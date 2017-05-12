@@ -1,6 +1,6 @@
 # Overview
 
-pk-vcs provides API and CLI to such SCM activities as
+pk-scm-wf provides API and CLI to perform such SCM tasks as
 - Create major software version
 - Create minor software version
 
