@@ -1,6 +1,6 @@
 # Overview
 
-pk-scm-wf provides API and CLI to perform such SCM tasks as
+pk-scm-wf provides API and CLI to perform such tasks as
 - Create major software version
 - Create minor software version
 
