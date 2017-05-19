@@ -4,7 +4,7 @@ Library povides API and CLI to perform such tasks as
 - Create major software version
 - Create minor software version
 
-pc-vcs uses pc-vcs-api/git/svn libraries family for low-level operations
+For low vcs operations scm4j-vcs- libraries are used
 
 # Terms
 
