@@ -54,7 +54,7 @@ Release  branch:
 Calculate actions to do the following things
 
 - Run recursively calculateProductionReleaseActions for all  mdeps
-  - pass mdeps, since even if dependency is in actual its latest version must be fetched (FetchVersion action)
+  - pass mdeps, since even if dependency is in actual state it may be needed to fetch its latest version (FetchVersion action)
 - Actualize list of mdeps versions in dev branch
   - save: dev/mdeps.json
   - calc: lastVerCommit
