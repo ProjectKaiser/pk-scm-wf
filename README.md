@@ -13,10 +13,14 @@ For low vcs operations scm4j-vcs- libraries are used
   
 # SCM Actions
 
+Actions can be executed. To have an access
+
 ISCMAction
-  - `execute()`
-  - `ISCMAction getParent()`
-  - `LinkedHashMap<String, ISCMAction> getChilds()`
+  - `execute() throws Exception`
+  - `ISCMAction getParent() //May be null`
+  - `LinkedHashMap<String, ISCMAction> getActions() //not null`
+  - `Object getResult() //may be null`
+  - `Object getChildResult(String childName) throws EChildNotFound`
 
 # Scenarious
 
@@ -24,7 +28,8 @@ ISCMAction
 
 Calculate actions to do the following things
 
-- Run analyzeVersion for all  mdeps
+- Run recursively calculateProductionReleaseActions for all  mdeps
+  - pass mdeps, since even if dependency is in actual its latest version must be fetched (FetchVersion action)
 - Actualize list of mdeps versions in dev branch
   - save: dev/mdeps.json
   - calc: lastVerCommit
@@ -37,11 +42,6 @@ Calculate actions to do the following things
   - lastVerCommit
   - childVer = ver + ".1"
   - ver = ver + 1
-
-
-
-  
- 
   
 
 
