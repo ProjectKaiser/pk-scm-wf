@@ -13,7 +13,7 @@ For low vcs operations scm4j-vcs- libraries are used
   
 # SCM Actions
 
-Actions can be executed. To have an access
+Actions are orginiazed into trees and can be executed
 
 ISCMAction
   - `execute() throws Exception`
@@ -22,9 +22,30 @@ ISCMAction
   - `Object getResult() //may be null`
   - `Object getChildResult(String childName) throws EChildNotFound`
 
-# Scenarious
+# ver.json
 
-## ISCMWorkflow.calculateProductionReleaseActions
+Development branch:
+  {
+    "ver" = 4
+    ,"childVer" = 3.1
+    ,"lastVerCommit" = ???
+  }
+  
+Release  branch:
+  {
+    "ver" = 4.1
+    ,"verCommit" = ???
+  }
+
+# mdeps.json
+
+[
+   "org.simplejavamail:simple-java-mail:4.2.3"
+  ,"org.apache.poi:poi:3.10.1"
+]
+
+
+# ISCMWorkflow.calculateProductionReleaseActions
 
 Calculate actions to do the following things
 
