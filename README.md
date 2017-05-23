@@ -25,25 +25,29 @@ ISCMAction
 # ver.json
 
 Development branch:
+```json
   {
-    "ver" = 4
-    ,"childVer" = 3.1
-    ,"lastVerCommit" = ???
+    "ver": "4"
+    ,"childVer": 3.1
+    ,"lastVerCommit": "???"
   }
+```  
   
 Release  branch:
+```json
   {
-    "ver" = 4.1
-    ,"verCommit" = ???
+    "ver": "4.1"
+    ,"verCommit": "???"
   }
+```  
 
 # mdeps.json
-
+```json
 [
    "org.simplejavamail:simple-java-mail:4.2.3"
   ,"org.apache.poi:poi:3.10.1"
 ]
-
+```
 
 # ISCMWorkflow.calculateProductionReleaseActions
 
