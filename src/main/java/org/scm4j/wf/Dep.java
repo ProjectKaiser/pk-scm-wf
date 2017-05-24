@@ -5,9 +5,18 @@ public class Dep {
 	private String resolvedVersion;
 	private String version;
 	private String lastBuildCommitId;
-	//private Artifactory repository;
+	// private Artifactory repository;
 	private Boolean isManaged;
 	private VCSRepository vcsRepository;
+	private String masterBranchName;
+
+	public String getMasterBranchName() {
+		return masterBranchName;
+	}
+
+	public void setMasterBranchName(String masterBranchName) {
+		this.masterBranchName = masterBranchName;
+	}
 
 	public Dep() {
 

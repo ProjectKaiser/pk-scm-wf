@@ -32,4 +32,9 @@ public class Credentials {
 	public Credentials() {
 
 	}
+
+	@Override
+	public String toString() {
+		return "Credentials [name=" + name + "]";
+	}
 }

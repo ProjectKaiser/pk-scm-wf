@@ -34,7 +34,7 @@ public abstract class ActionAbstract implements IAction {
 	
 	@Override
 	public Object getChildResult(String name) throws EChildNotFound {
-			return parent;
+		return parent;
 	}
 	
 }

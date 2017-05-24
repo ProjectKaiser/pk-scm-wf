@@ -17,33 +17,26 @@ public class SCMWorkflow implements ISCMWorkflow {
 	private static final String MDEPS_FILE_NAME = "mdeps.json";
 	public static final String WORKSPACE_DIR = System.getProperty("java.io.tmpdir") + "scm4j-wf-workspaces";
 	private static final String VER_FILE_NAME = "ver.json";
-	private Map<String, Credentials> credentials;
 	private Map<String, VCSRepository> vcsRepos;
-	private Credentials defaultCred;
 	private List<Dep> mDeps;
 	
-	public SCMWorkflow(Map<String, Credentials> credentials, Map<String, VCSRepository> vcsRepos) {
-		this.credentials = credentials;
+	public SCMWorkflow(Map<String, VCSRepository> vcsRepos) {
 		this.vcsRepos = vcsRepos;
-		for (Credentials cred : credentials.values()) {
-			if (cred.getIsDefault()) {
-				defaultCred = cred;
-				break;
-			}
-		}
-	}
-
-	private Boolean isVersionBranch(String branchName) {
-		return branchName.matches("^B[0-9]+$");
 	}
 
 	@Override
 	public IAction calculateProductionReleaseAction(IVCS vcs, String masterBranchName) {
 		List<IAction> childActions = new ArrayList<>();
 		
-		Boolean processMDeps;
 		String mDepsContent = null;
 		
+		String verContent = vcs.getFileContent(masterBranchName, VER_FILE_NAME);
+		Dep currentDep = GsonUtils.fromJson(verContent, Dep.class);
+		if (currentDep.getVcsRepository() == null) {
+			currentDep.setVcsRepository(vcsRepos.get(currentDep.getName()));
+		}
+		
+		Boolean processMDeps;
 		try {
 			mDepsContent = vcs.getFileContent(masterBranchName, MDEPS_FILE_NAME);
 			processMDeps = true;
@@ -51,28 +44,19 @@ public class SCMWorkflow implements ISCMWorkflow {
 			processMDeps = false;
 		}
 		
-		loadDeps(mDepsContent);
-		
-		for (Dep mDep : mDeps) {
-			IVCS mDepVcs = IVCSFactory.getIVCS(vcs.getWorkspace(), mDep.getVcsRepository());
-			childActions.add(calculateProductionReleaseAction(mDepVcs,  mDep.getVcsRepository().getMasterBranchName()));
+		if (processMDeps) {
+			loadDeps(mDepsContent);
+			
+			for (Dep mDep : mDeps) {
+				IVCS mDepVcs = IVCSFactory.getIVCS(vcs.getWorkspace(), mDep.getVcsRepository());
+				childActions.add(calculateProductionReleaseAction(mDepVcs, mDep.getMasterBranchName()));
+			}
 		}
 
-		String verContent = vcs.getFileContent(masterBranchName, VER_FILE_NAME);
-		Dep currentDep = GsonUtils.fromJson(verContent, Dep.class);
-		if (currentDep.getVcsRepository() == null) {
-			currentDep.setVcsRepository(vcsRepos.get(currentDep.getName()));
-		}
-		IAction currentAction;
 		List<VCSCommit> commits = vcs.getCommitsRange(masterBranchName, currentDep.getLastBuildCommitId(), null);
-		if (commits.size() > 1) {
-			currentAction = new SCMActionProductionRelease(null);
-		} else {
-			currentAction = new ActionNone(null);
-		}
 		
 		IAction res;
-		if (!childActions.isEmpty()) {
+		if (!childActions.isEmpty() || commits.size() > 1) {
 			res = new SCMActionProductionRelease(null);
 			for (IAction childAction : childActions) {
 				childAction.setParent(res);
@@ -87,6 +71,7 @@ public class SCMWorkflow implements ISCMWorkflow {
 	private void loadDeps(String mDepsContent) {
 		Type token = new TypeToken<List<Dep>>() {}.getType();
 		mDeps = GsonUtils.fromJson(mDepsContent, token);
+		
     	
     	for (Dep mDep : mDeps) {
     		if (mDep.getVcsRepository() == null) {
@@ -94,8 +79,6 @@ public class SCMWorkflow implements ISCMWorkflow {
     		}
     	}
 	}
-
-	
 
 	@Override
 	public void execActions(List<IAction> actions) {

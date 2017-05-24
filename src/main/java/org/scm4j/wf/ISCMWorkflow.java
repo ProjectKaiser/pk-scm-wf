@@ -7,7 +7,7 @@ import org.scm4j.vcs.api.IVCS;
 
 public interface ISCMWorkflow {
 	
-	IAction calculateProductionReleaseAction(IVCS vcs, String branchName);
+	IAction calculateProductionReleaseAction(IVCS vcs, String masterBranchName);
 	
 	void execActions(List<IAction> actions);
 }

@@ -4,6 +4,7 @@ import java.io.InputStream;
 import java.lang.reflect.Type;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -25,8 +26,8 @@ import com.google.gson.reflect.TypeToken;
 public class Cli {
 	
 	public static final String WORKSPACE_DIR = System.getProperty("java.io.tmpdir") + "scm4j-wf-workspaces";
-	private static Map<String, Credentials> credentials;
-	private static Map<String, VCSRepository> vcsRepos;
+	private static Map<String, Credentials> credentials = new HashMap<>();
+	private static Map<String, VCSRepository> vcsRepos = new HashMap<>();
 	private static Credentials defaultCred;
 	
     public static void main(String[] args) throws Exception {
@@ -35,12 +36,12 @@ public class Cli {
     	
     	loadRepos();
 
-    	VCSRepository repo = vcsRepos.get(args[1]);
+    	VCSRepository repo = vcsRepos.get(args[0]);
     	IVCSWorkspace ws = new VCSWorkspace(WORKSPACE_DIR);
     	
     	IVCS vcs = IVCSFactory.getIVCS(ws, repo);
     	
-    	ISCMWorkflow wf = new SCMWorkflow(credentials, vcsRepos);
+    	ISCMWorkflow wf = new SCMWorkflow(vcsRepos);
     	IAction action = wf.calculateProductionReleaseAction(vcs, null);
 
     	System.out.println(action.toString());

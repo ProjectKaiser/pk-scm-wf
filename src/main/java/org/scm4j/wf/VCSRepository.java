@@ -9,15 +9,6 @@ public class VCSRepository {
 	private String url;
 	private Credentials credentials;
 	private VCSType type;
-	private String masterBranchName;
-
-	public String getMasterBranchName() {
-		return masterBranchName;
-	}
-
-	public void setMasterBranchName(String masterBranchName) {
-		this.masterBranchName = masterBranchName;
-	}
 
 	public String getUrl() {
 		return url;
