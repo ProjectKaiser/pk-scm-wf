@@ -82,8 +82,6 @@ public class SCMWorkflow implements ISCMWorkflow {
 
 	@Override
 	public void execActions(List<IAction> actions) {
-		// TODO Auto-generated method stub
-
 	}
 
 }
