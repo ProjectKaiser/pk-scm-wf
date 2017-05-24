@@ -7,6 +7,4 @@ public interface IProgress {
 	
 	void reportStatus(String status);
 	void close();
-	
-	
 }
