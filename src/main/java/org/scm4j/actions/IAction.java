@@ -1,6 +1,6 @@
 package org.scm4j.actions;
 
-import java.util.LinkedHashMap;
+import java.util.List;
 
 import org.scm4j.progress.IProgress;
 
@@ -8,14 +8,16 @@ public interface IAction {
 
 	void setParent(IAction parent);
 	
-	void execute(IProgress progress);
+	Object execute(IProgress progress);
 
 	IAction getParent(); // may be null
 	
-	LinkedHashMap<String, IAction> getChildren(); // not null
+	List<IAction> getChildActions();
 	
 	Object getResult(); // may be null
 
 	Object getChildResult(String name) throws EChildNotFound;
+	
+	String getName();
 	
 }

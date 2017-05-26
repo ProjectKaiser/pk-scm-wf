@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.scm4j.actions.ActionError;
 import org.scm4j.actions.ActionNone;
 import org.scm4j.actions.IAction;
 import org.scm4j.vcs.api.IVCS;
@@ -14,26 +15,31 @@ import org.scm4j.vcs.api.exceptions.EVCSFileNotFound;
 import com.google.gson.reflect.TypeToken;
 
 public class SCMWorkflow implements ISCMWorkflow {
-	private static final String MDEPS_FILE_NAME = "mdeps.json";
+	public static final String MDEPS_FILE_NAME = "mdeps.json";
 	public static final String WORKSPACE_DIR = System.getProperty("java.io.tmpdir") + "scm4j-wf-workspaces";
-	private static final String VER_FILE_NAME = "ver.json";
+	public static final String VER_FILE_NAME = "ver.json";
 	private Map<String, VCSRepository> vcsRepos;
-	private List<Dep> mDeps;
-	
+
 	public SCMWorkflow(Map<String, VCSRepository> vcsRepos) {
 		this.vcsRepos = vcsRepos;
 	}
 
 	@Override
-	public IAction calculateProductionReleaseAction(IVCS vcs, String masterBranchName) {
+	public IAction calculateProductionReleaseAction(String masterBranchName, String depName) {
 		List<IAction> childActions = new ArrayList<>();
 		
-		String mDepsContent = null;
+		IVCS vcs = IVCSFactory.getIVCS(vcsRepos.get(depName));
 		
-		String verContent = vcs.getFileContent(masterBranchName, VER_FILE_NAME);
-		Dep currentDep = GsonUtils.fromJson(verContent, Dep.class);
-		if (currentDep.getVcsRepository() == null) {
-			currentDep.setVcsRepository(vcsRepos.get(currentDep.getName()));
+		String mDepsContent = null;
+		String verContent;
+		VerFile verFile = null;
+		Boolean hasVer;
+		try {
+			verContent = vcs.getFileContent(masterBranchName, VER_FILE_NAME);
+			verFile = GsonUtils.fromJson(verContent, VerFile.class);
+			hasVer = true;
+		} catch (EVCSFileNotFound e) {
+			hasVer = false;
 		}
 		
 		Boolean processMDeps;
@@ -45,39 +51,65 @@ public class SCMWorkflow implements ISCMWorkflow {
 		}
 		
 		if (processMDeps) {
-			loadDeps(mDepsContent);
-			
-			for (Dep mDep : mDeps) {
-				IVCS mDepVcs = IVCSFactory.getIVCS(vcs.getWorkspace(), mDep.getVcsRepository());
-				childActions.add(calculateProductionReleaseAction(mDepVcs, mDep.getMasterBranchName()));
+			List<Dep> deps = loadDeps(mDepsContent);
+			for (Dep mDep : deps) {
+				childActions.add(calculateProductionReleaseAction(mDep.getMasterBranchName(), mDep.getName()));
 			}
 		}
 
-		List<VCSCommit> commits = vcs.getCommitsRange(masterBranchName, currentDep.getLastBuildCommitId(), null);
+		List<VCSCommit> commits;
+		if (hasVer) {
+			commits = vcs.getCommitsRange(masterBranchName, verFile.getLastVerCommit(), null);
+		} else {
+			commits = new ArrayList<>();
+		}
 		
 		IAction res;
-		if (!childActions.isEmpty() || commits.size() > 1) {
-			res = new SCMActionProductionRelease(null);
-			for (IAction childAction : childActions) {
-				childAction.setParent(res);
-			}
+		if (!hasVer) {
+			res = new ActionError(vcsRepos.get(depName), childActions, masterBranchName, 
+					"no " + VER_FILE_NAME + " file");
+		} else if (hasErrorActions(childActions)) {
+			res = new ActionNone(vcsRepos.get(depName), childActions, masterBranchName);
+		} else if (hasSignificantActions(childActions) || commits.size() > 2) {
+			res = new SCMActionProductionRelease(vcsRepos.get(depName), childActions, masterBranchName);
 		} else {
-			res = new ActionNone(null);
+			res = new SCMActionUseExistingVersion(vcsRepos.get(depName), childActions, masterBranchName);
 		}
 		
 		return res;
 	}
 
-	private void loadDeps(String mDepsContent) {
-		Type token = new TypeToken<List<Dep>>() {}.getType();
-		mDeps = GsonUtils.fromJson(mDepsContent, token);
-		
-    	
-    	for (Dep mDep : mDeps) {
-    		if (mDep.getVcsRepository() == null) {
-    			mDep.setVcsRepository(vcsRepos.get(mDep.getName()));
-    		}
-    	}
+	private boolean hasErrorActions(List<IAction> actions) {
+		for (IAction action : actions) {
+			if (action instanceof ActionError) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private boolean hasSignificantActions(List<IAction> actions) {
+		for (IAction action : actions) {
+			if (!(action instanceof ActionNone) && !(action instanceof SCMActionUseExistingVersion)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private List<Dep> loadDeps(String mDepsContent) {
+		List<Dep> deps = new ArrayList<>();
+		Type type = new TypeToken<List<String>>() {}.getType();
+		List<String> strs = GsonUtils.fromJson(mDepsContent, type);
+		for (String str : strs) {
+			Dep dep = new Dep();
+			String[] parts = str.split(":");
+			dep.setName(str.replace(":" + parts[2], ""));
+			dep.setVer(parts[2]);
+			dep.setVcsRepository(vcsRepos.get(dep.getName()));
+			deps.add(dep);
+		}
+		return deps;
 	}
 
 	@Override

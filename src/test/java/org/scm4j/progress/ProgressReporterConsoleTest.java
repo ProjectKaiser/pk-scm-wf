@@ -4,7 +4,8 @@ import junit.framework.TestCase;
 
 public class ProgressReporterConsoleTest extends TestCase {
 
-	public void testMultiline(){
+	public void testMultiline() throws Exception{
+		
 		
 		System.out.println("***Multiline:");
 		ProgressConsole rpc1 = new ProgressConsole("Progress 1", false);
@@ -15,10 +16,10 @@ public class ProgressReporterConsoleTest extends TestCase {
 			rp2.reportStatus("Status2.1");
 			rp2.reportStatus("Status2.2");
 			{
-				IProgress rp3 = rp2.createNestedProgress("Progress 3");
-				rp3.reportStatus("Status3.1");
-				rp3.reportStatus("Status3.2");
-				rp3.close();
+				try (IProgress rp3 = rp2.createNestedProgress("Progress 3")) {
+					rp3.reportStatus("Status3.1");
+					rp3.reportStatus("Status3.2");
+				}
 			}
 			rp2.close();
 		}

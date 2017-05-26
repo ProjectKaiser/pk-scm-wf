@@ -1,15 +1,17 @@
 package org.scm4j.wf;
 
+import java.util.Map;
+
 public class Dep {
 	private String name;
 	private String resolvedVersion;
-	private String version;
-	private String lastBuildCommitId;
+	private String ver;
+	private String lastVerCommit;
 	// private Artifactory repository;
 	private Boolean isManaged;
 	private VCSRepository vcsRepository;
 	private String masterBranchName;
-
+	
 	public String getMasterBranchName() {
 		return masterBranchName;
 	}
@@ -46,20 +48,20 @@ public class Dep {
 		this.resolvedVersion = resolvedVersion;
 	}
 
-	public String getVersion() {
-		return version;
+	public String getVer() {
+		return ver;
 	}
 
-	public void setVersion(String version) {
-		this.version = version;
+	public void setVer(String ver) {
+		this.ver = ver;
 	}
 
-	public String getLastBuildCommitId() {
-		return lastBuildCommitId;
+	public String getLastVerCommit() {
+		return lastVerCommit;
 	}
 
-	public void setLastBuildCommitId(String lastBuildCommitId) {
-		this.lastBuildCommitId = lastBuildCommitId;
+	public void setLastVerCommit(String lastVerCommit) {
+		this.lastVerCommit = lastVerCommit;
 	}
 
 	public VCSRepository getVcsRepository() {
@@ -72,7 +74,14 @@ public class Dep {
 
 	@Override
 	public String toString() {
-		return "Dep [name=" + name + ", resolvedVersion=" + resolvedVersion + ", version=" + version + "]";
+		return "Dep [name=" + name + ", version=" + ver + "]";
+	}
+	
+	public static Dep fromName(String depName, Map<String, VCSRepository> vcsRepos) {
+		Dep res = new Dep();
+		res.setName(depName);
+		res.setVcsRepository(vcsRepos.get(depName));
+		return res;
 	}
 
 }

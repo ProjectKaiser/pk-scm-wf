@@ -10,13 +10,14 @@ import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
 import org.scm4j.actions.IAction;
-import org.scm4j.vcs.api.IVCS;
+import org.scm4j.actions.PrintAction;
+import org.scm4j.progress.IProgress;
+import org.scm4j.progress.ProgressConsole;
 import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
 import org.scm4j.vcs.api.workingcopy.VCSWorkspace;
 import org.scm4j.wf.Credentials;
 import org.scm4j.wf.GsonUtils;
 import org.scm4j.wf.ISCMWorkflow;
-import org.scm4j.wf.IVCSFactory;
 import org.scm4j.wf.SCMWorkflow;
 import org.scm4j.wf.VCSRepository;
 import org.scm4j.wf.VCSType;
@@ -34,17 +35,24 @@ public class Cli {
     	
     	loadCredentials();
     	
-    	loadRepos();
-
-    	VCSRepository repo = vcsRepos.get(args[0]);
     	IVCSWorkspace ws = new VCSWorkspace(WORKSPACE_DIR);
     	
-    	IVCS vcs = IVCSFactory.getIVCS(ws, repo);
+    	loadRepos(ws);
     	
     	ISCMWorkflow wf = new SCMWorkflow(vcsRepos);
-    	IAction action = wf.calculateProductionReleaseAction(vcs, null);
-
-    	System.out.println(action.toString());
+    	IAction action = wf.calculateProductionReleaseAction(null, args[0]);
+    	
+    	PrintAction pa = new PrintAction();
+    	pa.print(System.out, action);
+    	
+    	try (IProgress progress = new ProgressConsole(">>>" + action.getName())) {
+    		try {
+	    		action.execute(progress);
+	    	} finally {
+	    		progress.reportStatus("<<<" + action.getName());
+	    	}
+    	}
+    	
     }
 
 	private static void loadCredentials() throws Exception {
@@ -53,10 +61,12 @@ public class Cli {
     	String credsJson;
     	try (InputStream inputStream = url.openStream()) {
     		credsJson = IOUtils.toString(inputStream, StandardCharsets.UTF_8.name());
+    	} catch (Exception e) {
+    		return;
     	}
     	
-    	Type token = new TypeToken<List<Credentials>>() {}.getType();
-    	List<Credentials> creds = GsonUtils.fromJson(credsJson, token);
+    	Type type = new TypeToken<List<Credentials>>() {}.getType();
+    	List<Credentials> creds = GsonUtils.fromJson(credsJson, type);
 	
     	for (Credentials cred : creds) {
     		credentials.put(cred.getName(), cred);
@@ -66,7 +76,7 @@ public class Cli {
     	}
 	}
 
-	private static void loadRepos() throws Exception {
+	private static void loadRepos(IVCSWorkspace ws) throws Exception {
 		String storeUrl = System.getenv("SCM4J_VCS_REPOS_URL");
     	URL url = new URL(storeUrl);
     	String vcsReposJson;
@@ -74,8 +84,8 @@ public class Cli {
     		vcsReposJson = IOUtils.toString(inputStream, StandardCharsets.UTF_8.name());
     	}
     	
-    	Type token = new TypeToken<List<VCSRepository>>() {}.getType();
-    	List<VCSRepository> repos = GsonUtils.fromJson(vcsReposJson, token);
+    	Type type = new TypeToken<List<VCSRepository>>() {}.getType();
+    	List<VCSRepository> repos = GsonUtils.fromJson(vcsReposJson, type);
     	
     	for (VCSRepository repo : repos) {
     		if (repo.getType() == null) {
@@ -86,6 +96,7 @@ public class Cli {
     		} else {
     			repo.setCredentials(credentials.get(repo.getCredentials().getName()));
     		}
+    		repo.setWorkspace(ws.getVCSRepositoryWorkspace(repo.getUrl()));
     		vcsRepos.put(repo.getName(), repo);
     	}
 	}
