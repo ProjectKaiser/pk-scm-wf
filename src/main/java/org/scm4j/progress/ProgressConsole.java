@@ -71,4 +71,9 @@ public class ProgressConsole implements IProgress{
 		}
 	}
 
+	@Override
+	public void close(Throwable t) {
+		reportStatus("ERROR: " + t.toString());
+	}
+
 }

@@ -2,7 +2,7 @@ package org.scm4j.progress;
 
 import junit.framework.TestCase;
 
-public class ProgressReporterConsoleTest extends TestCase {
+public class ProgressConsoleTest extends TestCase {
 
 	public void testMultiline(){
 		
@@ -18,7 +18,7 @@ public class ProgressReporterConsoleTest extends TestCase {
 				IProgress rp3 = rp2.createNestedProgress("Progress 3");
 				rp3.reportStatus("Status3.1");
 				rp3.reportStatus("Status3.2");
-				rp3.close();
+				rp3.close(new RuntimeException("test exception"));
 			}
 			rp2.close();
 		}
