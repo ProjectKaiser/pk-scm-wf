@@ -1,6 +1,5 @@
 package org.scm4j.wf;
 
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -12,12 +11,10 @@ import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.vcs.api.exceptions.EVCSFileNotFound;
 
-import com.google.gson.reflect.TypeToken;
-
 public class SCMWorkflow implements ISCMWorkflow {
-	public static final String MDEPS_FILE_NAME = "mdeps.json";
+	public static final String MDEPS_FILE_NAME = "mdeps.conf";
 	public static final String WORKSPACE_DIR = System.getProperty("java.io.tmpdir") + "scm4j-wf-workspaces";
-	public static final String VER_FILE_NAME = "ver.json";
+	public static final String VER_FILE_NAME = "ver.conf";
 	private Map<String, VCSRepository> vcsRepos;
 
 	public SCMWorkflow(Map<String, VCSRepository> vcsRepos) {
@@ -36,7 +33,7 @@ public class SCMWorkflow implements ISCMWorkflow {
 		Boolean hasVer;
 		try {
 			verContent = vcs.getFileContent(masterBranchName, VER_FILE_NAME);
-			verFile = GsonUtils.fromJson(verContent, VerFile.class);
+			verFile = VerFile.fromFileContent(verContent);
 			hasVer = true;
 		} catch (EVCSFileNotFound e) {
 			hasVer = false;
@@ -98,9 +95,8 @@ public class SCMWorkflow implements ISCMWorkflow {
 	}
 
 	private List<Dep> loadDeps(String mDepsContent) {
+		List<String> strs = MDepsFile.fromFileContent(mDepsContent);
 		List<Dep> deps = new ArrayList<>();
-		Type type = new TypeToken<List<String>>() {}.getType();
-		List<String> strs = GsonUtils.fromJson(mDepsContent, type);
 		for (String str : strs) {
 			Dep dep = new Dep();
 			String[] parts = str.split(":");

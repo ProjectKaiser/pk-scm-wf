@@ -45,60 +45,62 @@ public class Cli {
     	PrintAction pa = new PrintAction();
     	pa.print(System.out, action);
     	
-    	try (IProgress progress = new ProgressConsole(">>>" + action.getName())) {
-    		try {
-	    		action.execute(progress);
-	    	} finally {
-	    		progress.reportStatus("<<<" + action.getName());
-	    	}
+    	try (IProgress progress = new ProgressConsole(action.getName(), ">>> ", "<<< ")) {
+    		action.execute(progress);
     	}
     	
     }
 
 	private static void loadCredentials() throws Exception {
-		String storeUrl = System.getenv("SCM4J_CREDENTIALS_URL");
-    	URL url = new URL(storeUrl);
-    	String credsJson;
-    	try (InputStream inputStream = url.openStream()) {
-    		credsJson = IOUtils.toString(inputStream, StandardCharsets.UTF_8.name());
-    	} catch (Exception e) {
-    		return;
-    	}
-    	
-    	Type type = new TypeToken<List<Credentials>>() {}.getType();
-    	List<Credentials> creds = GsonUtils.fromJson(credsJson, type);
-	
-    	for (Credentials cred : creds) {
-    		credentials.put(cred.getName(), cred);
-    		if (cred.getIsDefault()) {
-    			defaultCred = cred;
-    		}
-    	}
+		String storeUrlsStr = System.getenv("SCM4J_CREDENTIALS_URL");
+		String[] storeUrls = storeUrlsStr.split(";");
+		for (String storeUrl : storeUrls) {
+	    	URL url = new URL(storeUrl);
+	    	String credsJson;
+	    	try (InputStream inputStream = url.openStream()) {
+	    		credsJson = IOUtils.toString(inputStream, StandardCharsets.UTF_8.name());
+	    	} catch (Exception e) {
+	    		return;
+	    	}
+	    	
+	    	Type type = new TypeToken<List<Credentials>>() {}.getType();
+	    	List<Credentials> creds = GsonUtils.fromJson(credsJson, type);
+		
+	    	for (Credentials cred : creds) {
+	    		credentials.put(cred.getName(), cred);
+	    		if (cred.getIsDefault()) {
+	    			defaultCred = cred;
+	    		}
+	    	}
+		}
 	}
 
 	private static void loadRepos(IVCSWorkspace ws) throws Exception {
-		String storeUrl = System.getenv("SCM4J_VCS_REPOS_URL");
-    	URL url = new URL(storeUrl);
-    	String vcsReposJson;
-    	try (InputStream inputStream = url.openStream()) {
-    		vcsReposJson = IOUtils.toString(inputStream, StandardCharsets.UTF_8.name());
-    	}
-    	
-    	Type type = new TypeToken<List<VCSRepository>>() {}.getType();
-    	List<VCSRepository> repos = GsonUtils.fromJson(vcsReposJson, type);
-    	
-    	for (VCSRepository repo : repos) {
-    		if (repo.getType() == null) {
-    			repo.setType(getVCSType(repo.getUrl()));
-    		}
-    		if (repo.getCredentials() == null) {
-    			repo.setCredentials(defaultCred);
-    		} else {
-    			repo.setCredentials(credentials.get(repo.getCredentials().getName()));
-    		}
-    		repo.setWorkspace(ws.getVCSRepositoryWorkspace(repo.getUrl()));
-    		vcsRepos.put(repo.getName(), repo);
-    	}
+		String storeUrlsStr = System.getenv("SCM4J_VCS_REPOS_URL");
+		String[] storeUrls = storeUrlsStr.split(";");
+		for (String storeUrl : storeUrls) {
+	    	URL url = new URL(storeUrl);
+	    	String vcsReposJson;
+	    	try (InputStream inputStream = url.openStream()) {
+	    		vcsReposJson = IOUtils.toString(inputStream, StandardCharsets.UTF_8.name());
+	    	}
+	    	
+	    	Type type = new TypeToken<List<VCSRepository>>() {}.getType();
+	    	List<VCSRepository> repos = GsonUtils.fromJson(vcsReposJson, type);
+	    	
+	    	for (VCSRepository repo : repos) {
+	    		if (repo.getType() == null) {
+	    			repo.setType(getVCSType(repo.getUrl()));
+	    		}
+	    		if (repo.getCredentials() == null) {
+	    			repo.setCredentials(defaultCred);
+	    		} else {
+	    			repo.setCredentials(credentials.get(repo.getCredentials().getName()));
+	    		}
+	    		repo.setWorkspace(ws.getVCSRepositoryWorkspace(repo.getUrl()));
+	    		vcsRepos.put(repo.getName(), repo);
+	    	}
+		}
 	}
 
 	private static VCSType getVCSType(String url) {

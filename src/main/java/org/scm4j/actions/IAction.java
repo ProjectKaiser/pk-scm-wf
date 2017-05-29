@@ -1,6 +1,7 @@
 package org.scm4j.actions;
 
 import java.util.List;
+import java.util.Map;
 
 import org.scm4j.progress.IProgress;
 
@@ -14,10 +15,8 @@ public interface IAction {
 	
 	List<IAction> getChildActions();
 	
-	Object getResult(); // may be null
-
-	Object getChildResult(String name) throws EChildNotFound;
-	
 	String getName();
+
+	Map<String, Object> getResults();
 	
 }

@@ -14,12 +14,11 @@ public class SCMActionUseExistingVersion extends ActionAbstract {
 	public SCMActionUseExistingVersion(VCSRepository repo, List<IAction> actions, String masterBranchName) {
 		super(repo, actions, masterBranchName);
 		verFile = getVerFile();
-
 	}
 
 	@Override
 	public String toString() {
-		return "using existing version " + getName() + verFile.getVer();
+		return "using existing version " + getName() + ":" + verFile.getVer();
 	}
 
 	@Override
