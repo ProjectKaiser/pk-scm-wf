@@ -28,17 +28,15 @@ For low vcs operations scm4j-vcs- libraries are used
   
 # ver.conf
 
-Development branch:
+## Development branch:
 ```ini
-ver=5
-
-#`childVer` appears only if release branch exists
-childVer=4.0
+ver=1.5.0
+release=1.4.0
 ```
+Note: `release` exists in dev branch only
   
-Release  branch:
+## Release  branch:
 ```ini
-#".0" is added automatically
 ver=4.0
 ```  
 
@@ -58,14 +56,9 @@ Calculate actions to do the following things
   - save: dev/mdeps.json
   - calc: lastVerCommit
 - Create a release branch
-    - save release/ver.json
-      - ver.json.ver = ver + ".1"
-      - ver.json.verCommit = lastVerCommit
-      - ver.json.lastVerCommit = null
-- Change dev/ver.json
-  - lastVerCommit
-  - childVer = ver + ".1"
-  - ver = ver + 1
+    - `release` removed from `ver.conf`, if any
+- Change dev/ver.conf
+    - minor version increased
   
   
   
