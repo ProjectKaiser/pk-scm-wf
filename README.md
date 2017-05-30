@@ -20,7 +20,7 @@ For low vcs operations scm4j-vcs- libraries are used
 - mdeps-changed.conf
 - `#scm-mdeps`
   - Commit in `dev` branch which actualizes mdeps.conf dependencies
-- `#scm-ver 4.0`
+- `#scm-ver 5.0`
   - Commit in `dev` branch which increments dev version
 - `#scm-ignore`
 - SCM4j_CREDENTIALS
@@ -30,16 +30,14 @@ For low vcs operations scm4j-vcs- libraries are used
 
 Development branch:
 ```ini
-ver=4
+ver=5
 
 #`childVer` appears only if release branch exists
-childVer=3.0
+childVer=4.0
 ```
-
   
 Release  branch:
 ```ini
-
 #".0" is added automatically
 ver=4.0
 ```  
