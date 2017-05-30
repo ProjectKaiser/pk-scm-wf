@@ -13,25 +13,25 @@ For low vcs operations scm4j-vcs- libraries are used
   
 # Artifacts  
 
-## Configuration files
+Configuration files:
 - ver.conf
 - mdeps.conf
 - mdeps-changed.conf
 
-## Tags
+Tags:
 - `#scm-mdeps`
   - Commit in `dev` branch which actualizes mdeps.conf dependencies
 - `#scm-ver 5.0`
   - Commit in `dev` branch which increments dev version
 - `#scm-ignore`
 
-## Environment variables
+Environment variables:
 - SCM4j_CREDENTIALS
 - SCM4j_REPOSITORIES
   
 # ver.conf
 
-## Development branch:
+Development branch:
 ```ini
 ver=1.5.0
 release=1.4.0
@@ -40,7 +40,7 @@ branchType=develop
   - `release` exists in dev branch only
   - `develop` is a default value for `branchType`
   
-## Release  branch:
+Release  branch:
 ```ini
 ver=1.4.0
 branchType=release
