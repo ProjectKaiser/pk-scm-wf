@@ -37,7 +37,7 @@ ver=1.5.0
 release=1.4.0
 branchType=develop
 ```
-  - `release` exists in dev branch only
+  - `release` may exists in dev branch only and may be ommited there if no release branch has been created yet
   - `develop` is a default value for `branchType`
   
 Release  branch:
