@@ -15,9 +15,12 @@ For low vcs operations scm4j-vcs- libraries are used
 
 - ver.conf
 - mdeps.conf
+- mdeps-changed.conf
 - `#scm-mdeps`
 - `#scm-ver`
 - `#scm-ignore`
+- SCM4j_CREDENTIALS
+- SCM4j_REPOSITORIES
   
 # SCM Actions
 
