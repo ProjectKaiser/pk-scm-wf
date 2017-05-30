@@ -16,9 +16,12 @@ For low vcs operations scm4j-vcs- libraries are used
 # Artifacts  
 
 Configuration files:
-- ver.conf
-- mdeps.conf
-- mdeps-changed.conf
+- `ver.conf`
+ - Keeps development and release version numbers
+- `mdeps.conf`
+ - List of managed dependencies
+- `mdeps-changed.conf`
+ - Actual for `release` branch only. List of managed dependenciens which has been changed since last minor version.
 
 Tags:
 - `#scm-mdeps`
