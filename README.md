@@ -13,14 +13,19 @@ For low vcs operations scm4j-vcs- libraries are used
   
 # Artifacts  
 
+## Configuration files
 - ver.conf
 - mdeps.conf
 - mdeps-changed.conf
+
+## Tags
 - `#scm-mdeps`
   - Commit in `dev` branch which actualizes mdeps.conf dependencies
 - `#scm-ver 5.0`
   - Commit in `dev` branch which increments dev version
 - `#scm-ignore`
+
+## Environment variables
 - SCM4j_CREDENTIALS
 - SCM4j_REPOSITORIES
   
