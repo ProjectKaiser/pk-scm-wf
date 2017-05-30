@@ -44,15 +44,13 @@ Release  branch:
   }
 ```  
 
-# mdeps.json
-```json
-[
-   "org.simplejavamail:simple-java-mail:4.2.3"
-  ,"org.apache.poi:poi:3.10.1"
-]
+# mdeps.conf
+```
+org.simplejavamail:simple-java-mail:4.2.3
+org.apache.poi:poi:3.10.1
 ```
 
-# ISCMWorkflow.calculateProductionReleaseActions
+# ISCMWorkflow.ultimateProduction
 
 Calculate actions to do the following things
 
@@ -71,6 +69,5 @@ Calculate actions to do the following things
   - childVer = ver + ".1"
   - ver = ver + 1
   
-
-
+  
   
