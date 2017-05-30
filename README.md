@@ -22,27 +22,16 @@ For low vcs operations scm4j-vcs- libraries are used
 - SCM4j_CREDENTIALS
 - SCM4j_REPOSITORIES
   
-# SCM Actions
-
-Actions are orginiazed into trees and can be executed
-
-ISCMAction
-  - `execute() throws Exception`
-  - `ISCMAction getParent() //May be null`
-  - `LinkedHashMap<String, ISCMAction> getActions() //not null`
-  - `Object getResult() //may be null`
-  - `Object getChildResult(String childName) throws EChildNotFound`
-
-# ver.json
+# ver.conf
 
 Development branch:
 ```json
   {
     "ver": "4"
-    ,"childVer": 3.1
-    ,"lastVerCommit": "???"
+    ,"childVer": 3.0
   }
-```  
+```
+`childVer` appears only if release branch exists
   
 Release  branch:
 ```json
