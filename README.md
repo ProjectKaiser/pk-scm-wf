@@ -10,8 +10,6 @@ For low vcs operations scm4j-vcs- libraries are used
 
 - Managed dependency (mdep) / Контролируемая зависимость
   - Component which is under control, i.e. can be built, branched and uploaded to a maven repository
-- Development branch (`devBranch`)
-  - Branch developers commit changes to. By default `master` for git and `trunk` for svn
   
 # Artifacts  
 
@@ -32,12 +30,15 @@ For low vcs operations scm4j-vcs- libraries are used
 ```ini
 ver=1.5.0
 release=1.4.0
+branchType=develop
 ```
-Note: `release` exists in dev branch only
+  - `release` exists in dev branch only
+  - `develop` is a default value for `branchType`
   
 ## Release  branch:
 ```ini
-ver=4.0
+ver=1.4.0
+branchType=release
 ```  
 
 # mdeps.conf
@@ -58,7 +59,6 @@ Calculate actions to do the following things
 - Create a release branch
     - `release` removed from `ver.conf`, if any
 - Change dev/ver.conf
-    - minor version increased
-  
+    - minor version increased 
   
   
