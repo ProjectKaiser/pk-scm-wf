@@ -29,20 +29,19 @@ For low vcs operations scm4j-vcs- libraries are used
 # ver.conf
 
 Development branch:
-```json
-  {
-    "ver": "4"
-    ,"childVer": 3.0
-  }
+```ini
+ver=4
+
+#`childVer` appears only if release branch exists
+childVer=3.0
 ```
-`childVer` appears only if release branch exists
+
   
 Release  branch:
-```json
-  {
-    "ver": "4.1"
-    ,"verCommit": "???"
-  }
+```ini
+
+#".0" is added automatically
+ver=4.0
 ```  
 
 # mdeps.conf
