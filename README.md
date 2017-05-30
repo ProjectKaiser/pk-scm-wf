@@ -10,8 +10,8 @@ For low vcs operations scm4j-vcs- libraries are used
 
 - Managed dependency (mdep) / Контролируемая зависимость
   - Component which is under control, i.e. can be built, branched and uploaded to a maven repository
-- Development branch
-  - Branch developers commit changes to. `master` for git and `trunk` for svn
+- Development branch (`devBranch`)
+  - Branch developers commit changes to. By default `master` for git and `trunk` for svn
   
 # Artifacts  
 
