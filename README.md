@@ -19,8 +19,9 @@ For low vcs operations scm4j-vcs- libraries are used
 - mdeps.conf
 - mdeps-changed.conf
 - `#scm-mdeps`
+  - Commit in `dev` branch which actualizes mdeps.conf dependencies
 - `#scm-ver 4.0`
-  - Commit in a `dev` branch
+  - Commit in `dev` branch which increments dev version
 - `#scm-ignore`
 - SCM4j_CREDENTIALS
 - SCM4j_REPOSITORIES
