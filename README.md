@@ -1,8 +1,8 @@
 # Overview
 
-Library povides API and CLI to perform such tasks as
-- Create major software version
-- Create minor software version
+Library povides API and CLI to perform such tasks as (Ref [Semantic Versioning 2.0.0](http://semver.org/))
+- Create a minor version
+- Create a patch version
 
 For low vcs operations scm4j-vcs- libraries are used
 
