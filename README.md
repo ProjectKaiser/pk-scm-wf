@@ -1,6 +1,6 @@
 # Overview
 
-Library povides API and CLI to perform such tasks as
+Library povides API and CLI to automate such tasks as
 - Create a minor version
 - Create a patch version
 
