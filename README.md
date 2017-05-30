@@ -11,45 +11,48 @@ For low vcs operations scm4j-vcs- libraries are used
 - Managed dependency (mdep) / Контролируемая зависимость
   - Component which is under control, i.e. can be built, branched and uploaded to a maven repository
   
-# SCM Actions
+# Artifacts  
 
-Actions are orginiazed into trees and can be executed
+Configuration files:
+- ver.conf
+- mdeps.conf
+- mdeps-changed.conf
 
-ISCMAction
-  - `execute() throws Exception`
-  - `ISCMAction getParent() //May be null`
-  - `LinkedHashMap<String, ISCMAction> getActions() //not null`
-  - `Object getResult() //may be null`
-  - `Object getChildResult(String childName) throws EChildNotFound`
+Tags:
+- `#scm-mdeps`
+  - Commit in `dev` branch which actualizes mdeps.conf dependencies
+- `#scm-ver 5.0`
+  - Commit in `dev` branch which increments dev version
+- `#scm-ignore`
 
-# ver.json
+Environment variables:
+- SCM4j_CREDENTIALS
+- SCM4j_REPOSITORIES
+  
+# ver.conf
 
 Development branch:
-```json
-  {
-    "ver": "4"
-    ,"childVer": 3.1
-    ,"lastVerCommit": "???"
-  }
-```  
+```ini
+ver=1.5.0
+release=1.4.0
+branchType=develop
+```
+  - `release` exists in dev branch only
+  - `develop` is a default value for `branchType`
   
 Release  branch:
-```json
-  {
-    "ver": "4.1"
-    ,"verCommit": "???"
-  }
+```ini
+ver=1.4.0
+branchType=release
 ```  
 
-# mdeps.json
-```json
-[
-   "org.simplejavamail:simple-java-mail:4.2.3"
-  ,"org.apache.poi:poi:3.10.1"
-]
+# mdeps.conf
+```
+org.simplejavamail:simple-java-mail:4.2.3
+org.apache.poi:poi:3.10.1
 ```
 
-# ISCMWorkflow.calculateProductionReleaseActions
+# ISCMWorkflow.ultimateProduction
 
 Calculate actions to do the following things
 
@@ -59,15 +62,8 @@ Calculate actions to do the following things
   - save: dev/mdeps.json
   - calc: lastVerCommit
 - Create a release branch
-    - save release/ver.json
-      - ver.json.ver = ver + ".1"
-      - ver.json.verCommit = lastVerCommit
-      - ver.json.lastVerCommit = null
-- Change dev/ver.json
-  - lastVerCommit
-  - childVer = ver + ".1"
-  - ver = ver + 1
+    - `release` removed from `ver.conf`, if any
+- Change dev/ver.conf
+    - minor version increased 
   
-
-
   
