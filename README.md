@@ -1,8 +1,10 @@
 # Overview
 
-Library povides API and CLI to perform such tasks as (Ref [Semantic Versioning 2.0.0](http://semver.org/))
+Library povides API and CLI to perform such tasks as
 - Create a minor version
 - Create a patch version
+
+ Ref. [Semantic Versioning 2.0.0](http://semver.org/)) for naming convention.
 
 For low vcs operations scm4j-vcs- libraries are used
 
