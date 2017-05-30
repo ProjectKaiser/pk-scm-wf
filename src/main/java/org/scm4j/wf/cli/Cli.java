@@ -40,7 +40,7 @@ public class Cli {
     	loadRepos(ws);
     	
     	ISCMWorkflow wf = new SCMWorkflow(vcsRepos);
-    	IAction action = wf.calculateProductionReleaseAction(null, args[0]);
+    	IAction action = wf.calculateProductionReleaseAction(args[0]);
     	
     	PrintAction pa = new PrintAction();
     	pa.print(System.out, action);
@@ -52,7 +52,7 @@ public class Cli {
     }
 
 	private static void loadCredentials() throws Exception {
-		String storeUrlsStr = System.getenv("SCM4J_CREDENTIALS_URL");
+		String storeUrlsStr = System.getenv("SCM4J_CREDENTIALS");
 		String[] storeUrls = storeUrlsStr.split(";");
 		for (String storeUrl : storeUrls) {
 	    	URL url = new URL(storeUrl);
@@ -76,7 +76,7 @@ public class Cli {
 	}
 
 	private static void loadRepos(IVCSWorkspace ws) throws Exception {
-		String storeUrlsStr = System.getenv("SCM4J_VCS_REPOS_URL");
+		String storeUrlsStr = System.getenv("SCM4J_VCS_REPOS");
 		String[] storeUrls = storeUrlsStr.split(";");
 		for (String storeUrl : storeUrls) {
 	    	URL url = new URL(storeUrl);

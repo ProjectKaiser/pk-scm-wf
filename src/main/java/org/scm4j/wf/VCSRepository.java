@@ -11,6 +11,15 @@ public class VCSRepository {
 	private Credentials credentials;
 	private VCSType type;
 	private IVCSRepositoryWorkspace workspace;
+	private String devBranch;
+
+	public String getDevBranch() {
+		return devBranch;
+	}
+
+	public void setDevBranch(String devBranch) {
+		this.devBranch = devBranch;
+	}
 
 	public IVCSRepositoryWorkspace getWorkspace() {
 		return workspace;

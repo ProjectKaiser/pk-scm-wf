@@ -6,7 +6,7 @@ import org.scm4j.actions.IAction;
 
 public interface ISCMWorkflow {
 	
-	IAction calculateProductionReleaseAction(String masterBranchName, String depName);
+	IAction calculateProductionReleaseAction(String depName);
 	
 	void execActions(List<IAction> actions);
 }

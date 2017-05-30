@@ -8,7 +8,6 @@ import org.scm4j.actions.ActionError;
 import org.scm4j.actions.ActionNone;
 import org.scm4j.actions.IAction;
 import org.scm4j.vcs.api.IVCS;
-import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.vcs.api.exceptions.EVCSFileNotFound;
 
 public class SCMWorkflow implements ISCMWorkflow {
@@ -22,18 +21,16 @@ public class SCMWorkflow implements ISCMWorkflow {
 	}
 
 	@Override
-	public IAction calculateProductionReleaseAction(String masterBranchName, String depName) {
+	public IAction calculateProductionReleaseAction(String depName) {
+		String masterBranchName = vcsRepos.get(depName).getDevBranch();
 		List<IAction> childActions = new ArrayList<>();
 		
 		IVCS vcs = IVCSFactory.getIVCS(vcsRepos.get(depName));
 		
 		String mDepsContent = null;
-		String verContent;
-		VerFile verFile = null;
 		Boolean hasVer;
 		try {
-			verContent = vcs.getFileContent(masterBranchName, VER_FILE_NAME);
-			verFile = VerFile.fromFileContent(verContent);
+			vcs.getFileContent(masterBranchName, VER_FILE_NAME);
 			hasVer = true;
 		} catch (EVCSFileNotFound e) {
 			hasVer = false;
@@ -50,24 +47,18 @@ public class SCMWorkflow implements ISCMWorkflow {
 		if (processMDeps) {
 			List<Dep> deps = loadDeps(mDepsContent);
 			for (Dep mDep : deps) {
-				childActions.add(calculateProductionReleaseAction(mDep.getMasterBranchName(), mDep.getName()));
+				childActions.add(calculateProductionReleaseAction(mDep.getName()));
 			}
 		}
 
-		List<VCSCommit> commits;
-		if (hasVer) {
-			commits = vcs.getCommitsRange(masterBranchName, verFile.getLastVerCommit(), null);
-		} else {
-			commits = new ArrayList<>();
-		}
-		
 		IAction res;
+		BranchStructure struct = new BranchStructure(vcs, masterBranchName);
 		if (!hasVer) {
 			res = new ActionError(vcsRepos.get(depName), childActions, masterBranchName, 
 					"no " + VER_FILE_NAME + " file");
 		} else if (hasErrorActions(childActions)) {
 			res = new ActionNone(vcsRepos.get(depName), childActions, masterBranchName);
-		} else if (hasSignificantActions(childActions) || commits.size() > 2) {
+		} else if (hasSignificantActions(childActions) || struct.getHasFeatures()) {
 			res = new SCMActionProductionRelease(vcsRepos.get(depName), childActions, masterBranchName);
 		} else {
 			res = new SCMActionUseExistingVersion(vcsRepos.get(depName), childActions, masterBranchName);

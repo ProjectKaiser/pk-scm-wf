@@ -13,6 +13,11 @@ import org.scm4j.vcs.api.exceptions.EVCSFileNotFound;
 
 public class SCMActionProductionRelease extends ActionAbstract {
 	
+	public static final String VCS_TAG_SCM_VER = "#scm-ver";
+	public static final String VCS_TAG_SCM_MDEPS = "#scm-mdeps";
+	public static final String VCS_TAG_SCM_IGNORE = "#scm-ignore";
+	public static final String[] VCS_TAGS = new String[] {VCS_TAG_SCM_VER, VCS_TAG_SCM_MDEPS, VCS_TAG_SCM_IGNORE};
+
 	public SCMActionProductionRelease(VCSRepository repo, List<IAction> childActions, String masterBranchName) {
 		super(repo, childActions, masterBranchName);
 	}
@@ -76,7 +81,7 @@ public class SCMActionProductionRelease extends ActionAbstract {
 				
 				String mDepsOutContent = MDepsFile.toFileContent(mDepsOut);
 				newVersionStartsFromCommit = vcs.setFileContent(masterBranchName, SCMWorkflow.MDEPS_FILE_NAME, 
-						mDepsOutContent, SCMWorkflow.MDEPS_FILE_NAME + " updated");
+						mDepsOutContent, VCS_TAG_SCM_MDEPS);
 				if (newVersionStartsFromCommit == VCSCommit.EMPTY) {
 					// зависимости не изменились, но для нас самих надо сделать релиз
 					newVersionStartsFromCommit = vcs.getHeadCommit(masterBranchName);
@@ -90,31 +95,30 @@ public class SCMActionProductionRelease extends ActionAbstract {
 			}
 			
 			// отведем ветку
-			String newBranchName = verFile.getReleaseBranchPrefix() + ver.toString() + ".1";
+			String newBranchName = verFile.getVer() + ".0"; 
 			vcs.createBranch(masterBranchName, newBranchName, "branch created");
 			progress.reportStatus("branch " + newBranchName + " created");
 			
 			// сохраним lastVerCommit и ver в транке
-			verFile.setLastNumber(nextVer);
-			verFile.setLastVerCommit(newVersionStartsFromCommit.getId());
+			verFile.setRelease(verFile.getVer() + ".0");	// release = 1.0,
+			verFile.setLastNumber(nextVer);					// ver = 2 
+			 
 			String verContent = verFile.toFileContent();
 			vcs.setFileContent(masterBranchName, SCMWorkflow.VER_FILE_NAME, 
-					verContent, SCMWorkflow.VER_FILE_NAME + " lastVerCommit written");
-			progress.reportStatus("change to version " + verFile.getVer() + ", lastVerCommit = " 
-					+ verFile.getLastVerCommit() + " in trunk");
+					verContent, VCS_TAG_SCM_VER + " " + verFile.getRelease());
+			progress.reportStatus("change to version " + verFile.getRelease() + " in trunk");
 			
 			// сохраним verCommit в ветке
-			verFile.setLastVerCommit(null);
-			verFile.setVerCommit(newVersionStartsFromCommit.getId());
-			verFile.setVer(ver.toString() + ".1");
+			verFile.setVer(verFile.getRelease()); 	// ver=1.0
+			verFile.setRelease(null);				// no release
 			verContent = verFile.toFileContent();
 			vcs.setFileContent(newBranchName, SCMWorkflow.VER_FILE_NAME, verContent, 
-					SCMWorkflow.VER_FILE_NAME + " verCommit written");
-			progress.reportStatus("verCommit " + verFile.getVerCommit() + " written to " + newBranchName);
+					VCS_TAG_SCM_VER);
+			progress.reportStatus(verFile.toString() + " is written to " + newBranchName);
 			
 			ActionResultVersion res = new ActionResultVersion();
 			res.setName(repo.getName());
-			res.setVersion(verFile.getVer());
+			res.setVersion(verFile.getVer());		// 1.0
 			result = res;
 			progress.reportStatus("new " + repo.getName() + " " 
 					+ res.getVersion() + " is released in " + newBranchName);

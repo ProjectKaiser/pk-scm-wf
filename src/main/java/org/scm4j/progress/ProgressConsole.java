@@ -4,7 +4,6 @@ import com.google.common.base.Strings;
 
 public class ProgressConsole implements IProgress {
 
-	private IProgress parent;
 	private int level;
 	private String name;
 	private boolean singleLine;
@@ -12,21 +11,20 @@ public class ProgressConsole implements IProgress {
 	private String outdent;
 
 	public ProgressConsole(String name, String indent, String outdent) {
-		this(null, 0, name, false, indent, outdent);
+		this( 0, name, false, indent, outdent);
 	}
 	
 	public ProgressConsole(String name) {
-		this(null, 0, name, false, "", "");
+		this(0, name, false, "", "");
 	}
 
 	public ProgressConsole(String name, boolean singleLine) {
-		this(null, 0, name, singleLine, "", "");
+		this(0, name, singleLine, "", "");
 	}
 
-	public ProgressConsole(IProgress parent, int level, String name, boolean singleLine, String indent, String outdent) {
+	public ProgressConsole(int level, String name, boolean singleLine, String indent, String outdent) {
 		this.name = name;
 		this.singleLine = singleLine;
-		this.parent = parent;
 		this.level = level;
 		this.indent = indent;
 		this.outdent = outdent;
@@ -50,7 +48,7 @@ public class ProgressConsole implements IProgress {
 
 	@Override
 	public IProgress createNestedProgress(String name) {
-		return new ProgressConsole(this, level + 1, name, singleLine, indent, outdent);
+		return new ProgressConsole(level + 1, name, singleLine, indent, outdent);
 	}
 
 	@Override
@@ -60,16 +58,6 @@ public class ProgressConsole implements IProgress {
 		if (!singleLine) {
 			nl();
 		}
-	}
-
-	@Override
-	public IProgress getParent() {
-		return parent;
-	}
-
-	@Override
-	public String getName() {
-		return name;
 	}
 
 	@Override

@@ -24,8 +24,8 @@ dependencies {
 	testCompile 'junit:junit:4.12'
 	testCompile 'org.mockito:mockito-core:2.0.62-beta'
 
-	compile 'com.github.scm4j:scm4j-vcs-git:+'
-	compile 'com.github.scm4j:scm4j-vcs-svn:+'
+	compile 'com.github.scm4j:scm4j-vcs-git:master-SNAPSHOT'
+	compile 'com.github.scm4j:scm4j-vcs-svn:master-SNAPSHOT'
 	
 	compile 'com.google.code.gson:gson:2.8.0'
 	compile 'com.google.guava:guava:20.0'
