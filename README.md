@@ -17,11 +17,10 @@ For low vcs operations scm4j-vcs- libraries are used
 
 Configuration files:
 - `ver.conf`
- - Keeps development and release version numbers
+  - Keeps development and release version numbers
 - `mdeps.conf`
- - List of managed dependencies
 - `mdeps-changed.conf`
- - Actual for `release` branch only. List of managed dependenciens which has been changed since last minor version.
+  - Actual for `release` branch only. List of managed dependenciens which has been changed since last minor version.
 
 Tags:
 - `#scm-mdeps`
