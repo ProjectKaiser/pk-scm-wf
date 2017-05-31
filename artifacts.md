@@ -24,11 +24,11 @@
 
 Contains a single line.
 
-Development branch:
+`develop` branch:
 ```ini
 1.5.0-SNAPSHOT
 ```
-Release  branch:
+`release`  branch:
 ```ini
 1.4.0
 ```  
