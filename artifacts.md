@@ -20,7 +20,7 @@
 - SCM4j_REPOSITORIES
   - `developBranchName`, `releaseBranchPrefix`
   
-# version
+# `version` file
 
 Contains a single line.
 
@@ -33,7 +33,7 @@ Contains a single line.
 1.4.0
 ```  
 
-# mdeps
+# `mdeps` file
 
 Contains few lines.
 
