@@ -2,6 +2,7 @@
 - `version`
   - Keeps development and release version numbers
 - `mdeps`
+  - Managed dependencies list
 - `mdeps-changed`
   - Actual for `release` branch only. List of managed dependenciens which has been changed since last minor version
 
