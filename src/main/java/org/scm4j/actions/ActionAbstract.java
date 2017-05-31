@@ -8,7 +8,7 @@ import org.scm4j.vcs.api.IVCS;
 import org.scm4j.wf.IVCSFactory;
 import org.scm4j.wf.SCMWorkflow;
 import org.scm4j.wf.VCSRepository;
-import org.scm4j.wf.VerFile;
+import org.scm4j.wf.conf.VerFile;
 
 public abstract class ActionAbstract implements IAction {
 	
@@ -22,7 +22,7 @@ public abstract class ActionAbstract implements IAction {
 	public VerFile getVerFile() {
 		IVCS vcs = IVCSFactory.getIVCS(repo);
 		String verFileContent = vcs.getFileContent(masterBranchName, SCMWorkflow.VER_FILE_NAME);
-		return VerFile.fromFileContent(verFileContent);
+		return new VerFile(verFileContent);
 	}
 	
 	public IVCS getVCS() {

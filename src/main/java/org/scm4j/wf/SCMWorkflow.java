@@ -9,6 +9,7 @@ import org.scm4j.actions.ActionNone;
 import org.scm4j.actions.IAction;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.exceptions.EVCSFileNotFound;
+import org.scm4j.wf.conf.MDepsFile;
 
 public class SCMWorkflow implements ISCMWorkflow {
 	public static final String MDEPS_FILE_NAME = "mdeps.conf";
@@ -86,7 +87,7 @@ public class SCMWorkflow implements ISCMWorkflow {
 	}
 
 	private List<Dep> loadDeps(String mDepsContent) {
-		List<String> strs = MDepsFile.fromFileContent(mDepsContent);
+		List<String> strs = new MDepsFile(mDepsContent).getMDeps();
 		List<Dep> deps = new ArrayList<>();
 		for (String str : strs) {
 			Dep dep = new Dep();

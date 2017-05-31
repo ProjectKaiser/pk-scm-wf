@@ -10,6 +10,8 @@ import org.scm4j.progress.IProgress;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.vcs.api.exceptions.EVCSFileNotFound;
+import org.scm4j.wf.conf.MDepsFile;
+import org.scm4j.wf.conf.VerFile;
 
 public class SCMActionProductionRelease extends ActionAbstract {
 	
@@ -17,6 +19,8 @@ public class SCMActionProductionRelease extends ActionAbstract {
 	public static final String VCS_TAG_SCM_MDEPS = "#scm-mdeps";
 	public static final String VCS_TAG_SCM_IGNORE = "#scm-ignore";
 	public static final String[] VCS_TAGS = new String[] {VCS_TAG_SCM_VER, VCS_TAG_SCM_MDEPS, VCS_TAG_SCM_IGNORE};
+	public static final String BRANCH_DEVELOP = "develop";
+	public static final String BRANCH_RELEASE = "release";
 
 	public SCMActionProductionRelease(VCSRepository repo, List<IAction> childActions, String masterBranchName) {
 		super(repo, childActions, masterBranchName);
@@ -57,17 +61,17 @@ public class SCMActionProductionRelease extends ActionAbstract {
 				}
 			}
 			
-			// увеличим версию
-			Integer ver = verFile.getLastNumber();
-			Integer nextVer = ver + 1;
+			// увеличим минорную версию
+			Integer minor = verFile.getMinor();
+			Integer newMinor = minor + 1;
 			
 			// тут у нас мапа с новыми версиями. Будем прописывать их в mdeps под ногами.
 			VCSCommit newVersionStartsFromCommit;
 			try {
 				String mDepsContent = vcs.getFileContent(masterBranchName, SCMWorkflow.MDEPS_FILE_NAME);
-				List<String> mDeps = MDepsFile.fromFileContent(mDepsContent);
+				MDepsFile mdepsFile = new MDepsFile(mDepsContent);
 				List<String> mDepsOut = new ArrayList<>();
-				for (String mDep : mDeps) {
+				for (String mDep : mdepsFile.getMDeps()) {
 					String mDepName = getMDepName(mDep);
 					nestedResult = getResults().get(mDepName);
 					if (nestedResult != null && nestedResult instanceof ActionResultVersion) {
@@ -79,7 +83,7 @@ public class SCMActionProductionRelease extends ActionAbstract {
 				}
 				progress.reportStatus("new mdeps generated");
 				
-				String mDepsOutContent = MDepsFile.toFileContent(mDepsOut);
+				String mDepsOutContent = mdepsFile.toFileContent();
 				newVersionStartsFromCommit = vcs.setFileContent(masterBranchName, SCMWorkflow.MDEPS_FILE_NAME, 
 						mDepsOutContent, VCS_TAG_SCM_MDEPS);
 				if (newVersionStartsFromCommit == VCSCommit.EMPTY) {
@@ -95,13 +99,13 @@ public class SCMActionProductionRelease extends ActionAbstract {
 			}
 			
 			// отведем ветку
-			String newBranchName = verFile.getVer() + ".0"; 
+			String newBranchName = verFile.getReleaseBranchPrefix() + verFile.getVer() + ".0"; 
 			vcs.createBranch(masterBranchName, newBranchName, "branch created");
 			progress.reportStatus("branch " + newBranchName + " created");
 			
 			// сохраним lastVerCommit и ver в транке
-			verFile.setRelease(verFile.getVer() + ".0");	// release = 1.0,
-			verFile.setLastNumber(nextVer);					// ver = 2 
+			verFile.setRelease(verFile.getVer() + ".0");				// release = 1.0,
+			verFile.setNumberGroupValueFromEnd(2, newMinor);	// ver = 2 
 			 
 			String verContent = verFile.toFileContent();
 			vcs.setFileContent(masterBranchName, SCMWorkflow.VER_FILE_NAME, 

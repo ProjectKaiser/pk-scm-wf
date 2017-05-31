@@ -6,6 +6,7 @@ import org.scm4j.actions.ActionAbstract;
 import org.scm4j.actions.IAction;
 import org.scm4j.actions.results.ActionResultVersion;
 import org.scm4j.progress.IProgress;
+import org.scm4j.wf.conf.VerFile;
 
 public class SCMActionUseExistingVersion extends ActionAbstract {
 
