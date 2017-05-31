@@ -22,7 +22,7 @@
   
 # version
 
-Contains a single string.
+Contains a single line.
 
 Development branch:
 ```ini
@@ -34,6 +34,9 @@ Release  branch:
 ```  
 
 # mdeps
+
+Contains few lines.
+
 ```
 org.simplejavamail:simple-java-mail:4.2.3
 org.apache.poi:poi:3.10.1
