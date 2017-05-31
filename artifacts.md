@@ -9,7 +9,7 @@
 # Tags
 - `#scm-mdeps`
   - Commit in `develop` branch which actualizes mdeps.conf dependencies
-- `#scm-ver 5.0`
+- `#scm-ver 1.5.0`
   - Commit in `develop` branch which increments version
 - `#scm-ver release`
   - Commit in `release` branch which truncates `-SNAPSHOT`
