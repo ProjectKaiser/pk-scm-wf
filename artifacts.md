@@ -8,9 +8,11 @@
 
 # Tags
 - `#scm-mdeps`
-  - Commit in `dev` branch which actualizes mdeps.conf dependencies
+  - Commit in `develop` branch which actualizes mdeps.conf dependencies
 - `#scm-ver 5.0`
-  - Commit in `dev` branch which increments dev version
+  - Commit in `develop` branch which increments version
+- `#scm-ver release`
+  - Commit in `release` branch which truncates `-SNAPSHOT`
 - `#scm-ignore`
 
 # Environment variables:
