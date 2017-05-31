@@ -22,6 +22,8 @@
   
 # version
 
+Contains a single string.
+
 Development branch:
 ```ini
 1.5.0-SNAPSHOT
