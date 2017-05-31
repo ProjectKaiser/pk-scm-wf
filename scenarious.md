@@ -15,7 +15,7 @@ com.mycompany:server
 com.mycompany:client
 ```
 
-**Step2**. Create `version` file for all components. If `develop` branch does not have `version` file scm4j fails.
+**Step2**. Create `version` file for all components. If `develop` branch of any component does not have `version` file scm4j fails.
 
 **`#scm-ignore` usage**
 
