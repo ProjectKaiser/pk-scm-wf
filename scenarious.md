@@ -1,4 +1,6 @@
-# Migration to scm4j
+# Introduction
+
+This topic describes how to prepare branches to start working with scm4j
 
 Let your product consists of three components:
 
