@@ -35,7 +35,7 @@ Contains a single line.
 
 # `mdeps` file
 
-Contains few lines.
+Contains few lines:
 
 ```
 com.mycompany:component-one:4.2.0
