@@ -2,6 +2,8 @@
 
 This topic describes how to prepare branches to start working with scm4j
 
+# Migration
+
 Let your product consists of three components:
 
 - com.mycompany:product
