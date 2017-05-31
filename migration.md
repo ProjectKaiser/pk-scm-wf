@@ -10,7 +10,7 @@ Let your product consists of three components:
 - com.mycompany:server
 - com.mycompany:client
 
-To start with scm4j you need
+To start with scm4j
 
 - Create `mdeps` file for `product` component (`develop` branch), version part may be avoided at this step
 - Create `version` file with appropriate version in all components `develop' branches. If `develop` branch of any component does not have `version` file scm4j fails.
