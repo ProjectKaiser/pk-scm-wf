@@ -38,6 +38,7 @@ Contains a single line.
 Contains few lines.
 
 ```
-org.simplejavamail:simple-java-mail:4.2.3
-org.apache.poi:poi:3.10.1
+com.mycompany:component-one:4.2.0
+com.mycompany:component-two:1.56.0
+com.mycompany:component-three:1.56.0
 ```
