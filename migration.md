@@ -1,6 +1,6 @@
-# Introduction
+# Overview
 
-This topic describes how to prepare branches to start working with scm4j
+This topic describes how to prepare branches of youк repositories  to start working with scm4j.
 
 # Migration
 
