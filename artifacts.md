@@ -40,5 +40,5 @@ Contains few lines.
 ```
 com.mycompany:component-one:4.2.0
 com.mycompany:component-two:1.56.0
-com.mycompany:component-three:1.56.0
+com.mycompany:component-three:2.1.0
 ```
