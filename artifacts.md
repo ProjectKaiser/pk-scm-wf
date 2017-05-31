@@ -1,9 +1,9 @@
 # Configuration files
-- `ver.conf`
+- `version`
   - Keeps development and release version numbers
-- `mdeps.conf`
-- `mdeps-changed.conf`
-  - Actual for `release` branch only. List of managed dependenciens which has been changed since last minor version.
+- `mdeps`
+- `mdeps-changed`
+  - Actual for `release` branch only. List of managed dependenciens which has been changed since last minor version
 
 # Tags
 - `#scm-mdeps`
@@ -13,27 +13,22 @@
 - `#scm-ignore`
 
 # Environment variables:
-- SCM4j_CREDENTIALS
+- SCM4j_CREDENTIALS  
 - SCM4j_REPOSITORIES
+  - `developBranchName`, `releaseBranchPrefix`
   
-# ver.conf
+# version
 
 Development branch:
 ```ini
-ver=1.5.0
-release=1.4.0
-branchType=develop
+1.5.0-SNAPSHOT
 ```
-  - `release` may exists in dev branch only and may be ommited there if no release branch has been created yet
-  - `develop` is a default value for `branchType`
-  
 Release  branch:
 ```ini
-ver=1.4.0
-branchType=release
+1.4.0
 ```  
 
-# mdeps.conf
+# mdeps
 ```
 org.simplejavamail:simple-java-mail:4.2.3
 org.apache.poi:poi:3.10.1
