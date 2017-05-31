@@ -1,6 +1,6 @@
 # Migration to scm4j
 
-Let product consists of three components:
+Let your product consists of three components:
 
 - com.mycompany:product
 - com.mycompany:server
@@ -8,9 +8,17 @@ Let product consists of three components:
 
 To start with scm4j
 
-- You should create `mdeps` for product
+**Step1**. Create `mdeps` file for `product` component, version part may be avoided at this step
 
 ```ini
 com.mycompany:server
 com.mycompany:client
 ```
+
+**Step2**. Create `version` file for all components. If `develop` branch does not have `version` file scm4j fails.
+
+**`#scm-ignore` usage**
+
+
+
+
