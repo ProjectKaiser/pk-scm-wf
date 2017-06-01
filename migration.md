@@ -23,6 +23,6 @@ com.mycompany:client
 
 **`#scm-ignore` usage**
 
-
+If last commit contains #scm-ignore all changes will be ignored
 
 
