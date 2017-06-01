@@ -1,8 +1,10 @@
 # Overview
 
-Library povides API and CLI to perform such tasks as
-- Create major software version
-- Create minor software version
+Library povides API and CLI to automate such tasks as
+- Create a minor version
+- Create a patch version
+
+ Ref. [Semantic Versioning 2.0.0](http://semver.org/) for definitions.
 
 For low vcs operations scm4j-vcs- libraries are used
 
@@ -13,44 +15,7 @@ For low vcs operations scm4j-vcs- libraries are used
   
 # Artifacts  
 
-Configuration files:
-- ver.conf
-- mdeps.conf
-- mdeps-changed.conf
-
-Tags:
-- `#scm-mdeps`
-  - Commit in `dev` branch which actualizes mdeps.conf dependencies
-- `#scm-ver 5.0`
-  - Commit in `dev` branch which increments dev version
-- `#scm-ignore`
-
-Environment variables:
-- SCM4j_CREDENTIALS
-- SCM4j_REPOSITORIES
-  
-# ver.conf
-
-Development branch:
-```ini
-ver=1.5.0
-release=1.4.0
-branchType=develop
-```
-  - `release` exists in dev branch only
-  - `develop` is a default value for `branchType`
-  
-Release  branch:
-```ini
-ver=1.4.0
-branchType=release
-```  
-
-# mdeps.conf
-```
-org.simplejavamail:simple-java-mail:4.2.3
-org.apache.poi:poi:3.10.1
-```
+Ref. [artifacts.md](artifacts.md)
 
 # ISCMWorkflow.ultimateProduction
 
