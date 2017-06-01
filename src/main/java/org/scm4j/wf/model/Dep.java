@@ -1,4 +1,4 @@
-package org.scm4j.wf;
+package org.scm4j.wf.model;
 
 import java.util.Map;
 
@@ -7,18 +7,8 @@ public class Dep {
 	private String resolvedVersion;
 	private String ver;
 	private String lastVerCommit;
-	// private Artifactory repository;
 	private Boolean isManaged;
 	private VCSRepository vcsRepository;
-	private String masterBranchName;
-	
-	public String getMasterBranchName() {
-		return masterBranchName;
-	}
-
-	public void setMasterBranchName(String masterBranchName) {
-		this.masterBranchName = masterBranchName;
-	}
 
 	public Dep() {
 
@@ -77,11 +67,35 @@ public class Dep {
 		return "Dep [name=" + name + ", version=" + ver + "]";
 	}
 	
-	public static Dep fromName(String depName, Map<String, VCSRepository> vcsRepos) {
-		Dep res = new Dep();
-		res.setName(depName);
-		res.setVcsRepository(vcsRepos.get(depName));
-		return res;
+	public static Dep fromCoords(String coords) {
+		String[] parts = coords.split(":");
+		if (parts.length < 2) {
+			throw new IllegalArgumentException("wrong mdep coords: " + coords);
+		}
+		Dep dep = new Dep();
+		if (parts.length == 2) {
+			dep.setName(coords);
+		} else {
+			dep.setName(coords.replace(":" + parts[2], ""));
+			dep.setVer(parts[2]);
+		}
+		return dep;
+	}
+	
+	public static Dep fromCoords(String coords, VCSRepository repo) {
+		Dep dep = fromCoords(coords);
+		dep.setVcsRepository(repo);
+		return dep;
+	}
+
+	public static Dep fromCoords(String coords, Map<String, VCSRepository> vcsRepos) {
+		Dep dep = fromCoords(coords);
+		dep.setVcsRepository(vcsRepos.get(dep.getName()));
+		return dep;
+	}
+
+	public String toCoords() {
+		return name + ":" + ver;
 	}
 
 }

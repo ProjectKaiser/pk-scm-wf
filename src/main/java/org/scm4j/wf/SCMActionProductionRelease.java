@@ -10,38 +10,51 @@ import org.scm4j.progress.IProgress;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.vcs.api.exceptions.EVCSFileNotFound;
+import org.scm4j.wf.conf.ConfFile;
 import org.scm4j.wf.conf.MDepsFile;
-import org.scm4j.wf.conf.VerFile;
+import org.scm4j.wf.conf.Version;
+import org.scm4j.wf.model.Dep;
+import org.scm4j.wf.model.VCSRepository;
 
 public class SCMActionProductionRelease extends ActionAbstract {
 	
 	public static final String VCS_TAG_SCM_VER = "#scm-ver";
 	public static final String VCS_TAG_SCM_MDEPS = "#scm-mdeps";
 	public static final String VCS_TAG_SCM_IGNORE = "#scm-ignore";
+	public static final String VCS_TAG_SCM_RELEASE = "#scm-ver release";
 	public static final String[] VCS_TAGS = new String[] {VCS_TAG_SCM_VER, VCS_TAG_SCM_MDEPS, VCS_TAG_SCM_IGNORE};
 	public static final String BRANCH_DEVELOP = "develop";
 	public static final String BRANCH_RELEASE = "release";
+	
+	private ProductionReleaseReason reason;
 
-	public SCMActionProductionRelease(VCSRepository repo, List<IAction> childActions, String masterBranchName) {
+	public SCMActionProductionRelease(VCSRepository repo, List<IAction> childActions, String masterBranchName, 
+			ProductionReleaseReason reason) {
 		super(repo, childActions, masterBranchName);
+		this.reason = reason;
+	}
+
+	public ProductionReleaseReason getReason() {
+		return reason;
+	}
+
+	public void setReason(ProductionReleaseReason reason) {
+		this.reason = reason;
 	}
 
 	@Override
 	public Object execute(IProgress progress) {
-		progress.reportStatus(getName() + " execution started");
-		Object result;
-		Object nestedResult;
 		try {
 			
 			IVCS vcs = getVCS();
-			VerFile verFile = getVerFile();
-			progress.reportStatus("current trunk version: " + verFile);
+			Version currentVer = getDevVersion();
+			progress.reportStatus("current trunk version: " + currentVer);
 			
 			/**
 			 * выполним все экшены и получим результаты.
 			 * Составим таблицу новых версий (которые получились в итоге)
 			 */
-			
+			Object nestedResult;
 			for (IAction action : childActions) {
 				try (IProgress nestedProgress = progress.createNestedProgress(action.getName())) {
 					nestedResult = action.execute(nestedProgress);
@@ -61,84 +74,102 @@ public class SCMActionProductionRelease extends ActionAbstract {
 				}
 			}
 			
+			
 			// увеличим минорную версию
-			Integer minor = verFile.getMinor();
-			Integer newMinor = minor + 1;
+			Integer oldMinor = currentVer.getMinor();
+			Integer newMinor = oldMinor + 1;
 			
 			// тут у нас мапа с новыми версиями. Будем прописывать их в mdeps под ногами.
 			VCSCommit newVersionStartsFromCommit;
+			List<String> mDepsChanged = new ArrayList<>();
 			try {
-				String mDepsContent = vcs.getFileContent(masterBranchName, SCMWorkflow.MDEPS_FILE_NAME);
-				MDepsFile mdepsFile = new MDepsFile(mDepsContent);
+				String mDepsContent = vcs.getFileContent(currentBranchName, SCMWorkflow.MDEPS_FILE_NAME);
+				MDepsFile mDepsFile = new MDepsFile(mDepsContent);
 				List<String> mDepsOut = new ArrayList<>();
-				for (String mDep : mdepsFile.getMDeps()) {
-					String mDepName = getMDepName(mDep);
+				for (String mDepCoord: mDepsFile.getMDeps()) {
+					Dep mDep = Dep.fromCoords(mDepCoord, repo);
+					String mDepName = mDep.getName();
 					nestedResult = getResults().get(mDepName);
 					if (nestedResult != null && nestedResult instanceof ActionResultVersion) {
 						ActionResultVersion res = (ActionResultVersion) nestedResult;
-						mDepsOut.add(mDepName + ":" + res.getVersion());
+						if (res.getIsNewBuild()) {
+							String mDepOut = mDepName + ":" + res.getVersion();
+							mDepsOut.add(mDepOut);
+							mDepsChanged.add(mDepOut);
+						} else {
+							// тут посмотрим: если у нас в untillDb 5.0 (или вообще null), а в action.ver 7.1, то пропишем в mdeps unTillDb 7.0
+							String mDepVer = mDep.getVer();
+							if (!res.getVersion().equals(mDepVer)) {
+								mDep.setVer(res.getVersion());
+								String mDepOut = mDep.toCoords();
+								mDepsOut.add(mDepOut);
+								mDepsChanged.add(mDepOut);
+							} else {
+								mDepsOut.add(mDepCoord);
+							}
+						}
 					} else {
-						mDepsOut.add(mDep);
+						mDepsOut.add(mDepCoord);
 					}
 				}
 				progress.reportStatus("new mdeps generated");
 				
-				String mDepsOutContent = mdepsFile.toFileContent();
-				newVersionStartsFromCommit = vcs.setFileContent(masterBranchName, SCMWorkflow.MDEPS_FILE_NAME, 
+				String mDepsOutContent = ConfFile.toFileContent(mDepsOut);
+				newVersionStartsFromCommit = vcs.setFileContent(currentBranchName, SCMWorkflow.MDEPS_FILE_NAME, 
 						mDepsOutContent, VCS_TAG_SCM_MDEPS);
 				if (newVersionStartsFromCommit == VCSCommit.EMPTY) {
 					// зависимости не изменились, но для нас самих надо сделать релиз
-					newVersionStartsFromCommit = vcs.getHeadCommit(masterBranchName);
+					newVersionStartsFromCommit = vcs.getHeadCommit(currentBranchName);
 					progress.reportStatus("mdeps file is not changed. Going to branch from " + newVersionStartsFromCommit);
 				} else {
 					progress.reportStatus("mdeps updated in trunk, revision " + newVersionStartsFromCommit);
 				}
 			} catch (EVCSFileNotFound e) {
-				newVersionStartsFromCommit = vcs.getHeadCommit(masterBranchName);
-				progress.reportStatus("no mdeps. Going to branch from " + newVersionStartsFromCommit);
+				newVersionStartsFromCommit = vcs.getHeadCommit(currentBranchName);
+				progress.reportStatus("no mdeps. Going to branch from head " + newVersionStartsFromCommit);
 			}
 			
 			// отведем ветку
-			String newBranchName = verFile.getReleaseBranchPrefix() + verFile.getVer() + ".0"; 
-			vcs.createBranch(masterBranchName, newBranchName, "branch created");
+			currentVer.removeSnapshot();
+			String newBranchName = repo.getReleaseBanchPrefix() + currentVer; 
+			vcs.createBranch(currentBranchName, newBranchName, "branch created");
 			progress.reportStatus("branch " + newBranchName + " created");
 			
-			// сохраним lastVerCommit и ver в транке
-			verFile.setRelease(verFile.getVer() + ".0");				// release = 1.0,
-			verFile.setNumberGroupValueFromEnd(2, newMinor);	// ver = 2 
-			 
-			String verContent = verFile.toFileContent();
-			vcs.setFileContent(masterBranchName, SCMWorkflow.VER_FILE_NAME, 
-					verContent, VCS_TAG_SCM_VER + " " + verFile.getRelease());
-			progress.reportStatus("change to version " + verFile.getRelease() + " in trunk");
+			// увеличим minor ver в транке
+			currentVer.addSnapshot();
+			currentVer.setMinor(newMinor);	
+			String verContent = currentVer.toString();
+			vcs.setFileContent(currentBranchName, SCMWorkflow.VER_FILE_NAME, 
+					verContent, VCS_TAG_SCM_VER + " " + currentVer);
+			progress.reportStatus("change to version " + currentVer + " in trunk");
 			
-			// сохраним verCommit в ветке
-			verFile.setVer(verFile.getRelease()); 	// ver=1.0
-			verFile.setRelease(null);				// no release
-			verContent = verFile.toFileContent();
+			// сохраним ver в ветке
+			currentVer.removeSnapshot();			
+			currentVer.setMinor(oldMinor);
+			verContent = currentVer.toString();
 			vcs.setFileContent(newBranchName, SCMWorkflow.VER_FILE_NAME, verContent, 
-					VCS_TAG_SCM_VER);
-			progress.reportStatus(verFile.toString() + " is written to " + newBranchName);
+					VCS_TAG_SCM_VER + " " + currentVer);
+			progress.reportStatus("change to version " + currentVer + " in branch " + newBranchName);
 			
-			ActionResultVersion res = new ActionResultVersion();
-			res.setName(repo.getName());
-			res.setVersion(verFile.getVer());		// 1.0
-			result = res;
+			// запишем mdeps-changed
+			if (!mDepsChanged.isEmpty()) {
+				vcs.setFileContent(newBranchName, SCMWorkflow.MDEPS_CHANGED_FILE_NAME, ConfFile.toFileContent(mDepsChanged), 
+						VCS_TAG_SCM_IGNORE);
+				progress.reportStatus("mdeps-changed is written to branch " + newBranchName);
+			}
+			
+			ActionResultVersion res = new ActionResultVersion(repo.getName(), currentVer.toString(), true);
 			progress.reportStatus("new " + repo.getName() + " " 
 					+ res.getVersion() + " is released in " + newBranchName);
+			return res;
 		} catch (Throwable t) {
-			result = t;
-			progress.reportStatus("execution error: " + t.getMessage());
-		}
-		progress.reportStatus(getName() + " execution finished");
-		return result;
+			progress.reportStatus("execution error: " + t.toString() + ": " + t.getMessage());
+			return t;
+		} 
 	}
-
-	private String getMDepName(String mDep) {
-		String[] parts = mDep.split(":");
-		if (parts.length < 3) {
-			throw new RuntimeException("wrong coords: " + mDep);
-		}
-		return parts[0] + ":" + parts[1];
+	
+	@Override
+	public String toString() {
+		return super.toString() + "; " + reason.toString();
 	}
 }

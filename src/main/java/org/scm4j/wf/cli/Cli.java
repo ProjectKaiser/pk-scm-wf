@@ -15,12 +15,12 @@ import org.scm4j.progress.IProgress;
 import org.scm4j.progress.ProgressConsole;
 import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
 import org.scm4j.vcs.api.workingcopy.VCSWorkspace;
-import org.scm4j.wf.Credentials;
 import org.scm4j.wf.GsonUtils;
 import org.scm4j.wf.ISCMWorkflow;
 import org.scm4j.wf.SCMWorkflow;
-import org.scm4j.wf.VCSRepository;
-import org.scm4j.wf.VCSType;
+import org.scm4j.wf.model.Credentials;
+import org.scm4j.wf.model.VCSRepository;
+import org.scm4j.wf.model.VCSType;
 
 import com.google.gson.reflect.TypeToken;
 

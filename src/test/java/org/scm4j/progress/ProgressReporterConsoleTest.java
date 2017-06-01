@@ -8,7 +8,7 @@ public class ProgressReporterConsoleTest extends TestCase {
 		
 		
 		System.out.println("***Multiline:");
-		ProgressConsole rpc1 = new ProgressConsole("Progress 1", false);
+		ProgressConsole rpc1 = new ProgressConsole("Progress 1");
 		rpc1.reportStatus("Status1.1");
 		rpc1.reportStatus("Status1.2");
 		{

@@ -3,6 +3,7 @@ package org.scm4j.wf;
 import org.scm4j.vcs.GitVCS;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.svn.SVNVCS;
+import org.scm4j.wf.model.VCSRepository;
 
 public class IVCSFactory {
 	

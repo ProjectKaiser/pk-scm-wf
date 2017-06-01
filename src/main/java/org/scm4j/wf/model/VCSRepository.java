@@ -1,10 +1,10 @@
-package org.scm4j.wf;
+package org.scm4j.wf.model;
 
 import org.scm4j.vcs.api.workingcopy.IVCSRepositoryWorkspace;
-import org.scm4j.wf.Credentials;
-import org.scm4j.wf.VCSType;
 
 public class VCSRepository {
+	
+	public static final String DEFAULT_RELEASE_BRANCH_PREFIX = "release/";
 
 	private String name;
 	private String url;
@@ -12,6 +12,15 @@ public class VCSRepository {
 	private VCSType type;
 	private IVCSRepositoryWorkspace workspace;
 	private String devBranch;
+	private String releaseBanchPrefix = DEFAULT_RELEASE_BRANCH_PREFIX;
+
+	public String getReleaseBanchPrefix() {
+		return releaseBanchPrefix;
+	}
+
+	public void setReleaseBanchPrefix(String releaseBanchPrefix) {
+		this.releaseBanchPrefix = releaseBanchPrefix;
+	}
 
 	public String getDevBranch() {
 		return devBranch;

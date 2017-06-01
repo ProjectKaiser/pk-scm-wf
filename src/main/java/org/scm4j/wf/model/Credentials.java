@@ -1,4 +1,4 @@
-package org.scm4j.wf;
+package org.scm4j.wf.model;
 
 public class Credentials {
 	private String name;

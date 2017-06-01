@@ -10,11 +10,14 @@ import org.scm4j.actions.IAction;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.exceptions.EVCSFileNotFound;
 import org.scm4j.wf.conf.MDepsFile;
+import org.scm4j.wf.model.Dep;
+import org.scm4j.wf.model.VCSRepository;
 
 public class SCMWorkflow implements ISCMWorkflow {
-	public static final String MDEPS_FILE_NAME = "mdeps.conf";
+	public static final String MDEPS_FILE_NAME = "mdeps";
 	public static final String WORKSPACE_DIR = System.getProperty("java.io.tmpdir") + "scm4j-wf-workspaces";
-	public static final String VER_FILE_NAME = "ver.conf";
+	public static final String VER_FILE_NAME = "version";
+	public static final String MDEPS_CHANGED_FILE_NAME = "mdeps-changed";
 	private Map<String, VCSRepository> vcsRepos;
 
 	public SCMWorkflow(Map<String, VCSRepository> vcsRepos) {
@@ -23,49 +26,71 @@ public class SCMWorkflow implements ISCMWorkflow {
 
 	@Override
 	public IAction calculateProductionReleaseAction(String depName) {
-		String masterBranchName = vcsRepos.get(depName).getDevBranch();
+		String devBranchName = vcsRepos.get(depName).getDevBranch();
 		List<IAction> childActions = new ArrayList<>();
-		
+
 		IVCS vcs = IVCSFactory.getIVCS(vcsRepos.get(depName));
-		
+
 		String mDepsContent = null;
 		Boolean hasVer;
 		try {
-			vcs.getFileContent(masterBranchName, VER_FILE_NAME);
+			vcs.getFileContent(devBranchName, VER_FILE_NAME);
 			hasVer = true;
 		} catch (EVCSFileNotFound e) {
 			hasVer = false;
 		}
-		
+
 		Boolean processMDeps;
 		try {
-			mDepsContent = vcs.getFileContent(masterBranchName, MDEPS_FILE_NAME);
+			mDepsContent = vcs.getFileContent(devBranchName, MDEPS_FILE_NAME);
 			processMDeps = true;
 		} catch (EVCSFileNotFound e) {
 			processMDeps = false;
 		}
-		
+
+		List<Dep> mDeps;
 		if (processMDeps) {
-			List<Dep> deps = loadDeps(mDepsContent);
-			for (Dep mDep : deps) {
+			mDeps = loadDeps(mDepsContent);
+			for (Dep mDep : mDeps) {
 				childActions.add(calculateProductionReleaseAction(mDep.getName()));
 			}
+		} else {
+			mDeps = new ArrayList<>();
 		}
 
 		IAction res;
-		BranchStructure struct = new BranchStructure(vcs, masterBranchName);
+		BranchStructure struct = new BranchStructure(vcs, devBranchName);
 		if (!hasVer) {
-			res = new ActionError(vcsRepos.get(depName), childActions, masterBranchName, 
-					"no " + VER_FILE_NAME + " file");
+			res = new ActionError(vcsRepos.get(depName), childActions, devBranchName, "no " + VER_FILE_NAME + " file");
 		} else if (hasErrorActions(childActions)) {
-			res = new ActionNone(vcsRepos.get(depName), childActions, masterBranchName);
-		} else if (hasSignificantActions(childActions) || struct.getHasFeatures()) {
-			res = new SCMActionProductionRelease(vcsRepos.get(depName), childActions, masterBranchName);
+			res = new ActionNone(vcsRepos.get(depName), childActions, devBranchName);
+		} else if (hasSignificantActions(childActions) || hasNewerDependencies(childActions, mDeps)) {
+			res = new SCMActionProductionRelease(vcsRepos.get(depName), childActions, devBranchName,
+					ProductionReleaseReason.NEW_DEPENDENCIES);
+		} else if (struct.getHasFeatures()) {
+			res = new SCMActionProductionRelease(vcsRepos.get(depName), childActions, devBranchName,
+					ProductionReleaseReason.NEW_FEATURES);
 		} else {
-			res = new SCMActionUseExistingVersion(vcsRepos.get(depName), childActions, masterBranchName);
+			res = new SCMActionUseLastReleaseVersion(vcsRepos.get(depName), childActions, devBranchName);
 		}
-		
+
 		return res;
+	}
+
+	private boolean hasNewerDependencies(List<IAction> actions, List<Dep> mDeps) {
+		for (IAction action : actions) {
+			if (action instanceof SCMActionUseLastReleaseVersion) {
+				SCMActionUseLastReleaseVersion verAction = (SCMActionUseLastReleaseVersion) action;
+				// verAction = это использование существующей версии. посмотрим, а правильна ли версия соответствующего mDep
+				for (Dep dep : mDeps) {
+					if (dep.getName().equals(verAction.getName()) && (dep.getVer() == null || 
+							!dep.getVer().equals(verAction.getVer().toString()))) {
+						return true;
+					}
+				}
+			}
+		}
+		return false;
 	}
 
 	private boolean hasErrorActions(List<IAction> actions) {
@@ -79,7 +104,7 @@ public class SCMWorkflow implements ISCMWorkflow {
 
 	private boolean hasSignificantActions(List<IAction> actions) {
 		for (IAction action : actions) {
-			if (!(action instanceof ActionNone) && !(action instanceof SCMActionUseExistingVersion)) {
+			if (!(action instanceof ActionNone) && !(action instanceof SCMActionUseLastReleaseVersion)) {
 				return true;
 			}
 		}
@@ -90,12 +115,7 @@ public class SCMWorkflow implements ISCMWorkflow {
 		List<String> strs = new MDepsFile(mDepsContent).getMDeps();
 		List<Dep> deps = new ArrayList<>();
 		for (String str : strs) {
-			Dep dep = new Dep();
-			String[] parts = str.split(":");
-			dep.setName(str.replace(":" + parts[2], ""));
-			dep.setVer(parts[2]);
-			dep.setVcsRepository(vcsRepos.get(dep.getName()));
-			deps.add(dep);
+			deps.add(Dep.fromCoords(str, vcsRepos));
 		}
 		return deps;
 	}

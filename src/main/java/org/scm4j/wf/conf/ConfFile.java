@@ -1,6 +1,7 @@
 package org.scm4j.wf.conf;
 
 import java.lang.reflect.Field;
+import java.util.List;
 import java.util.Map.Entry;
 
 import com.google.common.collect.Maps;
@@ -25,6 +26,14 @@ public abstract class ConfFile {
 			} catch (Exception e) {
 				throw new RuntimeException(e);
 			}
+		}
+		return sb.toString();
+	}
+	
+	public static String toFileContent(List<String> strs) {
+		StringBuilder sb = new StringBuilder();
+		for (String str : strs) {
+			sb.append(str + SEP);
 		}
 		return sb.toString();
 	}

@@ -8,7 +8,7 @@ public class MDepsFile extends ConfFile {
 	private List<String> mDeps;
 	
 	public List<String> getMDeps() {
-		return this.mDeps;
+		return mDeps;
 	}
 	
 	@Override
@@ -23,10 +23,6 @@ public class MDepsFile extends ConfFile {
 		super(content);
 	}
 	
-	public MDepsFile() {
-		
-	}
-	
 	@Override
 	public String toFileContent() {
 		StringBuilder sb = new StringBuilder();
@@ -34,6 +30,11 @@ public class MDepsFile extends ConfFile {
 			sb.append(str + SEP);
 		}
 		return sb.toString();
+	}
+
+	@Override
+	public String toString() {
+		return "MDepsFile [mDeps=" + mDeps + "]";
 	}
 	
 }

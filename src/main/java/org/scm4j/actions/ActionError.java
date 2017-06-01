@@ -3,7 +3,7 @@ package org.scm4j.actions;
 import java.util.List;
 
 import org.scm4j.progress.IProgress;
-import org.scm4j.wf.VCSRepository;
+import org.scm4j.wf.model.VCSRepository;
 
 public class ActionError extends ActionAbstract implements IAction {
 	

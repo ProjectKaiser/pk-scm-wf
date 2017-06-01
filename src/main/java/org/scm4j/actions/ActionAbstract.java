@@ -1,42 +1,48 @@
 package org.scm4j.actions;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.wf.IVCSFactory;
 import org.scm4j.wf.SCMWorkflow;
-import org.scm4j.wf.VCSRepository;
-import org.scm4j.wf.conf.VerFile;
+import org.scm4j.wf.conf.Version;
+import org.scm4j.wf.model.VCSRepository;
 
 public abstract class ActionAbstract implements IAction {
-	
+
 	protected IAction parentAction;
 	protected List<IAction> childActions;
 	protected VCSRepository repo;
-	protected String masterBranchName;
-	private Map<String, Object> results = new HashMap<>();
+	protected String currentBranchName;
+	private Map<String, Object> results = new LinkedHashMap<>();
 
-	
-	public VerFile getVerFile() {
-		IVCS vcs = IVCSFactory.getIVCS(repo);
-		String verFileContent = vcs.getFileContent(masterBranchName, SCMWorkflow.VER_FILE_NAME);
-		return new VerFile(verFileContent);
+	public Version getLastReleaseVersion() {
+		Version ver = getDevVersion();
+		ver.removeSnapshot();
+		ver.setMinor(ver.getMinor() - 1);
+		return ver;
 	}
 	
+	public Version getDevVersion() {
+		IVCS vcs = IVCSFactory.getIVCS(repo);
+		String verFileContent = vcs.getFileContent(currentBranchName, SCMWorkflow.VER_FILE_NAME);
+		return new Version(verFileContent.trim());
+	}
+
 	public IVCS getVCS() {
 		return IVCSFactory.getIVCS(repo);
 	}
-	
+
 	public Map<String, Object> getResults() {
 		return parentAction != null ? parentAction.getResults() : results;
 	}
-	
-	public ActionAbstract(VCSRepository repo, List<IAction> childActions, String masterBranchName) {
+
+	public ActionAbstract(VCSRepository repo, List<IAction> childActions, String currentBranchName) {
 		this.repo = repo;
 		this.childActions = childActions;
-		this.masterBranchName = masterBranchName;
+		this.currentBranchName = currentBranchName;
 		if (childActions != null) {
 			for (IAction action : childActions) {
 				action.setParent(this);
@@ -58,7 +64,7 @@ public abstract class ActionAbstract implements IAction {
 	public void setParent(IAction parentAction) {
 		this.parentAction = parentAction;
 	}
-	
+
 	@Override
 	public String getName() {
 		return repo.getName();
