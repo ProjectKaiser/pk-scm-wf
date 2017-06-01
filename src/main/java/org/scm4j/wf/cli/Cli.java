@@ -1,5 +1,6 @@
 package org.scm4j.wf.cli;
 
+import java.io.File;
 import java.io.InputStream;
 import java.lang.reflect.Type;
 import java.net.URL;
@@ -26,7 +27,7 @@ import com.google.gson.reflect.TypeToken;
 
 public class Cli {
 	
-	public static final String WORKSPACE_DIR = System.getProperty("java.io.tmpdir") + "scm4j-wf-workspaces";
+	public static final String WORKSPACE_DIR = new File(System.getProperty("user.home"), ".scm4j").getPath();
 	private static Map<String, Credentials> credentials = new HashMap<>();
 	private static Map<String, VCSRepository> vcsRepos = new HashMap<>();
 	private static Credentials defaultCred;
@@ -48,7 +49,6 @@ public class Cli {
     	try (IProgress progress = new ProgressConsole(action.getName(), ">>> ", "<<< ")) {
     		action.execute(progress);
     	}
-    	
     }
 
 	private static void loadCredentials() throws Exception {

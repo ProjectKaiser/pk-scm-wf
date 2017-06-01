@@ -24,15 +24,11 @@ public class ProgressConsole implements IProgress {
 		this.outdent = outdent;
 		indent(level);
 		print(indent + name);
-		nl();
 	}
 
 	protected void print(Object s) {
 		System.out.print(s.toString());
-	}
-
-	protected void nl() {
-		print('\n');
+		System.out.println();
 	}
 
 	protected void indent(int level) {
@@ -48,7 +44,6 @@ public class ProgressConsole implements IProgress {
 	public void reportStatus(String status) {
 		indent(level + 1);
 		print(status);
-		nl();
 	}
 
 	@Override

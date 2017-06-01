@@ -1,5 +1,10 @@
 package org.scm4j.wf.conf;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map.Entry;
@@ -8,12 +13,12 @@ import com.google.common.collect.Maps;
 
 public abstract class ConfFile {
 
-	public static final String SEP = "\n";
 	public static final String COMMENT_PREFIX = "#";
 	private static final String KV_SEPARATOR = "=";
 
 	public String toFileContent() {
-		StringBuilder sb = new StringBuilder();
+		StringWriter sw = new StringWriter();
+		PrintWriter pw = new PrintWriter(sw);
 
 		for (Field field : this.getClass().getDeclaredFields()) {
 			try {
@@ -21,33 +26,39 @@ public abstract class ConfFile {
 						+ field.getName().substring(1);
 				String value = this.getClass().getMethod(methodName).invoke(this).toString();
 				if (value != null) {
-					sb.append(field.getName() + "=" + value + SEP);
+					pw.println(field.getName() + "=" + value);
 				}
 			} catch (Exception e) {
 				throw new RuntimeException(e);
 			}
 		}
-		return sb.toString();
+		return sw.toString();
 	}
 	
 	public static String toFileContent(List<String> strs) {
-		StringBuilder sb = new StringBuilder();
+		StringWriter sw = new StringWriter();
+		PrintWriter pw = new PrintWriter(sw);
 		for (String str : strs) {
-			sb.append(str + SEP);
+			pw.println(str);
 		}
-		return sb.toString();
+		return sw.toString();
 	}
 
 	public ConfFile() {
 	}
 
-	public ConfFile(String content) {
-		String[] strs = content.split(SEP);
-		for (String str : strs) {
-			if (isComment(str)) {
-				continue;
-			}
-			parseLine(str);
+	public ConfFile(String confFileContent) {
+		BufferedReader br = new BufferedReader(new StringReader(confFileContent));
+		String str;
+		try {
+			str = br.readLine();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			throw new RuntimeException(e);
+		}
+		while (str != null) {
+			String[] strs = str.split("#");
+			parseLine(strs[0]);
 		}
 	}
 
@@ -65,9 +76,5 @@ public abstract class ConfFile {
 		String[] strs = str.split(KV_SEPARATOR);
 		assert (strs.length == 2);
 		return Maps.immutableEntry(strs[0].trim(), strs[1].trim());
-	}
-
-	private static Boolean isComment(String str) {
-		return str.trim().startsWith(COMMENT_PREFIX);
 	}
 }

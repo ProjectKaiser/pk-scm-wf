@@ -36,6 +36,7 @@ public class Version {
 	}
 	
 	public Version(String ver) {
+		
 		this.ver = ver;
 	}
 	
