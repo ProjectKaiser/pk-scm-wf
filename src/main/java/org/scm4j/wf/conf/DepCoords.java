@@ -3,13 +3,11 @@ package org.scm4j.wf.conf;
 public class DepCoords {
 
 	protected String nameStr = "";
-	//private String preName = "";
 	private String commentStr = "";
 	private final String extStr;
 	private String groupStr = "";
 	private String verStr = "";
 	private String classStr = "";
-	protected Version ver;
 	private Version version;
 	
 	public String getComment(){
@@ -65,15 +63,15 @@ public class DepCoords {
 	
 	@Override
 	public String toString() {
-		return getGroupName() + ":" + version.toString() + classStr + extStr + commentStr;
+		return getName() + ":" + version.toString() + classStr + extStr + commentStr;
 	}
 	
-	public String getGroupName() {
+	public String getName() {
 		return groupStr + ":" + nameStr;
 	}
 	
-	public void setVersion(Version ver) {
-		this.ver = ver;
+	public void setVersion(Version version) {
+		this.version = version;
 	}
 
 	public String getExtension() {

@@ -19,13 +19,6 @@ public abstract class ActionAbstract implements IAction {
 	protected String currentBranchName;
 	private Map<String, Object> results = new LinkedHashMap<>();
 
-	public Version getLastReleaseVersion() {
-		Version ver = getDevVersion();
-		ver.setSnapshot(false);
-		ver.setMinor(Integer.toString(Integer.parseInt(ver.getMinor()) - 1));
-		return ver;
-	}
-	
 	public Version getDevVersion() {
 		IVCS vcs = IVCSFactory.getIVCS(repo);
 		String verFileContent = vcs.getFileContent(currentBranchName, SCMWorkflow.VER_FILE_NAME);

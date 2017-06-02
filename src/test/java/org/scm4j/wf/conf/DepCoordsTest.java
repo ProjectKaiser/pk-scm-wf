@@ -35,8 +35,6 @@ public class DepCoordsTest extends TestCase{
 		assertEquals("   com.myproject:  c1:1.0.0", dc("   com.myproject:  c1:1.0.0").toString());
 		assertEquals("com.myproject:c1:1.0.0#comment", dc("com.myproject:c1:1.0.0#comment").toString());
 		assertEquals("com.myproject:c1:1.0.0@ext #comment", dc("com.myproject:c1:1.0.0@ext #comment").toString());
-//		assertEquals("#", dc("com.myproject:c1#").getComment());
-//		assertEquals("#...$ #", dc("com.myproject:c1#...$ #").getComment());
 	}
 
 }

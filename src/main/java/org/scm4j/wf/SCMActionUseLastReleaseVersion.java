@@ -15,7 +15,7 @@ public class SCMActionUseLastReleaseVersion extends ActionAbstract {
 
 	public SCMActionUseLastReleaseVersion(VCSRepository repo, List<IAction> actions, String masterBranchName) {
 		super(repo, actions, masterBranchName);
-		ver = getLastReleaseVersion();
+		ver = getDevVersion();
 	}
 
 	@Override

@@ -8,10 +8,6 @@ public class Dep extends DepCoords {
 	private Boolean isManaged;
 	private VCSRepository vcsRepository;
 
-	public Dep() {
-		super();
-	}
-
 	public Boolean getIsManaged() {
 		return isManaged;
 	}

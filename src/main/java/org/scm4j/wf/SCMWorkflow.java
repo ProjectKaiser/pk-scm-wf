@@ -18,6 +18,14 @@ public class SCMWorkflow implements ISCMWorkflow {
 	public static final String VER_FILE_NAME = "version";
 	public static final String MDEPS_CHANGED_FILE_NAME = "mdeps-changed";
 	private Map<String, VCSRepository> vcsRepos;
+	
+	private VCSRepository getRepoByName(String name) {
+		VCSRepository res = vcsRepos.get(name);
+		if (res == null) {
+			throw new IllegalArgumentException("VCSRepository is not found by name " +name);
+		}
+		return res;
+	}
 
 	public SCMWorkflow(Map<String, VCSRepository> vcsRepos) {
 		this.vcsRepos = vcsRepos;
@@ -25,10 +33,10 @@ public class SCMWorkflow implements ISCMWorkflow {
 
 	@Override
 	public IAction calculateProductionReleaseAction(String depName) {
-		String devBranchName = vcsRepos.get(depName).getDevBranch();
+		String devBranchName = getRepoByName(depName).getDevBranch();
 		List<IAction> childActions = new ArrayList<>();
 
-		IVCS vcs = IVCSFactory.getIVCS(vcsRepos.get(depName));
+		IVCS vcs = IVCSFactory.getIVCS(getRepoByName(depName));
 
 		String mDepsContent = null;
 		Boolean hasVer = vcs.fileExists(devBranchName, VER_FILE_NAME);
@@ -51,17 +59,17 @@ public class SCMWorkflow implements ISCMWorkflow {
 		IAction res;
 		BranchStructure struct = new BranchStructure(vcs, devBranchName);
 		if (!hasVer) {
-			res = new ActionError(vcsRepos.get(depName), childActions, devBranchName, "no " + VER_FILE_NAME + " file");
+			res = new ActionError(getRepoByName(depName), childActions, devBranchName, "no " + VER_FILE_NAME + " file");
 		} else if (hasErrorActions(childActions)) {
-			res = new ActionNone(vcsRepos.get(depName), childActions, devBranchName);
+			res = new ActionNone(getRepoByName(depName), childActions, devBranchName);
 		} else if (hasSignificantActions(childActions) || hasNewerDependencies(childActions, mDeps)) {
-			res = new SCMActionProductionRelease(vcsRepos.get(depName), childActions, devBranchName,
+			res = new SCMActionProductionRelease(getRepoByName(depName), childActions, devBranchName,
 					ProductionReleaseReason.NEW_DEPENDENCIES);
 		} else if (struct.getHasFeatures()) {
-			res = new SCMActionProductionRelease(vcsRepos.get(depName), childActions, devBranchName,
+			res = new SCMActionProductionRelease(getRepoByName(depName), childActions, devBranchName,
 					ProductionReleaseReason.NEW_FEATURES);
 		} else {
-			res = new SCMActionUseLastReleaseVersion(vcsRepos.get(depName), childActions, devBranchName);
+			res = new SCMActionUseLastReleaseVersion(getRepoByName(depName), childActions, devBranchName);
 		}
 
 		return res;

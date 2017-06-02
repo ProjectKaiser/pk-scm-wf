@@ -73,11 +73,6 @@ public class SCMActionProductionRelease extends ActionAbstract {
 				}
 			}
 			
-			
-			// увеличим минорную версию
-			Integer oldMinor = Integer.parseInt(currentVer.getMinor());
-			Integer newMinor = oldMinor + 1;
-			
 			// тут у нас мапа с новыми версиями. Будем прописывать их в mdeps под ногами.
 			VCSCommit newVersionStartsFromCommit;
 			List<String> mDepsChanged = new ArrayList<>();
@@ -128,26 +123,21 @@ public class SCMActionProductionRelease extends ActionAbstract {
 			}
 			
 			// отведем ветку
-			currentVer.setSnapshot(false);
-			String newBranchName = repo.getReleaseBanchPrefix() + currentVer; 
+			String newBranchName = repo.getReleaseBanchPrefix() + currentVer.toReleaseString(); 
 			vcs.createBranch(currentBranchName, newBranchName, "branch created");
 			progress.reportStatus("branch " + newBranchName + " created");
 			
 			// увеличим minor ver в транке
-			currentVer.setSnapshot(true);
-			currentVer.setMinor(newMinor.toString());
-			String verContent = currentVer.toString();
+			String verContent = currentVer.toNextMinorSnapshot();
 			vcs.setFileContent(currentBranchName, SCMWorkflow.VER_FILE_NAME, 
-					verContent, VCS_TAG_SCM_VER + " " + currentVer);
-			progress.reportStatus("change to version " + currentVer + " in trunk");
+					verContent, VCS_TAG_SCM_VER + " " + verContent);
+			progress.reportStatus("change to version " + verContent + " in trunk");
 			
 			// сохраним ver в ветке
-			currentVer.setSnapshot(false);			
-			currentVer.setMinor(oldMinor.toString());
-			verContent = currentVer.toString();
+			verContent = currentVer.toReleaseString();
 			vcs.setFileContent(newBranchName, SCMWorkflow.VER_FILE_NAME, verContent, 
-					VCS_TAG_SCM_VER + " " + currentVer);
-			progress.reportStatus("change to version " + currentVer + " in branch " + newBranchName);
+					VCS_TAG_SCM_VER + " " + verContent);
+			progress.reportStatus("change to version " + verContent + " in branch " + newBranchName);
 			
 			// запишем mdeps-changed
 			if (!mDepsChanged.isEmpty()) {
@@ -156,7 +146,7 @@ public class SCMActionProductionRelease extends ActionAbstract {
 				progress.reportStatus("mdeps-changed is written to branch " + newBranchName);
 			}
 			
-			ActionResultVersion res = new ActionResultVersion(repo.getName(), currentVer.toString(), true);
+			ActionResultVersion res = new ActionResultVersion(repo.getName(), currentVer.toReleaseString(), true);
 			progress.reportStatus("new " + repo.getName() + " " 
 					+ res.getVersion() + " is released in " + newBranchName);
 			return res;

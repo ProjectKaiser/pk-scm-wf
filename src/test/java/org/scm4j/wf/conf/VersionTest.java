@@ -51,6 +51,32 @@ public class VersionTest {
 			fail();
 		} catch (IllegalArgumentException e) {
 		}
+	}
+	
+	@Test
+	public void testMinorBumping() {
+		assertEquals(new Version("11.21.31.41").toPreviousMinorRelease(), "11.21.30.41");
+		assertEquals(new Version("11.21.31.41-SNAPSHOT").toPreviousMinorRelease(), "11.21.30.41");
+		assertEquals(new Version("11.21.31.41").toNextMinorRelease(), "11.21.32.41");
+		assertEquals(new Version("11.21.31.41-SNAPSHOT").toNextMinorRelease(), "11.21.32.41");
+		assertEquals(new Version("11.21.31.41").toNextMinorSnapshot(), "11.21.32.41");
+		assertEquals(new Version("11.21.31.41-SNAPSHOT").toNextMinorSnapshot(), "11.21.32.41-SNAPSHOT");
+		try {
+			new Version("").toNextMinorRelease();
+			fail();
+		} catch (IllegalArgumentException e) {
+		}
+		try {
+			new Version("").toPreviousMinorRelease();
+			fail();
+		} catch (IllegalArgumentException e) {
+		}
+		try {
+			new Version("").toNextMinorSnapshot();
+			fail();
+		} catch (IllegalArgumentException e) {
+		}
+		
 		
 	}
 }	
