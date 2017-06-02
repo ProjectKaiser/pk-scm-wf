@@ -32,7 +32,7 @@ public class ProgressConsole implements IProgress {
 	}
 
 	protected void indent(int level) {
-		print(Strings.repeat("\t", level));
+		System.out.print(Strings.repeat("\t", level));
 	}
 
 	@Override

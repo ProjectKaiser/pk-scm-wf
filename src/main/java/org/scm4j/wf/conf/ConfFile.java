@@ -49,16 +49,14 @@ public abstract class ConfFile {
 
 	public ConfFile(String confFileContent) {
 		BufferedReader br = new BufferedReader(new StringReader(confFileContent));
-		String str;
 		try {
-			str = br.readLine();
+			String str = br.readLine();
+			while (str != null) {
+				parseLine(str.split(COMMENT_PREFIX)[0]);
+				str = br.readLine();
+			}
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			throw new RuntimeException(e);
-		}
-		while (str != null) {
-			String[] strs = str.split("#");
-			parseLine(strs[0]);
 		}
 	}
 

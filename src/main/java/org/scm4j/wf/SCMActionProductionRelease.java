@@ -76,7 +76,7 @@ public class SCMActionProductionRelease extends ActionAbstract {
 			
 			
 			// увеличим минорную версию
-			Integer oldMinor = currentVer.getMinor();
+			Integer oldMinor = Integer.parseInt(currentVer.getMinor());
 			Integer newMinor = oldMinor + 1;
 			
 			// тут у нас мапа с новыми версиями. Будем прописывать их в mdeps под ногами.
@@ -84,10 +84,9 @@ public class SCMActionProductionRelease extends ActionAbstract {
 			List<String> mDepsChanged = new ArrayList<>();
 			try {
 				String mDepsContent = vcs.getFileContent(currentBranchName, SCMWorkflow.MDEPS_FILE_NAME);
-				MDepsFile mDepsFile = new MDepsFile(mDepsContent);
+				MDepsFile mDepsFile = new MDepsFile(mDepsContent, repo);
 				List<String> mDepsOut = new ArrayList<>();
-				for (String mDepCoord: mDepsFile.getMDeps()) {
-					Dep mDep = Dep.fromCoords(mDepCoord, repo);
+				for (Dep mDep : mDepsFile.getMDeps()) {
 					String mDepName = mDep.getName();
 					nestedResult = getResults().get(mDepName);
 					if (nestedResult != null && nestedResult instanceof ActionResultVersion) {
@@ -98,18 +97,18 @@ public class SCMActionProductionRelease extends ActionAbstract {
 							mDepsChanged.add(mDepOut);
 						} else {
 							// тут посмотрим: если у нас в untillDb 5.0 (или вообще null), а в action.ver 7.1, то пропишем в mdeps unTillDb 7.0
-							String mDepVer = mDep.getVer();
+							String mDepVer = mDep.getVersion().toString();
 							if (!res.getVersion().equals(mDepVer)) {
-								mDep.setVer(res.getVersion());
-								String mDepOut = mDep.toCoords();
+								mDep.setVersion(new Version(res.getVersion()));
+								String mDepOut = mDep.getMDepsString();
 								mDepsOut.add(mDepOut);
 								mDepsChanged.add(mDepOut);
 							} else {
-								mDepsOut.add(mDepCoord);
+								mDepsOut.add(mDep.getMDepsString());
 							}
 						}
 					} else {
-						mDepsOut.add(mDepCoord);
+						mDepsOut.add(mDep.getMDepsString());
 					}
 				}
 				progress.reportStatus("new mdeps generated");
@@ -130,22 +129,22 @@ public class SCMActionProductionRelease extends ActionAbstract {
 			}
 			
 			// отведем ветку
-			currentVer.removeSnapshot();
+			currentVer.setSnapshot(false);
 			String newBranchName = repo.getReleaseBanchPrefix() + currentVer; 
 			vcs.createBranch(currentBranchName, newBranchName, "branch created");
 			progress.reportStatus("branch " + newBranchName + " created");
 			
 			// увеличим minor ver в транке
-			currentVer.addSnapshot();
-			currentVer.setMinor(newMinor);	
+			currentVer.setSnapshot(true);
+			currentVer.setMinor(newMinor.toString());	
 			String verContent = currentVer.toString();
 			vcs.setFileContent(currentBranchName, SCMWorkflow.VER_FILE_NAME, 
 					verContent, VCS_TAG_SCM_VER + " " + currentVer);
 			progress.reportStatus("change to version " + currentVer + " in trunk");
 			
 			// сохраним ver в ветке
-			currentVer.removeSnapshot();			
-			currentVer.setMinor(oldMinor);
+			currentVer.setSnapshot(false);			
+			currentVer.setMinor(oldMinor.toString());
 			verContent = currentVer.toString();
 			vcs.setFileContent(newBranchName, SCMWorkflow.VER_FILE_NAME, verContent, 
 					VCS_TAG_SCM_VER + " " + currentVer);

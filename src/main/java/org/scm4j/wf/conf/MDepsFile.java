@@ -1,35 +1,60 @@
 package org.scm4j.wf.conf;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
-public class MDepsFile extends ConfFile {
+import org.scm4j.wf.model.Dep;
+import org.scm4j.wf.model.VCSRepository;
+
+public class MDepsFile {
 	
-	private List<String> mDeps;
+	private List<Dep> mDeps = new ArrayList<>();
 	
-	public List<String> getMDeps() {
-		return mDeps;
-	}
-	
-	@Override
-	protected void parseLine(String line) {
-		if (mDeps == null) {
-			mDeps = new ArrayList<>();
+	public MDepsFile(String content, Map<String, VCSRepository> vcsRepos) {
+		BufferedReader br = new BufferedReader(new StringReader(content));
+		try {
+			String str = br.readLine();
+			while (str != null) {
+				Dep dep = new Dep(str, vcsRepos);
+				mDeps.add(dep);
+				str = br.readLine();
+			}
+		} catch (IOException e) {
+			throw new RuntimeException(e);
 		}
-		mDeps.add(line);
 	}
 	
-	public MDepsFile(String content) {
-		super(content);
+	public MDepsFile(String content, VCSRepository vcsRepo) {
+		BufferedReader br = new BufferedReader(new StringReader(content));
+		try {
+			String str = br.readLine();
+			while (str != null) {
+				Dep dep = new Dep(str, vcsRepo);
+				mDeps.add(dep);
+				str = br.readLine();
+			}
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
 	}
 	
-	@Override
 	public String toFileContent() {
-		StringBuilder sb = new StringBuilder();
-		for (String str : mDeps) {
-			sb.append(str + SEP);
+		StringWriter sw = new StringWriter();
+		PrintWriter pw = new PrintWriter(sw);
+		for (Dep mDep : mDeps) {
+			pw.println(mDep.toString());
 		}
-		return sb.toString();
+		return sw.toString();
+	}
+	
+	public List<Dep> getMDeps() {
+		return mDeps;
 	}
 
 	@Override

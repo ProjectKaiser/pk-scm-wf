@@ -83,8 +83,8 @@ public class SCMWorkflow implements ISCMWorkflow {
 				SCMActionUseLastReleaseVersion verAction = (SCMActionUseLastReleaseVersion) action;
 				// verAction = это использование существующей версии. посмотрим, а правильна ли версия соответствующего mDep
 				for (Dep dep : mDeps) {
-					if (dep.getName().equals(verAction.getName()) && (dep.getVer() == null || 
-							!dep.getVer().equals(verAction.getVer().toString()))) {
+					if (dep.getName().equals(verAction.getName()) && (dep.getVersion().toString() == null || 
+							!dep.getVersion().toString().equals(verAction.getVer().toString()))) {
 						return true;
 					}
 				}
@@ -112,12 +112,7 @@ public class SCMWorkflow implements ISCMWorkflow {
 	}
 
 	private List<Dep> loadDeps(String mDepsContent) {
-		List<String> strs = new MDepsFile(mDepsContent).getMDeps();
-		List<Dep> deps = new ArrayList<>();
-		for (String str : strs) {
-			deps.add(Dep.fromCoords(str, vcsRepos));
-		}
-		return deps;
+		return new MDepsFile(mDepsContent, vcsRepos).getMDeps();
 	}
 
 	@Override

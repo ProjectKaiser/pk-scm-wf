@@ -20,8 +20,8 @@ public abstract class ActionAbstract implements IAction {
 
 	public Version getLastReleaseVersion() {
 		Version ver = getDevVersion();
-		ver.removeSnapshot();
-		ver.setMinor(ver.getMinor() - 1);
+		ver.setSnapshot(false);
+		ver.setMinor(Integer.toString(Integer.parseInt(ver.getMinor()) - 1));
 		return ver;
 	}
 	

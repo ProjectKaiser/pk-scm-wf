@@ -1,34 +1,30 @@
 package org.scm4j.wf.conf;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+public class DepCoords {
 
-public class MDep {
-
-	private Version version;
-	private String name;
+	protected String name;
 	private String tail;
-	private Boolean isEmpty;
 	private String preName;
 	private String comment;
 	private String group;
-	private String preVersion;
-	private String major;
-	private String minor;
-	private Version ver;
+	protected Version ver;
+	
+	public DepCoords() {
+		
+	}
 
-	public MDep(String sourceString) {
+	public DepCoords(String sourceString) {
 		String str = sourceString;
 
 		// комментарий
-		String[] strs = str.split("#");
-		if (strs.length > 1) {
-			Integer commentPos = sourceString.indexOf("#");
-			comment = str.substring(commentPos);
+		Integer commentPos = sourceString.indexOf("#");
+		if (commentPos > 0) {
+			comment = "#" + str.substring(commentPos);
+			str = str.substring(0, commentPos - 1);
 		}
-		str = strs[0];
 		
-		strs = str.split(":");
+		
+		String[] strs = str.split(":");
 		if (strs.length < 2) {
 			throw new IllegalArgumentException("wrong mdep coord: " + sourceString);
 		}
@@ -36,8 +32,10 @@ public class MDep {
 		group = strs[0].trim();
 		StringBuilder sb = new StringBuilder();
 		for (Integer i = 0; i <= group.length(); i++) {
-			if (group.charAt(i) != name.charAt(0)) {
+			if (group.charAt(i) != strs[0].charAt(0)) {
 				sb.append(group.charAt(i));
+			} else {
+				break;
 			}
 		}
 		preName = sb.toString();
@@ -67,21 +65,27 @@ public class MDep {
 		
 		// strs[2] - версия
 		ver = new Version(strs[2]);
-		
-		
 	}
 	
 	@Override
 	public String toString() {
-		return group + ":" + name + ":" + getVersion();
+		return getName() + ":" + getVersion().toString();
 	}
 	
-	public String getVersion() {
-		return preVersion + "." + major + "." + minor;
+	public Version getVersion() {
+		return ver;
 	}
 	
 	public String getMDepsString() {
-		return preName + toString() + tail + "#" + comment;
+		return preName + toString() + tail + comment;
+	}
+	
+	public String getName() {
+		return group + ":" + name;
+	}
+	
+	public void setVersion(Version ver) {
+		this.ver = ver;
 	}
 	
 
