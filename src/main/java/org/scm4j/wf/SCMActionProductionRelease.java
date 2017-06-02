@@ -9,7 +9,6 @@ import org.scm4j.actions.results.ActionResultVersion;
 import org.scm4j.progress.IProgress;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSCommit;
-import org.scm4j.vcs.api.exceptions.EVCSFileNotFound;
 import org.scm4j.wf.conf.ConfFile;
 import org.scm4j.wf.conf.MDepsFile;
 import org.scm4j.wf.conf.Version;
@@ -82,7 +81,7 @@ public class SCMActionProductionRelease extends ActionAbstract {
 			// тут у нас мапа с новыми версиями. Будем прописывать их в mdeps под ногами.
 			VCSCommit newVersionStartsFromCommit;
 			List<String> mDepsChanged = new ArrayList<>();
-			try {
+			if (vcs.fileExists(currentBranchName, SCMWorkflow.MDEPS_FILE_NAME)) {
 				String mDepsContent = vcs.getFileContent(currentBranchName, SCMWorkflow.MDEPS_FILE_NAME);
 				MDepsFile mDepsFile = new MDepsFile(mDepsContent, repo);
 				List<String> mDepsOut = new ArrayList<>();
@@ -100,15 +99,15 @@ public class SCMActionProductionRelease extends ActionAbstract {
 							String mDepVer = mDep.getVersion().toString();
 							if (!res.getVersion().equals(mDepVer)) {
 								mDep.setVersion(new Version(res.getVersion()));
-								String mDepOut = mDep.getMDepsString();
+								String mDepOut = mDep.toString();
 								mDepsOut.add(mDepOut);
 								mDepsChanged.add(mDepOut);
 							} else {
-								mDepsOut.add(mDep.getMDepsString());
+								mDepsOut.add(mDep.toString());
 							}
 						}
 					} else {
-						mDepsOut.add(mDep.getMDepsString());
+						mDepsOut.add(mDep.toString());
 					}
 				}
 				progress.reportStatus("new mdeps generated");
@@ -123,7 +122,7 @@ public class SCMActionProductionRelease extends ActionAbstract {
 				} else {
 					progress.reportStatus("mdeps updated in trunk, revision " + newVersionStartsFromCommit);
 				}
-			} catch (EVCSFileNotFound e) {
+			} else {
 				newVersionStartsFromCommit = vcs.getHeadCommit(currentBranchName);
 				progress.reportStatus("no mdeps. Going to branch from head " + newVersionStartsFromCommit);
 			}
@@ -136,7 +135,7 @@ public class SCMActionProductionRelease extends ActionAbstract {
 			
 			// увеличим minor ver в транке
 			currentVer.setSnapshot(true);
-			currentVer.setMinor(newMinor.toString());	
+			currentVer.setMinor(newMinor.toString());
 			String verContent = currentVer.toString();
 			vcs.setFileContent(currentBranchName, SCMWorkflow.VER_FILE_NAME, 
 					verContent, VCS_TAG_SCM_VER + " " + currentVer);

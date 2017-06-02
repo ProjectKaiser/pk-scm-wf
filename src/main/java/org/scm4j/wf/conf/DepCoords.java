@@ -2,90 +2,82 @@ package org.scm4j.wf.conf;
 
 public class DepCoords {
 
-	protected String name;
-	private String tail;
-	private String preName;
-	private String comment;
-	private String group;
+	protected String nameStr = "";
+	//private String preName = "";
+	private String commentStr = "";
+	private final String extStr;
+	private String groupStr = "";
+	private String verStr = "";
+	private String classStr = "";
 	protected Version ver;
+	private Version version;
 	
-	public DepCoords() {
-		
+	public String getComment(){
+		return commentStr;
 	}
 
 	public DepCoords(String sourceString) {
 		String str = sourceString;
-
-		// комментарий
-		Integer commentPos = sourceString.indexOf("#");
-		if (commentPos > 0) {
-			comment = "#" + str.substring(commentPos);
-			str = str.substring(0, commentPos - 1);
+		
+		// Comment
+		{
+			Integer pos = sourceString.indexOf("#");
+			if (pos > 0) {
+				commentStr = str.substring(pos);
+				str = str.substring(0, pos);
+			}
 		}
 		
+		// Extension
+		{
+			Integer pos = sourceString.indexOf("@");
+			if (pos > 0) {
+				extStr  = str.substring(pos);
+				str = str.substring(0, pos);
+			} else {
+				extStr = "";				
+			}
+		}
 		
 		String[] strs = str.split(":");
 		if (strs.length < 2) {
 			throw new IllegalArgumentException("wrong mdep coord: " + sourceString);
 		}
 		
-		group = strs[0].trim();
-		StringBuilder sb = new StringBuilder();
-		for (Integer i = 0; i <= group.length(); i++) {
-			if (group.charAt(i) != strs[0].charAt(0)) {
-				sb.append(group.charAt(i));
-			} else {
-				break;
-			}
+		groupStr = strs[0];
+		nameStr = strs[1];
+		
+		if( strs.length > 2){
+			verStr = strs[2];
+		} else {
+			verStr = "0.1.0";			
 		}
-		preName = sb.toString();
-		
-		name = strs[1];
-		
-		if (strs.length == 2) {
-			return;
+		if( strs.length > 3){
+			classStr = ":" + strs[3];
 		}
 		
-		// если после имени нет версии, только классификатор
-		if (strs[2].indexOf(".") < 0) {
-			tail = strs[2];
-			return;
-		}
-		
-		// все что после версии
-		if (strs.length > 3) {
-			sb = new StringBuilder();
-			String prefix = ":";
-			for (Integer i = 3; i <= strs.length - 1; i++) {
-				sb.append(prefix);
-				sb.append(strs[i]);
-			}
-			tail = sb.toString();
-		}
-		
-		// strs[2] - версия
-		ver = new Version(strs[2]);
+		version = new Version(verStr);
+	}
+	
+	public Version getVersion() {
+		return new Version(verStr);
 	}
 	
 	@Override
 	public String toString() {
-		return getName() + ":" + getVersion().toString();
+		return getGroupName() + ":" + version.toString() + classStr + extStr + commentStr;
 	}
 	
-	public Version getVersion() {
-		return ver;
-	}
-	
-	public String getMDepsString() {
-		return preName + toString() + tail + comment;
-	}
-	
-	public String getName() {
-		return group + ":" + name;
+	public String getGroupName() {
+		return groupStr + ":" + nameStr;
 	}
 	
 	public void setVersion(Version ver) {
 		this.ver = ver;
+	}
+
+	public String getExtension() {
+		return extStr;
 	}
 	
 

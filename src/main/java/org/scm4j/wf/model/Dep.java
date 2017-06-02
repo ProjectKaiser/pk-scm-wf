@@ -28,11 +28,6 @@ public class Dep extends DepCoords {
 		this.vcsRepository = vcsRepository;
 	}
 
-	@Override
-	public String toString() {
-		return "Dep [name=" + getName() + ", version=" + ver + "]";
-	}
-	
 	public Dep(String coords, VCSRepository repo) {
 		super(coords);
 		vcsRepository = repo;
@@ -40,6 +35,6 @@ public class Dep extends DepCoords {
 
 	public Dep(String coords, Map<String, VCSRepository> vcsRepos) {
 		super(coords);
-		vcsRepository = vcsRepos.get(name);
+		vcsRepository = vcsRepos.get(nameStr);
 	}
 }

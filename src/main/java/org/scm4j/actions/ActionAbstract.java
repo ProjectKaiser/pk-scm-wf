@@ -7,6 +7,7 @@ import java.util.Map;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.wf.IVCSFactory;
 import org.scm4j.wf.SCMWorkflow;
+import org.scm4j.wf.conf.DepCoords;
 import org.scm4j.wf.conf.Version;
 import org.scm4j.wf.model.VCSRepository;
 
@@ -29,6 +30,12 @@ public abstract class ActionAbstract implements IAction {
 		IVCS vcs = IVCSFactory.getIVCS(repo);
 		String verFileContent = vcs.getFileContent(currentBranchName, SCMWorkflow.VER_FILE_NAME);
 		return new Version(verFileContent.trim());
+	}
+	
+	public DepCoords getDevCoords() {
+		IVCS vcs = IVCSFactory.getIVCS(repo);
+		String verFileContent = vcs.getFileContent(currentBranchName, SCMWorkflow.VER_FILE_NAME);
+		return new DepCoords(verFileContent.trim());
 	}
 
 	public IVCS getVCS() {

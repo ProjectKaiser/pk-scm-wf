@@ -8,7 +8,6 @@ import org.scm4j.actions.ActionError;
 import org.scm4j.actions.ActionNone;
 import org.scm4j.actions.IAction;
 import org.scm4j.vcs.api.IVCS;
-import org.scm4j.vcs.api.exceptions.EVCSFileNotFound;
 import org.scm4j.wf.conf.MDepsFile;
 import org.scm4j.wf.model.Dep;
 import org.scm4j.wf.model.VCSRepository;
@@ -32,20 +31,11 @@ public class SCMWorkflow implements ISCMWorkflow {
 		IVCS vcs = IVCSFactory.getIVCS(vcsRepos.get(depName));
 
 		String mDepsContent = null;
-		Boolean hasVer;
-		try {
-			vcs.getFileContent(devBranchName, VER_FILE_NAME);
-			hasVer = true;
-		} catch (EVCSFileNotFound e) {
-			hasVer = false;
-		}
+		Boolean hasVer = vcs.fileExists(devBranchName, VER_FILE_NAME);
 
-		Boolean processMDeps;
-		try {
+		Boolean processMDeps = vcs.fileExists(devBranchName, MDEPS_FILE_NAME);
+		if (processMDeps) {
 			mDepsContent = vcs.getFileContent(devBranchName, MDEPS_FILE_NAME);
-			processMDeps = true;
-		} catch (EVCSFileNotFound e) {
-			processMDeps = false;
 		}
 
 		List<Dep> mDeps;
