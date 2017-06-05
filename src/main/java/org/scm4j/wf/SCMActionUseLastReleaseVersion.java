@@ -20,7 +20,7 @@ public class SCMActionUseLastReleaseVersion extends ActionAbstract {
 
 	@Override
 	public String toString() {
-		return "using last release version " + getName() + ":" + ver;
+		return "using last release version " + getName() + ":" + ver.toPreviousMinorRelease();
 	}
 
 	public Version getVer() {
@@ -30,7 +30,7 @@ public class SCMActionUseLastReleaseVersion extends ActionAbstract {
 	@Override
 	public Object execute(IProgress progress) {
 		progress.reportStatus(toString());
-		ActionResultVersion res = new ActionResultVersion(getName(), ver.toString(), false);
+		ActionResultVersion res = new ActionResultVersion(getName(), ver.toPreviousMinorRelease(), false);
 		return res;
 	}
 }

@@ -81,8 +81,8 @@ public class SCMWorkflow implements ISCMWorkflow {
 				SCMActionUseLastReleaseVersion verAction = (SCMActionUseLastReleaseVersion) action;
 				// verAction = это использование существующей версии. посмотрим, а правильна ли версия соответствующего mDep
 				for (Dep dep : mDeps) {
-					if (dep.getName().equals(verAction.getName()) && (dep.getVersion().toString() == null || 
-							!dep.getVersion().toString().equals(verAction.getVer().toString()))) {
+					if (dep.getName().equals(verAction.getName()) && (dep.getVersion() == null || 
+							!dep.getVersion().toReleaseString().equals(verAction.getVer().toPreviousMinorRelease()))) {
 						return true;
 					}
 				}

@@ -80,30 +80,27 @@ public class SCMActionProductionRelease extends ActionAbstract {
 				String mDepsContent = vcs.getFileContent(currentBranchName, SCMWorkflow.MDEPS_FILE_NAME);
 				MDepsFile mDepsFile = new MDepsFile(mDepsContent, repo);
 				List<String> mDepsOut = new ArrayList<>();
+				String mDepOut;
 				for (Dep mDep : mDepsFile.getMDeps()) {
-					String mDepName = mDep.getName();
-					nestedResult = getResults().get(mDepName);
+					nestedResult = getResults().get(mDep.getName());
+					mDepOut = "";
 					if (nestedResult != null && nestedResult instanceof ActionResultVersion) {
 						ActionResultVersion res = (ActionResultVersion) nestedResult;
 						if (res.getIsNewBuild()) {
-							String mDepOut = mDepName + ":" + res.getVersion();
-							mDepsOut.add(mDepOut);
-							mDepsChanged.add(mDepOut);
+							mDepOut = mDep.toString(res.getVersion());
 						} else {
 							// тут посмотрим: если у нас в untillDb 5.0 (или вообще null), а в action.ver 7.1, то пропишем в mdeps unTillDb 7.0
-							String mDepVer = mDep.getVersion().toString();
-							if (!res.getVersion().equals(mDepVer)) {
-								mDep.setVersion(new Version(res.getVersion()));
-								String mDepOut = mDep.toString();
-								mDepsOut.add(mDepOut);
-								mDepsChanged.add(mDepOut);
-							} else {
-								mDepsOut.add(mDep.toString());
-							}
+							if (!res.getVersion().equals(mDep.getVersion().toReleaseString())) {
+								mDepOut = mDep.toString(res.getVersion());
+							} 
 						}
+					} 
+					if (mDepOut.isEmpty()) {
+						mDepOut = mDep.toString();
 					} else {
-						mDepsOut.add(mDep.toString());
+						mDepsChanged.add(mDepOut);
 					}
+					mDepsOut.add(mDepOut);
 				}
 				progress.reportStatus("new mdeps generated");
 				

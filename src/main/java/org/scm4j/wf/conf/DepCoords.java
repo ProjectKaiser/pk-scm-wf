@@ -63,17 +63,17 @@ public class DepCoords {
 	
 	@Override
 	public String toString() {
-		return getName() + ":" + version.toString() + classStr + extStr + commentStr;
+		return toString(version.toString());
+	}
+	
+	public String toString(String versionStr) {
+		return getName() + ":" + versionStr + classStr + extStr + commentStr;
 	}
 	
 	public String getName() {
 		return groupStr + ":" + nameStr;
 	}
 	
-	public void setVersion(Version version) {
-		this.version = version;
-	}
-
 	public String getExtension() {
 		return extStr;
 	}
