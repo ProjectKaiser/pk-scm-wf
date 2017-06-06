@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -18,7 +19,9 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.agent.PowerMockAgent;
 import org.powermock.modules.junit4.PowerMockRunner;
+import org.powermock.modules.junit4.rule.PowerMockRule;
 import org.scm4j.actions.ActionError;
 import org.scm4j.actions.ActionNone;
 import org.scm4j.actions.IAction;
@@ -35,6 +38,7 @@ public class SCMWorkflowTest {
 	private static final String TEST_DEP = "test:dep";
 
 	private static final String TEST_MASTER_BRANCH = "test master branch";
+	
 
 	@Mock
 	IVCS mockedVcs;

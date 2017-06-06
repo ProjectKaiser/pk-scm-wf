@@ -22,7 +22,6 @@ test {
 
 dependencies {
 	testCompile 'junit:junit:4.12'
-	//testCompile 'org.mockito:mockito-core:1.9.5'
 	testCompile 'org.mockito:mockito-all:1.9.5'
 	testCompile 'org.powermock:powermock-mockito-release-full:1.6.3'
 	testCompile 'org.powermock:powermock-api-mockito:1.6.3'
