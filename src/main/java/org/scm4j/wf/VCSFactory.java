@@ -5,8 +5,8 @@ import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.svn.SVNVCS;
 import org.scm4j.wf.model.VCSRepository;
 
-public class IVCSFactory {
-	
+public class VCSFactory {
+
 	public static IVCS getIVCS(VCSRepository repo) {
 		IVCS vcs;
 		switch (repo.getType()) {
@@ -15,7 +15,8 @@ public class IVCSFactory {
 			break;
 		}
 		case SVN: {
-			vcs = new SVNVCS(repo.getWorkspace(), repo.getCredentials() == null ? null : repo.getCredentials().getName(),
+			vcs = new SVNVCS(repo.getWorkspace(),
+					repo.getCredentials() == null ? null : repo.getCredentials().getName(),
 					repo.getCredentials() == null ? null : repo.getCredentials().getPassword());
 			break;
 		}

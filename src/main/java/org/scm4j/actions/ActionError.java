@@ -21,6 +21,10 @@ public class ActionError extends ActionAbstract implements IAction {
 
 	@Override
 	public String toString() {
+		return getCause();
+	}
+
+	public String getCause() {
 		return cause;
 	}
 	

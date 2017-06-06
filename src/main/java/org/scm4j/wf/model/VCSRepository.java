@@ -1,6 +1,14 @@
 package org.scm4j.wf.model;
 
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.scm4j.vcs.api.workingcopy.IVCSRepositoryWorkspace;
+import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
+import org.scm4j.wf.GsonUtils;
+
+import com.google.gson.reflect.TypeToken;
 
 public class VCSRepository {
 	
@@ -13,7 +21,7 @@ public class VCSRepository {
 	private IVCSRepositoryWorkspace workspace;
 	private String devBranch;
 	private String releaseBanchPrefix = DEFAULT_RELEASE_BRANCH_PREFIX;
-
+	
 	public String getReleaseBanchPrefix() {
 		return releaseBanchPrefix;
 	}
@@ -77,5 +85,41 @@ public class VCSRepository {
 	public String toString() {
 		return "VCSRepository [url=" + url + "]";
 	}
+	
+	public static List<VCSRepository> fromJson(String jsonStr, List<Credentials> credentials, IVCSWorkspace ws) {
+		List<VCSRepository> res = new ArrayList<>();
+		Type type = new TypeToken<List<VCSRepository>>() {}.getType();
+    	List<VCSRepository> repos = GsonUtils.fromJson(jsonStr, type);
+    	
+    	Credentials defaultCred = null;
+    	for (Credentials cred : credentials) {
+    		if (cred.getIsDefault()) {
+    			defaultCred = cred;
+    			break;
+    		}
+    	}
+    	
+    	for (VCSRepository repo : repos) {
+    		if (repo.getType() == null) {
+    			repo.setType(getVCSType(repo.getUrl()));
+    		}
+    		if (repo.getCredentials() == null) {
+    			repo.setCredentials(defaultCred);
+    		} else {
+    			repo.setCredentials(credentials.get(credentials.indexOf(repo.getCredentials())));
+    		}
+    		repo.setWorkspace(ws.getVCSRepositoryWorkspace(repo.getUrl()));
+    		res.add(repo);
+    	}
+		return res;
+	}
+	
+	private static VCSType getVCSType(String url) {
+		if (url.contains(".git")) {
+			return VCSType.GIT;
+		}
+		return VCSType.SVN;
+	}
+	
 
 }

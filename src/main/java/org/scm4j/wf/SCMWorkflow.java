@@ -14,10 +14,14 @@ import org.scm4j.wf.model.VCSRepository;
 
 public class SCMWorkflow implements ISCMWorkflow {
 	public static final String MDEPS_FILE_NAME = "mdeps";
-	public static final String WORKSPACE_DIR = System.getProperty("java.io.tmpdir") + "scm4j-wf-workspaces";
 	public static final String VER_FILE_NAME = "version";
 	public static final String MDEPS_CHANGED_FILE_NAME = "mdeps-changed";
 	private Map<String, VCSRepository> vcsRepos;
+	private String depName;
+	List<IAction> childActions = new ArrayList<>();
+	private String devBranchName;
+	private IVCS vcs;
+	private List<Dep> mDeps = new ArrayList<>();
 	
 	private VCSRepository getRepoByName(String name) {
 		VCSRepository res = vcsRepos.get(name);
@@ -26,38 +30,38 @@ public class SCMWorkflow implements ISCMWorkflow {
 		}
 		return res;
 	}
-
-	public SCMWorkflow(Map<String, VCSRepository> vcsRepos) {
+	
+	public void setMDeps(List<Dep> mDeps) {
+		this.mDeps = mDeps;
+	}
+	
+	public void setChildActions(List<IAction> childActions) {
+		this.childActions = childActions;
+	}
+	
+	public SCMWorkflow(String depName, Map<String, VCSRepository> vcsRepos) {
 		this.vcsRepos = vcsRepos;
+		this.depName = depName;
+		devBranchName = getRepoByName(depName).getDevBranch();
+		vcs = VCSFactory.getIVCS(getRepoByName(depName));
+		if (vcs.fileExists(devBranchName, MDEPS_FILE_NAME)) {
+			String mDepsContent = vcs.getFileContent(devBranchName, MDEPS_FILE_NAME);
+			mDeps = new MDepsFile(mDepsContent, vcsRepos).getMDeps();
+		} 
 	}
 
 	@Override
-	public IAction calculateProductionReleaseAction(String depName) {
-		String devBranchName = getRepoByName(depName).getDevBranch();
-		List<IAction> childActions = new ArrayList<>();
-
-		IVCS vcs = IVCSFactory.getIVCS(getRepoByName(depName));
-
-		String mDepsContent = null;
-		Boolean hasVer = vcs.fileExists(devBranchName, VER_FILE_NAME);
-
-		Boolean processMDeps = vcs.fileExists(devBranchName, MDEPS_FILE_NAME);
-		if (processMDeps) {
-			mDepsContent = vcs.getFileContent(devBranchName, MDEPS_FILE_NAME);
+	public IAction getProductionReleaseAction() {
+		for (Dep mDep : mDeps) {
+			ISCMWorkflow childWorkflow = new SCMWorkflow(mDep.getName(), vcsRepos);
+			childActions.add(childWorkflow.getProductionReleaseAction());
 		}
+		return getAction();
+	}
 
-		List<Dep> mDeps;
-		if (processMDeps) {
-			mDeps = loadDeps(mDepsContent);
-			for (Dep mDep : mDeps) {
-				childActions.add(calculateProductionReleaseAction(mDep.getName()));
-			}
-		} else {
-			mDeps = new ArrayList<>();
-		}
-
+	public IAction getAction() {
 		IAction res;
-		BranchStructure struct = new BranchStructure(vcs, devBranchName);
+		Boolean hasVer = vcs.fileExists(devBranchName, VER_FILE_NAME);
 		if (!hasVer) {
 			res = new ActionError(getRepoByName(depName), childActions, devBranchName, "no " + VER_FILE_NAME + " file");
 		} else if (hasErrorActions(childActions)) {
@@ -65,7 +69,7 @@ public class SCMWorkflow implements ISCMWorkflow {
 		} else if (hasSignificantActions(childActions) || hasNewerDependencies(childActions, mDeps)) {
 			res = new SCMActionProductionRelease(getRepoByName(depName), childActions, devBranchName,
 					ProductionReleaseReason.NEW_DEPENDENCIES);
-		} else if (struct.getHasFeatures()) {
+		} else if (new BranchStructure(vcs, devBranchName).getHasFeatures()) {
 			res = new SCMActionProductionRelease(getRepoByName(depName), childActions, devBranchName,
 					ProductionReleaseReason.NEW_FEATURES);
 		} else {
@@ -79,7 +83,6 @@ public class SCMWorkflow implements ISCMWorkflow {
 		for (IAction action : actions) {
 			if (action instanceof SCMActionUseLastReleaseVersion) {
 				SCMActionUseLastReleaseVersion verAction = (SCMActionUseLastReleaseVersion) action;
-				// verAction = это использование существующей версии. посмотрим, а правильна ли версия соответствующего mDep
 				for (Dep dep : mDeps) {
 					if (dep.getName().equals(verAction.getName()) && (dep.getVersion() == null || 
 							!dep.getVersion().toReleaseString().equals(verAction.getVer().toPreviousMinorRelease()))) {
@@ -107,14 +110,6 @@ public class SCMWorkflow implements ISCMWorkflow {
 			}
 		}
 		return false;
-	}
-
-	private List<Dep> loadDeps(String mDepsContent) {
-		return new MDepsFile(mDepsContent, vcsRepos).getMDeps();
-	}
-
-	@Override
-	public void execActions(List<IAction> actions) {
 	}
 
 }

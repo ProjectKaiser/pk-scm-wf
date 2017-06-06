@@ -5,8 +5,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.scm4j.vcs.api.IVCS;
-import org.scm4j.wf.IVCSFactory;
 import org.scm4j.wf.SCMWorkflow;
+import org.scm4j.wf.VCSFactory;
 import org.scm4j.wf.conf.DepCoords;
 import org.scm4j.wf.conf.Version;
 import org.scm4j.wf.model.VCSRepository;
@@ -18,21 +18,21 @@ public abstract class ActionAbstract implements IAction {
 	protected VCSRepository repo;
 	protected String currentBranchName;
 	private Map<String, Object> results = new LinkedHashMap<>();
-
+	
 	public Version getDevVersion() {
-		IVCS vcs = IVCSFactory.getIVCS(repo);
+		IVCS vcs = VCSFactory.getIVCS(repo);
 		String verFileContent = vcs.getFileContent(currentBranchName, SCMWorkflow.VER_FILE_NAME);
 		return new Version(verFileContent.trim());
 	}
 	
 	public DepCoords getDevCoords() {
-		IVCS vcs = IVCSFactory.getIVCS(repo);
+		IVCS vcs = VCSFactory.getIVCS(repo);
 		String verFileContent = vcs.getFileContent(currentBranchName, SCMWorkflow.VER_FILE_NAME);
 		return new DepCoords(verFileContent.trim());
 	}
 
 	public IVCS getVCS() {
-		return IVCSFactory.getIVCS(repo);
+		return VCSFactory.getIVCS(repo);
 	}
 
 	public Map<String, Object> getResults() {

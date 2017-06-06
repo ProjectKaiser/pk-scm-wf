@@ -49,10 +49,6 @@ public class SCMActionProductionRelease extends ActionAbstract {
 			Version currentVer = getDevVersion();
 			progress.reportStatus("current trunk version: " + currentVer);
 			
-			/**
-			 * выполним все экшены и получим результаты.
-			 * Составим таблицу новых версий (которые получились в итоге)
-			 */
 			Object nestedResult;
 			for (IAction action : childActions) {
 				try (IProgress nestedProgress = progress.createNestedProgress(action.getName())) {
@@ -64,7 +60,7 @@ public class SCMActionProductionRelease extends ActionAbstract {
 				getResults().put(action.getName(), nestedResult);
 			}
 			
-			// А не построены ли мы уже?
+			// Are we built already?
 			if (getResults().get(getName()) != null) {
 				Object existingResult = getResults().get(getName());
 				if (existingResult instanceof ActionResultVersion) {
@@ -73,7 +69,7 @@ public class SCMActionProductionRelease extends ActionAbstract {
 				}
 			}
 			
-			// тут у нас мапа с новыми версиями. Будем прописывать их в mdeps под ногами.
+			// We have a new versions map. Will write it to mdeps on the ground
 			VCSCommit newVersionStartsFromCommit;
 			List<String> mDepsChanged = new ArrayList<>();
 			if (vcs.fileExists(currentBranchName, SCMWorkflow.MDEPS_FILE_NAME)) {
@@ -89,7 +85,6 @@ public class SCMActionProductionRelease extends ActionAbstract {
 						if (res.getIsNewBuild()) {
 							mDepOut = mDep.toString(res.getVersion());
 						} else {
-							// тут посмотрим: если у нас в untillDb 5.0 (или вообще null), а в action.ver 7.1, то пропишем в mdeps unTillDb 7.0
 							if (!res.getVersion().equals(mDep.getVersion().toReleaseString())) {
 								mDepOut = mDep.toString(res.getVersion());
 							} 

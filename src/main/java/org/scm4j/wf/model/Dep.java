@@ -31,6 +31,6 @@ public class Dep extends DepCoords {
 
 	public Dep(String coords, Map<String, VCSRepository> vcsRepos) {
 		super(coords);
-		vcsRepository = vcsRepos.get(nameStr);
+		vcsRepository = vcsRepos.get(getName());
 	}
 }
