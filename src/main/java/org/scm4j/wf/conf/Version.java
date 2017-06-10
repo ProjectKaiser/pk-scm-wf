@@ -83,5 +83,20 @@ public class Version {
 		checkMinor();
 		return prefix + Integer.toString(Integer.parseInt(minor) + 1) + patch + snapshot;
 	}
-	
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+
+		Version version = (Version) o;
+
+		return !(verStr != null ? !verStr.equals(version.verStr) : version.verStr != null);
+
+	}
+
+	@Override
+	public int hashCode() {
+		return verStr != null ? verStr.hashCode() : 0;
+	}
 }
