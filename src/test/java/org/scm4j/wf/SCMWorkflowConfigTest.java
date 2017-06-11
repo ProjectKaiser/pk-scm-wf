@@ -1,21 +1,28 @@
-package org.scm4j.wf.conf;
+package org.scm4j.wf;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 import org.scm4j.vcs.GitVCS;
 import org.scm4j.vcs.GitVCSUtils;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.workingcopy.IVCSRepositoryWorkspace;
 import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
 import org.scm4j.vcs.api.workingcopy.VCSWorkspace;
-import org.scm4j.wf.SCMWorkflow;
+import org.scm4j.wf.exceptions.EWFNoConfig;
+import org.scm4j.wf.model.VCSRepository;
 
 import java.io.File;
 import java.io.IOException;
 
-public class SCMWorkflowTest {
+@PrepareForTest(System.class)
+@RunWith(PowerMockRunner.class)
+public class SCMWorkflowConfigTest {
 
 	private IVCS vcs;
 	private static final String TEST_WORKSPACE_DIR = System.getProperty("java.io.tmpdir") + "scm4j-wf-test";
@@ -50,7 +57,7 @@ public class SCMWorkflowTest {
 		unTillVCS.setFileContent(null, "ver", "1.123.3-SNAPSHOT", "ver file added");
 		unTillVCS.setFileContent(null, "mdeps",
 				"eu.untill:UBL:18.5-SNAPSHOT\r\n" +
-				"eu.untill:unTillDb:2.59.1-SNAPSHOT\r\n", "mdeps file added");
+						"eu.untill:unTillDb:2.59.1-SNAPSHOT\r\n", "mdeps file added");
 
 		ublVCS.setFileContent(null, "ver", "1.18.5-SNAPSHOT", "ver file added");
 		ublVCS.setFileContent(null, "mdeps",
@@ -67,9 +74,15 @@ public class SCMWorkflowTest {
 		}
 	}
 
-	@Test
+	@Test(expected=EWFNoConfig.class)
 	public void testNoConfig() {
-		SCMWorkflow wf = new SCMWorkflow("eu.untill:unTill", TEST_WORKSPACE_DIR);
+		new SCMWorkflow("eu.untill:unTill", TEST_WORKSPACE_DIR);
+	}
 
+	@Test(expected=EWFNoConfig.class)
+	public void testNoRepos() {
+		PowerMockito.mockStatic(System.class);
+		PowerMockito.when(System.getenv(VCSRepository.CONFIG_ENV_VAR)).thenReturn("malformed url");
+		new SCMWorkflow("eu.untill:unTill", TEST_WORKSPACE_DIR);
 	}
 }
