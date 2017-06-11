@@ -1,19 +1,20 @@
 package org.scm4j.wf;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.scm4j.actions.ActionAbstract;
 import org.scm4j.actions.IAction;
 import org.scm4j.actions.results.ActionResultVersion;
 import org.scm4j.progress.IProgress;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSCommit;
+import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
 import org.scm4j.wf.conf.ConfFile;
 import org.scm4j.wf.conf.MDepsFile;
 import org.scm4j.wf.conf.Version;
 import org.scm4j.wf.model.Dep;
 import org.scm4j.wf.model.VCSRepository;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class SCMActionProductionRelease extends ActionAbstract {
 	
@@ -28,8 +29,8 @@ public class SCMActionProductionRelease extends ActionAbstract {
 	private ProductionReleaseReason reason;
 
 	public SCMActionProductionRelease(VCSRepository repo, List<IAction> childActions, String masterBranchName, 
-			ProductionReleaseReason reason) {
-		super(repo, childActions, masterBranchName);
+			ProductionReleaseReason reason, IVCSWorkspace ws) {
+		super(repo, childActions, masterBranchName, ws);
 		this.reason = reason;
 	}
 
@@ -103,7 +104,7 @@ public class SCMActionProductionRelease extends ActionAbstract {
 				newVersionStartsFromCommit = vcs.setFileContent(currentBranchName, SCMWorkflow.MDEPS_FILE_NAME, 
 						mDepsOutContent, VCS_TAG_SCM_MDEPS);
 				if (newVersionStartsFromCommit == VCSCommit.EMPTY) {
-					// зависимости не изменились, но для нас самих надо сделать релиз
+					// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
 					newVersionStartsFromCommit = vcs.getHeadCommit(currentBranchName);
 					progress.reportStatus("mdeps file is not changed. Going to branch from " + newVersionStartsFromCommit);
 				} else {
@@ -114,24 +115,24 @@ public class SCMActionProductionRelease extends ActionAbstract {
 				progress.reportStatus("no mdeps. Going to branch from head " + newVersionStartsFromCommit);
 			}
 			
-			// отведем ветку
+			// пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
 			String newBranchName = repo.getReleaseBanchPrefix() + currentVer.toReleaseString(); 
 			vcs.createBranch(currentBranchName, newBranchName, "branch created");
 			progress.reportStatus("branch " + newBranchName + " created");
 			
-			// увеличим minor ver в транке
+			// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ minor ver пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 			String verContent = currentVer.toNextMinorSnapshot();
 			vcs.setFileContent(currentBranchName, SCMWorkflow.VER_FILE_NAME, 
 					verContent, VCS_TAG_SCM_VER + " " + verContent);
 			progress.reportStatus("change to version " + verContent + " in trunk");
 			
-			// сохраним ver в ветке
+			// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ ver пїЅ пїЅпїЅпїЅпїЅпїЅ
 			verContent = currentVer.toReleaseString();
 			vcs.setFileContent(newBranchName, SCMWorkflow.VER_FILE_NAME, verContent, 
 					VCS_TAG_SCM_VER + " " + verContent);
 			progress.reportStatus("change to version " + verContent + " in branch " + newBranchName);
 			
-			// запишем mdeps-changed
+			// пїЅпїЅпїЅпїЅпїЅпїЅпїЅ mdeps-changed
 			if (!mDepsChanged.isEmpty()) {
 				vcs.setFileContent(newBranchName, SCMWorkflow.MDEPS_CHANGED_FILE_NAME, ConfFile.toFileContent(mDepsChanged), 
 						VCS_TAG_SCM_IGNORE);

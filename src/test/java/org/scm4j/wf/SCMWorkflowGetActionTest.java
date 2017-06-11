@@ -1,17 +1,6 @@
 package org.scm4j.wf;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -25,10 +14,15 @@ import org.scm4j.actions.ActionNone;
 import org.scm4j.actions.IAction;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSCommit;
+import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
 import org.scm4j.wf.conf.Version;
 import org.scm4j.wf.model.Dep;
 import org.scm4j.wf.model.VCSRepository;
 import org.scm4j.wf.model.VCSType;
+
+import java.util.*;
+
+import static org.junit.Assert.*;
 
 @PrepareForTest(VCSFactory.class)
 @RunWith(PowerMockRunner.class)
@@ -41,6 +35,9 @@ public class SCMWorkflowGetActionTest {
 
 	@Mock
 	IVCS mockedVcs;
+
+	@Mock
+	IVCSWorkspace ws;
 	
 	private Map<String, VCSRepository> vcsRepos;
 	private VCSRepository testRepo;
@@ -56,8 +53,8 @@ public class SCMWorkflowGetActionTest {
 		testRepo.setType(VCSType.GIT);
 		vcsRepos.put(testRepo.getName(), testRepo);
 		PowerMockito.mockStatic(VCSFactory.class);
-		PowerMockito.when(VCSFactory.getIVCS(testRepo)).thenReturn(mockedVcs);
-		wf = new SCMWorkflow(TEST_DEP, vcsRepos);
+		PowerMockito.when(VCSFactory.getIVCS(testRepo, ws)).thenReturn(mockedVcs);
+		wf = new SCMWorkflow(TEST_DEP, vcsRepos, ws);
 		Mockito.doReturn(true).when(mockedVcs).fileExists(testRepo.getDevBranch(), SCMWorkflow.VER_FILE_NAME);
 	}
 	
@@ -86,7 +83,7 @@ public class SCMWorkflowGetActionTest {
 		//test none
 		List<Dep> testMDeps = Arrays.asList(new Dep(TEST_DEP + ":1.0.0", vcsRepos));
 		wf.setMDeps(testMDeps);
-		wf.setChildActions(Arrays.asList((IAction) new ActionError(testRepo, Collections.<IAction>emptyList(), TEST_MASTER_BRANCH, "test cause")));
+		wf.setChildActions(Arrays.asList((IAction) new ActionError(testRepo, Collections.<IAction>emptyList(), TEST_MASTER_BRANCH, "test cause", ws)));
 		IAction res = wf.getAction();
 		assertTrue(res instanceof ActionNone);
 	}
@@ -96,7 +93,7 @@ public class SCMWorkflowGetActionTest {
 		Mockito.doReturn("0.0.0").when(mockedVcs).getFileContent(TEST_MASTER_BRANCH, SCMWorkflow.VER_FILE_NAME);
 		List<Dep> testMDeps = Arrays.asList(new Dep(TEST_DEP + ":1.0.0", vcsRepos));
 		wf.setMDeps(testMDeps);
-		wf.setChildActions(Arrays.<IAction>asList(new SCMActionUseLastReleaseVersion(testRepo, Collections.<IAction>emptyList(), TEST_MASTER_BRANCH)));
+		wf.setChildActions(Arrays.<IAction>asList(new SCMActionUseLastReleaseVersion(testRepo, Collections.<IAction>emptyList(), TEST_MASTER_BRANCH, ws)));
 		IAction action = wf.getAction();
 		assertTrue(action instanceof SCMActionProductionRelease);
 		SCMActionProductionRelease pr = (SCMActionProductionRelease) action;

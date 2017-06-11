@@ -1,18 +1,23 @@
 package org.scm4j.wf;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
 import org.scm4j.actions.ActionError;
 import org.scm4j.actions.ActionNone;
 import org.scm4j.actions.IAction;
 import org.scm4j.vcs.api.IVCS;
+import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
+import org.scm4j.vcs.api.workingcopy.VCSWorkspace;
 import org.scm4j.wf.conf.MDepsFile;
 import org.scm4j.wf.model.Dep;
 import org.scm4j.wf.model.VCSRepository;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 public class SCMWorkflow implements ISCMWorkflow {
+
+	public static final String DEFAULT_WORKSPACE_DIR = new File(System.getProperty("user.home"), ".scm4j").getPath();
 	public static final String MDEPS_FILE_NAME = "mdeps";
 	public static final String VER_FILE_NAME = "version";
 	public static final String MDEPS_CHANGED_FILE_NAME = "mdeps-changed";
@@ -22,6 +27,7 @@ public class SCMWorkflow implements ISCMWorkflow {
 	private String devBranchName;
 	private IVCS vcs;
 	private List<Dep> mDeps = new ArrayList<>();
+	private IVCSWorkspace ws;
 	
 	private VCSRepository getRepoByName(String name) {
 		VCSRepository res = vcsRepos.get(name);
@@ -39,21 +45,31 @@ public class SCMWorkflow implements ISCMWorkflow {
 		this.childActions = childActions;
 	}
 	
-	public SCMWorkflow(String depName, Map<String, VCSRepository> vcsRepos) {
+	public SCMWorkflow(String depName, Map<String, VCSRepository> vcsRepos, IVCSWorkspace ws) {
 		this.vcsRepos = vcsRepos;
 		this.depName = depName;
+		this.ws = ws;
 		devBranchName = getRepoByName(depName).getDevBranch();
-		vcs = VCSFactory.getIVCS(getRepoByName(depName));
+		vcs = VCSFactory.getIVCS(getRepoByName(depName), ws);
 		if (vcs.fileExists(devBranchName, MDEPS_FILE_NAME)) {
 			String mDepsContent = vcs.getFileContent(devBranchName, MDEPS_FILE_NAME);
 			mDeps = new MDepsFile(mDepsContent, vcsRepos).getMDeps();
 		} 
 	}
 
+	public SCMWorkflow(String depName) {
+		this(depName, VCSRepository.loadFromEnvironment(), new VCSWorkspace(DEFAULT_WORKSPACE_DIR));
+	}
+
+	public SCMWorkflow(String depName, String configPath) {
+		this(depName, VCSRepository.loadFromEnvironment(), new VCSWorkspace(configPath));
+	}
+
+
 	@Override
 	public IAction getProductionReleaseAction() {
 		for (Dep mDep : mDeps) {
-			ISCMWorkflow childWorkflow = new SCMWorkflow(mDep.getName(), vcsRepos);
+			ISCMWorkflow childWorkflow = new SCMWorkflow(mDep.getName(), vcsRepos, ws);
 			childActions.add(childWorkflow.getProductionReleaseAction());
 		}
 		return getAction();
@@ -63,17 +79,17 @@ public class SCMWorkflow implements ISCMWorkflow {
 		IAction res;
 		Boolean hasVer = vcs.fileExists(devBranchName, VER_FILE_NAME);
 		if (!hasVer) {
-			res = new ActionError(getRepoByName(depName), childActions, devBranchName, "no " + VER_FILE_NAME + " file");
+			res = new ActionError(getRepoByName(depName), childActions, devBranchName, "no " + VER_FILE_NAME + " file", ws);
 		} else if (hasErrorActions(childActions)) {
-			res = new ActionNone(getRepoByName(depName), childActions, devBranchName);
+			res = new ActionNone(getRepoByName(depName), childActions, devBranchName, ws);
 		} else if (hasSignificantActions(childActions) || hasNewerDependencies(childActions, mDeps)) {
 			res = new SCMActionProductionRelease(getRepoByName(depName), childActions, devBranchName,
-					ProductionReleaseReason.NEW_DEPENDENCIES);
+					ProductionReleaseReason.NEW_DEPENDENCIES, ws);
 		} else if (new BranchStructure(vcs, devBranchName).getHasFeatures()) {
 			res = new SCMActionProductionRelease(getRepoByName(depName), childActions, devBranchName,
-					ProductionReleaseReason.NEW_FEATURES);
+					ProductionReleaseReason.NEW_FEATURES, ws);
 		} else {
-			res = new SCMActionUseLastReleaseVersion(getRepoByName(depName), childActions, devBranchName);
+			res = new SCMActionUseLastReleaseVersion(getRepoByName(depName), childActions, devBranchName, ws);
 		}
 
 		return res;

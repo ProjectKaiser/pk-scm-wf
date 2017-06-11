@@ -1,14 +1,17 @@
 package org.scm4j.wf.model;
 
-import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.List;
-
-import org.scm4j.vcs.api.workingcopy.IVCSRepositoryWorkspace;
-import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
+import com.google.gson.reflect.TypeToken;
+import org.apache.commons.io.IOUtils;
 import org.scm4j.wf.GsonUtils;
 
-import com.google.gson.reflect.TypeToken;
+import java.io.InputStream;
+import java.lang.reflect.Type;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class VCSRepository {
 	
@@ -18,7 +21,6 @@ public class VCSRepository {
 	private String url;
 	private Credentials credentials;
 	private VCSType type;
-	private IVCSRepositoryWorkspace workspace;
 	private String devBranch;
 	private String releaseBanchPrefix = DEFAULT_RELEASE_BRANCH_PREFIX;
 	
@@ -36,14 +38,6 @@ public class VCSRepository {
 
 	public void setDevBranch(String devBranch) {
 		this.devBranch = devBranch;
-	}
-
-	public IVCSRepositoryWorkspace getWorkspace() {
-		return workspace;
-	}
-
-	public void setWorkspace(IVCSRepositoryWorkspace workspace) {
-		this.workspace = workspace;
 	}
 
 	public String getUrl() {
@@ -86,7 +80,7 @@ public class VCSRepository {
 		return "VCSRepository [url=" + url + "]";
 	}
 	
-	public static List<VCSRepository> fromJson(String jsonStr, List<Credentials> credentials, IVCSWorkspace ws) {
+	public static List<VCSRepository> fromJson(String jsonStr, List<Credentials> credentials) {
 		List<VCSRepository> res = new ArrayList<>();
 		Type type = new TypeToken<List<VCSRepository>>() {}.getType();
     	List<VCSRepository> repos = GsonUtils.fromJson(jsonStr, type);
@@ -108,7 +102,6 @@ public class VCSRepository {
     		} else {
     			repo.setCredentials(credentials.get(credentials.indexOf(repo.getCredentials())));
     		}
-    		repo.setWorkspace(ws.getVCSRepositoryWorkspace(repo.getUrl()));
     		res.add(repo);
     	}
 		return res;
@@ -119,6 +112,29 @@ public class VCSRepository {
 			return VCSType.GIT;
 		}
 		return VCSType.SVN;
+	}
+
+	public static Map<String, VCSRepository> loadFromEnvironment() {
+		Map<String, VCSRepository> res = new HashMap<>();
+		String storeUrlsStr = System.getenv("SCM4J_VCS_REPOS");
+		try {
+			Map<String, Credentials> creds = Credentials.loadFromEnvironment();
+			String[] storeUrls = storeUrlsStr.split(";");
+			for (String storeUrl : storeUrls) {
+				URL url = new URL(storeUrl);
+				String vcsReposJson;
+				try (InputStream inputStream = url.openStream()) {
+					vcsReposJson = IOUtils.toString(inputStream, StandardCharsets.UTF_8.name());
+				}
+				List<VCSRepository> repos = VCSRepository.fromJson(vcsReposJson, new ArrayList<>(creds.values()));
+				for (VCSRepository repo : repos) {
+					res.put(repo.getName(), repo);
+				}
+			}
+			return res;
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
 	}
 	
 

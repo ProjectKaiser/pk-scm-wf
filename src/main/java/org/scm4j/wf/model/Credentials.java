@@ -1,11 +1,16 @@
 package org.scm4j.wf.model;
 
-import java.lang.reflect.Type;
-import java.util.List;
-
+import com.google.gson.reflect.TypeToken;
+import org.apache.commons.io.IOUtils;
 import org.scm4j.wf.GsonUtils;
 
-import com.google.gson.reflect.TypeToken;
+import java.io.InputStream;
+import java.lang.reflect.Type;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class Credentials {
 	@Override
@@ -73,5 +78,25 @@ public class Credentials {
 	public static List<Credentials> fromJson(String jsonString) {
 		Type type = new TypeToken<List<Credentials>>() {}.getType();
 		return GsonUtils.fromJson(jsonString, type);
+	}
+
+	public static Map<String, Credentials> loadFromEnvironment() throws Exception {
+		String storeUrlsStr = System.getenv("SCM4J_CREDENTIALS");
+		Map<String, Credentials> res = new HashMap<>();
+		String[] storeUrls = storeUrlsStr.split(";");
+		for (String storeUrl : storeUrls) {
+			URL url = new URL(storeUrl);
+			String credsJson;
+			try (InputStream inputStream = url.openStream()) {
+				credsJson = IOUtils.toString(inputStream, StandardCharsets.UTF_8.name());
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+
+			for (Credentials cred : Credentials.fromJson(credsJson)) {
+				res.put(cred.getName(), cred);
+			}
+		}
+		return res;
 	}
 }
