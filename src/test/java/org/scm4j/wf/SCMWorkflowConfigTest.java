@@ -20,12 +20,14 @@ import org.scm4j.wf.model.VCSRepository;
 import java.io.File;
 import java.io.IOException;
 
-@PrepareForTest(System.class)
+@PrepareForTest(VCSRepository.class)
 @RunWith(PowerMockRunner.class)
 public class SCMWorkflowConfigTest {
 
 	private IVCS vcs;
 	private static final String TEST_WORKSPACE_DIR = System.getProperty("java.io.tmpdir") + "scm4j-wf-test";
+	private static final String TEST_WORKSPACE_URL = "file:///" + TEST_WORKSPACE_DIR.replace("\\", "/");
+	private static final String TEST_VCS_REPO_FILE_URL = TEST_WORKSPACE_URL + "/vcs-repo";
 	private static final String TEST_REPO_DIR = new File(TEST_WORKSPACE_DIR, "repos").getPath();
 	private IVCS unTillVCS;
 	private IVCS ublVCS;
@@ -84,5 +86,15 @@ public class SCMWorkflowConfigTest {
 		PowerMockito.mockStatic(System.class);
 		PowerMockito.when(System.getenv(VCSRepository.CONFIG_ENV_VAR)).thenReturn("malformed url");
 		new SCMWorkflow("eu.untill:unTill", TEST_WORKSPACE_DIR);
+	}
+
+	@Test
+	public void testEmptyConfigs() throws IOException {
+		File vcsRepos = new File(TEST_WORKSPACE_DIR, "vcs-repos");
+		vcsRepos.createNewFile();
+		PowerMockito.mockStatic(System.class);
+		PowerMockito.when(System.getenv(VCSRepository.CONFIG_ENV_VAR)).thenReturn(TEST_VCS_REPO_FILE_URL);
+		new SCMWorkflow("eu.untill:unTill", TEST_WORKSPACE_DIR);
+
 	}
 }

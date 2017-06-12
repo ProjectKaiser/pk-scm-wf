@@ -83,6 +83,9 @@ public class Credentials {
 	public static Map<String, Credentials> loadFromEnvironment() throws Exception {
 		String storeUrlsStr = System.getenv("SCM4J_CREDENTIALS");
 		Map<String, Credentials> res = new HashMap<>();
+		if (storeUrlsStr == null) {
+			return res;
+		}
 		String[] storeUrls = storeUrlsStr.split(";");
 		for (String storeUrl : storeUrls) {
 			URL url = new URL(storeUrl);
