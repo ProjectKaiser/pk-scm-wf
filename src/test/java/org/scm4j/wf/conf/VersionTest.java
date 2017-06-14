@@ -10,6 +10,7 @@ public class VersionTest {
 	public void testMinor() {
 		assertEquals(new Version("11.21.31.41").getMinor(), "31");
 		assertEquals(new Version("11.21.31").getMinor(), "21");
+		assertEquals(new Version("11.21").getMinor(), "11");
 		assertEquals(new Version("11").getMinor(), "11");
 		assertEquals(new Version("1").getMinor(), "1");
 		assertEquals(new Version("").getMinor(), "");
