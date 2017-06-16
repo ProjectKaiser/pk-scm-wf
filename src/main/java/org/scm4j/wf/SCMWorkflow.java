@@ -17,7 +17,8 @@ import java.util.Map;
 
 public class SCMWorkflow implements ISCMWorkflow {
 
-	public static final String DEFAULT_WORKSPACE_DIR = new File(System.getProperty("user.home"), ".scm4j").getPath();
+	public static final String DEFAULT_VCS_WORKSPACE_DIR = new File(System.getProperty("user.home"), 
+			".scm4j" + File.separator + "wf-vcs-workspaces").getPath();
 	public static final String MDEPS_FILE_NAME = "mdeps";
 	public static final String VER_FILE_NAME = "version";
 	public static final String MDEPS_CHANGED_FILE_NAME = "mdeps-changed";
@@ -58,7 +59,7 @@ public class SCMWorkflow implements ISCMWorkflow {
 	}
 
 	public SCMWorkflow(String depName) {
-		this(depName, VCSRepository.loadFromEnvironment(), new VCSWorkspace(DEFAULT_WORKSPACE_DIR));
+		this(depName, VCSRepository.loadFromEnvironment(), new VCSWorkspace(DEFAULT_VCS_WORKSPACE_DIR));
 	}
 
 	public SCMWorkflow(String depName, String configPath) {
@@ -82,13 +83,13 @@ public class SCMWorkflow implements ISCMWorkflow {
 			res = new ActionError(getRepoByName(depName), childActions, devBranchName, "no " + VER_FILE_NAME + " file", ws);
 		} else if (hasErrorActions(childActions)) {
 			res = new ActionNone(getRepoByName(depName), childActions, devBranchName, ws);
-		} else if (hasSignificantActions(childActions) || hasNewerDependencies(childActions, mDeps)) {
-			res = new SCMActionProductionRelease(getRepoByName(depName), childActions, devBranchName,
-					ProductionReleaseReason.NEW_DEPENDENCIES, ws);
 		} else if (new BranchStructure(vcs, devBranchName).getHasFeatures()) {
 			res = new SCMActionProductionRelease(getRepoByName(depName), childActions, devBranchName,
 					ProductionReleaseReason.NEW_FEATURES, ws);
-		} else {
+		} else if (hasSignificantActions(childActions) || hasNewerDependencies(childActions, mDeps)) {
+			res = new SCMActionProductionRelease(getRepoByName(depName), childActions, devBranchName,
+					ProductionReleaseReason.NEW_DEPENDENCIES, ws);
+		}  else {
 			res = new SCMActionUseLastReleaseVersion(getRepoByName(depName), childActions, devBranchName, ws);
 		}
 

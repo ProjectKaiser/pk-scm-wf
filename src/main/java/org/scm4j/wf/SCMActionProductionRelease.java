@@ -58,12 +58,12 @@ public class SCMActionProductionRelease extends ActionAbstract {
 						return nestedResult;
 					}
 				}
-				getResults().put(action.getName(), nestedResult);
+				getExecutionResults().put(action.getName(), nestedResult);
 			}
 			
 			// Are we built already?
-			if (getResults().get(getName()) != null) {
-				Object existingResult = getResults().get(getName());
+			if (getExecutionResults().get(getName()) != null) {
+				Object existingResult = getExecutionResults().get(getName());
 				if (existingResult instanceof ActionResultVersion) {
 					progress.reportStatus("using already built version " + ((ActionResultVersion) existingResult).getVersion()); 
 					return existingResult;
@@ -79,7 +79,7 @@ public class SCMActionProductionRelease extends ActionAbstract {
 				List<String> mDepsOut = new ArrayList<>();
 				String mDepOut;
 				for (Dep mDep : mDepsFile.getMDeps()) {
-					nestedResult = getResults().get(mDep.getName());
+					nestedResult = getExecutionResults().get(mDep.getName());
 					mDepOut = "";
 					if (nestedResult != null && nestedResult instanceof ActionResultVersion) {
 						ActionResultVersion res = (ActionResultVersion) nestedResult;

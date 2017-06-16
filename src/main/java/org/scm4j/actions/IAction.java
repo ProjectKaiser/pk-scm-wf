@@ -17,6 +17,6 @@ public interface IAction {
 	
 	String getName();
 
-	Map<String, Object> getResults();
+	Map<String, Object> getExecutionResults();
 	
 }

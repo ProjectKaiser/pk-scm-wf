@@ -3,6 +3,7 @@ package org.scm4j.wf;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.UUID;
 
 import org.apache.commons.io.FileUtils;
 import org.scm4j.vcs.GitVCS;
@@ -11,21 +12,27 @@ import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.workingcopy.IVCSRepositoryWorkspace;
 import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
 import org.scm4j.vcs.api.workingcopy.VCSWorkspace;
+import org.scm4j.wf.conf.Version;
 
 public class TestEnvironment {
 	public static final String TEST_REPOS_FILE_NAME = "repos";
 	public static final String TEST_CREDENTIALS_FILE_NAME = "credentials";
-	public static final String TEST_ENVIRONMENT_DIR = System.getProperty("java.io.tmpdir") + "scm4j-wf-test";
+	public static final String TEST_ENVIRONMENT_DIR = new File(System.getProperty("java.io.tmpdir"), "scm4j-wf-test").getPath();
 	public static final String TEST_ENVIRONMENT_URL = "file://localhost/" + TEST_ENVIRONMENT_DIR.replace("\\", "/");
 	public static final String TEST_VCS_REPO_FILE_URL = "file://localhost/" + TEST_ENVIRONMENT_URL + "/vcs-repo";
 	public static final String TEST_LOCAL_REPO_DIR = new File(TEST_ENVIRONMENT_DIR, "local-repos").getPath();
 	public static final String TEST_REMOTE_REPO_DIR = new File(TEST_ENVIRONMENT_DIR, "remote-repos").getPath();
+	public static final String TEST_FEATURE_FILE_NAME = "feature.txt";
 
 	private IVCS unTillVCS;
 	private IVCS ublVCS;
 	private IVCS unTillDbVCS;
 	private File credsFile;
 	private File reposFile;
+	private final Version unTillVer = new Version("1.123.3-SNAPSHOT");
+	private final Version ublVer = new Version("1.18.5-SNAPSHOT");
+	private final Version unTillDbVer = new Version("2.59.1-SNAPSHOT");
+	
 
 	public void generateTestEnvironment() throws IOException {
 		File envDir = new File(TEST_ENVIRONMENT_DIR);
@@ -35,9 +42,9 @@ public class TestEnvironment {
 		envDir.mkdirs();
 		IVCSWorkspace localVCSWorkspace = new VCSWorkspace(TEST_ENVIRONMENT_DIR);
 
-		File unTillRemoteRepoDir = new File(TEST_REMOTE_REPO_DIR, "unTill.git");
-		File ublRemoteRepoDir = new File(TEST_REMOTE_REPO_DIR, "UBL.git");
-		File unTillRemoteDbRepoDir = new File(TEST_REMOTE_REPO_DIR, "unTillDb.git");
+		File unTillRemoteRepoDir = new File(TEST_REMOTE_REPO_DIR, "unTill-" + UUID.randomUUID().toString() + ".git");
+		File ublRemoteRepoDir = new File(TEST_REMOTE_REPO_DIR, "UBL-" + UUID.randomUUID().toString() + ".git");
+		File unTillRemoteDbRepoDir = new File(TEST_REMOTE_REPO_DIR, "unTillDb-" + UUID.randomUUID().toString() + ".git");
 		GitVCSUtils.createRepository(unTillRemoteRepoDir);
 		GitVCSUtils.createRepository(ublRemoteRepoDir);
 		GitVCSUtils.createRepository(unTillRemoteDbRepoDir);
@@ -51,25 +58,27 @@ public class TestEnvironment {
 		ublVCS = new GitVCS(ublVCSRepoWS);
 		unTillDbVCS = new GitVCS(unTillDbVCSRepoWS);
 
-		unTillVCS.setFileContent(null, "ver", "1.123.3-SNAPSHOT", "ver file added");
-		unTillVCS.setFileContent(null, "mdeps",
-				"eu.untill:UBL:18.5-SNAPSHOT\r\n" + 
-				"eu.untill:unTillDb:2.59.1-SNAPSHOT\r\n", "mdeps file added");
+		unTillVCS.setFileContent(null, SCMWorkflow.VER_FILE_NAME, unTillVer.toString(), "ver file added");
+		unTillVCS.setFileContent(null, SCMWorkflow.MDEPS_FILE_NAME,
+				SCMWorkflowConfigTest.PRODUCT_UBL + ":" + ublVer.toString() + "\r\n" + 
+				SCMWorkflowConfigTest.PRODUCT_UNTILLDB + ":" + unTillDbVer.toString() + "\r\n", "mdeps file added");
 
-		ublVCS.setFileContent(null, "ver", "1.18.5-SNAPSHOT", "ver file added");
-		ublVCS.setFileContent(null, "mdeps", "eu.untill:unTillDb:2.59.1-SNAPSHOT\r\n", "mdeps file added");
+		ublVCS.setFileContent(null, SCMWorkflow.VER_FILE_NAME, ublVer.toString(), "ver file added");
+		ublVCS.setFileContent(null, SCMWorkflow.MDEPS_FILE_NAME, 
+				SCMWorkflowConfigTest.PRODUCT_UNTILLDB + ":" + unTillDbVer.toString() + "\r\n", "mdeps file added");
 
-		unTillDbVCS.setFileContent(null, "ver", "2.59.1-SNAPSHOT", "ver file added");
+		unTillDbVCS.setFileContent(null, SCMWorkflow.VER_FILE_NAME, unTillDbVer.toString(), "ver file added");
 		credsFile = new File(TEST_ENVIRONMENT_DIR, TEST_CREDENTIALS_FILE_NAME);
 		credsFile.createNewFile();
 		reposFile = new File(TEST_ENVIRONMENT_DIR, TEST_REPOS_FILE_NAME);
 		reposFile.createNewFile();
+		
+		
 
 		FileUtils.writeLines(reposFile,Arrays.asList(
-				"[{\"name\": \"eu.untill:unTill\",\"url\": \"" + unTillVCS.getRepoUrl() + "\"},",
-				"{\"name\": \"eu.untill:UBL\",\"url\": \"" + ublVCS.getRepoUrl() + "\"},",
-				"{\"name\": \"eu.untill:unTillDb\",\"url\": \"" + unTillDbVCS.getRepoUrl() + "\"}]"));
-
+				"[{\"name\": \"" + SCMWorkflowConfigTest.PRODUCT_UNTILL + "\",\"url\": \"" + unTillVCS.getRepoUrl() + "\"},",
+				"{\"name\": \"" + SCMWorkflowConfigTest.PRODUCT_UBL + "\",\"url\": \"" + ublVCS.getRepoUrl() + "\"},",
+				"{\"name\": \"" + SCMWorkflowConfigTest.PRODUCT_UNTILLDB  +"\",\"url\": \"" + unTillDbVCS.getRepoUrl() + "\"}]"));
 	}
 
 	public IVCS getUnTillVCS() {
@@ -91,5 +100,22 @@ public class TestEnvironment {
 	public File getReposFile() {
 		return reposFile;
 	}
+
+	public void generateFeatureCommit(IVCS vcs, String commitMessage) {
+		vcs.setFileContent(null, TEST_FEATURE_FILE_NAME, "feature content", commitMessage);
+	}
+
+	public Version getUnTillVer() {
+		return unTillVer;
+	}
+
+	public Version getUblVer() {
+		return ublVer;
+	}
+
+	public Version getUnTillDbVer() {
+		return unTillDbVer;
+	}
+	
 
 }

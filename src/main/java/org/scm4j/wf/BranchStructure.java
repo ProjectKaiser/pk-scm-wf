@@ -27,4 +27,5 @@ public class BranchStructure {
 	public String toString() {
 		return "BranchStructure [branchName=" + branchName + ", hasFeatures=" + hasFeatures + "]";
 	}
+	
 }
