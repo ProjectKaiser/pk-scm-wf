@@ -32,7 +32,6 @@ public class SCMWorkflowGetActionTest {
 
 	private static final String TEST_MASTER_BRANCH = "test master branch";
 	
-
 	@Mock
 	IVCS mockedVcs;
 
@@ -81,9 +80,9 @@ public class SCMWorkflowGetActionTest {
 	@Test
 	public void testActionNone() {
 		//test none
-		List<Dep> testMDeps = Arrays.asList(new Dep(TEST_DEP + ":1.0.0", vcsRepos));
+		List<Dep> testMDeps = Collections.singletonList(new Dep(TEST_DEP + ":1.0.0", vcsRepos));
 		wf.setMDeps(testMDeps);
-		wf.setChildActions(Arrays.asList((IAction) new ActionError(testRepo, Collections.<IAction>emptyList(), TEST_MASTER_BRANCH, "test cause", ws)));
+		wf.setChildActions(Collections.singletonList((IAction) new ActionError(testRepo, Collections.<IAction>emptyList(), TEST_MASTER_BRANCH, "test cause", ws)));
 		IAction res = wf.getAction();
 		assertTrue(res instanceof ActionNone);
 	}
@@ -91,9 +90,9 @@ public class SCMWorkflowGetActionTest {
 	@Test
 	public void testProductionReleaseNewDependencies() {
 		Mockito.doReturn("0.0.0").when(mockedVcs).getFileContent(TEST_MASTER_BRANCH, SCMWorkflow.VER_FILE_NAME);
-		List<Dep> testMDeps = Arrays.asList(new Dep(TEST_DEP + ":1.0.0", vcsRepos));
+		List<Dep> testMDeps = Collections.singletonList(new Dep(TEST_DEP + ":1.0.0", vcsRepos));
 		wf.setMDeps(testMDeps);
-		wf.setChildActions(Arrays.<IAction>asList(new SCMActionUseLastReleaseVersion(testRepo, Collections.<IAction>emptyList(), TEST_MASTER_BRANCH, ws)));
+		wf.setChildActions(Collections.<IAction>singletonList(new SCMActionUseLastReleaseVersion(testRepo, Collections.<IAction>emptyList(), TEST_MASTER_BRANCH, ws)));
 		IAction action = wf.getAction();
 		assertTrue(action instanceof SCMActionProductionRelease);
 		SCMActionProductionRelease pr = (SCMActionProductionRelease) action;

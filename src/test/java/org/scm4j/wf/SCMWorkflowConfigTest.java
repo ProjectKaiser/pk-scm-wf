@@ -1,14 +1,5 @@
 package org.scm4j.wf;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.Arrays;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -21,16 +12,18 @@ import org.scm4j.wf.conf.Version;
 import org.scm4j.wf.model.Credentials;
 import org.scm4j.wf.model.VCSRepository;
 
+import java.io.File;
+import java.io.IOException;
+
+import static org.junit.Assert.*;
+
 @PrepareForTest({VCSRepository.class, Credentials.class})
 @RunWith(PowerMockRunner.class)
 public class SCMWorkflowConfigTest {
 
 	public static final String PRODUCT_UNTILL = "eu.untill:unTill";
-	public static final String PRODUCT_UBL= "eu.untill:UBL";
+	public static final String PRODUCT_UBL = "eu.untill:UBL";
 	public static final String PRODUCT_UNTILLDB = "eu.untill:unTIllDb";
-	
-	private static final String TEST_ENVIRONMENT_DIR = TestEnvironment.TEST_ENVIRONMENT_DIR;
-	private static final String TEST_VCS_REPO_FILE_URL = TestEnvironment.TEST_VCS_REPO_FILE_URL;
 	
 	private TestEnvironment env;
 
@@ -47,7 +40,7 @@ public class SCMWorkflowConfigTest {
 
 	@After
 	public void tearDown() {
-		File testFolder = new File(TEST_ENVIRONMENT_DIR);
+		File testFolder = new File(TestEnvironment.TEST_ENVIRONMENT_DIR);
 		if (testFolder.exists()) {
 			testFolder.delete();
 		}
@@ -55,9 +48,9 @@ public class SCMWorkflowConfigTest {
 	
 	@Test
 	public void testUseLastVersions() {
-		env.generateFeatureCommit(env.getUnTillVCS(), SCMActionProductionRelease.VCS_TAG_SCM_VER);
-		env.generateFeatureCommit(env.getUnTillDbVCS(), SCMActionProductionRelease.VCS_TAG_SCM_VER);
-		env.generateFeatureCommit(env.getUblVCS(), SCMActionProductionRelease.VCS_TAG_SCM_VER);
+		env.generateCommitWithVERTag(env.getUnTillVCS());
+		env.generateCommitWithVERTag(env.getUnTillDbVCS());
+		env.generateCommitWithVERTag(env.getUblVCS());
 		SCMWorkflow wf = new SCMWorkflow(PRODUCT_UNTILL);
 		
 		IAction actionUnTill = wf.getProductionReleaseAction();
@@ -95,7 +88,54 @@ public class SCMWorkflowConfigTest {
 	}
 	
 	@Test
-	public void testProductionReleaseNewDependencies() {
+	public void testProductionReleaseHasNewFeaturedDependencies() {
+		env.generateCommitWithVERTag(env.getUnTillVCS());
+		env.generateCommitWithVERTag(env.getUnTillDbVCS());
+		env.generateCommitWithVERTag(env.getUblVCS());
+		env.generateFeatureCommit(env.getUnTillDbVCS(), "feature commit");
+
+		SCMWorkflow wf = new SCMWorkflow(PRODUCT_UNTILL);
+
+		IAction actionUnTill = wf.getProductionReleaseAction();
+		checkProductionReleaseAction(actionUnTill, null, ProductionReleaseReason.NEW_DEPENDENCIES, PRODUCT_UNTILL);
+		assertTrue(actionUnTill.getChildActions().size() == 2);
+
+		IAction actionUBL = actionUnTill.getChildActions().get(0);
+		checkProductionReleaseAction(actionUBL, actionUnTill, ProductionReleaseReason.NEW_DEPENDENCIES, PRODUCT_UBL);
+		assertTrue(actionUBL.getChildActions().size() == 1);
+
+		IAction actionUnTillDb = actionUnTill.getChildActions().get(1);
+		checkProductionReleaseAction(actionUnTillDb, actionUnTill, ProductionReleaseReason.NEW_FEATURES, PRODUCT_UNTILLDB);
+
+		IAction actionUBLUnTillDb = actionUBL.getChildActions().get(0);
+		checkProductionReleaseAction(actionUBLUnTillDb, actionUBL, ProductionReleaseReason.NEW_FEATURES, PRODUCT_UNTILLDB);
+	}
+
+	@Test
+	public void testProductionReleaseHasNewerDependencyVersions() {
+		env.generateCommitWithVERTag(env.getUnTillDbVCS());
+		env.generateCommitWithVERTag(env.getUblVCS());
+		env.getUnTillVCS().setFileContent(null, SCMWorkflow.MDEPS_FILE_NAME,
+				SCMWorkflowConfigTest.PRODUCT_UBL + ":" + env.getUblVer().toString() + "\r\n" +
+				SCMWorkflowConfigTest.PRODUCT_UNTILLDB + ":1.0.0" + "\r\n",
+				SCMActionProductionRelease.VCS_TAG_SCM_IGNORE + " old unTillDb version is used in mdeps file");
+
+		SCMWorkflow wf = new SCMWorkflow(PRODUCT_UNTILL);
+
+		IAction actionUnTill = wf.getProductionReleaseAction();
+		checkProductionReleaseAction(actionUnTill, null, ProductionReleaseReason.NEW_DEPENDENCIES, PRODUCT_UNTILL);
+		assertTrue(actionUnTill.getChildActions().size() == 2);
+
+		IAction actionUBL = actionUnTill.getChildActions().get(0);
+		checkUseLastReleaseAction(actionUBL, actionUnTill, PRODUCT_UBL, env.getUblVer());
+		assertTrue(actionUBL.getChildActions().size() == 1);
+
+		IAction actionUnTillDb = actionUnTill.getChildActions().get(1);
+		checkUseLastReleaseAction(actionUnTillDb, actionUnTill, PRODUCT_UNTILLDB, env.getUnTillDbVer());
+
+		IAction actionUBLUnTillDb = actionUBL.getChildActions().get(0);
+		checkUseLastReleaseAction(actionUBLUnTillDb, actionUBL, PRODUCT_UNTILLDB, env.getUnTillDbVer());
+
 	}
 	
 	private void checkAction(IAction action, IAction parentAction, String expectedName) {
@@ -103,7 +143,7 @@ public class SCMWorkflowConfigTest {
 		assertEquals(action.getParent(), parentAction);
 		assertEquals(action.getName(), expectedName);
 		assertNotNull(action.getExecutionResults());
-		assertTrue(action.getExecutionResults().isEmpty()); // not executed yet
+		assertTrue(action.getExecutionResults().isEmpty()); // because is not executed yet
 	}
 	
 	private void checkUseLastReleaseAction(IAction action, IAction parentAction, String expectedName, Version expectedVersion) {
@@ -122,10 +162,4 @@ public class SCMWorkflowConfigTest {
 		SCMActionProductionRelease pr = (SCMActionProductionRelease) action;
 		assertEquals(pr.getReason(), expectedReason);
 	}
-	
-	
-	
-	
-
-	
 }

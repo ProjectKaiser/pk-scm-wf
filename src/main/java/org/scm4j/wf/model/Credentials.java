@@ -1,9 +1,9 @@
 package org.scm4j.wf.model;
 
+import com.google.common.base.Strings;
 import com.google.gson.reflect.TypeToken;
 import org.apache.commons.io.IOUtils;
 import org.scm4j.wf.GsonUtils;
-import org.testng.util.Strings;
 
 import java.io.InputStream;
 import java.lang.reflect.Type;

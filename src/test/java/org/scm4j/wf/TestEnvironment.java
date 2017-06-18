@@ -1,10 +1,5 @@
 package org.scm4j.wf;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.UUID;
-
 import org.apache.commons.io.FileUtils;
 import org.scm4j.vcs.GitVCS;
 import org.scm4j.vcs.GitVCSUtils;
@@ -13,6 +8,11 @@ import org.scm4j.vcs.api.workingcopy.IVCSRepositoryWorkspace;
 import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
 import org.scm4j.vcs.api.workingcopy.VCSWorkspace;
 import org.scm4j.wf.conf.Version;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.UUID;
 
 public class TestEnvironment {
 	public static final String TEST_REPOS_FILE_NAME = "repos";
@@ -23,6 +23,7 @@ public class TestEnvironment {
 	public static final String TEST_LOCAL_REPO_DIR = new File(TEST_ENVIRONMENT_DIR, "local-repos").getPath();
 	public static final String TEST_REMOTE_REPO_DIR = new File(TEST_ENVIRONMENT_DIR, "remote-repos").getPath();
 	public static final String TEST_FEATURE_FILE_NAME = "feature.txt";
+	public static final String TEST_DUMMY_FILE_NAME = "dummy.txt";
 
 	private IVCS unTillVCS;
 	private IVCS ublVCS;
@@ -35,13 +36,48 @@ public class TestEnvironment {
 	
 
 	public void generateTestEnvironment() throws IOException {
-		File envDir = new File(TEST_ENVIRONMENT_DIR);
-		if (envDir.exists()) {
-			FileUtils.deleteDirectory(envDir);
-		}
-		envDir.mkdirs();
-		IVCSWorkspace localVCSWorkspace = new VCSWorkspace(TEST_ENVIRONMENT_DIR);
 
+		createTestEnvironmentFolder();
+
+		createTestVCSRepos();
+
+		uploadVCSConfigFiles();
+
+		createCredentialsFile();
+
+		createReposFile();
+
+	}
+
+	private void createReposFile() throws IOException {
+		reposFile = new File(TEST_ENVIRONMENT_DIR, TEST_REPOS_FILE_NAME);
+		reposFile.createNewFile();
+		FileUtils.writeLines(reposFile,Arrays.asList(
+				"[{\"name\": \"" + SCMWorkflowConfigTest.PRODUCT_UNTILL + "\",\"url\": \"" + unTillVCS.getRepoUrl() + "\"},",
+				"{\"name\": \"" + SCMWorkflowConfigTest.PRODUCT_UBL + "\",\"url\": \"" + ublVCS.getRepoUrl() + "\"},",
+				"{\"name\": \"" + SCMWorkflowConfigTest.PRODUCT_UNTILLDB  +"\",\"url\": \"" + unTillDbVCS.getRepoUrl() + "\"}]"));
+	}
+
+	private void createCredentialsFile() throws IOException {
+		credsFile = new File(TEST_ENVIRONMENT_DIR, TEST_CREDENTIALS_FILE_NAME);
+		credsFile.createNewFile();
+	}
+
+	private void uploadVCSConfigFiles() {
+		unTillVCS.setFileContent(null, SCMWorkflow.VER_FILE_NAME, unTillVer.toString(), "ver file added");
+		unTillVCS.setFileContent(null, SCMWorkflow.MDEPS_FILE_NAME,
+				SCMWorkflowConfigTest.PRODUCT_UBL + ":" + ublVer.toString() + "\r\n" +
+				SCMWorkflowConfigTest.PRODUCT_UNTILLDB + ":" + unTillDbVer.toString() + "\r\n", "mdeps file added");
+
+		ublVCS.setFileContent(null, SCMWorkflow.VER_FILE_NAME, ublVer.toString(), "ver file added");
+		ublVCS.setFileContent(null, SCMWorkflow.MDEPS_FILE_NAME,
+				SCMWorkflowConfigTest.PRODUCT_UNTILLDB + ":" + unTillDbVer.toString() + "\r\n", "mdeps file added");
+
+		unTillDbVCS.setFileContent(null, SCMWorkflow.VER_FILE_NAME, unTillDbVer.toString(), "ver file added");
+	}
+
+	private void createTestVCSRepos() {
+		IVCSWorkspace localVCSWorkspace = new VCSWorkspace(TEST_ENVIRONMENT_DIR);
 		File unTillRemoteRepoDir = new File(TEST_REMOTE_REPO_DIR, "unTill-" + UUID.randomUUID().toString() + ".git");
 		File ublRemoteRepoDir = new File(TEST_REMOTE_REPO_DIR, "UBL-" + UUID.randomUUID().toString() + ".git");
 		File unTillRemoteDbRepoDir = new File(TEST_REMOTE_REPO_DIR, "unTillDb-" + UUID.randomUUID().toString() + ".git");
@@ -57,28 +93,14 @@ public class TestEnvironment {
 		unTillVCS = new GitVCS(unTillVCSRepoWS);
 		ublVCS = new GitVCS(ublVCSRepoWS);
 		unTillDbVCS = new GitVCS(unTillDbVCSRepoWS);
+	}
 
-		unTillVCS.setFileContent(null, SCMWorkflow.VER_FILE_NAME, unTillVer.toString(), "ver file added");
-		unTillVCS.setFileContent(null, SCMWorkflow.MDEPS_FILE_NAME,
-				SCMWorkflowConfigTest.PRODUCT_UBL + ":" + ublVer.toString() + "\r\n" + 
-				SCMWorkflowConfigTest.PRODUCT_UNTILLDB + ":" + unTillDbVer.toString() + "\r\n", "mdeps file added");
-
-		ublVCS.setFileContent(null, SCMWorkflow.VER_FILE_NAME, ublVer.toString(), "ver file added");
-		ublVCS.setFileContent(null, SCMWorkflow.MDEPS_FILE_NAME, 
-				SCMWorkflowConfigTest.PRODUCT_UNTILLDB + ":" + unTillDbVer.toString() + "\r\n", "mdeps file added");
-
-		unTillDbVCS.setFileContent(null, SCMWorkflow.VER_FILE_NAME, unTillDbVer.toString(), "ver file added");
-		credsFile = new File(TEST_ENVIRONMENT_DIR, TEST_CREDENTIALS_FILE_NAME);
-		credsFile.createNewFile();
-		reposFile = new File(TEST_ENVIRONMENT_DIR, TEST_REPOS_FILE_NAME);
-		reposFile.createNewFile();
-		
-		
-
-		FileUtils.writeLines(reposFile,Arrays.asList(
-				"[{\"name\": \"" + SCMWorkflowConfigTest.PRODUCT_UNTILL + "\",\"url\": \"" + unTillVCS.getRepoUrl() + "\"},",
-				"{\"name\": \"" + SCMWorkflowConfigTest.PRODUCT_UBL + "\",\"url\": \"" + ublVCS.getRepoUrl() + "\"},",
-				"{\"name\": \"" + SCMWorkflowConfigTest.PRODUCT_UNTILLDB  +"\",\"url\": \"" + unTillDbVCS.getRepoUrl() + "\"}]"));
+	private void createTestEnvironmentFolder() throws IOException {
+		File envDir = new File(TEST_ENVIRONMENT_DIR);
+		if (envDir.exists()) {
+			FileUtils.deleteDirectory(envDir);
+		}
+		envDir.mkdirs();
 	}
 
 	public IVCS getUnTillVCS() {
@@ -103,6 +125,10 @@ public class TestEnvironment {
 
 	public void generateFeatureCommit(IVCS vcs, String commitMessage) {
 		vcs.setFileContent(null, TEST_FEATURE_FILE_NAME, "feature content", commitMessage);
+	}
+
+	public void generateCommitWithVERTag(IVCS vcs) {
+		vcs.setFileContent(null, TEST_DUMMY_FILE_NAME, "dummy content", SCMActionProductionRelease.VCS_TAG_SCM_VER);
 	}
 
 	public Version getUnTillVer() {
