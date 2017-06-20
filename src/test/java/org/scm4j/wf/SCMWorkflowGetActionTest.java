@@ -29,8 +29,10 @@ import static org.junit.Assert.*;
 public class SCMWorkflowGetActionTest {
 
 	private static final String TEST_DEP = "test:dep";
-
 	private static final String TEST_MASTER_BRANCH = "test master branch";
+	private static final VCSCommit COMMIT_FEATURE = new VCSCommit("test revision", "feature commit", null);
+	private static final VCSCommit COMMIT_VER = new VCSCommit("test revision", SCMActionProductionRelease.VCS_TAG_SCM_VER, null);
+	private static final VCSCommit COMMIT_IGNORE = new VCSCommit("test revision", SCMActionProductionRelease.VCS_TAG_SCM_IGNORE, null);
 	
 	@Mock
 	IVCS mockedVcs;
@@ -59,8 +61,7 @@ public class SCMWorkflowGetActionTest {
 	
 	@Test
 	public void testProductionReleaseNewFeatures() {
-		VCSCommit featureCommit = new VCSCommit("test revision", "", null);
-		Mockito.doReturn(featureCommit).when(mockedVcs).getHeadCommit(TEST_MASTER_BRANCH);
+		Mockito.doReturn(COMMIT_FEATURE).when(mockedVcs).getHeadCommit(TEST_MASTER_BRANCH);
 		IAction action = wf.getAction();
 		assertTrue(action instanceof SCMActionProductionRelease);
 		SCMActionProductionRelease r = (SCMActionProductionRelease) action;
@@ -70,8 +71,7 @@ public class SCMWorkflowGetActionTest {
 	@Test 
 	public void testActionError() {
 		Mockito.doReturn(false).when(mockedVcs).fileExists(testRepo.getDevBranch(), SCMWorkflow.VER_FILE_NAME);
-		VCSCommit headCommit = new VCSCommit("test revision", "", null);
-		Mockito.doReturn(headCommit).when(mockedVcs).getHeadCommit(TEST_MASTER_BRANCH);
+		Mockito.doReturn(COMMIT_FEATURE).when(mockedVcs).getHeadCommit(TEST_MASTER_BRANCH);
 		IAction action = wf.getAction();
 		assertTrue(action instanceof ActionError);
 		assertNotNull(((ActionError) action).getCause());
@@ -79,7 +79,6 @@ public class SCMWorkflowGetActionTest {
 	
 	@Test
 	public void testActionNone() {
-		//test none
 		List<Dep> testMDeps = Collections.singletonList(new Dep(TEST_DEP + ":1.0.0", vcsRepos));
 		wf.setMDeps(testMDeps);
 		wf.setChildActions(Collections.singletonList((IAction) new ActionError(testRepo, Collections.<IAction>emptyList(), TEST_MASTER_BRANCH, "test cause", ws)));
@@ -90,6 +89,7 @@ public class SCMWorkflowGetActionTest {
 	@Test
 	public void testProductionReleaseNewDependencies() {
 		Mockito.doReturn("0.0.0").when(mockedVcs).getFileContent(TEST_MASTER_BRANCH, SCMWorkflow.VER_FILE_NAME);
+		Mockito.doReturn(COMMIT_VER).when(mockedVcs).getHeadCommit(TEST_MASTER_BRANCH);
 		List<Dep> testMDeps = Collections.singletonList(new Dep(TEST_DEP + ":1.0.0", vcsRepos));
 		wf.setMDeps(testMDeps);
 		wf.setChildActions(Collections.<IAction>singletonList(new SCMActionUseLastReleaseVersion(testRepo, Collections.<IAction>emptyList(), TEST_MASTER_BRANCH, ws)));
@@ -101,8 +101,7 @@ public class SCMWorkflowGetActionTest {
 
 	@Test
 	public void testUseLastReleaseIfNoFeatures() {
-		VCSCommit featureCommit = new VCSCommit("test revision", SCMActionProductionRelease.VCS_TAG_SCM_VER, null);
-		Mockito.doReturn(featureCommit).when(mockedVcs).getHeadCommit(TEST_MASTER_BRANCH);
+		Mockito.doReturn(COMMIT_VER).when(mockedVcs).getHeadCommit(TEST_MASTER_BRANCH);
 		Version ver = new Version("1.0.0");
 		Mockito.doReturn("1.0.0").when(mockedVcs).getFileContent(TEST_MASTER_BRANCH, SCMWorkflow.VER_FILE_NAME);
 		IAction action = wf.getAction();
@@ -113,8 +112,7 @@ public class SCMWorkflowGetActionTest {
 
 	@Test
 	public void testUseLastReleaseIfIgnore() {
-		VCSCommit featureCommit = new VCSCommit("test revision", SCMActionProductionRelease.VCS_TAG_SCM_IGNORE, null);
-		Mockito.doReturn(featureCommit).when(mockedVcs).getHeadCommit(TEST_MASTER_BRANCH);
+		Mockito.doReturn(COMMIT_IGNORE).when(mockedVcs).getHeadCommit(TEST_MASTER_BRANCH);
 		Version ver = new Version("1.0.0");
 		Mockito.doReturn("1.0.0").when(mockedVcs).getFileContent(TEST_MASTER_BRANCH, SCMWorkflow.VER_FILE_NAME);
 		IAction action = wf.getAction();

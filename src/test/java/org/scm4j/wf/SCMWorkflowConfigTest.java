@@ -36,6 +36,7 @@ public class SCMWorkflowConfigTest {
 				.thenReturn("file://localhost/" + env.getCredsFile().getPath().replace("\\", "/"));
 		PowerMockito.when(System.getenv(VCSRepository.REPOS_LOCATION_ENV_VAR))
 				.thenReturn("file://localhost/" + env.getReposFile().getPath().replace("\\", "/"));
+		
 	}
 
 	@After
@@ -51,6 +52,7 @@ public class SCMWorkflowConfigTest {
 		env.generateCommitWithVERTag(env.getUnTillVCS());
 		env.generateCommitWithVERTag(env.getUnTillDbVCS());
 		env.generateCommitWithVERTag(env.getUblVCS());
+		
 		SCMWorkflow wf = new SCMWorkflow(PRODUCT_UNTILL);
 		
 		IAction actionUnTill = wf.getProductionReleaseAction();
@@ -70,6 +72,10 @@ public class SCMWorkflowConfigTest {
 	
 	@Test
 	public void testProductionReleaseNewFeatures() {
+		env.generateFeatureCommit(env.getUblVCS(), "feature commit");
+		env.generateFeatureCommit(env.getUnTillVCS(), "feature commit");
+		env.generateFeatureCommit(env.getUnTillDbVCS(), "feature commit");
+		
 		SCMWorkflow wf = new SCMWorkflow(PRODUCT_UNTILL);
 		
 		IAction actionUnTill = wf.getProductionReleaseAction();
@@ -90,7 +96,6 @@ public class SCMWorkflowConfigTest {
 	@Test
 	public void testProductionReleaseHasNewFeaturedDependencies() {
 		env.generateCommitWithVERTag(env.getUnTillVCS());
-		env.generateCommitWithVERTag(env.getUnTillDbVCS());
 		env.generateCommitWithVERTag(env.getUblVCS());
 		env.generateFeatureCommit(env.getUnTillDbVCS(), "feature commit");
 
@@ -113,6 +118,7 @@ public class SCMWorkflowConfigTest {
 
 	@Test
 	public void testProductionReleaseHasNewerDependencyVersions() {
+		env.generateCommitWithVERTag(env.getUnTillVCS());
 		env.generateCommitWithVERTag(env.getUnTillDbVCS());
 		env.generateCommitWithVERTag(env.getUblVCS());
 		env.getUnTillVCS().setFileContent(null, SCMWorkflow.MDEPS_FILE_NAME,
