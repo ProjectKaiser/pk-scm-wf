@@ -21,15 +21,13 @@
 ]
 ```
 - explicit repositories config
-	- note: credentials will be repleced with credentilas from crdentials file by name. So just credentials name is required here.
 ```
 [
 	{
 		"name": "eu.untill:untill",
 		"url": "http://dev.untill.com/svn/untill",
 		"credentials": {
-			"name": "gdy",
-			"password": ""
+			"name": "gdy"
 		},
 		"type": "GIT"
 	},
@@ -62,7 +60,3 @@
 	eu.untill:unTillDb:1.11.2#sddfgdfgdfg
 	eu.untill:UBL:1.99.2
 	```
-
-
-
-
