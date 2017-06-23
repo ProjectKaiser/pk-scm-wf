@@ -1,5 +1,6 @@
 package org.scm4j.wf.model;
 
+import com.google.common.base.Strings;
 import com.google.gson.reflect.TypeToken;
 import org.apache.commons.io.IOUtils;
 import org.scm4j.wf.GsonUtils;
@@ -8,11 +9,14 @@ import java.io.InputStream;
 import java.lang.reflect.Type;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class Credentials {
+	public static final String CREDENTIALS_LOCATION_ENV_VAR = "SCM4J_CREDENTIALS";
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -76,12 +80,15 @@ public class Credentials {
 	}
 	
 	public static List<Credentials> fromJson(String jsonString) {
+		if (Strings.isNullOrEmpty(jsonString)) {
+			return new ArrayList<>();
+		}
 		Type type = new TypeToken<List<Credentials>>() {}.getType();
 		return GsonUtils.fromJson(jsonString, type);
 	}
 
 	public static Map<String, Credentials> loadFromEnvironment() throws Exception {
-		String storeUrlsStr = System.getenv("SCM4J_CREDENTIALS");
+		String storeUrlsStr = System.getenv(CREDENTIALS_LOCATION_ENV_VAR);
 		Map<String, Credentials> res = new HashMap<>();
 		if (storeUrlsStr == null) {
 			return res;

@@ -18,7 +18,7 @@ public abstract class ActionAbstract implements IAction {
 	protected List<IAction> childActions;
 	protected VCSRepository repo;
 	protected String currentBranchName;
-	private Map<String, Object> results = new LinkedHashMap<>();
+	private Map<String, Object> executionResults = new LinkedHashMap<>();
 	protected IVCSWorkspace ws;
 	
 	public Version getDevVersion() {
@@ -37,8 +37,8 @@ public abstract class ActionAbstract implements IAction {
 		return VCSFactory.getIVCS(repo, ws);
 	}
 
-	public Map<String, Object> getResults() {
-		return parentAction != null ? parentAction.getResults() : results;
+	public Map<String, Object> getExecutionResults() {
+		return parentAction != null ? parentAction.getExecutionResults() : executionResults;
 	}
 
 	public ActionAbstract(VCSRepository repo, List<IAction> childActions, String currentBranchName, IVCSWorkspace ws) {
