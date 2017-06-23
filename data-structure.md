@@ -14,7 +14,7 @@
 	- note: if "type" filed is omitted and if a repo url ends with ".git" then the repository is considered as Git, otherwise - SVN
 ```
 [
-    {
+	{
 		"name": "eu.untill:untill",
 		"url": "http://dev.untill.com/svn/untill"
 	},
@@ -24,7 +24,7 @@
 	- note: credentials will be repleced with credentilas from crdentials file by name. So just credentials name is required here.
 ```
 [
-    {
+	{
 		"name": "eu.untill:untill",
 		"url": "http://dev.untill.com/svn/untill",
 		"credentials": {
@@ -51,6 +51,18 @@
 
 # VCS repositories workspaces
 - located at user home folder by default or defined by SCMWorkfow(<product name>, <workspace home dir>) constructor
+
+# ver file
+- One line, no comments. Exmaple:
+	- ```1.0.0-SNAPSHOT```
+
+# mdeps file
+- multilines, #-commented. Example:
+-	```
+	eu.untill:unTillDb:1.11.2#sddfgdfgdfg
+	eu.untill:UBL:1.99.2
+	```
+
 
 
 
