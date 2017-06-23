@@ -51,11 +51,11 @@
 - located at user home folder by default or defined by SCMWorkfow(<product name>, <workspace home dir>) constructor
 
 # ver file
-- One line, no comments. Exmaple:
+- Single line, no comments. Exmaple:
 	- ```1.0.0-SNAPSHOT```
 
 # mdeps file
-- multilines, #-commented. Example:
+- multiline, #-commented. Example:
 -	```
 	eu.untill:unTillDb:1.11.2#sddfgdfgdfg
 	eu.untill:UBL:1.99.2
