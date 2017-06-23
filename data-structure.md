@@ -56,7 +56,7 @@
 
 # mdeps file
 - multiline, #-commented. Example:
--	`
+-	```
 	eu.untill:unTillDb:1.11.2#sddfgdfgdfg
 	eu.untill:UBL:1.99.2
-	`
+	```
