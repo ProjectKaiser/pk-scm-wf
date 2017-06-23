@@ -13,6 +13,10 @@ For low vcs operations scm4j-vcs- libraries are used
 - Managed dependency (mdep) / Контролируемая зависимость
   - Component which is under control, i.e. can be built, branched and uploaded to a maven repository
   
+# Data Structure
+
+Ref. [data-structure.md](data-structure.md)
+  
 # Artifacts  
 
 Ref. [artifacts.md](artifacts.md)
