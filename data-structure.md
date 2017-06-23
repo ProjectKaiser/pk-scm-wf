@@ -2,10 +2,10 @@
 
 - Repositories list urls
 	- Defined as ;-separated value of SCM4J_VCS_REPOS environment var. Each url must lead to json-file with repositories descriptions
-	- ```SCM4J_VCS_REPOS=file:///c:/workspace/vcs-repos.json;http://dev.untill.com/git/untillProtocols.git```
+	- `SCM4J_VCS_REPOS=file:///c:/workspace/vcs-repos.json;http://dev.untill.com/git/untillProtocols.git`
 - Credentials list urls
 	- Defined as ;-separated value of SCM4J_CREDENTIALS environment var. Each url must lead to json-file with credentials descriptions
-	- ```SCM4J_CREDENTIALS=file:///c:/workspace/credentials.json;http://dev.untill.com/ertiactory/repo/.../credentials.json```
+	- `SCM4J_CREDENTIALS=file:///c:/workspace/credentials.json;http://dev.untill.com/ertiactory/repo/.../credentials.json`
 	
 # Repositories list
 - must be referenced by SCM4J_VCS_REPOS environment var
@@ -52,11 +52,11 @@
 
 # ver file
 - Single line, no comments. Exmaple:
-	- ```1.0.0-SNAPSHOT```
+	- `1.0.0-SNAPSHOT`
 
 # mdeps file
 - multiline, #-commented. Example:
--	```
+-	`
 	eu.untill:unTillDb:1.11.2#sddfgdfgdfg
 	eu.untill:UBL:1.99.2
-	```
+	`
