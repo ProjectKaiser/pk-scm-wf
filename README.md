@@ -11,7 +11,7 @@ For low vcs operations scm4j-vcs- libraries are used
 # Terms
 
 - `Managable dependency` (`mdeps`)
- -Component which has its own repository and is under control, i.e. can be built, branched and uploaded to a maven repository
+ - Component which has its own repository and is under control, i.e. can be built, branched and uploaded to a maven repository
   
 # Data Structure
 
@@ -21,7 +21,7 @@ Ref. [data-structure.md](data-structure.md)
 
 Ref. [artifacts.md](artifacts.md)
 
-# ISCMWorkflow.ultimateProduction
+# ISCMWorkflow.getProductionReleaseAction
 
 Calculate actions to do the following things
 
@@ -34,5 +34,16 @@ Calculate actions to do the following things
     - `release` removed from `ver.conf`, if any
 - Change dev/ver.conf
     - minor version increased 
+    
+# Code snippet
+```
+ISCMworkflow wf = new SCMWorkflow("eu.untill:untill");
+IAction action = wf.getProductionReleaseAction;
+System.out.println(action.toString());
+try (IProgress progress = new ProgressConsole(action.getName(), ">>> ", "<<< ")) {
+	action.execute(progress);
+}
+```
+
   
   
