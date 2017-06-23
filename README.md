@@ -36,7 +36,7 @@ Calculate actions to do the following things
     - minor version increased 
     
 # Code snippet
-```
+```java
 ISCMworkflow wf = new SCMWorkflow("eu.untill:untill");
 IAction action = wf.getProductionReleaseAction;
 System.out.println(action.toString());
