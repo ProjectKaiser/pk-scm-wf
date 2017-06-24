@@ -37,8 +37,8 @@ Calculate actions to do the following things
     
 # Code snippet
 ```java
-ISCMworkflow wf = new SCMWorkflow("eu.untill:untill");
-IAction action = wf.getProductionReleaseAction;
+ISCMWorkflow wf = new SCMWorkflow("eu.untill:untill");
+IAction action = wf.getProductionReleaseAction();
 System.out.println(action.toString());
 try (IProgress progress = new ProgressConsole(action.getName(), ">>> ", "<<< ")) {
 	action.execute(progress);
