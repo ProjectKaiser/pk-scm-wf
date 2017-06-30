@@ -25,9 +25,9 @@
 [
 	{
 		"name": "eu.untill:untill",
-		"url": "http://dev.untill.com/svn/untill",
+		"url": "http://repository.host",
 		"credentials": {
-			"name": "gdy"
+			"name": "username"
 		},
 		"type": "GIT"
 	},
@@ -40,8 +40,8 @@
 ```
 [
 	{
-		"name": "gdy",
-		"password": "9usNgQxANUZC",
+		"name": "username",
+		"password": "password",
 		"isDefault": true
 	}
 ]
