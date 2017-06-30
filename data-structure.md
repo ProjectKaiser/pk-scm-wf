@@ -2,10 +2,10 @@
 
 - Repositories list urls
 	- Defined as ;-separated value of SCM4J_VCS_REPOS environment var. Each url must lead to json-file with repositories descriptions
-	- `SCM4J_VCS_REPOS=file:///c:/workspace/vcs-repos.json;http://dev.untill.com/git/untillProtocols.git`
+	- `SCM4J_VCS_REPOS=file:///c:/workspace/vcs-repos.json;http://host/git/untillProtocols.git`
 - Credentials list urls
 	- Defined as ;-separated value of SCM4J_CREDENTIALS environment var. Each url must lead to json-file with credentials descriptions
-	- `SCM4J_CREDENTIALS=file:///c:/workspace/credentials.json;http://dev.untill.com/ertiactory/repo/.../credentials.json`
+	- `SCM4J_CREDENTIALS=file:///c:/workspace/credentials.json;http://host/artiactory/repo/.../credentials.json`
 	
 # Repositories list
 - must be referenced by SCM4J_VCS_REPOS environment var
@@ -16,7 +16,7 @@
 [
 	{
 		"name": "eu.untill:untill",
-		"url": "http://dev.untill.com/svn/untill"
+		"url": "http://host"
 	},
 ]
 ```
@@ -25,7 +25,7 @@
 [
 	{
 		"name": "eu.untill:untill",
-		"url": "http://repository.host",
+		"url": "http://host",
 		"credentials": {
 			"name": "username"
 		},
