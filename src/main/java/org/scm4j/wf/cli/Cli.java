@@ -2,8 +2,8 @@ package org.scm4j.wf.cli;
 
 import org.scm4j.actions.IAction;
 import org.scm4j.actions.PrintAction;
-import org.scm4j.progress.IProgress;
-import org.scm4j.progress.ProgressConsole;
+import org.scm4j.commons.progress.IProgress;
+import org.scm4j.commons.progress.ProgressConsole;
 import org.scm4j.wf.ISCMWorkflow;
 import org.scm4j.wf.SCMWorkflow;
 

@@ -3,7 +3,7 @@ package org.scm4j.actions;
 import java.util.List;
 import java.util.Map;
 
-import org.scm4j.progress.IProgress;
+import org.scm4j.commons.progress.IProgress;
 
 public interface IAction {
 

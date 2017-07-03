@@ -1,5 +1,14 @@
 package org.scm4j.wf;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -19,10 +28,6 @@ import org.scm4j.wf.conf.Version;
 import org.scm4j.wf.model.Dep;
 import org.scm4j.wf.model.VCSRepository;
 import org.scm4j.wf.model.VCSType;
-
-import java.util.*;
-
-import static org.junit.Assert.*;
 
 @PrepareForTest(VCSFactory.class)
 @RunWith(PowerMockRunner.class)

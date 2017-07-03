@@ -1,10 +1,10 @@
 package org.scm4j.actions;
 
-import org.scm4j.progress.IProgress;
+import java.util.List;
+
+import org.scm4j.commons.progress.IProgress;
 import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
 import org.scm4j.wf.model.VCSRepository;
-
-import java.util.List;
 
 public class ActionNone extends ActionAbstract {
 

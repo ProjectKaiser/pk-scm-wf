@@ -1,5 +1,9 @@
 package org.scm4j.actions;
 
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
 import org.scm4j.wf.SCMWorkflow;
@@ -7,10 +11,6 @@ import org.scm4j.wf.VCSFactory;
 import org.scm4j.wf.conf.DepCoords;
 import org.scm4j.wf.conf.Version;
 import org.scm4j.wf.model.VCSRepository;
-
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
 
 public abstract class ActionAbstract implements IAction {
 

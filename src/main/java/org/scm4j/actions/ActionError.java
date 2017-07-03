@@ -1,10 +1,10 @@
-package org.scm4j.actions;
-
-import org.scm4j.progress.IProgress;
-import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
-import org.scm4j.wf.model.VCSRepository;
+	package org.scm4j.actions;
 
 import java.util.List;
+
+import org.scm4j.commons.progress.IProgress;
+import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
+import org.scm4j.wf.model.VCSRepository;
 
 public class ActionError extends ActionAbstract implements IAction {
 	

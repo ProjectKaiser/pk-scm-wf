@@ -1,5 +1,10 @@
 package org.scm4j.wf;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 import org.scm4j.actions.ActionError;
 import org.scm4j.actions.ActionNone;
 import org.scm4j.actions.IAction;
@@ -9,11 +14,6 @@ import org.scm4j.vcs.api.workingcopy.VCSWorkspace;
 import org.scm4j.wf.conf.MDepsFile;
 import org.scm4j.wf.model.Dep;
 import org.scm4j.wf.model.VCSRepository;
-
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 
 public class SCMWorkflow implements ISCMWorkflow {
 

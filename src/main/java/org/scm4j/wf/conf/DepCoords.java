@@ -2,23 +2,23 @@ package org.scm4j.wf.conf;
 
 public class DepCoords {
 
-	private final String nameStr;
+	private final String artifactId;
 	private final String commentStr;
-	private final String extStr;
-	private final String groupStr;
-	private final String classStr;
+	private final String extension;
+	private final String groupId;
+	private final String classifier;
 	private final Version version;
 
 	public String getComment() {
 		return commentStr;
 	}
 
-	public DepCoords(String sourceString) {
-		String str = sourceString;
+	public DepCoords(String coordsString) {
+		String str = coordsString;
 
 		// Comment
 		{
-			Integer pos = sourceString.indexOf("#");
+			Integer pos = coordsString.indexOf("#");
 			
 			if (pos > 0) {
 				commentStr = str.substring(pos);
@@ -30,24 +30,24 @@ public class DepCoords {
 
 		// Extension
 		{
-			Integer pos = sourceString.indexOf("@");
+			Integer pos = coordsString.indexOf("@");
 			if (pos > 0) {
-				extStr = str.substring(pos);
+				extension = str.substring(pos);
 				str = str.substring(0, pos);
 			} else {
-				extStr = "";
+				extension = "";
 			}
 		}
 
 		String[] strs = str.split(":", -1);
 		if (strs.length < 2) {
-			throw new IllegalArgumentException("wrong mdep coord: " + sourceString);
+			throw new IllegalArgumentException("wrong mdep coord: " + coordsString);
 		}
 
-		groupStr = strs[0];
-		nameStr = strs[1];
+		groupId = strs[0];
+		artifactId = strs[1];
 
-		classStr = strs.length > 3 ? ":" + strs[3] : "";
+		classifier = strs.length > 3 ? ":" + strs[3] : "";
 
 		version = new Version(strs.length > 2 ? strs[2] : "");
 	}
@@ -62,19 +62,27 @@ public class DepCoords {
 	}
 
 	public String toString(String versionStr) {
-		return getName() + ":" + versionStr + classStr + extStr + commentStr;
+		return getName() + ":" + versionStr + classifier + extension + commentStr;
 	}
 
 	public String getName() {
-		return groupStr + ":" + nameStr;
+		return groupId + ":" + artifactId;
+	}
+	
+	public String getGroupId() {
+		return groupId;
+	}
+	
+	public String getArtifactId() {
+		return artifactId;
 	}
 
 	public String getExtension() {
-		return extStr;
+		return extension;
 	}
 	
 	public String getClassifier() {
-		return classStr;
+		return classifier;
 	}
 
 }

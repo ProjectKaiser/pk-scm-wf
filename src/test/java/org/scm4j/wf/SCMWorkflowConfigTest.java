@@ -1,5 +1,12 @@
 package org.scm4j.wf;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import java.io.File;
+import java.io.IOException;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -11,11 +18,6 @@ import org.scm4j.actions.IAction;
 import org.scm4j.wf.conf.Version;
 import org.scm4j.wf.model.Credentials;
 import org.scm4j.wf.model.VCSRepository;
-
-import java.io.File;
-import java.io.IOException;
-
-import static org.junit.Assert.*;
 
 @PrepareForTest({VCSRepository.class, Credentials.class})
 @RunWith(PowerMockRunner.class)
