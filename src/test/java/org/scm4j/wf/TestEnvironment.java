@@ -1,5 +1,10 @@
 package org.scm4j.wf;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.UUID;
+
 import org.apache.commons.io.FileUtils;
 import org.scm4j.vcs.GitVCS;
 import org.scm4j.vcs.GitVCSUtils;
@@ -8,11 +13,6 @@ import org.scm4j.vcs.api.workingcopy.IVCSRepositoryWorkspace;
 import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
 import org.scm4j.vcs.api.workingcopy.VCSWorkspace;
 import org.scm4j.wf.conf.Version;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.UUID;
 
 public class TestEnvironment {
 	public static final String TEST_REPOS_FILE_NAME = "repos";
@@ -35,7 +35,7 @@ public class TestEnvironment {
 	private final Version unTillDbVer = new Version("2.59.1-SNAPSHOT");
 	
 
-	public void generateTestEnvironment() throws IOException {
+	public void generateTestEnvironment() throws Exception {
 
 		createTestEnvironmentFolder();
 
@@ -76,7 +76,7 @@ public class TestEnvironment {
 		unTillDbVCS.setFileContent(null, SCMWorkflow.VER_FILE_NAME, unTillDbVer.toString(), "ver file added");
 	}
 
-	private void createTestVCSRepos() {
+	private void createTestVCSRepos() throws Exception {
 		IVCSWorkspace localVCSWorkspace = new VCSWorkspace(TEST_ENVIRONMENT_DIR);
 		File unTillRemoteRepoDir = new File(TEST_REMOTE_REPO_DIR, "unTill-" + UUID.randomUUID().toString() + ".git");
 		File ublRemoteRepoDir = new File(TEST_REMOTE_REPO_DIR, "UBL-" + UUID.randomUUID().toString() + ".git");

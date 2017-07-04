@@ -1,5 +1,6 @@
 package org.scm4j.actions;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,7 +19,7 @@ public abstract class ActionAbstract implements IAction {
 	protected List<IAction> childActions;
 	protected VCSRepository repo;
 	protected String currentBranchName;
-	private Map<String, Object> executionResults = new LinkedHashMap<>();
+	private Map<String, List<Object>> executionResults = new LinkedHashMap<>();
 	protected IVCSWorkspace ws;
 	
 	public Version getDevVersion() {
@@ -37,7 +38,7 @@ public abstract class ActionAbstract implements IAction {
 		return VCSFactory.getIVCS(repo, ws);
 	}
 
-	public Map<String, Object> getExecutionResults() {
+	public Map<String, List<Object>> getExecutionResults() {
 		return parentAction != null ? parentAction.getExecutionResults() : executionResults;
 	}
 
@@ -76,5 +77,37 @@ public abstract class ActionAbstract implements IAction {
 	@Override
 	public String toString() {
 		return this.getClass().getSimpleName() + " [" + repo.getName() + "]";
+	}
+	
+	@Override
+	public IRelease getReleaseIntf() {
+		if (this instanceof IRelease) {
+			return (IRelease) this;
+		} else {
+			return null;
+		}
+	}
+	
+	public Object getResult(String name, Class<?> resultClass) {
+		resultClass.getClass();
+		List<Object> results = getExecutionResults().get(name);
+		if (results == null) {
+			return null;
+		}
+		for (Object result : results) {
+			if (resultClass.isInstance(result)) {
+				return result;
+			}
+		}
+		return null;
+	}
+	
+	public void addResult(String name, Object res) {
+		List<Object> results = getExecutionResults().get(name);
+		if (results == null) {
+			results = new ArrayList<>();
+			getExecutionResults().put(name, results);
+		}
+		results.add(res);
 	}
 }

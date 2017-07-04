@@ -17,6 +17,8 @@ public interface IAction {
 	
 	String getName();
 
-	Map<String, Object> getExecutionResults();
+	Map<String, List<Object>> getExecutionResults();
+	
+	IRelease getReleaseIntf();
 	
 }

@@ -5,18 +5,21 @@ import java.util.List;
 
 import org.scm4j.actions.ActionAbstract;
 import org.scm4j.actions.IAction;
+import org.scm4j.actions.IRelease;
 import org.scm4j.actions.results.ActionResultVersion;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSCommit;
+import org.scm4j.vcs.api.VCSTag;
 import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
 import org.scm4j.wf.conf.ConfFile;
 import org.scm4j.wf.conf.MDepsFile;
 import org.scm4j.wf.conf.Version;
+import org.scm4j.wf.exceptions.ENoReleaseToTag;
 import org.scm4j.wf.model.Dep;
 import org.scm4j.wf.model.VCSRepository;
 
-public class SCMActionProductionRelease extends ActionAbstract {
+public class SCMActionProductionRelease extends ActionAbstract implements IRelease {
 	
 	public static final String VCS_TAG_SCM_VER = "#scm-ver";
 	public static final String VCS_TAG_SCM_MDEPS = "#scm-mdeps";
@@ -27,6 +30,8 @@ public class SCMActionProductionRelease extends ActionAbstract {
 	public static final String BRANCH_RELEASE = "release";
 	
 	private ProductionReleaseReason reason;
+	private String newBranchName = null;
+	private String newVersion = null;
 
 	public SCMActionProductionRelease(VCSRepository repo, List<IAction> childActions, String masterBranchName, 
 			ProductionReleaseReason reason, IVCSWorkspace ws) {
@@ -41,7 +46,7 @@ public class SCMActionProductionRelease extends ActionAbstract {
 	public void setReason(ProductionReleaseReason reason) {
 		this.reason = reason;
 	}
-
+	
 	@Override
 	public Object execute(IProgress progress) {
 		try {
@@ -58,16 +63,14 @@ public class SCMActionProductionRelease extends ActionAbstract {
 						return nestedResult;
 					}
 				}
-				getExecutionResults().put(action.getName(), nestedResult);
+				addResult(action.getName(), nestedResult);
 			}
 			
 			// Are we built already?
-			if (getExecutionResults().get(getName()) != null) {
-				Object existingResult = getExecutionResults().get(getName());
-				if (existingResult instanceof ActionResultVersion) {
-					progress.reportStatus("using already built version " + ((ActionResultVersion) existingResult).getVersion()); 
-					return existingResult;
-				}
+			ActionResultVersion existingResult = (ActionResultVersion) getResult(getName(), ActionResultVersion.class);
+			if (existingResult != null) {
+				progress.reportStatus("using already built version " + ((ActionResultVersion) existingResult).getVersion()); 
+				return existingResult;
 			}
 			
 			// We have a new versions map. Will write it to mdeps on the ground
@@ -79,15 +82,14 @@ public class SCMActionProductionRelease extends ActionAbstract {
 				List<String> mDepsOut = new ArrayList<>();
 				String mDepOut;
 				for (Dep mDep : mDepsFile.getMDeps()) {
-					nestedResult = getExecutionResults().get(mDep.getName());
+					existingResult = (ActionResultVersion) getResult(mDep.getName(), ActionResultVersion.class);
 					mDepOut = "";
-					if (nestedResult != null && nestedResult instanceof ActionResultVersion) {
-						ActionResultVersion res = (ActionResultVersion) nestedResult;
-						if (res.getIsNewBuild()) {
-							mDepOut = mDep.toString(res.getVersion());
+					if (existingResult != null) {
+						if (existingResult.getIsNewBuild()) {
+							mDepOut = mDep.toString(existingResult.getVersion());
 						} else {
-							if (!res.getVersion().equals(mDep.getVersion().toReleaseString())) {
-								mDepOut = mDep.toString(res.getVersion());
+							if (!existingResult.getVersion().equals(mDep.getVersion().toReleaseString())) {
+								mDepOut = mDep.toString(existingResult.getVersion());
 							} 
 						}
 					} 
@@ -116,7 +118,7 @@ public class SCMActionProductionRelease extends ActionAbstract {
 			}
 			
 			// ������� �����
-			String newBranchName = repo.getReleaseBanchPrefix() + currentVer.toReleaseString(); 
+			newBranchName = repo.getReleaseBanchPrefix() + currentVer.toReleaseString(); 
 			vcs.createBranch(currentBranchName, newBranchName, "branch created");
 			progress.reportStatus("branch " + newBranchName + " created");
 			
@@ -127,10 +129,10 @@ public class SCMActionProductionRelease extends ActionAbstract {
 			progress.reportStatus("change to version " + verContent + " in trunk");
 			
 			// �������� ver � �����
-			verContent = currentVer.toReleaseString();
-			vcs.setFileContent(newBranchName, SCMWorkflow.VER_FILE_NAME, verContent, 
-					VCS_TAG_SCM_VER + " " + verContent);
-			progress.reportStatus("change to version " + verContent + " in branch " + newBranchName);
+			newVersion = currentVer.toReleaseString();
+			vcs.setFileContent(newBranchName, SCMWorkflow.VER_FILE_NAME, newVersion, 
+					VCS_TAG_SCM_VER + " " + newVersion);
+			progress.reportStatus("change to version " + newVersion + " in branch " + newBranchName);
 			
 			// ������� mdeps-changed
 			if (!mDepsChanged.isEmpty()) {
@@ -142,15 +144,67 @@ public class SCMActionProductionRelease extends ActionAbstract {
 			ActionResultVersion res = new ActionResultVersion(repo.getName(), currentVer.toReleaseString(), true);
 			progress.reportStatus("new " + repo.getName() + " " 
 					+ res.getVersion() + " is released in " + newBranchName);
+			if (parentAction == null) {
+				addResult(getName(), res); 
+			}
 			return res;
 		} catch (Throwable t) {
 			progress.reportStatus("execution error: " + t.toString() + ": " + t.getMessage());
 			return t;
 		} 
 	}
+
+	
 	
 	@Override
 	public String toString() {
 		return super.toString() + "; " + reason.toString();
+	}
+
+	@Override
+	public VCSTag tagRelease(IProgress progress, String tagMessage) {
+		VCSTag existingTag = (VCSTag) getResult(getName(), VCSTag.class);
+		if (existingTag != null) {
+			progress.reportStatus("already tagged: " + existingTag.toString());
+			return existingTag;
+		}
+		
+		ActionResultVersion existingRelease = (ActionResultVersion) getResult(getName(), ActionResultVersion.class);
+		if (existingRelease == null) {
+			progress.reportStatus("no release to tag");
+			throw new ENoReleaseToTag();
+		}
+		
+		if (newVersion == null) {
+			progress.reportStatus("skipped because already procssed");
+			return null;
+		}
+
+		IRelease tagIntf;
+		for (IAction action : childActions) {
+			tagIntf = action.getReleaseIntf(); 
+			if (tagIntf != null) {
+				try (IProgress nestedProgress = progress.createNestedProgress(action.getName())) {
+					tagIntf.tagRelease(nestedProgress, tagMessage);
+				} catch (Exception e) {
+					throw new RuntimeException(e);
+				}
+			}
+		}
+		
+		IVCS vcs = getVCS();
+		VCSTag tag = vcs.createTag(newBranchName, newVersion, tagMessage);
+		progress.reportStatus("head of \"" + newBranchName + "\" tagged: " + tag.toString());
+		return tag;
+	}
+
+	@Override
+	public String getNewVersion() {
+		return newVersion;
+	}
+
+	@Override
+	public String getNewBranchName() {
+		return newBranchName;
 	}
 }

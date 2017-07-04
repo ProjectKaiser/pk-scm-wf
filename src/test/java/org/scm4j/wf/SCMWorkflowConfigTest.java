@@ -5,7 +5,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
-import java.io.IOException;
+import java.util.List;
 
 import org.junit.After;
 import org.junit.Before;
@@ -15,6 +15,9 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.scm4j.actions.IAction;
+import org.scm4j.commons.progress.IProgress;
+import org.scm4j.commons.progress.ProgressConsole;
+import org.scm4j.vcs.api.VCSTag;
 import org.scm4j.wf.conf.Version;
 import org.scm4j.wf.model.Credentials;
 import org.scm4j.wf.model.VCSRepository;
@@ -30,7 +33,7 @@ public class SCMWorkflowConfigTest {
 	private TestEnvironment env;
 
 	@Before
-	public void setUp() throws IOException {
+	public void setUp() throws Exception {
 		env = new TestEnvironment();
 		env.generateTestEnvironment();
 		PowerMockito.mockStatic(System.class);
@@ -169,5 +172,41 @@ public class SCMWorkflowConfigTest {
 		assertTrue(action instanceof SCMActionProductionRelease);
 		SCMActionProductionRelease pr = (SCMActionProductionRelease) action;
 		assertEquals(pr.getReason(), expectedReason);
+	}
+	
+	@Test
+	public void testTagRelease() throws Exception {
+		env.generateFeatureCommit(env.getUblVCS(), "feature commit");
+		env.generateFeatureCommit(env.getUnTillVCS(), "feature commit");
+		env.generateFeatureCommit(env.getUnTillDbVCS(), "feature commit");
+		
+		SCMWorkflow wf = new SCMWorkflow(PRODUCT_UNTILL);
+		IAction actionUnTill = wf.getProductionReleaseAction();
+		checkChildActionsSupportsIRelease(actionUnTill.getChildActions());
+		
+		try (IProgress progress = new ProgressConsole("executing " + actionUnTill.getName(), ">>> ", "<<< ")) {
+			actionUnTill.execute(progress);
+		}
+		
+		try (IProgress progress = new ProgressConsole("tagging " + actionUnTill.getName(), ">>> ", "<<< ")) {
+			actionUnTill.getReleaseIntf().tagRelease(progress, "tagMessage");
+		}
+		List<VCSTag> tags = env.getUnTillVCS().getTags();
+		assertNotNull(tags);
+		assertTrue(tags.size() == 1);
+		VCSTag tag = tags.get(0);
+		assertEquals(tag.getTagName(), actionUnTill.getReleaseIntf().getNewVersion());
+		assertEquals(tag.getTagMessage(), "tagMessage");
+		assertEquals(tag.getRelatedCommit(), env.getUnTillVCS().getHeadCommit(actionUnTill.getReleaseIntf().getNewBranchName()));
+	}
+
+	private void checkChildActionsSupportsIRelease(List<IAction> childActions) {
+		if (childActions == null) {
+			return;
+		}
+		for (IAction action : childActions) {
+			checkChildActionsSupportsIRelease(action.getChildActions());
+			assertNotNull(action.getReleaseIntf());
+		}
 	}
 }
