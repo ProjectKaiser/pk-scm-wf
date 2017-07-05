@@ -16,6 +16,10 @@ import java.util.Map;
 
 public class Credentials {
 	public static final String CREDENTIALS_LOCATION_ENV_VAR = "SCM4J_CREDENTIALS";
+	
+	private String name;
+	private String password;
+	private Boolean isDefault = false;
 
 	@Override
 	public int hashCode() {
@@ -41,10 +45,6 @@ public class Credentials {
 			return false;
 		return true;
 	}
-
-	private String name;
-	private String password;
-	private Boolean isDefault = false;
 
 	public String getName() {
 		return name;

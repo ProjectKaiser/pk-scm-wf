@@ -181,23 +181,25 @@ public class SCMWorkflowConfigTest {
 		env.generateFeatureCommit(env.getUnTillDbVCS(), "feature commit");
 		
 		SCMWorkflow wf = new SCMWorkflow(PRODUCT_UNTILL);
-		IAction actionUnTill = wf.getProductionReleaseAction();
-		checkChildActionsSupportsIRelease(actionUnTill.getChildActions());
+		IAction actionReleaseUnTill = wf.getProductionReleaseAction();
 		
-		try (IProgress progress = new ProgressConsole("executing " + actionUnTill.getName(), ">>> ", "<<< ")) {
-			actionUnTill.execute(progress);
+		try (IProgress progress = new ProgressConsole("releasing " + actionReleaseUnTill.getName(), ">>> ", "<<< ")) {
+			actionReleaseUnTill.execute(progress);
 		}
 		
-		try (IProgress progress = new ProgressConsole("tagging " + actionUnTill.getName(), ">>> ", "<<< ")) {
-			actionUnTill.getReleaseIntf().tagRelease(progress, "tagMessage");
+		IAction actionTagUnTill = wf.getTagReleaseAction();
+		
+		try (IProgress progress = new ProgressConsole("tagging " + actionReleaseUnTill.getName(), ">>> ", "<<< ")) {
+			actionTagUnTill.execute(progress);
 		}
+		
 		List<VCSTag> tags = env.getUnTillVCS().getTags();
 		assertNotNull(tags);
 		assertTrue(tags.size() == 1);
 		VCSTag tag = tags.get(0);
-		assertEquals(tag.getTagName(), actionUnTill.getReleaseIntf().getNewVersion());
+		assertEquals(tag.getTagName(), actionReleaseUnTill.getReleaseIntf().getNewVersion());
 		assertEquals(tag.getTagMessage(), "tagMessage");
-		assertEquals(tag.getRelatedCommit(), env.getUnTillVCS().getHeadCommit(actionUnTill.getReleaseIntf().getNewBranchName()));
+		assertEquals(tag.getRelatedCommit(), env.getUnTillVCS().getHeadCommit(actionReleaseUnTill.getReleaseIntf().getNewBranchName()));
 	}
 
 	private void checkChildActionsSupportsIRelease(List<IAction> childActions) {

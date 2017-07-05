@@ -73,16 +73,17 @@ public class SCMWorkflow implements ISCMWorkflow {
 			ISCMWorkflow childWorkflow = new SCMWorkflow(mDep.getName(), vcsRepos, ws);
 			childActions.add(childWorkflow.getProductionReleaseAction());
 		}
-		return getAction();
+		return getProductionReleaseOneAction();
 	}
 
-	public IAction getAction() {
+	public IAction getProductionReleaseOneAction() {
 		IAction res;
 		Boolean hasVer = vcs.fileExists(devBranchName, VER_FILE_NAME);
 		if (!hasVer) {
-			res = new ActionError(getRepoByName(depName), childActions, devBranchName, "no " + VER_FILE_NAME + " file", ws);
+			//res = new ActionError(getRepoByName(depName), childActions, devBranchName, "no " + VER_FILE_NAME + " file", ws);
+			res = new ActionNone(getRepoByName(depName), childActions, devBranchName, ws, "no " + VER_FILE_NAME + " file");
 		} else if (hasErrorActions(childActions)) {
-			res = new ActionNone(getRepoByName(depName), childActions, devBranchName, ws);
+			res = new ActionNone(getRepoByName(depName), childActions, devBranchName, ws, "has child error actions");
 		} else if (new BranchStructure(vcs, devBranchName).getHasFeatures()) {
 			res = new SCMActionProductionRelease(getRepoByName(depName), childActions, devBranchName,
 					ProductionReleaseReason.NEW_FEATURES, ws);
@@ -92,7 +93,6 @@ public class SCMWorkflow implements ISCMWorkflow {
 		}  else {
 			res = new SCMActionUseLastReleaseVersion(getRepoByName(depName), childActions, devBranchName, ws);
 		}
-
 		return res;
 	}
 
@@ -129,4 +129,21 @@ public class SCMWorkflow implements ISCMWorkflow {
 		return false;
 	}
 
+	@Override
+	public IAction getTagReleaseAction() {
+		for (Dep mDep : mDeps) {
+			ISCMWorkflow childWorkflow = new SCMWorkflow(mDep.getName(), vcsRepos, ws);
+			childActions.add(childWorkflow.getTagReleaseAction());
+		}
+		return getTagReleaseOneAction();
+	}
+
+	private IAction getTagReleaseOneAction() {
+		BranchStructure br = new BranchStructure(vcs, devBranchName);
+		if (br.getReleaseTag() != null) {
+			return new SCMActionUseExistingTag(getRepoByName(depName), childActions, devBranchName, ws, br.getReleaseTag());
+		} else {
+			return new SCMActionTagRelease(getRepoByName(depName), childActions, devBranchName, ws, "tag message");
+		}
+	}
 }

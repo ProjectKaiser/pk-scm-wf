@@ -5,21 +5,18 @@ import java.util.List;
 
 import org.scm4j.actions.ActionAbstract;
 import org.scm4j.actions.IAction;
-import org.scm4j.actions.IRelease;
 import org.scm4j.actions.results.ActionResultVersion;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSCommit;
-import org.scm4j.vcs.api.VCSTag;
 import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
 import org.scm4j.wf.conf.ConfFile;
 import org.scm4j.wf.conf.MDepsFile;
 import org.scm4j.wf.conf.Version;
-import org.scm4j.wf.exceptions.ENoReleaseToTag;
 import org.scm4j.wf.model.Dep;
 import org.scm4j.wf.model.VCSRepository;
 
-public class SCMActionProductionRelease extends ActionAbstract implements IRelease {
+public class SCMActionProductionRelease extends ActionAbstract {
 	
 	public static final String VCS_TAG_SCM_VER = "#scm-ver";
 	public static final String VCS_TAG_SCM_MDEPS = "#scm-mdeps";
@@ -154,57 +151,9 @@ public class SCMActionProductionRelease extends ActionAbstract implements IRelea
 		} 
 	}
 
-	
-	
 	@Override
 	public String toString() {
 		return super.toString() + "; " + reason.toString();
 	}
 
-	@Override
-	public VCSTag tagRelease(IProgress progress, String tagMessage) {
-		VCSTag existingTag = (VCSTag) getResult(getName(), VCSTag.class);
-		if (existingTag != null) {
-			progress.reportStatus("already tagged: " + existingTag.toString());
-			return existingTag;
-		}
-		
-		ActionResultVersion existingRelease = (ActionResultVersion) getResult(getName(), ActionResultVersion.class);
-		if (existingRelease == null) {
-			progress.reportStatus("no release to tag");
-			throw new ENoReleaseToTag();
-		}
-		
-		if (newVersion == null) {
-			progress.reportStatus("skipped because already procssed");
-			return null;
-		}
-
-		IRelease tagIntf;
-		for (IAction action : childActions) {
-			tagIntf = action.getReleaseIntf(); 
-			if (tagIntf != null) {
-				try (IProgress nestedProgress = progress.createNestedProgress(action.getName())) {
-					tagIntf.tagRelease(nestedProgress, tagMessage);
-				} catch (Exception e) {
-					throw new RuntimeException(e);
-				}
-			}
-		}
-		
-		IVCS vcs = getVCS();
-		VCSTag tag = vcs.createTag(newBranchName, newVersion, tagMessage);
-		progress.reportStatus("head of \"" + newBranchName + "\" tagged: " + tag.toString());
-		return tag;
-	}
-
-	@Override
-	public String getNewVersion() {
-		return newVersion;
-	}
-
-	@Override
-	public String getNewBranchName() {
-		return newBranchName;
-	}
 }

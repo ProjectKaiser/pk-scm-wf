@@ -21,8 +21,11 @@ public class MDepsFile {
 		try {
 			String str = br.readLine();
 			while (str != null) {
-				Dep dep = new Dep(str, vcsRepos);
-				mDeps.add(dep);
+				if (isLineValueable(str)) {
+					Dep dep = new Dep(str, vcsRepos);
+					mDeps.add(dep);
+
+				}
 				str = br.readLine();
 			}
 		} catch (IOException e) {
@@ -30,6 +33,14 @@ public class MDepsFile {
 		}
 	}
 	
+	private boolean isLineValueable(String str) {
+		Integer pos = str.indexOf("#");
+		if (pos >= 0) {
+			str = str.substring(0, pos);
+		}
+		return !str.trim().isEmpty();
+	}
+
 	public MDepsFile(String content, VCSRepository vcsRepo) {
 		BufferedReader br = new BufferedReader(new StringReader(content));
 		try {

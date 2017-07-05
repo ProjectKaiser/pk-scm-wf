@@ -7,20 +7,22 @@ import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
 import org.scm4j.wf.model.VCSRepository;
 
 public class ActionNone extends ActionAbstract {
-
-	public ActionNone(VCSRepository repo, List<IAction> actions, String masterBranchName, IVCSWorkspace ws) {
+	
+	private String reason;
+	
+	public ActionNone(VCSRepository repo, List<IAction> actions, String masterBranchName, IVCSWorkspace ws, String reason) {
 		super(repo, actions, masterBranchName, ws);
+		this.reason = reason;
 	}
 
 	@Override
 	public Object execute(IProgress progress) {
 		return null;
-		
 	}
 	
 	@Override
 	public String toString() {
-		return "Nothing should be done [" + getName() + "]";
+		return "Nothing should be done [" + getName() + "]. Reason: " + reason;
 	}
 
 }
