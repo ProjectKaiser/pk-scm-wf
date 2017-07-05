@@ -1,4 +1,4 @@
-package org.scm4j.wf.model;
+package org.scm4j.wf.conf;
 
 import com.google.common.base.Strings;
 import com.google.gson.reflect.TypeToken;

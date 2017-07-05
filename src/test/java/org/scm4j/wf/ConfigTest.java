@@ -13,9 +13,9 @@ import org.junit.runner.RunWith;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
+import org.scm4j.wf.conf.Credentials;
+import org.scm4j.wf.conf.VCSRepository;
 import org.scm4j.wf.exceptions.EWFConfig;
-import org.scm4j.wf.model.Credentials;
-import org.scm4j.wf.model.VCSRepository;
 
 @PrepareForTest({VCSRepository.class, Credentials.class})
 @RunWith(PowerMockRunner.class)

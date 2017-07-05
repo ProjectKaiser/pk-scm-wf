@@ -1,8 +1,6 @@
-package org.scm4j.wf.model;
+package org.scm4j.wf.conf;
 
 import java.util.Map;
-
-import org.scm4j.wf.conf.DepCoords;
 
 public class Dep extends DepCoords {
 	private Boolean isManaged;

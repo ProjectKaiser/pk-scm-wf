@@ -24,10 +24,10 @@ import org.scm4j.actions.IAction;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
+import org.scm4j.wf.conf.Dep;
+import org.scm4j.wf.conf.VCSRepository;
+import org.scm4j.wf.conf.VCSType;
 import org.scm4j.wf.conf.Version;
-import org.scm4j.wf.model.Dep;
-import org.scm4j.wf.model.VCSRepository;
-import org.scm4j.wf.model.VCSType;
 
 @PrepareForTest(VCSFactory.class)
 @RunWith(PowerMockRunner.class)

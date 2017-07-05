@@ -7,8 +7,8 @@ import org.scm4j.actions.IAction;
 import org.scm4j.actions.results.ActionResultVersion;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
+import org.scm4j.wf.conf.VCSRepository;
 import org.scm4j.wf.conf.Version;
-import org.scm4j.wf.model.VCSRepository;
 
 public class SCMActionUseLastReleaseVersion extends ActionAbstract {
 

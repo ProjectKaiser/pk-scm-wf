@@ -18,9 +18,9 @@ import org.scm4j.actions.IAction;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.commons.progress.ProgressConsole;
 import org.scm4j.vcs.api.VCSTag;
+import org.scm4j.wf.conf.Credentials;
+import org.scm4j.wf.conf.VCSRepository;
 import org.scm4j.wf.conf.Version;
-import org.scm4j.wf.model.Credentials;
-import org.scm4j.wf.model.VCSRepository;
 
 @PrepareForTest({VCSRepository.class, Credentials.class})
 @RunWith(PowerMockRunner.class)

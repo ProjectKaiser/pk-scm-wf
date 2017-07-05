@@ -1,4 +1,4 @@
-package org.scm4j.wf.model;
+package org.scm4j.wf.conf;
 
 import com.google.common.base.Strings;
 import com.google.gson.reflect.TypeToken;
@@ -86,7 +86,7 @@ public class Credentials {
 		Type type = new TypeToken<List<Credentials>>() {}.getType();
 		return GsonUtils.fromJson(jsonString, type);
 	}
-
+	
 	public static Map<String, Credentials> loadFromEnvironment() throws Exception {
 		String storeUrlsStr = System.getenv(CREDENTIALS_LOCATION_ENV_VAR);
 		Map<String, Credentials> res = new HashMap<>();

@@ -11,10 +11,10 @@ import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
 import org.scm4j.wf.conf.ConfFile;
+import org.scm4j.wf.conf.Dep;
 import org.scm4j.wf.conf.MDepsFile;
+import org.scm4j.wf.conf.VCSRepository;
 import org.scm4j.wf.conf.Version;
-import org.scm4j.wf.model.Dep;
-import org.scm4j.wf.model.VCSRepository;
 
 public class SCMActionProductionRelease extends ActionAbstract {
 	
