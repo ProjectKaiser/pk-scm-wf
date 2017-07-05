@@ -1,17 +1,17 @@
-	package org.scm4j.actions;
+	package org.scm4j.wf.actions;
 
 import java.util.List;
 
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
-import org.scm4j.wf.model.VCSRepository;
+import org.scm4j.wf.conf.Dep;
 
 public class ActionError extends ActionAbstract implements IAction {
 	
 	private String cause;
 
-	public ActionError(VCSRepository repo, List<IAction> childActions, String masterBranchName, String cause, IVCSWorkspace ws) {
-		super(repo, childActions, masterBranchName, ws);
+	public ActionError(Dep dep, List<IAction> childActions, String masterBranchName, String cause, IVCSWorkspace ws) {
+		super(dep, childActions, masterBranchName, ws);
 		this.cause = cause;
 	}
 

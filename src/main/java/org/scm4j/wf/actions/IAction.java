@@ -1,4 +1,4 @@
-package org.scm4j.actions;
+package org.scm4j.wf.actions;
 
 import java.util.List;
 import java.util.Map;
@@ -18,7 +18,5 @@ public interface IAction {
 	String getName();
 
 	Map<String, List<Object>> getExecutionResults();
-	
-	IRelease getReleaseIntf();
 	
 }

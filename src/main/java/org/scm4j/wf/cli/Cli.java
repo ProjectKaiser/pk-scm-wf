@@ -1,9 +1,9 @@
 package org.scm4j.wf.cli;
 
-import org.scm4j.actions.IAction;
-import org.scm4j.actions.PrintAction;
 import org.scm4j.wf.ISCMWorkflow;
 import org.scm4j.wf.SCMWorkflow;
+import org.scm4j.wf.actions.IAction;
+import org.scm4j.wf.actions.PrintAction;
 
 public class Cli {
 
@@ -12,7 +12,7 @@ public class Cli {
 		String depName = args[0];
 
 		ISCMWorkflow wf = new SCMWorkflow(depName);
-		IAction action = wf.getProductionReleaseAction();
+		IAction action = wf.getProductionReleaseAction(null);
 
 		PrintAction pa = new PrintAction();
 		pa.print(System.out, action);

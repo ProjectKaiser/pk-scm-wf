@@ -1,0 +1,12 @@
+!!omap
+artA1|artA2:
+  url: http://url.com/svn/prjA
+my(.*):
+  url: http://localhost/git/myProj$1
+  type: git
+  releaseBanchPrefix: B
+  devBranch: null
+~:
+  url: https://github.com/qwerty/$0
+  type: svn
+  devBranch: branches/

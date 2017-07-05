@@ -1,4 +1,4 @@
-package org.scm4j.wf.model;
+package org.scm4j.wf;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
@@ -6,20 +6,28 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
+import org.junit.Before;
 import org.junit.Test;
+import org.scm4j.wf.conf.VCSRepositories;
+import org.scm4j.wf.conf.VCSRepository;
+import org.scm4j.wf.conf.VCSType;
 
-import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 
 public class VCSRepositoriesTest {
 
-	public VCSRepositoriesTest() throws IOException {
-	}
+	private String urlsStr;
+	private String credsStr;
+	private String urlsOmapStr;
 
-	private String urlsStr = Resources.toString(this.getClass().getResource("urls.yml"), Charsets.UTF_8);
-	private String urlsOmapStr = Resources.toString(this.getClass().getResource("urls-omap.yml"), Charsets.UTF_8);
-	private String credsStr = Resources.toString(this.getClass().getResource("creds.yml"), Charsets.UTF_8);
+	@Before
+	public void setUp() throws IOException {
+		urlsStr = Resources.toString(this.getClass().getResource("urls.yml"), StandardCharsets.UTF_8);
+		credsStr = Resources.toString(this.getClass().getResource("creds.yml"), StandardCharsets.UTF_8);
+		urlsOmapStr = Resources.toString(this.getClass().getResource("urls-omap.yml"), StandardCharsets.UTF_8);
+	}
 
 	@Test
 	public void getMy() {
@@ -38,20 +46,20 @@ public class VCSRepositoriesTest {
 	public void get1() {
 		VCSRepositories reps = new VCSRepositories(urlsStr, credsStr);
 		VCSRepository rep = reps.get("artA1");
-		assertThat(new Object[] {rep.getName(), rep.getUrl(), rep.getType(), rep.getDevBranch(), rep.getReleaseBanchPrefix()},
-				is(new Object[] {"artA1", "http://url.com/svn/prjA", VCSType.SVN, "branches/", "release/"}));
-		assertThat(new Object[] {rep.getCredentials().getName(), rep.getCredentials().getPassword()},
-				is(new Object[] {"user", "password"}));
+		assertThat(new Object[] { rep.getName(), rep.getUrl(), rep.getType(), rep.getDevBranch(), rep.getReleaseBanchPrefix() },
+				is(new Object[] { "artA1", "http://url.com/svn/prjA", VCSType.SVN, "branches/", "release/" }));
+		assertThat(new Object[] { rep.getCredentials().getName(), rep.getCredentials().getPassword() },
+				is(new Object[] { "user", "password" }));
 	}
 
 	@Test
 	public void get2() {
 		VCSRepositories reps = new VCSRepositories(urlsStr, credsStr);
 		VCSRepository rep = reps.get("abyrvalg");
-		assertThat(new Object[] {rep.getName(), rep.getUrl(), rep.getType(), rep.getDevBranch(), rep.getReleaseBanchPrefix()},
-				is(new Object[] {"abyrvalg", "https://github.com/qwerty/abyrvalg", VCSType.SVN, "branches/", "release/"}));
-		assertThat(new Object[] {rep.getCredentials().getName(), rep.getCredentials().getPassword()},
-				is(new Object[] {"guest", "guest"}));
+		assertThat(new Object[] { rep.getName(), rep.getUrl(), rep.getType(), rep.getDevBranch(), rep.getReleaseBanchPrefix() },
+				is(new Object[] { "abyrvalg", "https://github.com/qwerty/abyrvalg", VCSType.SVN, "branches/", "release/" }));
+		assertThat(new Object[] { rep.getCredentials().getName(), rep.getCredentials().getPassword() },
+				is(new Object[] { "guest", "guest" }));
 	}
 
 	@Test

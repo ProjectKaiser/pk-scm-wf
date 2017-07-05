@@ -1,8 +1,4 @@
-package org.scm4j.wf.model;
-
-import java.util.Map;
-
-import org.scm4j.wf.conf.DepCoords;
+package org.scm4j.wf.conf;
 
 public class Dep extends DepCoords {
 	private Boolean isManaged;
@@ -29,8 +25,11 @@ public class Dep extends DepCoords {
 		vcsRepository = repo;
 	}
 
-	public Dep(String coords, Map<String, VCSRepository> vcsRepos) {
+	public Dep(String coords, VCSRepositories repos) {
 		super(coords);
-		vcsRepository = vcsRepos.get(getName());
+		vcsRepository = repos.get(getName());
+		if (vcsRepository == null) {
+			throw new IllegalArgumentException("VCSRepository is not found by name " + getName());
+		}
 	}
 }

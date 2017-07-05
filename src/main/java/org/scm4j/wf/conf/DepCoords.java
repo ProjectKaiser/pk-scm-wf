@@ -32,7 +32,7 @@ public class DepCoords {
 		{
 			Integer pos = coordsString.indexOf("@");
 			if (pos > 0) {
-				extension = str.substring(pos);
+				extension = str.substring(pos).trim();
 				str = str.substring(0, pos);
 			} else {
 				extension = "";
@@ -47,7 +47,7 @@ public class DepCoords {
 		groupId = strs[0];
 		artifactId = strs[1];
 
-		classifier = strs.length > 3 ? ":" + strs[3] : "";
+		classifier = strs.length > 3 ? ":" + strs[3].trim() : "";
 
 		version = new Version(strs.length > 2 ? strs[2] : "");
 	}
@@ -62,9 +62,10 @@ public class DepCoords {
 	}
 
 	public String toString(String versionStr) {
-		return getName() + ":" + versionStr + classifier + extension + commentStr;
+		String str = versionStr + classifier + extension;
+		return getName() + (str.isEmpty() ? "" : ":" + str);
 	}
-
+	
 	public String getName() {
 		return groupId + ":" + artifactId;
 	}

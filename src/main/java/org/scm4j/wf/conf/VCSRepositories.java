@@ -1,31 +1,47 @@
-package org.scm4j.wf.model;
+package org.scm4j.wf.conf;
 
+import java.util.HashMap;
 import java.util.Map;
 
+import org.scm4j.wf.exceptions.EConfig;
 import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.error.YAMLException;
 
 public class VCSRepositories {
 	private Map<?, ?> urls;
 	private Map<?, ?> creds;
 
-	public VCSRepositories(String urlsStr, String credsStr) {
+	public VCSRepositories(String urlsStr, String credsStr) throws YAMLException {
 		Yaml yaml = new Yaml();
-		urls = (Map<?, ?>) yaml.load(urlsStr);
-		creds = (Map<?, ?>) yaml.load(credsStr);
+		urls = yaml.loadAs(urlsStr, Map.class);
+		if (urls == null) {
+			urls = new HashMap<>();
+		}
+		creds = yaml.loadAs(credsStr, Map.class);
+		if (creds == null) {
+			creds = new HashMap<>();
+	}
 	}
 
 	public VCSRepository get(String name) {
 		VCSRepository result = new VCSRepository();
 
 		result.setName(name);
-		result.setUrl(getPropByNameAsStringWithReplace(urls, name, "url", result.getUrl()));
-		if (result.getUrl() != null) {
-			Credentials credentials = new Credentials();
-			credentials.setName((String) getPropByName(creds, result.getUrl(), "name", credentials.getName()));
-			credentials.setPassword((String) getPropByName(creds, result.getUrl(), "password", credentials.getPassword()));
-			credentials.setIsDefault((Boolean) getPropByName(creds, result.getUrl(), "isDefault", credentials.getIsDefault()));
-			result.setCredentials(credentials);
+		String url = getPropByNameAsStringWithReplace(urls, name, "url", result.getUrl());
+		if (url == null) {
+			throw new EConfig("no repo url for: " + name);
 		}
+		result.setUrl(url);
+		Credentials credentials; 
+		if (result.getUrl() != null && getPropByName(creds, result.getUrl(), "name", null) != null) {
+			String user = (String) getPropByName(creds, result.getUrl(), "name", null);
+			String pass = (String) getPropByName(creds, result.getUrl(), "password", null);
+			Boolean isDefault = (Boolean) getPropByName(creds, result.getUrl(), "isDefault", false);
+			credentials = new Credentials(user, pass, isDefault);
+		} else {
+			credentials = new Credentials(null, null, false);
+		}
+		result.setCredentials(credentials);
 		result.setType(getVCSType((String) getPropByName(urls, name, "type", null), result.getUrl()));
 		result.setDevBranch((String) getPropByName(urls, name, "devBranch", result.getDevBranch()));
 		result.setReleaseBanchPrefix((String) getPropByName(urls, name, "releaseBanchPrefix", result.getReleaseBanchPrefix()));

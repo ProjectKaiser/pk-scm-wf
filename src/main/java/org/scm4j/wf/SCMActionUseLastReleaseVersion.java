@@ -2,20 +2,20 @@ package org.scm4j.wf;
 
 import java.util.List;
 
-import org.scm4j.actions.ActionAbstract;
-import org.scm4j.actions.IAction;
-import org.scm4j.actions.results.ActionResultVersion;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
+import org.scm4j.wf.actions.ActionAbstract;
+import org.scm4j.wf.actions.IAction;
+import org.scm4j.wf.actions.results.ActionResultVersion;
+import org.scm4j.wf.conf.Dep;
 import org.scm4j.wf.conf.Version;
-import org.scm4j.wf.model.VCSRepository;
 
 public class SCMActionUseLastReleaseVersion extends ActionAbstract {
 
 	private Version ver;
 
-	public SCMActionUseLastReleaseVersion(VCSRepository repo, List<IAction> actions, String masterBranchName, IVCSWorkspace ws) {
-		super(repo, actions, masterBranchName, ws);
+	public SCMActionUseLastReleaseVersion(Dep dep, List<IAction> actions, String masterBranchName, IVCSWorkspace ws) {
+		super(dep, actions, masterBranchName, ws);
 		ver = getDevVersion();
 	}
 
@@ -31,7 +31,7 @@ public class SCMActionUseLastReleaseVersion extends ActionAbstract {
 	@Override
 	public Object execute(IProgress progress) {
 		progress.reportStatus(toString());
-		ActionResultVersion res = new ActionResultVersion(getName(), ver.toPreviousMinorRelease(), false);
+		ActionResultVersion res = new ActionResultVersion(getName(), ver.toPreviousMinorRelease(), false, null);
 		return res;
 	}
 }

@@ -1,97 +1,125 @@
 package org.scm4j.wf;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
-import org.scm4j.actions.ActionError;
-import org.scm4j.actions.ActionNone;
-import org.scm4j.actions.IAction;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
 import org.scm4j.vcs.api.workingcopy.VCSWorkspace;
+import org.scm4j.wf.actions.ActionError;
+import org.scm4j.wf.actions.ActionNone;
+import org.scm4j.wf.actions.IAction;
+import org.scm4j.wf.conf.Dep;
 import org.scm4j.wf.conf.MDepsFile;
-import org.scm4j.wf.model.Dep;
-import org.scm4j.wf.model.VCSRepository;
+import org.scm4j.wf.conf.URLContentLoader;
+import org.scm4j.wf.conf.VCSRepositories;
+import org.scm4j.wf.conf.VCSRepository;
+import org.scm4j.wf.exceptions.EConfig;
+import org.scm4j.wf.exceptions.EDepConfig;
 
 public class SCMWorkflow implements ISCMWorkflow {
 
-	public static final String DEFAULT_VCS_WORKSPACE_DIR = new File(System.getProperty("user.home"), 
+	public static final String REPOS_LOCATION_ENV_VAR = "SCM4J_VCS_REPOS";
+	public static final String CREDENTIALS_LOCATION_ENV_VAR = "SCM4J_CREDENTIALS";
+	public static final String DEFAULT_VCS_WORKSPACE_DIR = new File(System.getProperty("user.home"),
 			".scm4j" + File.separator + "wf-vcs-workspaces").getPath();
 	public static final String MDEPS_FILE_NAME = "mdeps";
 	public static final String VER_FILE_NAME = "version";
 	public static final String MDEPS_CHANGED_FILE_NAME = "mdeps-changed";
-	private Map<String, VCSRepository> vcsRepos;
-	private String depName;
-	List<IAction> childActions = new ArrayList<>();
+	private VCSRepositories repos;
+	private Dep dep;
 	private String devBranchName;
 	private IVCS vcs;
 	private List<Dep> mDeps = new ArrayList<>();
 	private IVCSWorkspace ws;
-	
-	private VCSRepository getRepoByName(String name) {
-		VCSRepository res = vcsRepos.get(name);
-		if (res == null) {
-			throw new IllegalArgumentException("VCSRepository is not found by name " +name);
-		}
-		return res;
-	}
-	
+
 	public void setMDeps(List<Dep> mDeps) {
 		this.mDeps = mDeps;
 	}
 	
-	public void setChildActions(List<IAction> childActions) {
-		this.childActions = childActions;
+	public VCSRepository getRepoByName(String depName) {
+		VCSRepository res = repos.get(depName);
+		if (res == null) {
+			throw new IllegalArgumentException("no repo url by name: " + depName);
+		}
+		return res;
+	}
+
+	public SCMWorkflow(String depCoords, VCSRepositories repos, IVCSWorkspace ws) {
+		this(new Dep(depCoords, repos), repos, ws);
 	}
 	
-	public SCMWorkflow(String depName, Map<String, VCSRepository> vcsRepos, IVCSWorkspace ws) {
-		this.vcsRepos = vcsRepos;
-		this.depName = depName;
+	public SCMWorkflow(Dep dep, VCSRepositories repos, IVCSWorkspace ws) {
+		this.repos = repos;
+		this.dep = dep;
 		this.ws = ws;
-		devBranchName = getRepoByName(depName).getDevBranch();
-		vcs = VCSFactory.getIVCS(getRepoByName(depName), ws);
+		devBranchName = dep.getVcsRepository().getDevBranch();
+		vcs = VCSFactory.getIVCS(dep.getVcsRepository(), ws);
 		if (vcs.fileExists(devBranchName, MDEPS_FILE_NAME)) {
 			String mDepsContent = vcs.getFileContent(devBranchName, MDEPS_FILE_NAME);
-			mDeps = new MDepsFile(mDepsContent, vcsRepos).getMDeps();
-		} 
+			mDeps = new MDepsFile(mDepsContent, repos).getMDeps();
+		}
+	}
+	
+	public SCMWorkflow(String depName) throws EConfig {
+		this(depName, getReposFromEnvironment(), new VCSWorkspace(DEFAULT_VCS_WORKSPACE_DIR));
 	}
 
-	public SCMWorkflow(String depName) {
-		this(depName, VCSRepository.loadFromEnvironment(), new VCSWorkspace(DEFAULT_VCS_WORKSPACE_DIR));
+	private static VCSRepositories getReposFromEnvironment() throws EConfig {
+		try {
+			URLContentLoader reposLoader = new URLContentLoader();
+			String separatedReposUrlsStr = System.getenv(REPOS_LOCATION_ENV_VAR);
+			if (separatedReposUrlsStr == null) {
+				throw new EConfig(REPOS_LOCATION_ENV_VAR + " environment var must contain a valid config path");
+			}
+			String reposContent = reposLoader.getContentFromUrls(separatedReposUrlsStr);
+			String separatedCredsUrlsStr = System.getenv(CREDENTIALS_LOCATION_ENV_VAR);
+			if (separatedCredsUrlsStr == null) {
+				throw new EConfig(CREDENTIALS_LOCATION_ENV_VAR + " environment var must contain a valid config path");
+			}
+			String credsContent = reposLoader.getContentFromUrls(separatedCredsUrlsStr);
+			try {
+				return new VCSRepositories(reposContent, credsContent);
+			} catch (Exception e) {
+				throw new EConfig(e);
+			}
+		} catch (IOException e) {
+			throw new EConfig("Failed to read config", e);
+		}
 	}
-
-	public SCMWorkflow(String depName, String configPath) {
-		this(depName, VCSRepository.loadFromEnvironment(), new VCSWorkspace(configPath));
-	}
-
 
 	@Override
-	public IAction getProductionReleaseAction() {
-		for (Dep mDep : mDeps) {
-			ISCMWorkflow childWorkflow = new SCMWorkflow(mDep.getName(), vcsRepos, ws);
-			childActions.add(childWorkflow.getProductionReleaseAction());
+	public IAction getProductionReleaseAction(List<IAction> childActions) {
+		if (childActions == null) {
+			childActions = new ArrayList<>();
 		}
-		return getProductionReleaseOneAction();
+		
+		for (Dep mDep : mDeps) {
+			ISCMWorkflow childWorkflow = new SCMWorkflow(mDep, repos, ws);
+			childActions.add(childWorkflow.getProductionReleaseAction(null));
+		}
+		return getProductionReleaseActionRoot(childActions);
 	}
 
-	public IAction getProductionReleaseOneAction() {
+	public IAction getProductionReleaseActionRoot(List<IAction> childActions) {
 		IAction res;
 		Boolean hasVer = vcs.fileExists(devBranchName, VER_FILE_NAME);
 		if (!hasVer) {
-			//res = new ActionError(getRepoByName(depName), childActions, devBranchName, "no " + VER_FILE_NAME + " file", ws);
-			res = new ActionNone(getRepoByName(depName), childActions, devBranchName, ws, "no " + VER_FILE_NAME + " file");
+			throw new EDepConfig("no " + VER_FILE_NAME + " file for " + dep.toString());
+//			res = new ActionNone(dep, childActions, devBranchName, ws,
+//					"no " + VER_FILE_NAME + " file");
 		} else if (hasErrorActions(childActions)) {
-			res = new ActionNone(getRepoByName(depName), childActions, devBranchName, ws, "has child error actions");
+			res = new ActionNone(dep, childActions, devBranchName, ws, "has child error actions");
 		} else if (new BranchStructure(vcs, devBranchName).getHasFeatures()) {
-			res = new SCMActionProductionRelease(getRepoByName(depName), childActions, devBranchName,
+			res = new SCMActionProductionRelease(dep, childActions, devBranchName,
 					ProductionReleaseReason.NEW_FEATURES, ws);
 		} else if (hasSignificantActions(childActions) || hasNewerDependencies(childActions, mDeps)) {
-			res = new SCMActionProductionRelease(getRepoByName(depName), childActions, devBranchName,
+			res = new SCMActionProductionRelease(dep, childActions, devBranchName,
 					ProductionReleaseReason.NEW_DEPENDENCIES, ws);
-		}  else {
-			res = new SCMActionUseLastReleaseVersion(getRepoByName(depName), childActions, devBranchName, ws);
+		} else {
+			res = new SCMActionUseLastReleaseVersion(dep, childActions, devBranchName, ws);
 		}
 		return res;
 	}
@@ -101,8 +129,8 @@ public class SCMWorkflow implements ISCMWorkflow {
 			if (action instanceof SCMActionUseLastReleaseVersion) {
 				SCMActionUseLastReleaseVersion verAction = (SCMActionUseLastReleaseVersion) action;
 				for (Dep dep : mDeps) {
-					if (dep.getName().equals(verAction.getName()) && (dep.getVersion() == null || 
-							!dep.getVersion().toPreviousMinorRelease().equals(verAction.getVer().toPreviousMinorRelease()))) {
+					if (dep.getName().equals(verAction.getName()) && (dep.getVersion() == null || !dep.getVersion()
+							.toPreviousMinorRelease().equals(verAction.getVer().toPreviousMinorRelease()))) {
 						return true;
 					}
 				}
@@ -130,20 +158,24 @@ public class SCMWorkflow implements ISCMWorkflow {
 	}
 
 	@Override
-	public IAction getTagReleaseAction() {
-		for (Dep mDep : mDeps) {
-			ISCMWorkflow childWorkflow = new SCMWorkflow(mDep.getName(), vcsRepos, ws);
-			childActions.add(childWorkflow.getTagReleaseAction());
+	public IAction getTagReleaseAction(List<IAction> childActions) {
+		if (childActions == null) {
+			childActions = new ArrayList<>();
 		}
-		return getTagReleaseOneAction();
+		for (Dep mDep : mDeps) {
+			ISCMWorkflow childWorkflow = new SCMWorkflow(mDep, repos, ws);
+			childActions.add(childWorkflow.getTagReleaseAction(null));
+		}
+		return getTagReleaseActionRoot(childActions);
 	}
 
-	private IAction getTagReleaseOneAction() {
+	private IAction getTagReleaseActionRoot(List<IAction> childActions) {
 		BranchStructure br = new BranchStructure(vcs, devBranchName);
 		if (br.getReleaseTag() != null) {
-			return new SCMActionUseExistingTag(getRepoByName(depName), childActions, devBranchName, ws, br.getReleaseTag());
+			return new SCMActionUseExistingTag(dep, childActions, devBranchName, ws,
+					br.getReleaseTag());
 		} else {
-			return new SCMActionTagRelease(getRepoByName(depName), childActions, devBranchName, ws, "tag message");
+			return new SCMActionTagRelease(dep, childActions, devBranchName, ws, "tag message");
 		}
 	}
 }

@@ -7,22 +7,18 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-
-import org.scm4j.wf.model.Dep;
-import org.scm4j.wf.model.VCSRepository;
 
 public class MDepsFile {
 	
 	private List<Dep> mDeps = new ArrayList<>();
 	
-	public MDepsFile(String content, Map<String, VCSRepository> vcsRepos) {
+	public MDepsFile(String content, VCSRepositories repos) {
 		BufferedReader br = new BufferedReader(new StringReader(content));
 		try {
 			String str = br.readLine();
 			while (str != null) {
 				if (isLineValueable(str)) {
-					Dep dep = new Dep(str, vcsRepos);
+					Dep dep = new Dep(str, repos);
 					mDeps.add(dep);
 
 				}

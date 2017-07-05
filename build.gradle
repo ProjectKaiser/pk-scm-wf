@@ -10,7 +10,6 @@ group = 'org.scm4j'
 version = '1.0-SNAPSHOT'
 
 repositories {
-	maven { url "https://maven.atlassian.com/3rdparty/" }
 	maven { url "https://jitpack.io" }
 	mavenCentral()
 }
@@ -28,10 +27,7 @@ dependencies {
 	compile 'com.github.scm4j:scm4j-vcs-git:master-SNAPSHOT'
 	compile 'com.github.scm4j:scm4j-vcs-svn:master-SNAPSHOT'
 	compile 'com.github.scm4j:scm4j-commons:master-SNAPSHOT'
-	
-	compile 'com.google.code.gson:gson:2.8.0'
 	compile 'com.google.guava:guava:20.0'
-
 	compile 'org.yaml:snakeyaml:1.18'
 }
 

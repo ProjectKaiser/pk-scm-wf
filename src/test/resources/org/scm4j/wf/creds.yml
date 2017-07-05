@@ -1,0 +1,9 @@
+https?://url\.com.*:
+  name: user
+  password: password
+http://localhost.*:
+  name: null
+  password: null
+~:
+  name: guest
+  password: guest

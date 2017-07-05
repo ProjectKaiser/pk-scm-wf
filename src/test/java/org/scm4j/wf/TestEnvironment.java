@@ -6,7 +6,7 @@ import java.util.Arrays;
 import java.util.UUID;
 
 import org.apache.commons.io.FileUtils;
-import org.eclipse.jgit.api.errors.GitAPIException;
+import org.apache.commons.lang3.StringUtils;
 import org.scm4j.vcs.GitVCS;
 import org.scm4j.vcs.GitVCSUtils;
 import org.scm4j.vcs.api.IVCS;
@@ -25,6 +25,7 @@ public class TestEnvironment {
 	public static final String TEST_REMOTE_REPO_DIR = new File(TEST_ENVIRONMENT_DIR, "remote-repos").getPath();
 	public static final String TEST_FEATURE_FILE_NAME = "feature.txt";
 	public static final String TEST_DUMMY_FILE_NAME = "dummy.txt";
+	public final String RANDOM_VCS_NAME_SUFFIX;
 
 	private IVCS unTillVCS;
 	private IVCS ublVCS;
@@ -34,7 +35,11 @@ public class TestEnvironment {
 	private final Version unTillVer = new Version("1.123.3-SNAPSHOT");
 	private final Version ublVer = new Version("1.18.5-SNAPSHOT");
 	private final Version unTillDbVer = new Version("2.59.1-SNAPSHOT");
+	private File envDir;
 	
+	public TestEnvironment() {
+		RANDOM_VCS_NAME_SUFFIX = UUID.randomUUID().toString();
+	}
 
 	public void generateTestEnvironment() throws Exception {
 
@@ -54,9 +59,8 @@ public class TestEnvironment {
 		reposFile = new File(TEST_ENVIRONMENT_DIR, TEST_REPOS_FILE_NAME);
 		reposFile.createNewFile();
 		FileUtils.writeLines(reposFile,Arrays.asList(
-				"[{\"name\": \"" + SCMWorkflowConfigTest.PRODUCT_UNTILL + "\",\"url\": \"" + unTillVCS.getRepoUrl() + "\"},",
-				"{\"name\": \"" + SCMWorkflowConfigTest.PRODUCT_UBL + "\",\"url\": \"" + ublVCS.getRepoUrl() + "\"},",
-				"{\"name\": \"" + SCMWorkflowConfigTest.PRODUCT_UNTILLDB  +"\",\"url\": \"" + unTillDbVCS.getRepoUrl() + "\"}]"));
+				"eu.untill:(.*):",
+				" url: " + new File(TEST_REMOTE_REPO_DIR).toURI().toURL().toString() + "$1-" + RANDOM_VCS_NAME_SUFFIX + ".git"));
 	}
 
 	private void createCredentialsFile() throws IOException {
@@ -67,37 +71,37 @@ public class TestEnvironment {
 	private void uploadVCSConfigFiles() {
 		unTillVCS.setFileContent(null, SCMWorkflow.VER_FILE_NAME, unTillVer.toString(), "ver file added");
 		unTillVCS.setFileContent(null, SCMWorkflow.MDEPS_FILE_NAME,
-				SCMWorkflowConfigTest.PRODUCT_UBL + ":" + ublVer.toString() + "\r\n" +
-				SCMWorkflowConfigTest.PRODUCT_UNTILLDB + ":" + unTillDbVer.toString() + "\r\n", "mdeps file added");
+				SCMWorkflowTest.PRODUCT_UBL + ":" + ublVer.toString() + "\r\n" +
+				SCMWorkflowTest.PRODUCT_UNTILLDB + ":" + unTillDbVer.toString() + "\r\n", "mdeps file added");
 
 		ublVCS.setFileContent(null, SCMWorkflow.VER_FILE_NAME, ublVer.toString(), "ver file added");
 		ublVCS.setFileContent(null, SCMWorkflow.MDEPS_FILE_NAME,
-				SCMWorkflowConfigTest.PRODUCT_UNTILLDB + ":" + unTillDbVer.toString() + "\r\n", "mdeps file added");
+				SCMWorkflowTest.PRODUCT_UNTILLDB + ":" + unTillDbVer.toString() + "\r\n", "mdeps file added");
 
 		unTillDbVCS.setFileContent(null, SCMWorkflow.VER_FILE_NAME, unTillDbVer.toString(), "ver file added");
 	}
 
 	private void createTestVCSRepos() throws Exception {
-		IVCSWorkspace localVCSWorkspace = new VCSWorkspace(TEST_ENVIRONMENT_DIR);
-		File unTillRemoteRepoDir = new File(TEST_REMOTE_REPO_DIR, "unTill-" + UUID.randomUUID().toString() + ".git");
-		File ublRemoteRepoDir = new File(TEST_REMOTE_REPO_DIR, "UBL-" + UUID.randomUUID().toString() + ".git");
-		File unTillRemoteDbRepoDir = new File(TEST_REMOTE_REPO_DIR, "unTillDb-" + UUID.randomUUID().toString() + ".git");
+		IVCSWorkspace localVCSWorkspace = new VCSWorkspace();
+		File unTillRemoteRepoDir = new File(TEST_REMOTE_REPO_DIR, "unTill-" + RANDOM_VCS_NAME_SUFFIX + ".git");
+		File ublRemoteRepoDir = new File(TEST_REMOTE_REPO_DIR, "UBL-" + RANDOM_VCS_NAME_SUFFIX + ".git");
+		File unTillRemoteDbRepoDir = new File(TEST_REMOTE_REPO_DIR, "unTillDb-" + RANDOM_VCS_NAME_SUFFIX + ".git");
 		GitVCSUtils.createRepository(unTillRemoteRepoDir);
 		GitVCSUtils.createRepository(ublRemoteRepoDir);
 		GitVCSUtils.createRepository(unTillRemoteDbRepoDir);
 		IVCSRepositoryWorkspace unTillVCSRepoWS = localVCSWorkspace
-				.getVCSRepositoryWorkspace("file:///" + unTillRemoteRepoDir.getPath().replace("\\", "/"));
+				.getVCSRepositoryWorkspace(StringUtils.removeEndIgnoreCase(unTillRemoteRepoDir.toURI().toURL().toString(), "/"));
 		IVCSRepositoryWorkspace ublVCSRepoWS = localVCSWorkspace
-				.getVCSRepositoryWorkspace("file:///" + ublRemoteRepoDir.getPath().replace("\\", "/"));
+				.getVCSRepositoryWorkspace(StringUtils.removeEndIgnoreCase(ublRemoteRepoDir.toURI().toURL().toString(), "/"));
 		IVCSRepositoryWorkspace unTillDbVCSRepoWS = localVCSWorkspace
-				.getVCSRepositoryWorkspace("file:///" + unTillRemoteDbRepoDir.getPath().replace("\\", "/"));
+				.getVCSRepositoryWorkspace(StringUtils.removeEndIgnoreCase(unTillRemoteDbRepoDir.toURI().toURL().toString(), "/"));
 		unTillVCS = new GitVCS(unTillVCSRepoWS);
 		ublVCS = new GitVCS(ublVCSRepoWS);
 		unTillDbVCS = new GitVCS(unTillDbVCSRepoWS);
 	}
 
 	private void createTestEnvironmentFolder() throws IOException {
-		File envDir = new File(TEST_ENVIRONMENT_DIR);
+		envDir = new File(TEST_ENVIRONMENT_DIR);
 		if (envDir.exists()) {
 			FileUtils.deleteDirectory(envDir);
 		}
@@ -143,6 +147,12 @@ public class TestEnvironment {
 
 	public Version getUnTillDbVer() {
 		return unTillDbVer;
+	}
+
+	public void clean() throws IOException {
+		if (envDir != null && envDir.exists()) {
+			FileUtils.deleteDirectory(envDir);
+		}
 	}
 	
 

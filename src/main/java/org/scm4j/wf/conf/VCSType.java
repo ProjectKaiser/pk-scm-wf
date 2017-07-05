@@ -1,4 +1,4 @@
-package org.scm4j.wf.model;
+package org.scm4j.wf.conf;
 
 public enum VCSType {
 	GIT(".git"), SVN("");

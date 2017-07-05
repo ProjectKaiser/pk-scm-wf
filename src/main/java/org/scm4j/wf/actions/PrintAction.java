@@ -1,4 +1,4 @@
-package org.scm4j.actions;
+package org.scm4j.wf.actions;
 
 import java.io.PrintStream;
 
@@ -16,6 +16,5 @@ public class PrintAction {
 			print(ps, currentAction);
 		}
 		level--;
-		
 	}
 }
