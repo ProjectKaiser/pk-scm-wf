@@ -1,5 +1,6 @@
 package org.scm4j.wf;
 
+import org.eclipse.jgit.api.errors.GitAPIException;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
