@@ -33,7 +33,7 @@ public class SCMWorkflow implements ISCMWorkflow {
 	private VCSRepository getRepoByName(String name) {
 		VCSRepository res = vcsRepos.get(name);
 		if (res == null) {
-			throw new IllegalArgumentException("VCSRepository is not found by name " +name);
+			throw new IllegalArgumentException("VCSRepository is not found by name " + name);
 		}
 		return res;
 	}

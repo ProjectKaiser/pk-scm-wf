@@ -44,5 +44,4 @@ public class BranchStructureTest {
 		bs = new BranchStructure(vcs, TEST_BRANCH);
 		assertFalse(bs.getHasFeatures());
 	}
-
 }

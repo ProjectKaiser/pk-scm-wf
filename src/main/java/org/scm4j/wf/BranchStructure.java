@@ -1,8 +1,6 @@
 package org.scm4j.wf;
 
 
-import java.util.List;
-
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.vcs.api.VCSTag;
@@ -23,9 +21,9 @@ public class BranchStructure {
 			hasFeatures = true;
 		}
 		
-		List<VCSTag> tags = vcs.getTags();
-		if (!tags.isEmpty() && tags.get(tags.size() - 1).getRelatedCommit().equals(vcs.getHeadCommit(branchName))) {
-			releaseTag = tags.get(tags.size() - 1);
+		VCSTag lastTag = vcs.getLastTag();
+		if (lastTag.getRelatedCommit().equals(vcs.getHeadCommit(branchName))) {
+			releaseTag = lastTag;
 		} else {
 			releaseTag = null;
 		}
