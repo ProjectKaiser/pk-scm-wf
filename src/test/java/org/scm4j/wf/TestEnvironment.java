@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.UUID;
 
 import org.apache.commons.io.FileUtils;
+import org.eclipse.jgit.api.errors.GitAPIException;
 import org.scm4j.vcs.GitVCS;
 import org.scm4j.vcs.GitVCSUtils;
 import org.scm4j.vcs.api.IVCS;
