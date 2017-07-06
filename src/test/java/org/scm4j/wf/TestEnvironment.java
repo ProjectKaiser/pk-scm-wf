@@ -1,6 +1,7 @@
 package org.scm4j.wf;
 
 import org.apache.commons.io.FileUtils;
+import org.eclipse.jgit.api.errors.GitAPIException;
 import org.scm4j.vcs.GitVCS;
 import org.scm4j.vcs.GitVCSUtils;
 import org.scm4j.vcs.api.IVCS;
@@ -35,7 +36,7 @@ public class TestEnvironment {
 	private final Version unTillDbVer = new Version("2.59.1-SNAPSHOT");
 	
 
-	public void generateTestEnvironment() throws IOException {
+	public void generateTestEnvironment() throws IOException, GitAPIException {
 
 		createTestEnvironmentFolder();
 
@@ -76,7 +77,7 @@ public class TestEnvironment {
 		unTillDbVCS.setFileContent(null, SCMWorkflow.VER_FILE_NAME, unTillDbVer.toString(), "ver file added");
 	}
 
-	private void createTestVCSRepos() {
+	private void createTestVCSRepos() throws GitAPIException {
 		IVCSWorkspace localVCSWorkspace = new VCSWorkspace(TEST_ENVIRONMENT_DIR);
 		File unTillRemoteRepoDir = new File(TEST_REMOTE_REPO_DIR, "unTill-" + UUID.randomUUID().toString() + ".git");
 		File ublRemoteRepoDir = new File(TEST_REMOTE_REPO_DIR, "UBL-" + UUID.randomUUID().toString() + ".git");

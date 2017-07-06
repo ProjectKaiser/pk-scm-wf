@@ -1,5 +1,6 @@
 package org.scm4j.wf;
 
+import org.eclipse.jgit.api.errors.GitAPIException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -28,7 +29,7 @@ public class SCMWorkflowConfigTest {
 	private TestEnvironment env;
 
 	@Before
-	public void setUp() throws IOException {
+	public void setUp() throws IOException, GitAPIException {
 		env = new TestEnvironment();
 		env.generateTestEnvironment();
 		PowerMockito.mockStatic(System.class);
