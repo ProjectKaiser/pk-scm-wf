@@ -1,4 +1,4 @@
-package org.scm4j.wf.model;
+package org.scm4j.wf;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
@@ -6,6 +6,9 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 
 import org.junit.Test;
+import org.scm4j.wf.conf.VCSRepositories;
+import org.scm4j.wf.conf.VCSRepository;
+import org.scm4j.wf.conf.VCSType;
 
 public class VCSRepositoriesTest {
 
@@ -45,24 +48,25 @@ public class VCSRepositoriesTest {
 		assertEquals(null, rep.getCredentials().getName());
 		assertEquals(null, rep.getCredentials().getPassword());
 	}
+
 	@Test
 	public void get1() {
 		VCSRepositories reps = new VCSRepositories(urlsStr, credsStr);
 		VCSRepository rep = reps.get("artA1");
-		assertThat(new Object[] {rep.getName(), rep.getUrl(), rep.getType(), rep.getDevBranch(), rep.getReleaseBanchPrefix()},
-				is(new Object[] {"artA1", "http://url.com/svn/prjA", VCSType.SVN, "branches/", "release/"}));
-		assertThat(new Object[] {rep.getCredentials().getName(), rep.getCredentials().getPassword()},
-				is(new Object[] {"user", "password"}));
+		assertThat(new Object[] { rep.getName(), rep.getUrl(), rep.getType(), rep.getDevBranch(), rep.getReleaseBanchPrefix() },
+				is(new Object[] { "artA1", "http://url.com/svn/prjA", VCSType.SVN, "branches/", "release/" }));
+		assertThat(new Object[] { rep.getCredentials().getName(), rep.getCredentials().getPassword() },
+				is(new Object[] { "user", "password" }));
 	}
 
 	@Test
 	public void get2() {
 		VCSRepositories reps = new VCSRepositories(urlsStr, credsStr);
 		VCSRepository rep = reps.get("abyrvalg");
-		assertThat(new Object[] {rep.getName(), rep.getUrl(), rep.getType(), rep.getDevBranch(), rep.getReleaseBanchPrefix()},
-				is(new Object[] {"abyrvalg", "https://github.com/qwerty/abyrvalg", VCSType.SVN, "branches/", "release/"}));
-		assertThat(new Object[] {rep.getCredentials().getName(), rep.getCredentials().getPassword()},
-				is(new Object[] {"guest", "guest"}));
+		assertThat(new Object[] { rep.getName(), rep.getUrl(), rep.getType(), rep.getDevBranch(), rep.getReleaseBanchPrefix() },
+				is(new Object[] { "abyrvalg", "https://github.com/qwerty/abyrvalg", VCSType.SVN, "branches/", "release/" }));
+		assertThat(new Object[] { rep.getCredentials().getName(), rep.getCredentials().getPassword() },
+				is(new Object[] { "guest", "guest" }));
 	}
 
 	@Test(expected = NullPointerException.class)

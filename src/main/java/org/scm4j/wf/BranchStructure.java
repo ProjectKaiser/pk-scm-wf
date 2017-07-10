@@ -22,7 +22,7 @@ public class BranchStructure {
 		}
 		
 		VCSTag lastTag = vcs.getLastTag();
-		if (lastTag.getRelatedCommit().equals(vcs.getHeadCommit(branchName))) {
+		if (lastTag != null && lastTag.getRelatedCommit().equals(vcs.getHeadCommit(branchName))) {
 			releaseTag = lastTag;
 		} else {
 			releaseTag = null;

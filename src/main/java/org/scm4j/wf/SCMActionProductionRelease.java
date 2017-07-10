@@ -138,7 +138,8 @@ public class SCMActionProductionRelease extends ActionAbstract {
 				progress.reportStatus("mdeps-changed is written to branch " + newBranchName);
 			}
 			
-			ActionResultVersion res = new ActionResultVersion(repo.getName(), currentVer.toReleaseString(), true);
+			ActionResultVersion res = new ActionResultVersion(repo.getName(), currentVer.toReleaseString(), true, 
+					newBranchName);
 			progress.reportStatus("new " + repo.getName() + " " 
 					+ res.getVersion() + " is released in " + newBranchName);
 			if (parentAction == null) {

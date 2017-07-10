@@ -1,9 +1,13 @@
 package org.scm4j.wf;
 
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.nio.charset.StandardCharsets;
 
 import org.apache.commons.io.FileUtils;
@@ -13,11 +17,9 @@ import org.junit.runner.RunWith;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
-import org.scm4j.wf.conf.Credentials;
-import org.scm4j.wf.conf.VCSRepository;
-import org.scm4j.wf.exceptions.EWFConfig;
+import org.scm4j.wf.exceptions.EConfig;
 
-@PrepareForTest({VCSRepository.class, Credentials.class})
+@PrepareForTest(SCMWorkflow.class)
 @RunWith(PowerMockRunner.class)
 public class ConfigTest {
 	
@@ -30,35 +32,38 @@ public class ConfigTest {
 	
 	@Test
 	public void testNoReposEnvVar() {
-		PowerMockito.when(System.getenv(VCSRepository.REPOS_LOCATION_ENV_VAR))
+		PowerMockito.when(System.getenv(SCMWorkflow.REPOS_LOCATION_ENV_VAR))
 				.thenReturn(null);
 		try {
-			new SCMWorkflow("eu.untill:unTill", TEST_ENVIRONMENT_DIR);
+			new SCMWorkflow("eu.untill:unTill");
 			fail();
-		} catch (EWFConfig e) {
+		} catch (EConfig e) {
+			assertNull(e.getCause());
 		}
 	}
 	
 	@Test
 	public void testMalformedReposUrl() {
 		
-		PowerMockito.when(System.getenv(VCSRepository.REPOS_LOCATION_ENV_VAR))
+		PowerMockito.when(System.getenv(SCMWorkflow.REPOS_LOCATION_ENV_VAR))
 				.thenReturn("malformed url");
 		try {
-			new SCMWorkflow("eu.untill:unTill", TEST_ENVIRONMENT_DIR);
+			new SCMWorkflow("eu.untill:unTill");
 			fail();
-		} catch (EWFConfig e) {
+		} catch (EConfig e) {
+			assertTrue(e.getCause() instanceof MalformedURLException);
 		}
 	}
 	
 	@Test 
 	public void testWrongReposLocation() {
-		PowerMockito.when(System.getenv(VCSRepository.REPOS_LOCATION_ENV_VAR))
+		PowerMockito.when(System.getenv(SCMWorkflow.REPOS_LOCATION_ENV_VAR))
 				.thenReturn("file:///c:/wrong/Location");
 		try {
-			new SCMWorkflow("eu.untill:unTill", TEST_ENVIRONMENT_DIR);
+			new SCMWorkflow("eu.untill:unTill");
 			fail();
-		} catch (EWFConfig e) {
+		} catch (EConfig e) {
+			assertTrue(e.getCause() instanceof IOException);
 		}
 	}
 	
@@ -68,12 +73,15 @@ public class ConfigTest {
 		vcsRepos.createNewFile();
 		FileUtils.writeStringToFile(vcsRepos, "wrong content", StandardCharsets.UTF_8);
 		PowerMockito.mockStatic(System.class);
-		PowerMockito.when(System.getenv(VCSRepository.REPOS_LOCATION_ENV_VAR))
-				.thenReturn("file:///" + vcsRepos.getParent().replace("\\", "/"));
+		PowerMockito.when(System.getenv(SCMWorkflow.REPOS_LOCATION_ENV_VAR))
+				.thenReturn("file:///" + vcsRepos.getAbsolutePath().replace("\\", "/"));
+		PowerMockito.when(System.getenv(SCMWorkflow.CREDENTIALS_LOCATION_ENV_VAR))
+				.thenReturn("file:///" + vcsRepos.getAbsolutePath().replace("\\", "/"));
 		try { 
-			new SCMWorkflow("eu.untill:unTill", TEST_ENVIRONMENT_DIR);
+			new SCMWorkflow("eu.untill:unTill");
 			fail();
-		} catch (EWFConfig e) {
+		} catch (EConfig e) {
+			assertNotNull(e.getCause());
 		}
 	}
 }

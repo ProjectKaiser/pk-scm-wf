@@ -21,13 +21,13 @@ public abstract class ActionAbstract implements IAction {
 	protected String currentBranchName;
 	private Map<String, List<Object>> executionResults = new LinkedHashMap<>();
 	protected IVCSWorkspace ws;
-	
+
 	public Version getDevVersion() {
 		IVCS vcs = VCSFactory.getIVCS(repo, ws);
 		String verFileContent = vcs.getFileContent(currentBranchName, SCMWorkflow.VER_FILE_NAME);
 		return new Version(verFileContent.trim());
 	}
-	
+
 	public DepCoords getDevCoords() {
 		IVCS vcs = VCSFactory.getIVCS(repo, ws);
 		String verFileContent = vcs.getFileContent(currentBranchName, SCMWorkflow.VER_FILE_NAME);
@@ -78,16 +78,7 @@ public abstract class ActionAbstract implements IAction {
 	public String toString() {
 		return this.getClass().getSimpleName() + " [" + repo.getName() + "]";
 	}
-	
-	@Override
-	public IRelease getReleaseIntf() {
-		if (this instanceof IRelease) {
-			return (IRelease) this;
-		} else {
-			return null;
-		}
-	}
-	
+
 	public Object getResult(String name, Class<?> resultClass) {
 		resultClass.getClass();
 		List<Object> results = getExecutionResults().get(name);
@@ -101,7 +92,7 @@ public abstract class ActionAbstract implements IAction {
 		}
 		return null;
 	}
-	
+
 	public void addResult(String name, Object res) {
 		List<Object> results = getExecutionResults().get(name);
 		if (results == null) {

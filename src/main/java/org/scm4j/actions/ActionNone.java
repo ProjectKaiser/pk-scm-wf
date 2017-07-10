@@ -20,6 +20,10 @@ public class ActionNone extends ActionAbstract {
 		return null;
 	}
 	
+	public String getReason() {
+		return reason;
+	}
+	
 	@Override
 	public String toString() {
 		return "Nothing should be done [" + getName() + "]. Reason: " + reason;

@@ -31,7 +31,7 @@ public class SCMActionUseLastReleaseVersion extends ActionAbstract {
 	@Override
 	public Object execute(IProgress progress) {
 		progress.reportStatus(toString());
-		ActionResultVersion res = new ActionResultVersion(getName(), ver.toPreviousMinorRelease(), false);
+		ActionResultVersion res = new ActionResultVersion(getName(), ver.toPreviousMinorRelease(), false, null);
 		return res;
 	}
 }

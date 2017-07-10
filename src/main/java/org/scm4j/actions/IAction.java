@@ -19,6 +19,4 @@ public interface IAction {
 
 	Map<String, List<Object>> getExecutionResults();
 	
-	IRelease getReleaseIntf();
-	
 }

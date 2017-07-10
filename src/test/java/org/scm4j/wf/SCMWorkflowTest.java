@@ -1,35 +1,33 @@
 package org.scm4j.wf;
 
-import org.eclipse.jgit.api.errors.GitAPIException;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import java.io.File;
 import java.util.List;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Matchers;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.scm4j.actions.IAction;
+import org.scm4j.actions.results.ActionResultVersion;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.commons.progress.ProgressConsole;
 import org.scm4j.vcs.api.VCSTag;
-import org.scm4j.wf.conf.Credentials;
-import org.scm4j.wf.conf.VCSRepository;
 import org.scm4j.wf.conf.Version;
 
-@PrepareForTest({VCSRepository.class, Credentials.class})
+@PrepareForTest(SCMWorkflow.class)
 @RunWith(PowerMockRunner.class)
-public class SCMWorkflowConfigTest {
+public class SCMWorkflowTest {
 
 	public static final String PRODUCT_UNTILL = "eu.untill:unTill";
 	public static final String PRODUCT_UBL = "eu.untill:UBL";
-	public static final String PRODUCT_UNTILLDB = "eu.untill:unTIllDb";
+	public static final String PRODUCT_UNTILLDB = "eu.untill:unTillDb";
 	
 	private TestEnvironment env;
 
@@ -38,18 +36,18 @@ public class SCMWorkflowConfigTest {
 		env = new TestEnvironment();
 		env.generateTestEnvironment();
 		PowerMockito.mockStatic(System.class);
-		PowerMockito.when(System.getenv(Credentials.CREDENTIALS_LOCATION_ENV_VAR))
+		PowerMockito.when(System.getenv(SCMWorkflow.CREDENTIALS_LOCATION_ENV_VAR))
 				.thenReturn("file://localhost/" + env.getCredsFile().getPath().replace("\\", "/"));
-		PowerMockito.when(System.getenv(VCSRepository.REPOS_LOCATION_ENV_VAR))
+		PowerMockito.when(System.getenv(SCMWorkflow.REPOS_LOCATION_ENV_VAR))
 				.thenReturn("file://localhost/" + env.getReposFile().getPath().replace("\\", "/"));
-		
+		PowerMockito.when(System.getProperty(Matchers.anyString()))
+				.thenCallRealMethod();
 	}
 
 	@After
-	public void tearDown() {
-		File testFolder = new File(TestEnvironment.TEST_ENVIRONMENT_DIR);
-		if (testFolder.exists()) {
-			testFolder.delete();
+	public void tearDown() throws Exception {
+		if (env != null) {
+			env.clean();
 		}
 	}
 	
@@ -61,7 +59,7 @@ public class SCMWorkflowConfigTest {
 		
 		SCMWorkflow wf = new SCMWorkflow(PRODUCT_UNTILL);
 		
-		IAction actionUnTill = wf.getProductionReleaseAction();
+		IAction actionUnTill = wf.getProductionReleaseAction(null);
 		checkUseLastReleaseAction(actionUnTill, null, PRODUCT_UNTILL, env.getUnTillVer());
 		assertTrue(actionUnTill.getChildActions().size() == 2);
 		
@@ -84,7 +82,7 @@ public class SCMWorkflowConfigTest {
 		
 		SCMWorkflow wf = new SCMWorkflow(PRODUCT_UNTILL);
 		
-		IAction actionUnTill = wf.getProductionReleaseAction();
+		IAction actionUnTill = wf.getProductionReleaseAction(null);
 		checkProductionReleaseAction(actionUnTill, null, ProductionReleaseReason.NEW_FEATURES, PRODUCT_UNTILL);
 		assertTrue(actionUnTill.getChildActions().size() == 2);
 		
@@ -107,7 +105,7 @@ public class SCMWorkflowConfigTest {
 
 		SCMWorkflow wf = new SCMWorkflow(PRODUCT_UNTILL);
 
-		IAction actionUnTill = wf.getProductionReleaseAction();
+		IAction actionUnTill = wf.getProductionReleaseAction(null);
 		checkProductionReleaseAction(actionUnTill, null, ProductionReleaseReason.NEW_DEPENDENCIES, PRODUCT_UNTILL);
 		assertTrue(actionUnTill.getChildActions().size() == 2);
 
@@ -128,13 +126,13 @@ public class SCMWorkflowConfigTest {
 		env.generateCommitWithVERTag(env.getUnTillDbVCS());
 		env.generateCommitWithVERTag(env.getUblVCS());
 		env.getUnTillVCS().setFileContent(null, SCMWorkflow.MDEPS_FILE_NAME,
-				SCMWorkflowConfigTest.PRODUCT_UBL + ":" + env.getUblVer().toString() + "\r\n" +
-				SCMWorkflowConfigTest.PRODUCT_UNTILLDB + ":1.0.0" + "\r\n",
+				SCMWorkflowTest.PRODUCT_UBL + ":" + env.getUblVer().toString() + "\r\n" +
+				SCMWorkflowTest.PRODUCT_UNTILLDB + ":1.0.0" + "\r\n",
 				SCMActionProductionRelease.VCS_TAG_SCM_IGNORE + " old unTillDb version is used in mdeps file");
 
 		SCMWorkflow wf = new SCMWorkflow(PRODUCT_UNTILL);
 
-		IAction actionUnTill = wf.getProductionReleaseAction();
+		IAction actionUnTill = wf.getProductionReleaseAction(null);
 		checkProductionReleaseAction(actionUnTill, null, ProductionReleaseReason.NEW_DEPENDENCIES, PRODUCT_UNTILL);
 		assertTrue(actionUnTill.getChildActions().size() == 2);
 
@@ -182,34 +180,26 @@ public class SCMWorkflowConfigTest {
 		env.generateFeatureCommit(env.getUnTillDbVCS(), "feature commit");
 		
 		SCMWorkflow wf = new SCMWorkflow(PRODUCT_UNTILL);
-		IAction actionReleaseUnTill = wf.getProductionReleaseAction();
 		
+		IAction actionReleaseUnTill = wf.getProductionReleaseAction(null);
+		actionReleaseUnTill.toString();
 		try (IProgress progress = new ProgressConsole("releasing " + actionReleaseUnTill.getName(), ">>> ", "<<< ")) {
 			actionReleaseUnTill.execute(progress);
 		}
 		
-		IAction actionTagUnTill = wf.getTagReleaseAction();
-		
+		IAction actionTagUnTill = wf.getTagReleaseAction(null);
+		ActionResultVersion ver;
 		try (IProgress progress = new ProgressConsole("tagging " + actionReleaseUnTill.getName(), ">>> ", "<<< ")) {
-			actionTagUnTill.execute(progress);
+			ver = (ActionResultVersion) actionTagUnTill.execute(progress);
 		}
 		
 		List<VCSTag> tags = env.getUnTillVCS().getTags();
 		assertNotNull(tags);
 		assertTrue(tags.size() == 1);
 		VCSTag tag = tags.get(0);
-		assertEquals(tag.getTagName(), actionReleaseUnTill.getReleaseIntf().getNewVersion());
+		assertEquals(tag.getTagName(), ver.getVersion());
 		assertEquals(tag.getTagMessage(), "tagMessage");
-		assertEquals(tag.getRelatedCommit(), env.getUnTillVCS().getHeadCommit(actionReleaseUnTill.getReleaseIntf().getNewBranchName()));
+		assertEquals(tag.getRelatedCommit(), env.getUnTillVCS().getHeadCommit(ver.getNewBranchName()));
 	}
 
-	private void checkChildActionsSupportsIRelease(List<IAction> childActions) {
-		if (childActions == null) {
-			return;
-		}
-		for (IAction action : childActions) {
-			checkChildActionsSupportsIRelease(action.getChildActions());
-			assertNotNull(action.getReleaseIntf());
-		}
-	}
 }

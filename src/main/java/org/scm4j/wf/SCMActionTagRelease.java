@@ -31,9 +31,14 @@ public class SCMActionTagRelease extends ActionAbstract {
 				return actionTag;
 			}
 			
+			Object nestedResult;
 			for (IAction action : childActions) {
 				try (IProgress nestedProgress = progress.createNestedProgress(action.getName())) {
-					action.execute(nestedProgress);
+					nestedResult = action.execute(nestedProgress);
+					if (nestedResult instanceof Throwable) {
+						return nestedResult;
+					}
+					addResult(action.getName(), nestedResult);
 				} catch (Exception e) {
 					throw new RuntimeException(e);
 				}

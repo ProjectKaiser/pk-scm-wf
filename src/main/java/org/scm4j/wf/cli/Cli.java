@@ -12,7 +12,7 @@ public class Cli {
 		String depName = args[0];
 
 		ISCMWorkflow wf = new SCMWorkflow(depName);
-		IAction action = wf.getProductionReleaseAction();
+		IAction action = wf.getProductionReleaseAction(null);
 
 		PrintAction pa = new PrintAction();
 		pa.print(System.out, action);

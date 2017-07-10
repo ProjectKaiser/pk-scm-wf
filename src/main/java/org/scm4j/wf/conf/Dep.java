@@ -1,7 +1,5 @@
 package org.scm4j.wf.conf;
 
-import java.util.Map;
-
 public class Dep extends DepCoords {
 	private Boolean isManaged;
 	private VCSRepository vcsRepository;
@@ -27,8 +25,8 @@ public class Dep extends DepCoords {
 		vcsRepository = repo;
 	}
 
-	public Dep(String coords, Map<String, VCSRepository> vcsRepos) {
+	public Dep(String coords, VCSRepositories repos) {
 		super(coords);
-		vcsRepository = vcsRepos.get(getName());
+		vcsRepository = repos.get(getName());
 	}
 }

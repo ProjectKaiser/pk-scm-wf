@@ -1,17 +1,25 @@
-package org.scm4j.wf.model;
+package org.scm4j.wf.conf;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.error.YAMLException;
 
 public class VCSRepositories {
 	private Map<?, ?> urls;
 	private Map<?, ?> creds;
 
-	public VCSRepositories(String urlsStr, String credsStr) {
+	public VCSRepositories(String urlsStr, String credsStr) throws YAMLException {
 		Yaml yaml = new Yaml();
 		urls = yaml.loadAs(urlsStr, Map.class);
+		if (urls == null) {
+			urls = new HashMap<>();
+		}
 		creds = yaml.loadAs(credsStr, Map.class);
+		if (creds == null) {
+			creds = new HashMap<>();
+		}
 	}
 
 	public VCSRepository get(String name) {
@@ -19,7 +27,7 @@ public class VCSRepositories {
 
 		result.setName(name);
 		result.setUrl(getPropByNameAsStringWithReplace(urls, name, "url", result.getUrl()));
-		if (result.getUrl() != null) {
+		if (result.getUrl() != null && getPropByName(creds, result.getUrl(), "name", null) != null) {
 			Credentials credentials = new Credentials();
 			credentials.setName((String) getPropByName(creds, result.getUrl(), "name", credentials.getName()));
 			credentials.setPassword((String) getPropByName(creds, result.getUrl(), "password", credentials.getPassword()));
