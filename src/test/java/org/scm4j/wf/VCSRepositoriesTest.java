@@ -5,36 +5,27 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+
+import org.junit.Before;
 import org.junit.Test;
 import org.scm4j.wf.conf.VCSRepositories;
 import org.scm4j.wf.conf.VCSRepository;
 import org.scm4j.wf.conf.VCSType;
 
+import com.google.common.io.Resources;
+
 public class VCSRepositoriesTest {
-
-	private String urlsStr = ""
-			+ "artA1|artA2:\n"
-			+ " url: http://url.com/svn/prjA\n"
-			+ "my(.*):\n"
-			+ " url: http://localhost/git/myProj$1\n"
-			+ " type: git\n"
-			+ " releaseBanchPrefix: B\n"
-			+ " devBranch: null\n"
-			+ ".*:\n"
-			+ " url: https://github.com/qwerty/$0\n"
-			+ " type: svn\n"
-			+ " devBranch: branches/";
-	private String credsStr = ""
-			+ "https?://url\\.com.*:\n"
-			+ " name: user\n"
-			+ " password: password\n"
-			+ "http://localhost.*:\n"
-			+ " name: null\n"
-			+ " password: null\n"
-			+ ".*:\n"
-			+ " name: guest\n"
-			+ " password: guest\n";
-
+	
+	private String urlsStr;
+	private String credsStr;
+	
+	@Before
+	public void setUp() throws IOException {
+		urlsStr = Resources.toString(Resources.getResource(this.getClass(), "urls.yml"), StandardCharsets.UTF_8);
+		credsStr = Resources.toString(Resources.getResource(this.getClass(), "creds.yml"), StandardCharsets.UTF_8); 
+	}
 
 	@Test
 	public void getMy() {

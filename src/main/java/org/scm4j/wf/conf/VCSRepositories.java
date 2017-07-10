@@ -27,12 +27,12 @@ public class VCSRepositories {
 
 		result.setName(name);
 		result.setUrl(getPropByNameAsStringWithReplace(urls, name, "url", result.getUrl()));
+		Credentials credentials = new Credentials();
+		result.setCredentials(credentials);
 		if (result.getUrl() != null && getPropByName(creds, result.getUrl(), "name", null) != null) {
-			Credentials credentials = new Credentials();
 			credentials.setName((String) getPropByName(creds, result.getUrl(), "name", credentials.getName()));
 			credentials.setPassword((String) getPropByName(creds, result.getUrl(), "password", credentials.getPassword()));
 			credentials.setIsDefault((Boolean) getPropByName(creds, result.getUrl(), "isDefault", credentials.getIsDefault()));
-			result.setCredentials(credentials);
 		}
 		result.setType(getVCSType((String) getPropByName(urls, name, "type", null), result.getUrl()));
 		result.setDevBranch((String) getPropByName(urls, name, "devBranch", result.getDevBranch()));

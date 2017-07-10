@@ -1,52 +1,46 @@
 # Environment vars
 
 - `SCM4J_VCS_REPOS` list of coord=>URL maps
-	- Example: `SCM4J_VCS_REPOS=file:///c:/workspace/vcs-repos.json;http://host/git/untillProtocols.git`
+	- Example: `SCM4J_VCS_REPOS=file:///c:/workspace/vcs-repos.yaml;http://host/git/untillProtocols.git`
 - `SCM4J_CREDENTIALS` list of url=>credentials maps
-	- `SCM4J_CREDENTIALS=file:///c:/workspace/credentials.json;http://host/artiactory/repo/.../credentials.json` 
+	- `SCM4J_CREDENTIALS=file:///c:/workspace/credentials.json;http://host/artiactory/repo/.../credentials.yaml` 
 	
-# `coord=>URL` map
-- Referenced by SCM4J_VCS_REPOS environment var
-- configuration by convention
-	- note: if "credentials" is omitted then default credentials are used
-	- note: if "type" filed is omitted and if a repo url ends with ".git" then the repository is considered as Git, otherwise - SVN
-```
-[
-	{
-		"name": "eu.untill:untill",
-		"url": "http://host"
-	},
-]
-```
-- explicit repositories config
-```
-[
-	{
-		"name": "eu.untill:untill",
-		"url": "http://host",
-		"credentials": {
-			"name": "username"
-		},
-		"type": "GIT"
-	},
-]
+# `coord => URL` map
+- Need to match a dependency by its coord to its Repository
+- Must be referenced by `SCM4J_VCS_REPOS environment var
+- Represented as YAML which describes repository parameters for dependencies by its coords. Coords could contain regular expressions. Described Repository will be assigned to all matching dependencies.
+```yaml
+artA1|artA2:
+  url: http://url.com/svn/prjA
+my(.*):
+  url: http://localhost/git/myProj$1
+  type: git
+  releaseBanchPrefix: B
+  devBranch: null
+.*:
+  url: https://github.com/qwerty/$0
+  type: svn
+  devBranch: branches/
 ```
 
-# `url=>credentials` map
-- must be referenced by SCM4J_CREDENTIALS environment var
-	- note: "isDefault" field is false by default. Can be omited.
-```
-[
-	{
-		"name": "username",
-		"password": "password",
-		"isDefault": true
-	}
-]
+# `url => credentials` map
+- Need to match a Repository by its url to its Credentials
+- Must be referenced by SCM4J_CREDENTIALS environment var
+- Represented as YAML which defines credentials for repository urls. Urls could contains regular expressions. Described Credentials will be assigned to all matching Repositories 
+```yaml
+https?://url\.com.*:
+  name: user
+  password: password
+http://localhost.*:
+  name: null
+  password: null
+.*:
+  name: guest
+  password: guest
 ```
 
 # VCS repositories workspaces
-- located at user home folder by default or defined by SCMWorkfow(<product name>, <workspace home dir>) constructor
+- located at user home folder by default or defined by SCMWorkfow(\<product name\>, \<workspace home dir\>) constructor
 
 # ver file
 - Single line, no comments. Exmaple:

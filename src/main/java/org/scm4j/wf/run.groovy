@@ -1,7 +1,9 @@
 package org.scm4j.wf;
-@GrabResolver(name = 'jitpack', root = 'https://jitpack.io')
-@Grab('com.github.scm4j:scm4j-wf:dev-SNAPSHOT')
+import java.io.File;
+//@GrabResolver(name = 'jitpack', root = 'https://jitpack.io')
+//@Grab('com.github.scm4j:scm4j-wf:master-SNAPSHOT')
 import org.scm4j.wf.*;
+
 
 class CLI {
 
