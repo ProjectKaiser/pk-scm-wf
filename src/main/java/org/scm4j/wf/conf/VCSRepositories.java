@@ -3,6 +3,7 @@ package org.scm4j.wf.conf;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.scm4j.wf.exceptions.EConfig;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.error.YAMLException;
 
@@ -26,7 +27,11 @@ public class VCSRepositories {
 		VCSRepository result = new VCSRepository();
 
 		result.setName(name);
-		result.setUrl(getPropByNameAsStringWithReplace(urls, name, "url", result.getUrl()));
+		String url = getPropByNameAsStringWithReplace(urls, name, "url", result.getUrl());
+		if (url == null) {
+			throw new EConfig("not repo url for: " + name);
+		}
+		result.setUrl(url);
 		Credentials credentials = new Credentials();
 		result.setCredentials(credentials);
 		if (result.getUrl() != null && getPropByName(creds, result.getUrl(), "name", null) != null) {
