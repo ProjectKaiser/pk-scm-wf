@@ -13,10 +13,10 @@ public class VCSFactory {
 		switch (repo.getType()) {
 		case GIT: {
 			vcs = new GitVCS(ws.getVCSRepositoryWorkspace(repo.getUrl()));
-			if (repo.getCredentials() != null) {
+			if (repo.getCredentials().getName() != null) {
 					vcs.setCredentials(
-							repo.getCredentials() == null ? null : repo.getCredentials().getName(),
-							repo.getCredentials() == null ? null : repo.getCredentials().getPassword());
+							repo.getCredentials().getName(),
+							repo.getCredentials().getPassword());
 			}
 			break;
 		}

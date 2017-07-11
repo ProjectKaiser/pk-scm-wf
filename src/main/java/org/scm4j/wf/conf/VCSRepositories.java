@@ -32,13 +32,16 @@ public class VCSRepositories {
 			throw new EConfig("no repo url for: " + name);
 		}
 		result.setUrl(url);
-		Credentials credentials = new Credentials();
-		result.setCredentials(credentials);
+		Credentials credentials; 
 		if (result.getUrl() != null && getPropByName(creds, result.getUrl(), "name", null) != null) {
-			credentials.setName((String) getPropByName(creds, result.getUrl(), "name", credentials.getName()));
-			credentials.setPassword((String) getPropByName(creds, result.getUrl(), "password", credentials.getPassword()));
-			credentials.setIsDefault((Boolean) getPropByName(creds, result.getUrl(), "isDefault", credentials.getIsDefault()));
+			String user = (String) getPropByName(creds, result.getUrl(), "name", null);
+			String pass = (String) getPropByName(creds, result.getUrl(), "password", null);
+			Boolean isDefault = (Boolean) getPropByName(creds, result.getUrl(), "isDefault", false);
+			credentials = new Credentials(user, pass, isDefault);
+		} else {
+			credentials = new Credentials(null, null, false);
 		}
+		result.setCredentials(credentials);
 		result.setType(getVCSType((String) getPropByName(urls, name, "type", null), result.getUrl()));
 		result.setDevBranch((String) getPropByName(urls, name, "devBranch", result.getDevBranch()));
 		result.setReleaseBanchPrefix((String) getPropByName(urls, name, "releaseBanchPrefix", result.getReleaseBanchPrefix()));

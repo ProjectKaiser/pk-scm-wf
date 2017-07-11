@@ -7,15 +7,15 @@ import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
 import org.scm4j.wf.actions.ActionAbstract;
 import org.scm4j.wf.actions.IAction;
 import org.scm4j.wf.actions.results.ActionResultVersion;
-import org.scm4j.wf.conf.VCSRepository;
+import org.scm4j.wf.conf.Dep;
 import org.scm4j.wf.conf.Version;
 
 public class SCMActionUseLastReleaseVersion extends ActionAbstract {
 
 	private Version ver;
 
-	public SCMActionUseLastReleaseVersion(VCSRepository repo, List<IAction> actions, String masterBranchName, IVCSWorkspace ws) {
-		super(repo, actions, masterBranchName, ws);
+	public SCMActionUseLastReleaseVersion(Dep dep, List<IAction> actions, String masterBranchName, IVCSWorkspace ws) {
+		super(dep, actions, masterBranchName, ws);
 		ver = getDevVersion();
 	}
 

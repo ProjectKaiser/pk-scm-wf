@@ -49,11 +49,13 @@ http://localhost.*:
 
 # ver file
 - Single line, no comments. Exmaple:
-	- `1.0.0-SNAPSHOT`
+```
+1.0.0-SNAPSHOT
+```
 
 # mdeps file
 - multiline, #-commented. Example:
--	```
-	eu.untill:unTillDb:1.11.2#sddfgdfgdfg
-	eu.untill:UBL:1.99.2
-	```
+```
+eu.untill:unTillDb:1.11.2#sddfgdfgdfg
+eu.untill:UBL:1.99.2
+```

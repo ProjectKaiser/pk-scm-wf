@@ -28,5 +28,8 @@ public class Dep extends DepCoords {
 	public Dep(String coords, VCSRepositories repos) {
 		super(coords);
 		vcsRepository = repos.get(getName());
+		if (vcsRepository == null) {
+			throw new IllegalArgumentException("VCSRepository is not found by name " + getName());
+		}
 	}
 }

@@ -70,6 +70,7 @@ public class ConfigTest {
 	@Test
 	public void testBadReposFileContent() throws IOException {
 		File vcsRepos = new File(TEST_ENVIRONMENT_DIR, "vcs-repos");
+		vcsRepos.getParentFile().mkdirs();
 		vcsRepos.createNewFile();
 		FileUtils.writeStringToFile(vcsRepos, "wrong content", StandardCharsets.UTF_8);
 		PowerMockito.mockStatic(System.class);

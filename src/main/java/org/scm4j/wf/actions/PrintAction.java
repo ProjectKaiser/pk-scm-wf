@@ -16,6 +16,5 @@ public class PrintAction {
 			print(ps, currentAction);
 		}
 		level--;
-		
 	}
 }

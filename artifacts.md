@@ -14,12 +14,8 @@
 - `#scm-ver release`
   - Commit in `release` branch which truncates `-SNAPSHOT`
 - `#scm-ignore`
+  - Commit in `develop` branch which shows that all previous feature commits are ignored
 
-# Environment variables:
-- SCM4j_CREDENTIALS  
-- SCM4j_REPOSITORIES
-  - `developBranchName`, `releaseBranchPrefix`
-  
 # `version` file
 
 Contains a single line.
@@ -35,7 +31,7 @@ Contains a single line.
 
 # `mdeps` file
 
-Contains few lines:
+Contains few lines, :
 
 ```
 com.mycompany:component-one:4.2.0

@@ -1,6 +1,7 @@
 package org.scm4j.wf;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -18,6 +19,7 @@ import org.scm4j.commons.progress.IProgress;
 import org.scm4j.commons.progress.ProgressConsole;
 import org.scm4j.vcs.api.VCSTag;
 import org.scm4j.wf.actions.IAction;
+import org.scm4j.wf.actions.results.ActionResultTag;
 import org.scm4j.wf.actions.results.ActionResultVersion;
 import org.scm4j.wf.conf.Version;
 
@@ -182,24 +184,28 @@ public class SCMWorkflowTest {
 		SCMWorkflow wf = new SCMWorkflow(PRODUCT_UNTILL);
 		
 		IAction actionReleaseUnTill = wf.getProductionReleaseAction(null);
-		actionReleaseUnTill.toString();
+		ActionResultVersion resultVersion;
 		try (IProgress progress = new ProgressConsole("releasing " + actionReleaseUnTill.getName(), ">>> ", "<<< ")) {
-			actionReleaseUnTill.execute(progress);
+			Object result = actionReleaseUnTill.execute(progress);
+			assertFalse(result instanceof Throwable);
+			resultVersion = (ActionResultVersion) result; 
 		}
 		
 		IAction actionTagUnTill = wf.getTagReleaseAction(null);
-		ActionResultVersion ver;
+		ActionResultTag resultTag;
 		try (IProgress progress = new ProgressConsole("tagging " + actionReleaseUnTill.getName(), ">>> ", "<<< ")) {
-			ver = (ActionResultVersion) actionTagUnTill.execute(progress);
+			Object result = actionTagUnTill.execute(progress);
+			assertFalse(result instanceof Throwable);
+			resultTag = (ActionResultTag) result;
 		}
 		
 		List<VCSTag> tags = env.getUnTillVCS().getTags();
 		assertNotNull(tags);
 		assertTrue(tags.size() == 1);
 		VCSTag tag = tags.get(0);
-		assertEquals(tag.getTagName(), ver.getVersion());
+		assertEquals(tag.getTagName(), resultTag.getTag().getTagName());
 		assertEquals(tag.getTagMessage(), "tagMessage");
-		assertEquals(tag.getRelatedCommit(), env.getUnTillVCS().getHeadCommit(ver.getNewBranchName()));
+		assertEquals(tag.getRelatedCommit(), env.getUnTillVCS().getHeadCommit(resultVersion.getNewBranchName()));
 	}
 
 }
