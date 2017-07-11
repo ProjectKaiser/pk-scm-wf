@@ -5,12 +5,12 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.scm4j.actions.ActionError;
-import org.scm4j.actions.ActionNone;
-import org.scm4j.actions.IAction;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
 import org.scm4j.vcs.api.workingcopy.VCSWorkspace;
+import org.scm4j.wf.actions.ActionError;
+import org.scm4j.wf.actions.ActionNone;
+import org.scm4j.wf.actions.IAction;
 import org.scm4j.wf.conf.Dep;
 import org.scm4j.wf.conf.MDepsFile;
 import org.scm4j.wf.conf.URLContentLoader;

@@ -1,4 +1,4 @@
-package org.scm4j.actions.results;
+package org.scm4j.wf.actions.results;
 
 public class ActionResultVersion {
 	private String name;

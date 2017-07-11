@@ -2,7 +2,7 @@ package org.scm4j.wf;
 
 import java.util.List;
 
-import org.scm4j.actions.IAction;
+import org.scm4j.wf.actions.IAction;
 
 public interface ISCMWorkflow {
 

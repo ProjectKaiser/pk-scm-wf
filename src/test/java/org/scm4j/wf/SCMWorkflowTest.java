@@ -14,11 +14,11 @@ import org.mockito.Matchers;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
-import org.scm4j.actions.IAction;
-import org.scm4j.actions.results.ActionResultVersion;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.commons.progress.ProgressConsole;
 import org.scm4j.vcs.api.VCSTag;
+import org.scm4j.wf.actions.IAction;
+import org.scm4j.wf.actions.results.ActionResultVersion;
 import org.scm4j.wf.conf.Version;
 
 @PrepareForTest(SCMWorkflow.class)

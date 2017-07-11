@@ -1,4 +1,4 @@
-package org.scm4j.actions.results;
+package org.scm4j.wf.actions.results;
 
 import org.scm4j.vcs.api.VCSTag;
 

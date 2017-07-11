@@ -1,9 +1,9 @@
 package org.scm4j.wf.cli;
 
-import org.scm4j.actions.IAction;
-import org.scm4j.actions.PrintAction;
 import org.scm4j.wf.ISCMWorkflow;
 import org.scm4j.wf.SCMWorkflow;
+import org.scm4j.wf.actions.IAction;
+import org.scm4j.wf.actions.PrintAction;
 
 public class Cli {
 

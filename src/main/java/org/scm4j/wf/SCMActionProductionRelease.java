@@ -3,13 +3,13 @@ package org.scm4j.wf;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.scm4j.actions.ActionAbstract;
-import org.scm4j.actions.IAction;
-import org.scm4j.actions.results.ActionResultVersion;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
+import org.scm4j.wf.actions.ActionAbstract;
+import org.scm4j.wf.actions.IAction;
+import org.scm4j.wf.actions.results.ActionResultVersion;
 import org.scm4j.wf.conf.ConfFile;
 import org.scm4j.wf.conf.Dep;
 import org.scm4j.wf.conf.MDepsFile;
