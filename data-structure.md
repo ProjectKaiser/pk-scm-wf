@@ -14,8 +14,13 @@ artA1|artA2:
   url: http://url.com/svn/prjA
 my(.*):
   url: http://localhost/git/myProj$1
+  # git and svn types are supported. If ommited then:
+  #   if url ends with ".git" then type is git
+  #   otherwise - svn
   type: git
+  # default "release/"
   releaseBanchPrefix: B
+  # Branch name which is considered as development branch, i.e. to create release branches from. Null means "master" branch for Git, "trunk/" branch for SVN. Default is null.
   devBranch: null
 .*:
   url: https://github.com/qwerty/$0

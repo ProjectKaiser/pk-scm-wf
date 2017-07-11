@@ -29,7 +29,7 @@ public class VCSRepositories {
 		result.setName(name);
 		String url = getPropByNameAsStringWithReplace(urls, name, "url", result.getUrl());
 		if (url == null) {
-			throw new EConfig("not repo url for: " + name);
+			throw new EConfig("no repo url for: " + name);
 		}
 		result.setUrl(url);
 		Credentials credentials = new Credentials();

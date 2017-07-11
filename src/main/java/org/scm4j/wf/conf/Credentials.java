@@ -64,35 +64,4 @@ public class Credentials {
 	public String toString() {
 		return "Credentials [name=" + name + "]";
 	}
-	
-//	public static List<Credentials> fromJson(String jsonString) {
-//		if (Strings.isNullOrEmpty(jsonString)) {
-//			return new ArrayList<>();
-//		}
-//		Type type = new TypeToken<List<Credentials>>() {}.getType();
-//		return GsonUtils.fromJson(jsonString, type);
-//	}
-	
-//	public static Map<String, Credentials> loadFromEnvironment() throws Exception {
-//		String storeUrlsStr = System.getenv(CREDENTIALS_LOCATION_ENV_VAR);
-//		Map<String, Credentials> res = new HashMap<>();
-//		if (storeUrlsStr == null) {
-//			return res;
-//		}
-//		String[] storeUrls = storeUrlsStr.split(";");
-//		for (String storeUrl : storeUrls) {
-//			URL url = new URL(storeUrl);
-//			String credsJson;
-//			try (InputStream inputStream = url.openStream()) {
-//				credsJson = IOUtils.toString(inputStream, StandardCharsets.UTF_8.name());
-//			} catch (Exception e) {
-//				throw new RuntimeException(e);
-//			}
-//
-//			for (Credentials cred : Credentials.fromJson(credsJson)) {
-//				res.put(cred.getName(), cred);
-//			}
-//		}
-//		return res;
-//	}
 }
