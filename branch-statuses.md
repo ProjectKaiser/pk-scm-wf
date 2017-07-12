@@ -9,13 +9,13 @@ All statuses are calculated top-down
   - Last commit has `#scm-ver`
   
 # `release` branch
-- MISSED
+- `MISSED`
   - Branch does not exist
-- TAGGED
+- `TAGGED`
   - Tag exist
-- BUILT
+- `BUILT`
   - Last commit has `#scm-built`
-- MDEPS_TAGGED
+- `MDEPS_TAGGED`
   - All mdeps (if any) have version and their release branches tagged 
-- MDEPS_FROZEN 
+- `MDEPS_FROZEN`
   - All mdeps (if any) has fixed version
