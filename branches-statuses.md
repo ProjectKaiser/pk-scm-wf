@@ -2,7 +2,7 @@ All statuses are calculated top-down using `BranchesStatuses` class
 
 # `develop` branch
 - `IGNORED`
-  - Lst commit has `#scm-ignore`
+  - Last commit has `#scm-ignore`
 - `MODIFIED`
   - Last commit has no `#scm-ver`
 - `BRANCHED`
