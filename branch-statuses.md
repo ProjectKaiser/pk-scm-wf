@@ -6,7 +6,7 @@
 - `BRANCHED`
   - Last commit has `#scm-ver`
   
-# release branch
+# `release` branch
 - MISSED
   - Branch does not exist
 - TAGGED
