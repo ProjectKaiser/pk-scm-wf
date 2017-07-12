@@ -1,3 +1,5 @@
+All statuses are calculated top-down
+
 # `develop` branch
 - `IGNORED`
   - Lst commit has `#scm-ignore`
