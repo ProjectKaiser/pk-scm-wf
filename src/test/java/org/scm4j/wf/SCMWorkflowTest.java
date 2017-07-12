@@ -3,6 +3,7 @@ package org.scm4j.wf;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
@@ -54,7 +55,7 @@ public class SCMWorkflowTest {
 	}
 	
 	@Test
-	public void testUseLastVersions() {
+	public void testUseLastVersions() throws Exception {
 		env.generateCommitWithVERTag(env.getUnTillVCS());
 		env.generateCommitWithVERTag(env.getUnTillDbVCS());
 		env.generateCommitWithVERTag(env.getUblVCS());
@@ -123,7 +124,7 @@ public class SCMWorkflowTest {
 	}
 
 	@Test
-	public void testProductionReleaseHasNewerDependencyVersions() {
+	public void testProductionReleaseHasNewerDependencyVersions() throws Exception {
 		env.generateCommitWithVERTag(env.getUnTillVCS());
 		env.generateCommitWithVERTag(env.getUnTillDbVCS());
 		env.generateCommitWithVERTag(env.getUblVCS());
@@ -158,14 +159,31 @@ public class SCMWorkflowTest {
 		assertTrue(action.getExecutionResults().isEmpty()); // because is not executed yet
 	}
 	
-	private void checkUseLastReleaseAction(IAction action, IAction parentAction, String expectedName, Version expectedVersion) {
+	private void checkUseLastReleaseAction(IAction action, IAction parentAction, String expectedName, Version expectedVersion) throws Exception {
 		checkAction(action, parentAction, expectedName);
-		
 		assertTrue(action instanceof SCMActionUseLastReleaseVersion);
 		SCMActionUseLastReleaseVersion lv = (SCMActionUseLastReleaseVersion) action;
 		assertEquals(lv.getVer(), expectedVersion);
+		checkActionResultVersion(action, expectedName, expectedVersion, false);
 	}
 	
+	private void checkActionResultVersion(IAction action, String expectedName, Version expectedVersion, Boolean isNewBuildExpected) throws Exception {
+		Object res;
+		try (IProgress progress = new NullProgress()) {
+			res = action.execute(progress);
+		}
+		assertTrue(res instanceof ActionResultVersion);
+		ActionResultVersion arv = (ActionResultVersion) res;
+		assertEquals(arv.getIsNewBuild(), isNewBuildExpected);
+		assertEquals(arv.getName(), expectedName);
+		if (isNewBuildExpected) {
+			assertNotNull(arv.getNewBranchName());
+		} else {
+			assertNull(arv.getNewBranchName());
+		}
+		assertEquals(arv.getVersion(), isNewBuildExpected ? expectedVersion.toReleaseString() : expectedVersion.toPreviousMinorRelease());
+	}
+
 	private void checkProductionReleaseAction(IAction action, IAction parentAction, ProductionReleaseReason expectedReason, 
 			String expectedName) {
 		checkAction(action, parentAction, expectedName);
@@ -208,4 +226,15 @@ public class SCMWorkflowTest {
 		assertEquals(tag.getRelatedCommit(), env.getUnTillVCS().getHeadCommit(resultVersion.getNewBranchName()));
 	}
 
+	@Test
+	public void testProductionReleaseExecute() throws Exception {
+		env.generateFeatureCommit(env.getUblVCS(), "feature commit");
+		env.generateFeatureCommit(env.getUnTillVCS(), "feature commit");
+		env.generateFeatureCommit(env.getUnTillDbVCS(), "feature commit");
+		
+		SCMWorkflow wf = new SCMWorkflow(PRODUCT_UNTILL);
+		IAction actionUnTill = wf.getProductionReleaseAction(null);
+		
+		checkActionResultVersion(actionUnTill, PRODUCT_UNTILL, env.getUnTillVer(), true);
+	}
 }

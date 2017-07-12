@@ -1,8 +1,8 @@
 package org.scm4j.wf;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -28,6 +28,7 @@ import org.scm4j.wf.conf.VCSRepositories;
 import org.scm4j.wf.conf.VCSRepository;
 import org.scm4j.wf.conf.VCSType;
 import org.scm4j.wf.conf.Version;
+import org.scm4j.wf.exceptions.EDepConfig;
 
 @PrepareForTest(VCSFactory.class)
 @RunWith(PowerMockRunner.class)
@@ -78,9 +79,12 @@ public class SCMWorkflowGetActionTest {
 	public void testActionNoneIfNoVersionFile() {
 		Mockito.doReturn(false).when(mockedVcs).fileExists(testRepo.getDevBranch(), SCMWorkflow.VER_FILE_NAME);
 		Mockito.doReturn(COMMIT_FEATURE).when(mockedVcs).getHeadCommit(TEST_MASTER_BRANCH);
-		IAction action = wf.getProductionReleaseActionRoot(new ArrayList<IAction>());
-		assertTrue(action instanceof ActionNone);
-		assertNotNull(((ActionNone) action).getReason());
+		try {
+			wf.getProductionReleaseActionRoot(new ArrayList<IAction>());
+			fail();
+		} catch (EDepConfig e) {
+			
+		}
 	}
 	
 	@Test
