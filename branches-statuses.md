@@ -18,4 +18,6 @@ All statuses are calculated top-down using `BranchesStatuses` class
 - `MDEPS_TAGGED`
   - All mdeps (if any) have version and their release branches tagged 
 - `MDEPS_FROZEN`
-  - All mdeps (if any) has fixed version
+  - All mdeps (if any) have fixed version
+- `BRANCHED`
+  - Not all mdeps have fixed version
