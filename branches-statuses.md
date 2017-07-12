@@ -1,4 +1,4 @@
-All statuses are calculated top-down using `BranchesStatues` class
+All statuses are calculated top-down using `BranchesStatuses` class
 
 # `develop` branch
 - `IGNORED`
