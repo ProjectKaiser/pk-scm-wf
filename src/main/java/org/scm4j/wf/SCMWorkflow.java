@@ -81,7 +81,7 @@ public class SCMWorkflow implements ISCMWorkflow {
 			}
 			String credsContent = reposLoader.getContentFromUrls(separatedCredsUrlsStr);
 			try {
-				return new VCSRepositories(reposContent, credsContent);
+				return new VCSRepositories(reposContent, credsContent, new VCSWorkspace(DEFAULT_VCS_WORKSPACE_DIR));
 			} catch (Exception e) {
 				throw new EConfig(e);
 			}

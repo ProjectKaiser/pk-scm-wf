@@ -3,6 +3,7 @@ package org.scm4j.wf.conf;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
 import org.scm4j.wf.exceptions.EConfig;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.error.YAMLException;
@@ -10,8 +11,10 @@ import org.yaml.snakeyaml.error.YAMLException;
 public class VCSRepositories {
 	private Map<?, ?> urls;
 	private Map<?, ?> creds;
+	private final IVCSWorkspace ws;
 
-	public VCSRepositories(String urlsStr, String credsStr) throws YAMLException {
+	public VCSRepositories(String urlsStr, String credsStr, IVCSWorkspace ws) throws YAMLException {
+		this.ws = ws;
 		Yaml yaml = new Yaml();
 		urls = yaml.loadAs(urlsStr, Map.class);
 		if (urls == null) {
@@ -24,13 +27,12 @@ public class VCSRepositories {
 	}
 
 	public VCSRepository get(String name) {
-		VCSRepository result = new VCSRepository();
-
-		result.setName(name);
-		String url = getPropByNameAsStringWithReplace(urls, name, "url", result.getUrl());
+		String url = getPropByNameAsStringWithReplace(urls, name, "url", null);
 		if (url == null) {
 			throw new EConfig("no repo url for: " + name);
 		}
+		VCSRepository result = new VCSRepository(ws.getVCSRepositoryWorkspace(url));
+		result.setName(name);
 		result.setUrl(url);
 		Credentials credentials; 
 		if (result.getUrl() != null && getPropByName(creds, result.getUrl(), "name", null) != null) {
