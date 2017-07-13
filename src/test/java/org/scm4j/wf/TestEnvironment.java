@@ -20,7 +20,7 @@ public class TestEnvironment {
 	public static final String TEST_CREDENTIALS_FILE_NAME = "credentials";
 	public static final String TEST_ENVIRONMENT_DIR = new File(System.getProperty("java.io.tmpdir"), "scm4j-wf-test").getPath();
 	public static final String TEST_ENVIRONMENT_URL = "file://localhost/" + TEST_ENVIRONMENT_DIR.replace("\\", "/");
-	public static final String TEST_VCS_REPO_FILE_URL = "file://localhost/" + TEST_ENVIRONMENT_URL + "/vcs-repo";
+	public static final String TEST_VCS_REPO_FILE_URL = "file://localhost/" + TEST_ENVIRONMENT_URL.replace("\\", "/") + "/vcs-repo";
 	public static final String TEST_LOCAL_REPO_DIR = new File(TEST_ENVIRONMENT_DIR, "local-repos").getPath();
 	public static final String TEST_REMOTE_REPO_DIR = new File(TEST_ENVIRONMENT_DIR, "remote-repos").getPath();
 	public static final String TEST_FEATURE_FILE_NAME = "feature.txt";
@@ -69,6 +69,7 @@ public class TestEnvironment {
 	}
 
 	private void uploadVCSConfigFiles() {
+		System.out.println(unTillVCS.getWorkspace().getVCSRepositoryWorkspace(unTillVCS.getRepoUrl()).getRepoUrl());
 		unTillVCS.setFileContent(null, SCMWorkflow.VER_FILE_NAME, unTillVer.toString(), "ver file added");
 		unTillVCS.setFileContent(null, SCMWorkflow.MDEPS_FILE_NAME,
 				SCMWorkflowTest.PRODUCT_UBL + ":" + ublVer.toString() + "\r\n" +
