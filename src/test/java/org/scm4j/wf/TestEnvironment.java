@@ -69,7 +69,6 @@ public class TestEnvironment {
 	}
 
 	private void uploadVCSConfigFiles() {
-		System.out.println("!!!" + unTillVCS.getWorkspace().getHomeFolder());
 		unTillVCS.setFileContent(null, SCMWorkflow.VER_FILE_NAME, unTillVer.toString(), "ver file added");
 		unTillVCS.setFileContent(null, SCMWorkflow.MDEPS_FILE_NAME,
 				SCMWorkflowTest.PRODUCT_UBL + ":" + ublVer.toString() + "\r\n" +
