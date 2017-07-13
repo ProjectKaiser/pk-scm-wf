@@ -15,6 +15,9 @@ For low vcs operations scm4j-vcs-* libraries are used
 - [branches-statuses.md](branches-statuses.md)
 - [data-structure.md](data-structure.md)
   
+- [branches-statuses.md](branches-statuses.md)
+- [data-structure.md](data-structure.md)
+  
 # Artifacts  
 Ref. [artifacts.md](artifacts.md)
 
