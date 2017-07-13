@@ -34,7 +34,7 @@ public class VCSRepositoriesTest {
 		assertEquals("myDiskFormatter", rep.getName());
 		assertEquals("http://localhost/git/myProjDiskFormatter", rep.getUrl());
 		assertEquals(VCSType.GIT, rep.getType());
-		assertEquals("B", rep.getReleaseBanchPrefix());
+		assertEquals("B", rep.getReleaseBranchPrefix());
 		assertNull(rep.getDevBranch());
 		assertEquals(null, rep.getCredentials().getName());
 		assertEquals(null, rep.getCredentials().getPassword());
@@ -44,7 +44,7 @@ public class VCSRepositoriesTest {
 	public void get1() {
 		VCSRepositories reps = new VCSRepositories(urlsStr, credsStr);
 		VCSRepository rep = reps.get("artA1");
-		assertThat(new Object[] { rep.getName(), rep.getUrl(), rep.getType(), rep.getDevBranch(), rep.getReleaseBanchPrefix() },
+		assertThat(new Object[] { rep.getName(), rep.getUrl(), rep.getType(), rep.getDevBranch(), rep.getReleaseBranchPrefix() },
 				is(new Object[] { "artA1", "http://url.com/svn/prjA", VCSType.SVN, "branches/", "release/" }));
 		assertThat(new Object[] { rep.getCredentials().getName(), rep.getCredentials().getPassword() },
 				is(new Object[] { "user", "password" }));
@@ -54,7 +54,7 @@ public class VCSRepositoriesTest {
 	public void get2() {
 		VCSRepositories reps = new VCSRepositories(urlsStr, credsStr);
 		VCSRepository rep = reps.get("abyrvalg");
-		assertThat(new Object[] { rep.getName(), rep.getUrl(), rep.getType(), rep.getDevBranch(), rep.getReleaseBanchPrefix() },
+		assertThat(new Object[] { rep.getName(), rep.getUrl(), rep.getType(), rep.getDevBranch(), rep.getReleaseBranchPrefix() },
 				is(new Object[] { "abyrvalg", "https://github.com/qwerty/abyrvalg", VCSType.SVN, "branches/", "release/" }));
 		assertThat(new Object[] { rep.getCredentials().getName(), rep.getCredentials().getPassword() },
 				is(new Object[] { "guest", "guest" }));

@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
+import org.scm4j.vcs.api.workingcopy.VCSWorkspace;
 import org.scm4j.wf.exceptions.EConfig;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.error.YAMLException;
@@ -12,6 +13,10 @@ public class VCSRepositories {
 	private Map<?, ?> urls;
 	private Map<?, ?> creds;
 	private final IVCSWorkspace ws;
+	
+	public VCSRepositories(String urlsStr, String credsStr) {
+		this(urlsStr, credsStr, new VCSWorkspace());
+	}
 
 	public VCSRepositories(String urlsStr, String credsStr, IVCSWorkspace ws) throws YAMLException {
 		this.ws = ws;
@@ -31,23 +36,20 @@ public class VCSRepositories {
 		if (url == null) {
 			throw new EConfig("no repo url for: " + name);
 		}
-		VCSRepository result = new VCSRepository(ws.getVCSRepositoryWorkspace(url));
-		result.setName(name);
-		result.setUrl(url);
+		
 		Credentials credentials; 
-		if (result.getUrl() != null && getPropByName(creds, result.getUrl(), "name", null) != null) {
-			String user = (String) getPropByName(creds, result.getUrl(), "name", null);
-			String pass = (String) getPropByName(creds, result.getUrl(), "password", null);
-			Boolean isDefault = (Boolean) getPropByName(creds, result.getUrl(), "isDefault", false);
+		if (url != null && getPropByName(creds, url, "name", null) != null) {
+			String user = (String) getPropByName(creds, url, "name", null);
+			String pass = (String) getPropByName(creds, url, "password", null);
+			Boolean isDefault = (Boolean) getPropByName(creds, url, "isDefault", false);
 			credentials = new Credentials(user, pass, isDefault);
 		} else {
 			credentials = new Credentials(null, null, false);
 		}
-		result.setCredentials(credentials);
-		result.setType(getVCSType((String) getPropByName(urls, name, "type", null), result.getUrl()));
-		result.setDevBranch((String) getPropByName(urls, name, "devBranch", result.getDevBranch()));
-		result.setReleaseBanchPrefix((String) getPropByName(urls, name, "releaseBanchPrefix", result.getReleaseBanchPrefix()));
-
+		VCSType type = getVCSType((String) getPropByName(urls, name, "type", null), url);
+		String devBranch = (String) getPropByName(urls, name, "devBranch", VCSRepository.DEFAULT_DEV_BRANCH);
+		String releaseBranchPrefix = (String) getPropByName(urls, name, "releaseBanchPrefix", VCSRepository.DEFAULT_RELEASE_BRANCH_PREFIX);
+		VCSRepository result = new VCSRepository(name, url, credentials, type, devBranch, ws, releaseBranchPrefix);
 		return result;
 	}
 

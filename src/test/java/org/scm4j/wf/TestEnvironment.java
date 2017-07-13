@@ -134,7 +134,7 @@ public class TestEnvironment {
 
 	public void generateCommitWithVERTag(IVCS vcs) {
 		vcs.setFileContent(null, TEST_DUMMY_FILE_NAME, "dummy content " + UUID.randomUUID().toString(), 
-				SCMActionProductionRelease.VCS_TAG_SCM_VER);
+				LogTag.SCM_VER);
 	}
 
 	public Version getUnTillVer() {

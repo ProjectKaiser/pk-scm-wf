@@ -11,6 +11,7 @@ public class Version {
 	private final String snapshot;
 	private final String patch;
 	private final String verStr;
+	private final Boolean isEmpty;
 
 	public Version(String ver) {
 		verStr = ver;
@@ -19,7 +20,9 @@ public class Version {
 			prefix = "";
 			minor = "";
 			patch = "";
+			isEmpty = true;
 		} else {
+			isEmpty = false;
 			if (ver.contains(SNAPSHOT)) {
 				snapshot = SNAPSHOT;
 				ver = ver.replace(SNAPSHOT, "");
@@ -98,5 +101,9 @@ public class Version {
 	@Override
 	public int hashCode() {
 		return verStr != null ? verStr.hashCode() : 0;
+	}
+	
+	public Boolean isEmpty() {
+		return isEmpty;
 	}
 }

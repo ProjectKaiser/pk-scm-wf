@@ -7,10 +7,8 @@ import java.util.Map;
 
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
-import org.scm4j.wf.SCMWorkflow;
 import org.scm4j.wf.VCSFactory;
 import org.scm4j.wf.conf.Dep;
-import org.scm4j.wf.conf.Version;
 
 public abstract class ActionAbstract implements IAction {
 
@@ -20,12 +18,6 @@ public abstract class ActionAbstract implements IAction {
 	protected String currentBranchName;
 	private Map<String, List<Object>> executionResults = new LinkedHashMap<>();
 	protected IVCSWorkspace ws;
-
-	public Version getDevVersion() {
-		IVCS vcs = VCSFactory.getIVCS(dep.getVcsRepository(), ws);
-		String verFileContent = vcs.getFileContent(currentBranchName, SCMWorkflow.VER_FILE_NAME);
-		return new Version(verFileContent.trim());
-	}
 
 	public IVCS getVCS() {
 		return VCSFactory.getIVCS(dep.getVcsRepository(), ws);
@@ -40,6 +32,7 @@ public abstract class ActionAbstract implements IAction {
 		this.childActions = childActions;
 		this.currentBranchName = currentBranchName;
 		this.ws = ws;
+		
 		if (childActions != null) {
 			for (IAction action : childActions) {
 				action.setParent(this);

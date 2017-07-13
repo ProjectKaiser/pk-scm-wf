@@ -12,26 +12,23 @@ import org.scm4j.wf.conf.Version;
 
 public class SCMActionUseLastReleaseVersion extends ActionAbstract {
 
-	private Version ver;
-
 	public SCMActionUseLastReleaseVersion(Dep dep, List<IAction> actions, String masterBranchName, IVCSWorkspace ws) {
 		super(dep, actions, masterBranchName, ws);
-		ver = getDevVersion();
 	}
 
 	@Override
 	public String toString() {
-		return "using last release version " + getName() + ":" + ver.toPreviousMinorRelease();
+		return "using last release version " + getName() + ":" + getVer().toPreviousMinorRelease();
 	}
 
 	public Version getVer() {
-		return ver;
+		return dep.getActualVersion();
 	}
 
 	@Override
 	public Object execute(IProgress progress) {
 		progress.reportStatus(toString());
-		ActionResultVersion res = new ActionResultVersion(getName(), ver.toPreviousMinorRelease(), false, null);
+		ActionResultVersion res = new ActionResultVersion(getName(), getVer().toPreviousMinorRelease(), false, null);
 		return res;
 	}
 }

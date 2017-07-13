@@ -20,6 +20,7 @@ import org.scm4j.commons.progress.IProgress;
 import org.scm4j.commons.progress.ProgressConsole;
 import org.scm4j.vcs.api.VCSTag;
 import org.scm4j.wf.actions.IAction;
+import org.scm4j.wf.actions.PrintAction;
 import org.scm4j.wf.actions.results.ActionResultTag;
 import org.scm4j.wf.actions.results.ActionResultVersion;
 import org.scm4j.wf.conf.Version;
@@ -131,11 +132,12 @@ public class SCMWorkflowTest {
 		env.getUnTillVCS().setFileContent(null, SCMWorkflow.MDEPS_FILE_NAME,
 				SCMWorkflowTest.PRODUCT_UBL + ":" + env.getUblVer().toString() + "\r\n" +
 				SCMWorkflowTest.PRODUCT_UNTILLDB + ":1.0.0" + "\r\n",
-				SCMActionProductionRelease.VCS_TAG_SCM_IGNORE + " old unTillDb version is used in mdeps file");
+				LogTag.SCM_IGNORE + " old unTillDb version is used in mdeps file");
 
 		SCMWorkflow wf = new SCMWorkflow(PRODUCT_UNTILL);
 
 		IAction actionUnTill = wf.getProductionReleaseAction(null);
+		//actionUnTill.toString();
 		checkProductionReleaseAction(actionUnTill, null, ProductionReleaseReason.NEW_DEPENDENCIES, PRODUCT_UNTILL);
 		assertTrue(actionUnTill.getChildActions().size() == 2);
 
@@ -168,7 +170,7 @@ public class SCMWorkflowTest {
 	}
 	
 	private void checkActionResultVersion(IAction action, String expectedName, Version expectedVersion, Boolean isNewBuildExpected) throws Exception {
-		Object res;
+		Object res = null;;
 		try (IProgress progress = new NullProgress()) {
 			res = action.execute(progress);
 		}
@@ -234,6 +236,8 @@ public class SCMWorkflowTest {
 		
 		SCMWorkflow wf = new SCMWorkflow(PRODUCT_UNTILL);
 		IAction actionUnTill = wf.getProductionReleaseAction(null);
+		PrintAction pa = new PrintAction();
+		pa.print(System.out, actionUnTill);
 		
 		checkActionResultVersion(actionUnTill, PRODUCT_UNTILL, env.getUnTillVer(), true);
 	}

@@ -23,6 +23,7 @@ import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
 import org.scm4j.wf.actions.ActionError;
 import org.scm4j.wf.actions.ActionNone;
 import org.scm4j.wf.actions.IAction;
+import org.scm4j.wf.conf.Credentials;
 import org.scm4j.wf.conf.Dep;
 import org.scm4j.wf.conf.VCSRepositories;
 import org.scm4j.wf.conf.VCSRepository;
@@ -37,8 +38,8 @@ public class SCMWorkflowGetActionTest {
 	private static final String TEST_DEP = "test:dep";
 	private static final String TEST_MASTER_BRANCH = "test master branch";
 	private static final VCSCommit COMMIT_FEATURE = new VCSCommit("test revision", "feature commit", null);
-	private static final VCSCommit COMMIT_VER = new VCSCommit("test revision", SCMActionProductionRelease.VCS_TAG_SCM_VER, null);
-	private static final VCSCommit COMMIT_IGNORE = new VCSCommit("test revision", SCMActionProductionRelease.VCS_TAG_SCM_IGNORE, null);
+	private static final VCSCommit COMMIT_VER = new VCSCommit("test revision", LogTag.SCM_VER, null);
+	private static final VCSCommit COMMIT_IGNORE = new VCSCommit("test revision", LogTag.SCM_IGNORE, null);
 	
 	@Mock
 	IVCS mockedVcs;
@@ -55,10 +56,7 @@ public class SCMWorkflowGetActionTest {
 	@Before
 	public void setUp() {
 		MockitoAnnotations.initMocks(this);
-		testRepo = new VCSRepository();
-		testRepo.setDevBranch(TEST_MASTER_BRANCH);
-		testRepo.setName(TEST_DEP);
-		testRepo.setType(VCSType.GIT);
+		testRepo = new VCSRepository(TEST_DEP, null, new Credentials(null, null, false), VCSType.GIT, TEST_MASTER_BRANCH, ws);
 		Mockito.doReturn(testRepo).when(mockedRepos).get(testRepo.getName());
 		PowerMockito.mockStatic(VCSFactory.class);
 		PowerMockito.when(VCSFactory.getIVCS(testRepo, ws)).thenReturn(mockedVcs);

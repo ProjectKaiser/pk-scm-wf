@@ -33,12 +33,12 @@ public class BranchStructureTest {
 	@Test
 	public void testHasNoFeatures() {
 		VCSCommit commit = new VCSCommit("rev",
-				"head commit with " + SCMActionProductionRelease.VCS_TAG_SCM_IGNORE + " tag", "author");
+				"head commit with " + LogTag.SCM_IGNORE + " tag", "author");
 		Mockito.doReturn(commit).when(vcs).getHeadCommit(TEST_BRANCH);
 		BranchStructure bs = new BranchStructure(vcs, TEST_BRANCH);
 		assertFalse(bs.getHasFeatures());
 
-		commit = new VCSCommit("rev", "head commit with " + SCMActionProductionRelease.VCS_TAG_SCM_VER + " tag",
+		commit = new VCSCommit("rev", "head commit with " + LogTag.SCM_VER + " tag",
 				"author");
 		Mockito.doReturn(commit).when(vcs).getHeadCommit(TEST_BRANCH);
 		bs = new BranchStructure(vcs, TEST_BRANCH);

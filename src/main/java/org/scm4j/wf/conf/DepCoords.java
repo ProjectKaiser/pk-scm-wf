@@ -7,10 +7,14 @@ public class DepCoords {
 	private final String extension;
 	private final String groupId;
 	private final String classifier;
-	private final Version version;
+	private Version version;
 
 	public String getComment() {
 		return commentStr;
+	}
+	
+	public void setVersion(Version version) {
+		this.version = version;
 	}
 
 	public DepCoords(String coordsString) {

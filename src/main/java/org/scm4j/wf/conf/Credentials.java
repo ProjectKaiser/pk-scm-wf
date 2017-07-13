@@ -1,6 +1,8 @@
 package org.scm4j.wf.conf;
 
 public class Credentials {
+	public static final Credentials EMPTY = new Credentials(null, null, false);
+	
 	private final String name;
 	private final String password;
 	private final Boolean isDefault;

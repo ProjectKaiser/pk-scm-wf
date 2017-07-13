@@ -13,9 +13,9 @@ public class BranchStructure {
 	public BranchStructure(IVCS vcs, String branchName) {
 		this.branchName = branchName;
 		VCSCommit headCommit = vcs.getHeadCommit(branchName);
-		if (headCommit.getLogMessage().contains(SCMActionProductionRelease.VCS_TAG_SCM_IGNORE)) {
+		if (headCommit.getLogMessage().contains(LogTag.SCM_IGNORE)) {
 			hasFeatures = false;
-		} else if(headCommit.getLogMessage().contains(SCMActionProductionRelease.VCS_TAG_SCM_VER)) {
+		} else if(headCommit.getLogMessage().contains(LogTag.SCM_VER)) {
 			hasFeatures = false;
 		} else {
 			hasFeatures = true;

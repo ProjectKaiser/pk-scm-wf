@@ -56,7 +56,7 @@ public class SCMWorkflow implements ISCMWorkflow {
 		this.dep = dep;
 		this.ws = ws;
 		devBranchName = dep.getVcsRepository().getDevBranch();
-		vcs = VCSFactory.getIVCS(dep.getVcsRepository(), ws);
+		vcs = dep.getVcsRepository().getVcs(); //VCSFactory.getIVCS(dep.getVcsRepository(), ws);
 		if (vcs.fileExists(devBranchName, MDEPS_FILE_NAME)) {
 			String mDepsContent = vcs.getFileContent(devBranchName, MDEPS_FILE_NAME);
 			mDeps = new MDepsFile(mDepsContent, repos).getMDeps();
@@ -67,7 +67,7 @@ public class SCMWorkflow implements ISCMWorkflow {
 		this(depName, getReposFromEnvironment(), new VCSWorkspace(DEFAULT_VCS_WORKSPACE_DIR));
 	}
 
-	private static VCSRepositories getReposFromEnvironment() throws EConfig {
+	public static VCSRepositories getReposFromEnvironment() throws EConfig {
 		try {
 			URLContentLoader reposLoader = new URLContentLoader();
 			String separatedReposUrlsStr = System.getenv(REPOS_LOCATION_ENV_VAR);

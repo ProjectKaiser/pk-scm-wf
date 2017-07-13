@@ -46,8 +46,8 @@ public class SCMActionTagRelease extends ActionAbstract {
 			
 			IVCS vcs = getVCS();
 			
-			String releaseBranchName = dep.getVcsRepository().getReleaseBanchPrefix() + getDevVersion().toPreviousMinorRelease();
-			String tagName = getDevVersion().toPreviousMinorRelease();
+			String releaseBranchName = dep.getPreviousMinorReleaseBranchName();
+			String tagName = dep.getActualVersion().toPreviousMinorRelease();
 			VCSTag tag = vcs.createTag(releaseBranchName, tagName, tagMessage);
 			progress.reportStatus("head of \"" + releaseBranchName + "\" tagged: " + tag.toString());
 			return new ActionResultTag(getName(), tag);
