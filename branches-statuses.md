@@ -17,7 +17,7 @@ All statuses are calculated top-down using `BranchesStatuses` class
   - Last commit has `#scm-built`
 - `MDEPS_TAGGED`   
   - Every mdep is built and tagged
-- `MDEPS_FROZEND` 
+- `MDEPS_FROZEN` 
   - All mdeps (if any) have fixed version
 - `BRANCHED`
   - Not all mdeps have fixed version
