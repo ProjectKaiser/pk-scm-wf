@@ -15,9 +15,7 @@ All statuses are calculated top-down using `BranchesStatuses` class
   - Tag exist
 - `BUILT`
   - Last commit has `#scm-built`
-- `MDEPS_TAGGED`
-  - All mdeps (if any) have version and their release branches tagged 
-- `MDEPS_FROZEN`
-  - All mdeps (if any) have fixed version
+- `MDEPS_BUILT` 
+  - All mdeps (if any) have fixed version. Means that every dep is built and tagged
 - `BRANCHED`
   - Not all mdeps have fixed version
