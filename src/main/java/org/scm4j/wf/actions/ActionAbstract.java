@@ -8,27 +8,27 @@ import java.util.Map;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
 import org.scm4j.wf.VCSFactory;
-import org.scm4j.wf.conf.Dep;
+import org.scm4j.wf.conf.Component;
 
 public abstract class ActionAbstract implements IAction {
 
 	protected IAction parentAction;
 	protected List<IAction> childActions;
-	protected Dep dep;
+	protected Component comp;
 	protected String currentBranchName;
 	private Map<String, List<Object>> executionResults = new LinkedHashMap<>();
 	protected IVCSWorkspace ws;
 
 	public IVCS getVCS() {
-		return VCSFactory.getIVCS(dep.getVcsRepository(), ws);
+		return VCSFactory.getIVCS(comp.getVcsRepository(), ws);
 	}
 
 	public Map<String, List<Object>> getExecutionResults() {
 		return parentAction != null ? parentAction.getExecutionResults() : executionResults;
 	}
 
-	public ActionAbstract(Dep dep, List<IAction> childActions, String currentBranchName, IVCSWorkspace ws) {
-		this.dep = dep;
+	public ActionAbstract(Component comp, List<IAction> childActions, String currentBranchName, IVCSWorkspace ws) {
+		this.comp = comp;
 		this.childActions = childActions;
 		this.currentBranchName = currentBranchName;
 		this.ws = ws;
@@ -57,12 +57,12 @@ public abstract class ActionAbstract implements IAction {
 
 	@Override
 	public String getName() {
-		return dep.getName();
+		return comp.getName();
 	}
 
 	@Override
 	public String toString() {
-		return this.getClass().getSimpleName() + " [" + dep.getName() + "]";
+		return this.getClass().getSimpleName() + " [" + comp.getName() + "]";
 	}
 
 	public Object getResult(String name, Class<?> resultClass) {

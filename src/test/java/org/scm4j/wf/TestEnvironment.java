@@ -10,6 +10,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.scm4j.vcs.GitVCS;
 import org.scm4j.vcs.GitVCSUtils;
 import org.scm4j.vcs.api.IVCS;
+import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.vcs.api.workingcopy.IVCSRepositoryWorkspace;
 import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
 import org.scm4j.vcs.api.workingcopy.VCSWorkspace;
@@ -25,6 +26,11 @@ public class TestEnvironment {
 	public static final String TEST_REMOTE_REPO_DIR = new File(TEST_ENVIRONMENT_DIR, "remote-repos").getPath();
 	public static final String TEST_FEATURE_FILE_NAME = "feature.txt";
 	public static final String TEST_DUMMY_FILE_NAME = "dummy.txt";
+	
+	public static final String PRODUCT_UNTILL = "eu.untill:unTill";
+	public static final String PRODUCT_UBL = "eu.untill:UBL";
+	public static final String PRODUCT_UNTILLDB = "eu.untill:unTillDb";
+	
 	public final String RANDOM_VCS_NAME_SUFFIX;
 
 	private IVCS unTillVCS;
@@ -71,12 +77,12 @@ public class TestEnvironment {
 	private void uploadVCSConfigFiles() {
 		unTillVCS.setFileContent(null, SCMWorkflow.VER_FILE_NAME, unTillVer.toString(), "ver file added");
 		unTillVCS.setFileContent(null, SCMWorkflow.MDEPS_FILE_NAME,
-				SCMWorkflowTest.PRODUCT_UBL + ":" + ublVer.toString() + "\r\n" +
-				SCMWorkflowTest.PRODUCT_UNTILLDB + ":" + unTillDbVer.toString() + "\r\n", "mdeps file added");
+				PRODUCT_UBL + ":" + ublVer.toString() + "\r\n" +
+				PRODUCT_UNTILLDB + ":" + unTillDbVer.toString() + "\r\n", "mdeps file added");
 
 		ublVCS.setFileContent(null, SCMWorkflow.VER_FILE_NAME, ublVer.toString(), "ver file added");
 		ublVCS.setFileContent(null, SCMWorkflow.MDEPS_FILE_NAME,
-				SCMWorkflowTest.PRODUCT_UNTILLDB + ":" + unTillDbVer.toString() + "\r\n", "mdeps file added");
+				PRODUCT_UNTILLDB + ":" + unTillDbVer.toString() + "\r\n", "mdeps file added");
 
 		unTillDbVCS.setFileContent(null, SCMWorkflow.VER_FILE_NAME, unTillDbVer.toString(), "ver file added");
 	}
@@ -127,14 +133,21 @@ public class TestEnvironment {
 	public File getReposFile() {
 		return reposFile;
 	}
-
-	public void generateFeatureCommit(IVCS vcs, String commitMessage) {
-		vcs.setFileContent(null, TEST_FEATURE_FILE_NAME, "feature content", commitMessage);
+	
+	public VCSCommit generateLogTag(IVCS vcs, String branchName, String logTag) {
+		return generateDummyContent(vcs, branchName, logTag);
 	}
 
-	public void generateCommitWithVERTag(IVCS vcs) {
-		vcs.setFileContent(null, TEST_DUMMY_FILE_NAME, "dummy content " + UUID.randomUUID().toString(), 
-				LogTag.SCM_VER);
+	public VCSCommit generateFeatureCommit(IVCS vcs, String branchName, String commitMessage) {
+		return generateContent(vcs, branchName, TEST_FEATURE_FILE_NAME, "feature content", commitMessage);
+	}
+	
+	public VCSCommit generateContent(IVCS vcs, String branchName, String fileName, String content, String logMessage) {
+		return vcs.setFileContent(branchName, fileName, content, logMessage);
+	}
+	
+	public VCSCommit generateDummyContent(IVCS vcs, String branchName, String logMessage) {
+		return vcs.setFileContent(branchName, TEST_DUMMY_FILE_NAME, "dummy content " + UUID.randomUUID().toString(), logMessage);
 	}
 
 	public Version getUnTillVer() {
@@ -154,6 +167,8 @@ public class TestEnvironment {
 			FileUtils.deleteDirectory(envDir);
 		}
 	}
+
+	
 	
 
 }

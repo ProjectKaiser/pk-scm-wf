@@ -9,13 +9,14 @@ import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
 import org.scm4j.wf.actions.ActionAbstract;
 import org.scm4j.wf.actions.IAction;
 import org.scm4j.wf.actions.results.ActionResultTag;
-import org.scm4j.wf.conf.Dep;
+import org.scm4j.wf.branchstatus.DevelopBranch;
+import org.scm4j.wf.conf.Component;
 
 public class SCMActionTagRelease extends ActionAbstract {
 
 	private String tagMessage;
 
-	public SCMActionTagRelease(Dep dep, List<IAction> childActions, String currentBranchName,
+	public SCMActionTagRelease(Component dep, List<IAction> childActions, String currentBranchName,
 			IVCSWorkspace ws, String tagMessage) {
 		super(dep, childActions, currentBranchName, ws);
 		this.tagMessage = tagMessage;
@@ -45,9 +46,10 @@ public class SCMActionTagRelease extends ActionAbstract {
 			}
 			
 			IVCS vcs = getVCS();
+			DevelopBranch db = new DevelopBranch(comp);
 			
-			String releaseBranchName = dep.getPreviousMinorReleaseBranchName();
-			String tagName = dep.getActualVersion().toPreviousMinorRelease();
+			String releaseBranchName = db.getPreviousMinorReleaseBranchName();
+			String tagName = db.getVersion().toPreviousMinorRelease();
 			VCSTag tag = vcs.createTag(releaseBranchName, tagName, tagMessage);
 			progress.reportStatus("head of \"" + releaseBranchName + "\" tagged: " + tag.toString());
 			return new ActionResultTag(getName(), tag);

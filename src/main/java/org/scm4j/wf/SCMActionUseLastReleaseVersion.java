@@ -7,28 +7,33 @@ import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
 import org.scm4j.wf.actions.ActionAbstract;
 import org.scm4j.wf.actions.IAction;
 import org.scm4j.wf.actions.results.ActionResultVersion;
-import org.scm4j.wf.conf.Dep;
+import org.scm4j.wf.branchstatus.DevelopBranch;
+import org.scm4j.wf.conf.Component;
 import org.scm4j.wf.conf.Version;
 
 public class SCMActionUseLastReleaseVersion extends ActionAbstract {
+	
+	private Version version;
 
-	public SCMActionUseLastReleaseVersion(Dep dep, List<IAction> actions, String masterBranchName, IVCSWorkspace ws) {
-		super(dep, actions, masterBranchName, ws);
+	public SCMActionUseLastReleaseVersion(Component comp, List<IAction> actions, String masterBranchName, IVCSWorkspace ws) {
+		super(comp, actions, masterBranchName, ws);
+		DevelopBranch db = new DevelopBranch(comp);
+		version = db.getVersion();
 	}
 
 	@Override
 	public String toString() {
-		return "using last release version " + getName() + ":" + getVer().toPreviousMinorRelease();
+		return "using last release version " + getName() + ":" + getVersion().toPreviousMinorRelease();
 	}
 
-	public Version getVer() {
-		return dep.getActualVersion();
+	public Version getVersion() {
+		return version;
 	}
 
 	@Override
 	public Object execute(IProgress progress) {
 		progress.reportStatus(toString());
-		ActionResultVersion res = new ActionResultVersion(getName(), getVer().toPreviousMinorRelease(), false, null);
+		ActionResultVersion res = new ActionResultVersion(getName(), getVersion().toPreviousMinorRelease(), false, null);
 		return res;
 	}
 }

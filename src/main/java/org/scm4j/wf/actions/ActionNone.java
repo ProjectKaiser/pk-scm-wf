@@ -4,13 +4,13 @@ import java.util.List;
 
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
-import org.scm4j.wf.conf.Dep;
+import org.scm4j.wf.conf.Component;
 
 public class ActionNone extends ActionAbstract {
 	
 	private String reason;
 	
-	public ActionNone(Dep dep, List<IAction> actions, String masterBranchName, IVCSWorkspace ws, String reason) {
+	public ActionNone(Component dep, List<IAction> actions, String masterBranchName, IVCSWorkspace ws, String reason) {
 		super(dep, actions, masterBranchName, ws);
 		this.reason = reason;
 	}

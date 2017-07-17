@@ -1,7 +1,6 @@
 package org.scm4j.wf.branchstatus;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 
 import java.io.IOException;
 
@@ -13,16 +12,18 @@ import org.mockito.Matchers;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
+import org.scm4j.wf.LogTag;
 import org.scm4j.wf.SCMWorkflow;
 import org.scm4j.wf.TestEnvironment;
-import org.scm4j.wf.conf.Dep;
+import org.scm4j.wf.conf.Component;
 import org.scm4j.wf.conf.VCSRepositories;
 
 @PrepareForTest(SCMWorkflow.class)
 @RunWith(PowerMockRunner.class)
-public class BranchStatusTest {
+public class DevelopBranchTest {
 	
 	private TestEnvironment env;
+	private VCSRepositories repos;
 	
 	@Before
 	public void setUp() throws Exception {
@@ -35,6 +36,7 @@ public class BranchStatusTest {
 				.thenReturn("file://localhost/" + env.getReposFile().getPath().replace("\\", "/"));
 		PowerMockito.when(System.getProperty(Matchers.anyString()))
 				.thenCallRealMethod();
+		repos = SCMWorkflow.getReposFromEnvironment();
 	}
 	
 	@After
@@ -44,21 +46,31 @@ public class BranchStatusTest {
 	
 	
 	@Test
-	public void testBranchStatusNothingIsMade() {
-		BranchStatus bs = new BranchStatus();
-		VCSRepositories repos = SCMWorkflow.getReposFromEnvironment();
-		Dep dep = new Dep("eu.untill:unTill", repos);
-		
-		BranchStatuses bss = bs.getCurrentStatuses(dep, repos);
-		assertNotNull(bss);
-		assertEquals(bss.getDevelopStatus(), DevelopBranchStatus.MODIFIED);
-		assertEquals(bss.getReleaseStatus(), ReleaseBranchStatus.MISSING);
+	public void testBranchedIfNothingIsMade() {
+		env.generateLogTag(env.getUnTillVCS(), null, LogTag.SCM_VER);
+		Component comp = new Component(TestEnvironment.PRODUCT_UNTILL, repos);
+		DevelopBranch db = new DevelopBranch(comp);
+		DevelopBranchStatus dbs = db.getStatus();
+		assertEquals(dbs, DevelopBranchStatus.BRANCHED);
 	}
 	
 	@Test
-	public void testBranchStatusHasFeatureCommits() {
-		env.generateFeatureCommit(env.getUnTillVCS(), "feature commit");
+	public void testModifiedIfHasFeatureCommits() {
+		env.generateFeatureCommit(env.getUnTillVCS(), null, "feature commit");
 		
+		Component comp = new Component(TestEnvironment.PRODUCT_UNTILL, repos);
+		DevelopBranch db = new DevelopBranch(comp);
+		DevelopBranchStatus dbs = db.getStatus();
+		assertEquals(dbs, DevelopBranchStatus.MODIFIED);
 	}
-
+	
+	@Test
+	public void testIgnored() {
+		env.generateLogTag(env.getUnTillVCS(), null, LogTag.SCM_IGNORE);
+		
+		Component comp = new Component(TestEnvironment.PRODUCT_UNTILL, repos);
+		DevelopBranch db = new DevelopBranch(comp);
+		DevelopBranchStatus dbs = db.getStatus();
+		assertEquals(dbs, DevelopBranchStatus.IGNORED);
+	}
 }

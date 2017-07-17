@@ -1,23 +1,19 @@
 package org.scm4j.wf.conf;
 
-public class DepCoords {
+public class Coords {
 
 	private final String artifactId;
 	private final String commentStr;
 	private final String extension;
 	private final String groupId;
 	private final String classifier;
-	private Version version;
+	private final Version version;
 
 	public String getComment() {
 		return commentStr;
 	}
 	
-	public void setVersion(Version version) {
-		this.version = version;
-	}
-
-	public DepCoords(String coordsString) {
+	public Coords(String coordsString) {
 		String str = coordsString;
 
 		// Comment

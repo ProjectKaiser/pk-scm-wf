@@ -31,10 +31,10 @@ public class VCSRepositories {
 		}
 	}
 
-	public VCSRepository get(String name) {
-		String url = getPropByNameAsStringWithReplace(urls, name, "url", null);
+	public VCSRepository getByComponent(String componentName) {
+		String url = getPropByNameAsStringWithReplace(urls, componentName, "url", null);
 		if (url == null) {
-			throw new EConfig("no repo url for: " + name);
+			throw new EConfig("no repo url for: " + componentName);
 		}
 		
 		Credentials credentials; 
@@ -46,10 +46,10 @@ public class VCSRepositories {
 		} else {
 			credentials = new Credentials(null, null, false);
 		}
-		VCSType type = getVCSType((String) getPropByName(urls, name, "type", null), url);
-		String devBranch = (String) getPropByName(urls, name, "devBranch", VCSRepository.DEFAULT_DEV_BRANCH);
-		String releaseBranchPrefix = (String) getPropByName(urls, name, "releaseBanchPrefix", VCSRepository.DEFAULT_RELEASE_BRANCH_PREFIX);
-		VCSRepository result = new VCSRepository(name, url, credentials, type, devBranch, ws, releaseBranchPrefix);
+		VCSType type = getVCSType((String) getPropByName(urls, componentName, "type", null), url);
+		String devBranch = (String) getPropByName(urls, componentName, "devBranch", VCSRepository.DEFAULT_DEV_BRANCH);
+		String releaseBranchPrefix = (String) getPropByName(urls, componentName, "releaseBanchPrefix", VCSRepository.DEFAULT_RELEASE_BRANCH_PREFIX);
+		VCSRepository result = new VCSRepository(componentName, url, credentials, type, devBranch, ws, releaseBranchPrefix);
 		return result;
 	}
 
@@ -93,6 +93,11 @@ public class VCSRepositories {
 			}
 		}
 		return result;
+	}
+
+	public VCSRepository getByCoords(String coordsStr) {
+		Coords coords = new Coords(coordsStr);
+		return getByComponent(coords.getName());
 	}
 
 }

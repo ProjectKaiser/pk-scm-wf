@@ -30,7 +30,7 @@ public class VCSRepositoriesTest {
 	@Test
 	public void getMy() {
 		VCSRepositories reps = new VCSRepositories(urlsStr, credsStr);
-		VCSRepository rep = reps.get("myDiskFormatter");
+		VCSRepository rep = reps.getByComponent("myDiskFormatter");
 		assertEquals("myDiskFormatter", rep.getName());
 		assertEquals("http://localhost/git/myProjDiskFormatter", rep.getUrl());
 		assertEquals(VCSType.GIT, rep.getType());
@@ -43,7 +43,7 @@ public class VCSRepositoriesTest {
 	@Test
 	public void get1() {
 		VCSRepositories reps = new VCSRepositories(urlsStr, credsStr);
-		VCSRepository rep = reps.get("artA1");
+		VCSRepository rep = reps.getByComponent("artA1");
 		assertThat(new Object[] { rep.getName(), rep.getUrl(), rep.getType(), rep.getDevBranch(), rep.getReleaseBranchPrefix() },
 				is(new Object[] { "artA1", "http://url.com/svn/prjA", VCSType.SVN, "branches/", "release/" }));
 		assertThat(new Object[] { rep.getCredentials().getName(), rep.getCredentials().getPassword() },
@@ -53,7 +53,7 @@ public class VCSRepositoriesTest {
 	@Test
 	public void get2() {
 		VCSRepositories reps = new VCSRepositories(urlsStr, credsStr);
-		VCSRepository rep = reps.get("abyrvalg");
+		VCSRepository rep = reps.getByComponent("abyrvalg");
 		assertThat(new Object[] { rep.getName(), rep.getUrl(), rep.getType(), rep.getDevBranch(), rep.getReleaseBranchPrefix() },
 				is(new Object[] { "abyrvalg", "https://github.com/qwerty/abyrvalg", VCSType.SVN, "branches/", "release/" }));
 		assertThat(new Object[] { rep.getCredentials().getName(), rep.getCredentials().getPassword() },
@@ -73,7 +73,7 @@ public class VCSRepositoriesTest {
 	@Test(expected = NullPointerException.class)
 	public void getNull3() {
 		VCSRepositories reps = new VCSRepositories(urlsStr, credsStr);
-		reps.get(null);
+		reps.getByComponent(null);
 	}
 
 }

@@ -29,9 +29,7 @@ import org.scm4j.wf.conf.Version;
 @RunWith(PowerMockRunner.class)
 public class SCMWorkflowTest {
 
-	public static final String PRODUCT_UNTILL = "eu.untill:unTill";
-	public static final String PRODUCT_UBL = "eu.untill:UBL";
-	public static final String PRODUCT_UNTILLDB = "eu.untill:unTillDb";
+
 	
 	private TestEnvironment env;
 
@@ -57,99 +55,99 @@ public class SCMWorkflowTest {
 	
 	@Test
 	public void testUseLastVersions() throws Exception {
-		env.generateCommitWithVERTag(env.getUnTillVCS());
-		env.generateCommitWithVERTag(env.getUnTillDbVCS());
-		env.generateCommitWithVERTag(env.getUblVCS());
+		env.generateLogTag(env.getUnTillVCS(), null, LogTag.SCM_VER);
+		env.generateLogTag(env.getUnTillDbVCS(), null, LogTag.SCM_VER);
+		env.generateLogTag(env.getUblVCS(), null, LogTag.SCM_VER);
 		
-		SCMWorkflow wf = new SCMWorkflow(PRODUCT_UNTILL);
+		SCMWorkflow wf = new SCMWorkflow(TestEnvironment.PRODUCT_UNTILL);
 		
 		IAction actionUnTill = wf.getProductionReleaseAction(null);
-		checkUseLastReleaseAction(actionUnTill, null, PRODUCT_UNTILL, env.getUnTillVer());
+		checkUseLastReleaseAction(actionUnTill, null, TestEnvironment.PRODUCT_UNTILL, env.getUnTillVer());
 		assertTrue(actionUnTill.getChildActions().size() == 2);
 		
 		IAction actionUBL = actionUnTill.getChildActions().get(0);
-		checkUseLastReleaseAction(actionUBL, actionUnTill, PRODUCT_UBL, env.getUblVer());
+		checkUseLastReleaseAction(actionUBL, actionUnTill, TestEnvironment.PRODUCT_UBL, env.getUblVer());
 		assertTrue(actionUBL.getChildActions().size() == 1);
 		
 		IAction actionUnTillDb = actionUnTill.getChildActions().get(1);
-		checkUseLastReleaseAction(actionUnTillDb, actionUnTill, PRODUCT_UNTILLDB, env.getUnTillDbVer());
+		checkUseLastReleaseAction(actionUnTillDb, actionUnTill, TestEnvironment.PRODUCT_UNTILLDB, env.getUnTillDbVer());
 		
 		IAction actionUBLUnTillDb = actionUBL.getChildActions().get(0);
-		checkUseLastReleaseAction(actionUBLUnTillDb, actionUBL, PRODUCT_UNTILLDB, env.getUnTillDbVer());
+		checkUseLastReleaseAction(actionUBLUnTillDb, actionUBL, TestEnvironment.PRODUCT_UNTILLDB, env.getUnTillDbVer());
 	}
 	
 	@Test
 	public void testProductionReleaseNewFeatures() {
-		env.generateFeatureCommit(env.getUblVCS(), "feature commit");
-		env.generateFeatureCommit(env.getUnTillVCS(), "feature commit");
-		env.generateFeatureCommit(env.getUnTillDbVCS(), "feature commit");
+		env.generateFeatureCommit(env.getUblVCS(), null, "feature commit");
+		env.generateFeatureCommit(env.getUnTillVCS(), null, "feature commit");
+		env.generateFeatureCommit(env.getUnTillDbVCS(), null, "feature commit");
 		
-		SCMWorkflow wf = new SCMWorkflow(PRODUCT_UNTILL);
+		SCMWorkflow wf = new SCMWorkflow(TestEnvironment.PRODUCT_UNTILL);
 		
 		IAction actionUnTill = wf.getProductionReleaseAction(null);
-		checkProductionReleaseAction(actionUnTill, null, ProductionReleaseReason.NEW_FEATURES, PRODUCT_UNTILL);
+		checkProductionReleaseAction(actionUnTill, null, ProductionReleaseReason.NEW_FEATURES, TestEnvironment.PRODUCT_UNTILL);
 		assertTrue(actionUnTill.getChildActions().size() == 2);
 		
 		IAction actionUBL = actionUnTill.getChildActions().get(0);
-		checkProductionReleaseAction(actionUBL, actionUnTill, ProductionReleaseReason.NEW_FEATURES, PRODUCT_UBL);
+		checkProductionReleaseAction(actionUBL, actionUnTill, ProductionReleaseReason.NEW_FEATURES, TestEnvironment.PRODUCT_UBL);
 		assertTrue(actionUBL.getChildActions().size() == 1);
 		
 		IAction actionUnTillDb = actionUnTill.getChildActions().get(1);
-		checkProductionReleaseAction(actionUnTillDb, actionUnTill, ProductionReleaseReason.NEW_FEATURES, PRODUCT_UNTILLDB);
+		checkProductionReleaseAction(actionUnTillDb, actionUnTill, ProductionReleaseReason.NEW_FEATURES, TestEnvironment.PRODUCT_UNTILLDB);
 		
 		IAction actionUBLUnTillDb = actionUBL.getChildActions().get(0);
-		checkProductionReleaseAction(actionUBLUnTillDb, actionUBL, ProductionReleaseReason.NEW_FEATURES, PRODUCT_UNTILLDB);
+		checkProductionReleaseAction(actionUBLUnTillDb, actionUBL, ProductionReleaseReason.NEW_FEATURES, TestEnvironment.PRODUCT_UNTILLDB);
 	}
 	
 	@Test
 	public void testProductionReleaseHasNewFeaturedDependencies() {
-		env.generateCommitWithVERTag(env.getUnTillVCS());
-		env.generateCommitWithVERTag(env.getUblVCS());
-		env.generateFeatureCommit(env.getUnTillDbVCS(), "feature commit");
+		env.generateLogTag(env.getUnTillVCS(), null, LogTag.SCM_VER);
+		env.generateLogTag(env.getUblVCS(), null, LogTag.SCM_VER);
+		env.generateFeatureCommit(env.getUnTillDbVCS(), null, "feature commit");
 
-		SCMWorkflow wf = new SCMWorkflow(PRODUCT_UNTILL);
+		SCMWorkflow wf = new SCMWorkflow(TestEnvironment.PRODUCT_UNTILL);
 
 		IAction actionUnTill = wf.getProductionReleaseAction(null);
-		checkProductionReleaseAction(actionUnTill, null, ProductionReleaseReason.NEW_DEPENDENCIES, PRODUCT_UNTILL);
+		checkProductionReleaseAction(actionUnTill, null, ProductionReleaseReason.NEW_DEPENDENCIES, TestEnvironment.PRODUCT_UNTILL);
 		assertTrue(actionUnTill.getChildActions().size() == 2);
 
 		IAction actionUBL = actionUnTill.getChildActions().get(0);
-		checkProductionReleaseAction(actionUBL, actionUnTill, ProductionReleaseReason.NEW_DEPENDENCIES, PRODUCT_UBL);
+		checkProductionReleaseAction(actionUBL, actionUnTill, ProductionReleaseReason.NEW_DEPENDENCIES, TestEnvironment.PRODUCT_UBL);
 		assertTrue(actionUBL.getChildActions().size() == 1);
 
 		IAction actionUnTillDb = actionUnTill.getChildActions().get(1);
-		checkProductionReleaseAction(actionUnTillDb, actionUnTill, ProductionReleaseReason.NEW_FEATURES, PRODUCT_UNTILLDB);
+		checkProductionReleaseAction(actionUnTillDb, actionUnTill, ProductionReleaseReason.NEW_FEATURES, TestEnvironment.PRODUCT_UNTILLDB);
 
 		IAction actionUBLUnTillDb = actionUBL.getChildActions().get(0);
-		checkProductionReleaseAction(actionUBLUnTillDb, actionUBL, ProductionReleaseReason.NEW_FEATURES, PRODUCT_UNTILLDB);
+		checkProductionReleaseAction(actionUBLUnTillDb, actionUBL, ProductionReleaseReason.NEW_FEATURES, TestEnvironment.PRODUCT_UNTILLDB);
 	}
 
 	@Test
 	public void testProductionReleaseHasNewerDependencyVersions() throws Exception {
-		env.generateCommitWithVERTag(env.getUnTillVCS());
-		env.generateCommitWithVERTag(env.getUnTillDbVCS());
-		env.generateCommitWithVERTag(env.getUblVCS());
+		env.generateLogTag(env.getUnTillVCS(), null, LogTag.SCM_VER);
+		env.generateLogTag(env.getUnTillDbVCS(), null, LogTag.SCM_VER);
+		env.generateLogTag(env.getUblVCS(), null, LogTag.SCM_VER);
 		env.getUnTillVCS().setFileContent(null, SCMWorkflow.MDEPS_FILE_NAME,
-				SCMWorkflowTest.PRODUCT_UBL + ":" + env.getUblVer().toString() + "\r\n" +
-				SCMWorkflowTest.PRODUCT_UNTILLDB + ":1.0.0" + "\r\n",
+				TestEnvironment.PRODUCT_UBL + ":" + env.getUblVer().toString() + "\r\n" +
+				TestEnvironment.PRODUCT_UNTILLDB + ":1.0.0" + "\r\n",
 				LogTag.SCM_IGNORE + " old unTillDb version is used in mdeps file");
 
-		SCMWorkflow wf = new SCMWorkflow(PRODUCT_UNTILL);
+		SCMWorkflow wf = new SCMWorkflow(TestEnvironment.PRODUCT_UNTILL);
 
 		IAction actionUnTill = wf.getProductionReleaseAction(null);
 		//actionUnTill.toString();
-		checkProductionReleaseAction(actionUnTill, null, ProductionReleaseReason.NEW_DEPENDENCIES, PRODUCT_UNTILL);
+		checkProductionReleaseAction(actionUnTill, null, ProductionReleaseReason.NEW_DEPENDENCIES, TestEnvironment.PRODUCT_UNTILL);
 		assertTrue(actionUnTill.getChildActions().size() == 2);
 
 		IAction actionUBL = actionUnTill.getChildActions().get(0);
-		checkUseLastReleaseAction(actionUBL, actionUnTill, PRODUCT_UBL, env.getUblVer());
+		checkUseLastReleaseAction(actionUBL, actionUnTill, TestEnvironment.PRODUCT_UBL, env.getUblVer());
 		assertTrue(actionUBL.getChildActions().size() == 1);
 
 		IAction actionUnTillDb = actionUnTill.getChildActions().get(1);
-		checkUseLastReleaseAction(actionUnTillDb, actionUnTill, PRODUCT_UNTILLDB, env.getUnTillDbVer());
+		checkUseLastReleaseAction(actionUnTillDb, actionUnTill, TestEnvironment.PRODUCT_UNTILLDB, env.getUnTillDbVer());
 
 		IAction actionUBLUnTillDb = actionUBL.getChildActions().get(0);
-		checkUseLastReleaseAction(actionUBLUnTillDb, actionUBL, PRODUCT_UNTILLDB, env.getUnTillDbVer());
+		checkUseLastReleaseAction(actionUBLUnTillDb, actionUBL, TestEnvironment.PRODUCT_UNTILLDB, env.getUnTillDbVer());
 
 	}
 	
@@ -165,7 +163,7 @@ public class SCMWorkflowTest {
 		checkAction(action, parentAction, expectedName);
 		assertTrue(action instanceof SCMActionUseLastReleaseVersion);
 		SCMActionUseLastReleaseVersion lv = (SCMActionUseLastReleaseVersion) action;
-		assertEquals(lv.getVer(), expectedVersion);
+		assertEquals(lv.getVersion(), expectedVersion);
 		checkActionResultVersion(action, expectedName, expectedVersion, false);
 	}
 	
@@ -197,11 +195,11 @@ public class SCMWorkflowTest {
 	
 	@Test
 	public void testTagRelease() throws Exception {
-		env.generateFeatureCommit(env.getUblVCS(), "feature commit");
-		env.generateFeatureCommit(env.getUnTillVCS(), "feature commit");
-		env.generateFeatureCommit(env.getUnTillDbVCS(), "feature commit");
+		env.generateFeatureCommit(env.getUblVCS(),null, "feature commit");
+		env.generateFeatureCommit(env.getUnTillVCS(), null, "feature commit");
+		env.generateFeatureCommit(env.getUnTillDbVCS(), null, "feature commit");
 		
-		SCMWorkflow wf = new SCMWorkflow(PRODUCT_UNTILL);
+		SCMWorkflow wf = new SCMWorkflow(TestEnvironment.PRODUCT_UNTILL);
 		
 		IAction actionReleaseUnTill = wf.getProductionReleaseAction(null);
 		ActionResultVersion resultVersion;
@@ -230,15 +228,15 @@ public class SCMWorkflowTest {
 
 	@Test
 	public void testProductionReleaseExecute() throws Exception {
-		env.generateFeatureCommit(env.getUblVCS(), "feature commit");
-		env.generateFeatureCommit(env.getUnTillVCS(), "feature commit");
-		env.generateFeatureCommit(env.getUnTillDbVCS(), "feature commit");
+		env.generateFeatureCommit(env.getUblVCS(), null, "feature commit");
+		env.generateFeatureCommit(env.getUnTillVCS(), null, "feature commit");
+		env.generateFeatureCommit(env.getUnTillDbVCS(), null, "feature commit");
 		
-		SCMWorkflow wf = new SCMWorkflow(PRODUCT_UNTILL);
+		SCMWorkflow wf = new SCMWorkflow(TestEnvironment.PRODUCT_UNTILL);
 		IAction actionUnTill = wf.getProductionReleaseAction(null);
 		PrintAction pa = new PrintAction();
 		pa.print(System.out, actionUnTill);
 		
-		checkActionResultVersion(actionUnTill, PRODUCT_UNTILL, env.getUnTillVer(), true);
+		checkActionResultVersion(actionUnTill, TestEnvironment.PRODUCT_UNTILL, env.getUnTillVer(), true);
 	}
 }

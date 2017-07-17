@@ -8,13 +8,13 @@ import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
 import org.scm4j.wf.actions.ActionAbstract;
 import org.scm4j.wf.actions.IAction;
 import org.scm4j.wf.actions.results.ActionResultTag;
-import org.scm4j.wf.conf.Dep;
+import org.scm4j.wf.conf.Component;
 
 public class SCMActionUseExistingTag extends ActionAbstract {
 	
 	private VCSTag tag;
 
-	public SCMActionUseExistingTag(Dep dep, List<IAction> childActions, String currentBranchName,
+	public SCMActionUseExistingTag(Component dep, List<IAction> childActions, String currentBranchName,
 			IVCSWorkspace ws, VCSTag tag) {
 		super(dep, childActions, currentBranchName, ws);
 		this.tag = tag;

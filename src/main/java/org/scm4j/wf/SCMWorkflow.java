@@ -11,7 +11,7 @@ import org.scm4j.vcs.api.workingcopy.VCSWorkspace;
 import org.scm4j.wf.actions.ActionError;
 import org.scm4j.wf.actions.ActionNone;
 import org.scm4j.wf.actions.IAction;
-import org.scm4j.wf.conf.Dep;
+import org.scm4j.wf.conf.Component;
 import org.scm4j.wf.conf.MDepsFile;
 import org.scm4j.wf.conf.URLContentLoader;
 import org.scm4j.wf.conf.VCSRepositories;
@@ -29,18 +29,18 @@ public class SCMWorkflow implements ISCMWorkflow {
 	public static final String VER_FILE_NAME = "version";
 	public static final String MDEPS_CHANGED_FILE_NAME = "mdeps-changed";
 	private VCSRepositories repos;
-	private Dep dep;
+	private Component dep;
 	private String devBranchName;
 	private IVCS vcs;
-	private List<Dep> mDeps = new ArrayList<>();
+	private List<Component> mDeps = new ArrayList<>();
 	private IVCSWorkspace ws;
 
-	public void setMDeps(List<Dep> mDeps) {
+	public void setMDeps(List<Component> mDeps) {
 		this.mDeps = mDeps;
 	}
 	
 	public VCSRepository getRepoByName(String depName) {
-		VCSRepository res = repos.get(depName);
+		VCSRepository res = repos.getByComponent(depName);
 		if (res == null) {
 			throw new IllegalArgumentException("no repo url by name: " + depName);
 		}
@@ -48,10 +48,10 @@ public class SCMWorkflow implements ISCMWorkflow {
 	}
 
 	public SCMWorkflow(String depCoords, VCSRepositories repos, IVCSWorkspace ws) {
-		this(new Dep(depCoords, repos), repos, ws);
+		this(new Component(depCoords, repos), repos, ws);
 	}
 	
-	public SCMWorkflow(Dep dep, VCSRepositories repos, IVCSWorkspace ws) {
+	public SCMWorkflow(Component dep, VCSRepositories repos, IVCSWorkspace ws) {
 		this.repos = repos;
 		this.dep = dep;
 		this.ws = ws;
@@ -66,10 +66,11 @@ public class SCMWorkflow implements ISCMWorkflow {
 	public SCMWorkflow(String depName) throws EConfig {
 		this(depName, getReposFromEnvironment(), new VCSWorkspace(DEFAULT_VCS_WORKSPACE_DIR));
 	}
-
+	
 	public static VCSRepositories getReposFromEnvironment() throws EConfig {
 		try {
 			URLContentLoader reposLoader = new URLContentLoader();
+			
 			String separatedReposUrlsStr = System.getenv(REPOS_LOCATION_ENV_VAR);
 			if (separatedReposUrlsStr == null) {
 				throw new EConfig(REPOS_LOCATION_ENV_VAR + " environment var must contain a valid config path");
@@ -96,7 +97,7 @@ public class SCMWorkflow implements ISCMWorkflow {
 			childActions = new ArrayList<>();
 		}
 		
-		for (Dep mDep : mDeps) {
+		for (Component mDep : mDeps) {
 			ISCMWorkflow childWorkflow = new SCMWorkflow(mDep, repos, ws);
 			childActions.add(childWorkflow.getProductionReleaseAction(null));
 		}
@@ -124,13 +125,13 @@ public class SCMWorkflow implements ISCMWorkflow {
 		return res;
 	}
 
-	private boolean hasNewerDependencies(List<IAction> actions, List<Dep> mDeps) {
+	private boolean hasNewerDependencies(List<IAction> actions, List<Component> mDeps) {
 		for (IAction action : actions) {
 			if (action instanceof SCMActionUseLastReleaseVersion) {
 				SCMActionUseLastReleaseVersion verAction = (SCMActionUseLastReleaseVersion) action;
-				for (Dep dep : mDeps) {
-					if (dep.getName().equals(verAction.getName()) && (dep.getVersion() == null || !dep.getVersion()
-							.toPreviousMinorRelease().equals(verAction.getVer().toPreviousMinorRelease()))) {
+				for (Component comp : mDeps) {
+					if (comp.getCoords().getName().equals(verAction.getName()) && (comp.getVersion() == null || !comp.getVersion()
+							.toPreviousMinorRelease().equals(verAction.getVersion().toPreviousMinorRelease()))) {
 						return true;
 					}
 				}
@@ -162,7 +163,7 @@ public class SCMWorkflow implements ISCMWorkflow {
 		if (childActions == null) {
 			childActions = new ArrayList<>();
 		}
-		for (Dep mDep : mDeps) {
+		for (Component mDep : mDeps) {
 			ISCMWorkflow childWorkflow = new SCMWorkflow(mDep, repos, ws);
 			childActions.add(childWorkflow.getTagReleaseAction(null));
 		}

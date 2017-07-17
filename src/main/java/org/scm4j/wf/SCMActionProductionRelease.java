@@ -10,7 +10,8 @@ import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
 import org.scm4j.wf.actions.ActionAbstract;
 import org.scm4j.wf.actions.IAction;
 import org.scm4j.wf.actions.results.ActionResultVersion;
-import org.scm4j.wf.conf.Dep;
+import org.scm4j.wf.branchstatus.DevelopBranch;
+import org.scm4j.wf.conf.Component;
 import org.scm4j.wf.conf.MDepsFile;
 import org.scm4j.wf.conf.Version;
 
@@ -24,7 +25,7 @@ public class SCMActionProductionRelease extends ActionAbstract {
 	private String newBranchName = null;
 	private String newVersion = null;
 
-	public SCMActionProductionRelease(Dep dep, List<IAction> childActions, String masterBranchName, 
+	public SCMActionProductionRelease(Component dep, List<IAction> childActions, String masterBranchName, 
 			ProductionReleaseReason reason, IVCSWorkspace ws) {
 		super(dep, childActions, masterBranchName, ws);
 		this.reason = reason;
@@ -43,7 +44,9 @@ public class SCMActionProductionRelease extends ActionAbstract {
 		try {
 			
 			IVCS vcs = getVCS();
-			Version currentVer = dep.getActualVersion();
+			DevelopBranch devBranch = new DevelopBranch(comp);
+			
+			Version currentVer = devBranch.getVersion();
 			progress.reportStatus("current trunk version: " + currentVer);
 			
 			Object nestedResult;
@@ -69,18 +72,18 @@ public class SCMActionProductionRelease extends ActionAbstract {
 			List<String> mDepsChanged = new ArrayList<>();
 			if (vcs.fileExists(currentBranchName, SCMWorkflow.MDEPS_FILE_NAME)) {
 				String mDepsContent = vcs.getFileContent(currentBranchName, SCMWorkflow.MDEPS_FILE_NAME);
-				MDepsFile mDepsFile = new MDepsFile(mDepsContent, dep.getVcsRepository());
+				MDepsFile mDepsFile = new MDepsFile(mDepsContent, comp.getVcsRepository());
 				List<String> mDepsOut = new ArrayList<>();
 				String mDepOut;
-				for (Dep mDep : mDepsFile.getMDeps()) {
+				for (Component mDep : mDepsFile.getMDeps()) {
 					existingResult = (ActionResultVersion) getResult(mDep.getName(), ActionResultVersion.class);
 					mDepOut = "";
 					if (existingResult != null) {
 						if (existingResult.getIsNewBuild()) {
-							mDepOut = mDep.toString(existingResult.getVersion());
+							mDepOut = mDep.getCoords().toString(existingResult.getVersion());
 						} else {
-							if (!existingResult.getVersion().equals(mDep.getVersion().toReleaseString())) {
-								mDepOut = mDep.toString(existingResult.getVersion());
+							if (!existingResult.getVersion().equals(mDep.getCoords().getVersion().toReleaseString())) {
+								mDepOut = mDep.getCoords().toString(existingResult.getVersion());
 							} 
 						}
 					} 
@@ -107,7 +110,7 @@ public class SCMActionProductionRelease extends ActionAbstract {
 				progress.reportStatus("no mdeps. Going to branch from head " + newVersionStartsFromCommit);
 			}
 			
-			newBranchName = dep.getReleaseBranchName(); 
+			newBranchName = devBranch.getReleaseBranchName(); 
 			vcs.createBranch(currentBranchName, newBranchName, "branch created");
 			progress.reportStatus("branch " + newBranchName + " created");
 			
@@ -127,9 +130,9 @@ public class SCMActionProductionRelease extends ActionAbstract {
 				progress.reportStatus("mdeps-changed is written to branch " + newBranchName);
 			}
 			
-			ActionResultVersion res = new ActionResultVersion(dep.getName(), currentVer.toReleaseString(), true, 
+			ActionResultVersion res = new ActionResultVersion(comp.getName(), currentVer.toReleaseString(), true, 
 					newBranchName);
-			progress.reportStatus("new " + dep.getName() + " " 
+			progress.reportStatus("new " + comp.getName() + " " 
 					+ res.getVersion() + " is released in " + newBranchName);
 			if (parentAction == null) {
 				addResult(getName(), res); 
@@ -143,7 +146,7 @@ public class SCMActionProductionRelease extends ActionAbstract {
 
 	@Override
 	public String toString() {
-		return dep.toString() + ": " + reason.toString();
+		return comp.getCoords().toString() + ": " + reason.toString();
 	}
 
 }
