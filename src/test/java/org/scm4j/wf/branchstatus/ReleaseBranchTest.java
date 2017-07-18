@@ -112,7 +112,6 @@ public class ReleaseBranchTest {
 		env.generateLogTag(env.getUnTillDbVCS(), rbUnTillDb.getReleaseBranchName(), LogTag.SCM_BUILT);
 		
 		ReleaseBranchStatus rbs = rbUnTill.getStatus();
-		assertNotNull(rbs);
 		assertEquals(ReleaseBranchStatus.BRANCHED, rbs);
 		
 		String ublTagName = new DevelopBranch(compUBL).getVersion().toReleaseString();
@@ -120,7 +119,6 @@ public class ReleaseBranchTest {
 		env.generateLogTag(env.getUblVCS(), rbUBL.getReleaseBranchName(), LogTag.SCM_BUILT);
 		
 		rbs =  rbUnTill.getStatus();
-		assertNotNull(rbs);
 		assertEquals(ReleaseBranchStatus.MDEPS_TAGGED, rbs);
 	}
 	

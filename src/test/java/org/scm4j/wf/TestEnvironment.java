@@ -77,12 +77,12 @@ public class TestEnvironment {
 	private void uploadVCSConfigFiles() {
 		unTillVCS.setFileContent(null, SCMWorkflow.VER_FILE_NAME, unTillVer.toString(), "ver file added");
 		unTillVCS.setFileContent(null, SCMWorkflow.MDEPS_FILE_NAME,
-				PRODUCT_UBL + ":" + ublVer.toString() + "\r\n" +
-				PRODUCT_UNTILLDB + ":" + unTillDbVer.toString() + "\r\n", "mdeps file added");
+				PRODUCT_UBL + ":" + ublVer.getSnapshot() + "\r\n" +
+				PRODUCT_UNTILLDB + ":" + unTillDbVer.getSnapshot() + "\r\n", "mdeps file added");
 
 		ublVCS.setFileContent(null, SCMWorkflow.VER_FILE_NAME, ublVer.toString(), "ver file added");
 		ublVCS.setFileContent(null, SCMWorkflow.MDEPS_FILE_NAME,
-				PRODUCT_UNTILLDB + ":" + unTillDbVer.toString() + "\r\n", "mdeps file added");
+				PRODUCT_UNTILLDB + ":" + unTillDbVer.getSnapshot() + "\r\n", "mdeps file added");
 
 		unTillDbVCS.setFileContent(null, SCMWorkflow.VER_FILE_NAME, unTillDbVer.toString(), "ver file added");
 	}

@@ -33,73 +33,73 @@ public class ReleaseBranch {
 		vcs = comp.getVcsRepository().getVcs();
 	}
 	
-	public ReleaseBranchStatus getStatus() {
-		return getStatus(comp);
-	}
-
-	protected ReleaseBranchStatus getStatus (Component comp) {
-		String releaseBranchName = getReleaseBranchName();
-		Set<String> branches = vcs.getBranches();
-		if (!branches.contains(releaseBranchName)) {
+	protected ReleaseBranchStatus getStatus () {
+		if (isMissing()) {
 			return ReleaseBranchStatus.MISSING;
 		}
 		
-		List<VCSCommit> log = vcs.log(releaseBranchName, 1);
-		if (log != null && !log.isEmpty()) {
-			VCSCommit lastCommit = log.get(0);
-			List<VCSTag> tags = vcs.getTags();
-			DevelopBranch db;
-			for (VCSTag tag : tags) {
-				db = new DevelopBranch(comp);
-				if (tag.getRelatedCommit().equals(lastCommit) && tag.getTagName().equals(db.getVersion().toReleaseString())) {
-					return ReleaseBranchStatus.TAGGED;
-				}
-			}
-			if (lastCommit.getLogMessage().contains(LogTag.SCM_BUILT)) {
-				return ReleaseBranchStatus.BUILT;
-			} 
-		} else {
-			return ReleaseBranchStatus.BRANCHED;
+		if (isTagged()) {
+			return ReleaseBranchStatus.TAGGED;
 		}
 		
+		if (isComponentBuilt(comp)) {
+			return ReleaseBranchStatus.BUILT;
+		}
+		
+		if (mDepsTagged()) {
+			return ReleaseBranchStatus.MDEPS_TAGGED;
+		}
+		
+		if (mDepsFrozen()) {
+			return ReleaseBranchStatus.MDEPS_FROZEN;
+		}
+		
+		return ReleaseBranchStatus.BRANCHED;
+	}
+
+	private boolean mDepsTagged() {
 		String devBranchName = comp.getVcsRepository().getDevBranch();
 		List<Component> mDeps = new ArrayList<>();
 		if (vcs.fileExists(devBranchName, SCMWorkflow.MDEPS_FILE_NAME)) {
 			String mDepsContent = vcs.getFileContent(devBranchName, SCMWorkflow.MDEPS_FILE_NAME);
 			mDeps = new MDepsFile(mDepsContent, repos).getMDeps();
 		}
-		
 		if (mDeps.size() == 0) {
-			return ReleaseBranchStatus.BRANCHED;
+			return false;
 		}
 		
-		int tagged = 0;
-		int frozen = 0;
 		ReleaseBranch rb;
-		Component mDep;
-		for (Integer count = 0; count < mDeps.size(); count++) {
-			mDep = mDeps.get(count);
+		ReleaseBranchStatus status;
+		for (Component mDep : mDeps) {
 			rb = new ReleaseBranch(mDep, repos);
-			ReleaseBranchStatus status = rb.getStatus(mDep);
-			
-			if (status == ReleaseBranchStatus.TAGGED) {
-				if (isComponentBuilt(mDep)) {
-					tagged++;
+			status = rb.getStatus();
+			if (status != ReleaseBranchStatus.TAGGED || !isComponentBuilt(mDep)) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	private boolean isTagged() {
+		List<VCSCommit> log = vcs.log(getReleaseBranchName(), 1);
+		if (log != null && !log.isEmpty()) { // what to return if no commits at all?
+			VCSCommit lastCommit = log.get(0);
+			List<VCSTag> tags = vcs.getTags();
+			DevelopBranch db;
+			for (VCSTag tag : tags) {
+				db = new DevelopBranch(comp);
+				if (tag.getRelatedCommit().equals(lastCommit) && tag.getTagName().equals(db.getVersion().toPreviousMinorRelease())) {
+					return true;
 				}
-			} else if (areMDepsFrozen(mDep)) {
-				frozen++;
-			}
-			if (count + 1 != tagged + frozen || (tagged > 0 && frozen > 0)) {
-				return ReleaseBranchStatus.BRANCHED;
 			}
 		}
-		if (tagged == mDeps.size()) {
-			return ReleaseBranchStatus.MDEPS_TAGGED;
-		}
-		if (frozen == mDeps.size()) {
-			return ReleaseBranchStatus.MDEPS_FROZEN;
-		}
-		return ReleaseBranchStatus.BRANCHED;
+		return false;
+	}
+
+	private boolean isMissing() {
+		String releaseBranchName = getReleaseBranchName();
+		Set<String> branches = vcs.getBranches();
+		return !branches.contains(releaseBranchName);
 	}
 
 	private boolean isComponentBuilt(Component comp) {
@@ -113,11 +113,10 @@ public class ReleaseBranch {
 		return false;
 	}
 
-	private Boolean areMDepsFrozen(Component comp) {
+	private Boolean mDepsFrozen() {
 		IVCS vcs = comp.getVcsRepository().getVcs();
 		try {
-			ReleaseBranch rb = new ReleaseBranch(comp, repos);
-			String mDepsContent = vcs.getFileContent(rb.getReleaseBranchName(), SCMWorkflow.MDEPS_FILE_NAME);
+			String mDepsContent = vcs.getFileContent(getReleaseBranchName(), SCMWorkflow.MDEPS_FILE_NAME);
 			List<Component> mDeps = new MDepsFile(mDepsContent, repos).getMDeps();
 			if (mDeps.isEmpty()) {
 				return false;
@@ -135,5 +134,10 @@ public class ReleaseBranch {
 	
 	public String getReleaseBranchName() {
 		return comp.getVcsRepository().getReleaseBranchPrefix() + version.toReleaseString();
+	}
+
+	@Override
+	public String toString() {
+		return "ReleaseBranch [comp=" + comp + "]";
 	}
 }

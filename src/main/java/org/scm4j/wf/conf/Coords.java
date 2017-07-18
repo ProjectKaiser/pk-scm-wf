@@ -1,5 +1,7 @@
 package org.scm4j.wf.conf;
 
+import org.apache.commons.lang3.StringUtils;
+
 public class Coords {
 
 	private final String artifactId;
@@ -21,8 +23,9 @@ public class Coords {
 			Integer pos = coordsString.indexOf("#");
 			
 			if (pos > 0) {
-				commentStr = str.substring(pos);
-				str = str.substring(0, pos);
+				// add spaces between valuable chars and # to comment
+				commentStr = StringUtils.difference(str.substring(0, pos).trim(), str.substring(0, pos)) + str.substring(pos); 
+				str = str.substring(0, pos).trim();
 			} else {
 				commentStr = "";
 			}
@@ -63,7 +66,7 @@ public class Coords {
 
 	public String toString(String versionStr) {
 		String str = versionStr + classifier + extension;
-		return getName() + (str.isEmpty() ? "" : ":" + str);
+		return getName() + (str.isEmpty() ? "" : ":" + str) + commentStr;
 	}
 	
 	public String getName() {

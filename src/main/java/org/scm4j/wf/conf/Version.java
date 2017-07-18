@@ -43,8 +43,8 @@ public class Version {
 				minor = ver;
 				patch = ".0";
 			}
-			if (!StringUtils.isNumeric(minor)) {
-				throw new IllegalArgumentException("wrong version" + ver);
+			if (!minor.isEmpty() && !StringUtils.isNumeric(minor)) {
+				throw new IllegalArgumentException("wrong version: " + ver);
 			}
 		}
 	}
@@ -59,10 +59,14 @@ public class Version {
 
 	@Override
 	public String toString() {
+		if (!StringUtils.isNumeric(minor)) {
+			return verStr;
+		}
 		return toReleaseString() + snapshot;
 	}
 	
 	public String toReleaseString() {
+		checkMinor();
 		return prefix + minor + patch;
 	}
 	

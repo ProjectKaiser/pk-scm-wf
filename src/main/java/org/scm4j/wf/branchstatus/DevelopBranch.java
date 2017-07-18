@@ -45,4 +45,8 @@ public class DevelopBranch {
 		return comp.getVcsRepository().getReleaseBranchPrefix() + getVersion().toPreviousMinorRelease();
 	}
 
+	@Override
+	public String toString() {
+		return "DevelopBranch [comp=" + comp + "]";
+	}
 }
