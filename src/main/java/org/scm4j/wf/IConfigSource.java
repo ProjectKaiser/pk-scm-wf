@@ -1,6 +1,6 @@
 package org.scm4j.wf;
 
-public interface IConfigLocation {
+public interface IConfigSource {
 	
 	String getReposLocations();
 	

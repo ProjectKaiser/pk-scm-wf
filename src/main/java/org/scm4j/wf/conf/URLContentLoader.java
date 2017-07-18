@@ -1,18 +1,17 @@
 package org.scm4j.wf.conf;
 
+import org.apache.commons.io.IOUtils;
+
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-
-import org.apache.commons.io.IOUtils;
 
 public class URLContentLoader {
 	
 	private static final String URL_SEPARATOR = ";";
 
-	public String getContentFromUrls(String separatedUrlsStr) throws MalformedURLException, IOException {
+	public String getContentFromUrls(String separatedUrlsStr) throws IOException {
 		if (separatedUrlsStr == null) {
 			return null;
 		}
@@ -25,7 +24,7 @@ public class URLContentLoader {
 		return mergedContent.toString();
 	}
 	
-	public String getContentFromUrl(String urlStr) throws MalformedURLException, IOException {
+	public String getContentFromUrl(String urlStr) throws IOException {
 		URL url = new URL(urlStr);
 		String vcsReposYml;
 		try (InputStream inputStream = url.openStream()) {

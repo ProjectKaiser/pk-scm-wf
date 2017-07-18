@@ -1,21 +1,8 @@
 package org.scm4j.wf;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
-import java.util.List;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Matchers;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.commons.progress.ProgressConsole;
 import org.scm4j.vcs.api.VCSTag;
@@ -25,25 +12,29 @@ import org.scm4j.wf.actions.results.ActionResultTag;
 import org.scm4j.wf.actions.results.ActionResultVersion;
 import org.scm4j.wf.conf.Version;
 
-@PrepareForTest(SCMWorkflow.class)
-@RunWith(PowerMockRunner.class)
+import java.util.List;
+
+import static org.junit.Assert.*;
+
 public class SCMWorkflowTest {
 
-
-	
 	private TestEnvironment env;
 
 	@Before
 	public void setUp() throws Exception {
 		env = new TestEnvironment();
 		env.generateTestEnvironment();
-		PowerMockito.mockStatic(System.class);
-		PowerMockito.when(System.getenv(SCMWorkflow.CREDENTIALS_LOCATION_ENV_VAR))
-				.thenReturn("file://localhost/" + env.getCredsFile().getPath().replace("\\", "/"));
-		PowerMockito.when(System.getenv(SCMWorkflow.REPOS_LOCATION_ENV_VAR))
-				.thenReturn("file://localhost/" + env.getReposFile().getPath().replace("\\", "/"));
-		PowerMockito.when(System.getProperty(Matchers.anyString()))
-				.thenCallRealMethod();
+		SCMWorkflow.setConfigSource(new IConfigSource() {
+			@Override
+			public String getReposLocations() {
+				return "file://localhost/" + env.getReposFile().getPath().replace("\\", "/");
+			}
+
+			@Override
+			public String getCredentialsLocations() {
+				return "file://localhost/" + env.getCredsFile().getPath().replace("\\", "/");
+			}
+		});
 	}
 
 	@After
@@ -51,6 +42,7 @@ public class SCMWorkflowTest {
 		if (env != null) {
 			env.clean();
 		}
+		SCMWorkflow.setConfigSource(new EnvVarsConfigSource());
 	}
 	
 	@Test
