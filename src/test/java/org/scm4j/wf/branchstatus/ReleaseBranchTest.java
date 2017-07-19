@@ -3,21 +3,17 @@ package org.scm4j.wf.branchstatus;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-import java.io.IOException;
 import java.util.Arrays;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.scm4j.wf.*;
+import org.scm4j.wf.LogTag;
+import org.scm4j.wf.SCMWorkflow;
+import org.scm4j.wf.TestEnvironment;
 import org.scm4j.wf.conf.Component;
 import org.scm4j.wf.conf.MDepsFile;
 import org.scm4j.wf.conf.VCSRepositories;
-
-import java.io.IOException;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 
 public class ReleaseBranchTest {
 	
@@ -28,24 +24,12 @@ public class ReleaseBranchTest {
 	public void setUp() throws Exception {
 		env = new TestEnvironment();
 		env.generateTestEnvironment();
-		SCMWorkflow.setConfigSource(new IConfigSource() {
-			@Override
-			public String getReposLocations() {
-				return "file://localhost/" + env.getReposFile().getPath().replace("\\", "/");
-	}
-	
-			@Override
-			public String getCredentialsLocations() {
-				return "file://localhost/" + env.getCredsFile().getPath().replace("\\", "/");
-			}
-		});
 		repos = SCMWorkflow.loadVCSRepositories();
 	}
 	
 	@After
-	public void tearDown() throws IOException {
-		env.clean();
-		SCMWorkflow.setConfigSource(new EnvVarsConfigSource());
+	public void tearDown() throws Exception {
+		env.close();
 	}
 	
 	@Test

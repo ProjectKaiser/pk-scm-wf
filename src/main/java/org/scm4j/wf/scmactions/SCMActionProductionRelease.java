@@ -1,4 +1,4 @@
-package org.scm4j.wf;
+package org.scm4j.wf.scmactions;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -6,7 +6,9 @@ import java.util.List;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSCommit;
-import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
+import org.scm4j.wf.LogTag;
+import org.scm4j.wf.SCMWorkflow;
+import org.scm4j.wf.Utils;
 import org.scm4j.wf.actions.ActionAbstract;
 import org.scm4j.wf.actions.IAction;
 import org.scm4j.wf.actions.results.ActionResultVersion;
@@ -25,9 +27,8 @@ public class SCMActionProductionRelease extends ActionAbstract {
 	private String newBranchName = null;
 	private String newVersion = null;
 
-	public SCMActionProductionRelease(Component dep, List<IAction> childActions, String masterBranchName, 
-			ProductionReleaseReason reason, IVCSWorkspace ws) {
-		super(dep, childActions, masterBranchName, ws);
+	public SCMActionProductionRelease(Component dep, List<IAction> childActions, ProductionReleaseReason reason) {
+		super(dep, childActions);
 		this.reason = reason;
 	}
 
@@ -48,8 +49,6 @@ public class SCMActionProductionRelease extends ActionAbstract {
 			
 			Version currentVer = devBranch.getVersion();
 			progress.reportStatus("current trunk version: " + currentVer);
-			
-			
 			
 			Object nestedResult;
 			for (IAction action : childActions) {
@@ -72,8 +71,8 @@ public class SCMActionProductionRelease extends ActionAbstract {
 			// We have a new versions map. Will write it to mdeps on the ground
 			VCSCommit newVersionStartsFromCommit;
 			List<String> mDepsChanged = new ArrayList<>();
-			if (vcs.fileExists(currentBranchName, SCMWorkflow.MDEPS_FILE_NAME)) {
-				String mDepsContent = vcs.getFileContent(currentBranchName, SCMWorkflow.MDEPS_FILE_NAME);
+			if (vcs.fileExists(devBranch.getName(), SCMWorkflow.MDEPS_FILE_NAME)) {
+				String mDepsContent = vcs.getFileContent(devBranch.getName(), SCMWorkflow.MDEPS_FILE_NAME);
 				MDepsFile mDepsFile = new MDepsFile(mDepsContent, comp.getVcsRepository());
 				List<String> mDepsOut = new ArrayList<>();
 				String mDepOut;
@@ -99,25 +98,25 @@ public class SCMActionProductionRelease extends ActionAbstract {
 				progress.reportStatus("new mdeps generated");
 				
 				String mDepsOutContent = Utils.stringsToString(mDepsOut);
-				newVersionStartsFromCommit = vcs.setFileContent(currentBranchName, SCMWorkflow.MDEPS_FILE_NAME, 
+				newVersionStartsFromCommit = vcs.setFileContent(devBranch.getName(), SCMWorkflow.MDEPS_FILE_NAME, 
 						mDepsOutContent, LogTag.SCM_MDEPS);
 				if (newVersionStartsFromCommit == VCSCommit.EMPTY) {
-					newVersionStartsFromCommit = vcs.getHeadCommit(currentBranchName);
+					newVersionStartsFromCommit = vcs.getHeadCommit(devBranch.getName());
 					progress.reportStatus("mdeps file is not changed. Going to branch from " + newVersionStartsFromCommit);
 				} else {
 					progress.reportStatus("mdeps updated in trunk, revision " + newVersionStartsFromCommit);
 				}
 			} else {
-				newVersionStartsFromCommit = vcs.getHeadCommit(currentBranchName);
+				newVersionStartsFromCommit = vcs.getHeadCommit(devBranch.getName());
 				progress.reportStatus("no mdeps. Going to branch from head " + newVersionStartsFromCommit);
 			}
 			
 			newBranchName = devBranch.getReleaseBranchName(); 
-			vcs.createBranch(currentBranchName, newBranchName, "branch created");
+			vcs.createBranch(devBranch.getName(), newBranchName, "release branch created");
 			progress.reportStatus("branch " + newBranchName + " created");
 			
 			String verContent = currentVer.toNextMinorSnapshot();
-			vcs.setFileContent(currentBranchName, SCMWorkflow.VER_FILE_NAME, 
+			vcs.setFileContent(devBranch.getName(), SCMWorkflow.VER_FILE_NAME, 
 					verContent, LogTag.SCM_VER + " " + verContent);
 			progress.reportStatus("change to version " + verContent + " in trunk");
 			

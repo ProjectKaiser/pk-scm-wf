@@ -33,5 +33,9 @@ public class Component {
 	public Version getVersion() {
 		return coords.getVersion();
 	}
+
+	public Component cloneWithDifferentVersion(String versionStr) {
+		return new Component(coords.toString(versionStr), vcsRepository);
+	}
 	
 }

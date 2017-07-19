@@ -2,7 +2,6 @@ package org.scm4j.wf.conf;
 
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
-import org.scm4j.wf.VCSFactory;
 
 public class VCSRepository {
 	

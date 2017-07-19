@@ -14,9 +14,11 @@ import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.vcs.api.workingcopy.IVCSRepositoryWorkspace;
 import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
 import org.scm4j.vcs.api.workingcopy.VCSWorkspace;
+import org.scm4j.wf.conf.EnvVarsConfigSource;
+import org.scm4j.wf.conf.IConfigSource;
 import org.scm4j.wf.conf.Version;
 
-public class TestEnvironment {
+public class TestEnvironment implements AutoCloseable {
 	public static final String TEST_REPOS_FILE_NAME = "repos";
 	public static final String TEST_CREDENTIALS_FILE_NAME = "credentials";
 	public static final String TEST_ENVIRONMENT_DIR = new File(System.getProperty("java.io.tmpdir"), "scm4j-wf-test").getPath();
@@ -58,6 +60,18 @@ public class TestEnvironment {
 		createCredentialsFile();
 
 		createReposFile();
+		
+		SCMWorkflow.setConfigSource(new IConfigSource() {
+			@Override
+			public String getReposLocations() {
+				return "file://localhost/" + getReposFile().getPath().replace("\\", "/");
+			}
+
+			@Override
+			public String getCredentialsLocations() {
+				return "file://localhost/" + getCredsFile().getPath().replace("\\", "/");
+			}
+		});
 
 	}
 
@@ -162,13 +176,11 @@ public class TestEnvironment {
 		return unTillDbVer;
 	}
 
-	public void clean() throws IOException {
+	@Override
+	public void close() throws Exception {
 		if (envDir != null && envDir.exists()) {
 			FileUtils.deleteDirectory(envDir);
 		}
+		SCMWorkflow.setConfigSource(new EnvVarsConfigSource());
 	}
-
-	
-	
-
 }

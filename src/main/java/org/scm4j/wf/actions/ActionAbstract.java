@@ -6,18 +6,14 @@ import java.util.List;
 import java.util.Map;
 
 import org.scm4j.vcs.api.IVCS;
-import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
-import org.scm4j.wf.VCSFactory;
 import org.scm4j.wf.conf.Component;
 
 public abstract class ActionAbstract implements IAction {
 
 	protected IAction parentAction;
-	protected List<IAction> childActions;
-	protected Component comp;
-	protected String currentBranchName;
-	private Map<String, List<Object>> executionResults = new LinkedHashMap<>();
-	protected IVCSWorkspace ws;
+	protected final List<IAction> childActions;
+	protected final Component comp;
+	private final Map<String, List<Object>> executionResults = new LinkedHashMap<>();
 
 	public IVCS getVCS() {
 		return comp.getVcsRepository().getVcs();
@@ -27,17 +23,19 @@ public abstract class ActionAbstract implements IAction {
 		return parentAction != null ? parentAction.getExecutionResults() : executionResults;
 	}
 
-	public ActionAbstract(Component comp, List<IAction> childActions, String currentBranchName, IVCSWorkspace ws) {
+	public ActionAbstract(Component comp, List<IAction> childActions) {
 		this.comp = comp;
 		this.childActions = childActions;
-		this.currentBranchName = currentBranchName;
-		this.ws = ws;
 		
 		if (childActions != null) {
 			for (IAction action : childActions) {
 				action.setParent(this);
 			}
 		}
+	}
+
+	public Component getComponent() {
+		return comp;
 	}
 
 	@Override

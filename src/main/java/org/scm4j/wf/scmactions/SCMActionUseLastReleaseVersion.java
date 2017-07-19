@@ -1,9 +1,8 @@
-package org.scm4j.wf;
+package org.scm4j.wf.scmactions;
 
 import java.util.List;
 
 import org.scm4j.commons.progress.IProgress;
-import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
 import org.scm4j.wf.actions.ActionAbstract;
 import org.scm4j.wf.actions.IAction;
 import org.scm4j.wf.actions.results.ActionResultVersion;
@@ -15,8 +14,8 @@ public class SCMActionUseLastReleaseVersion extends ActionAbstract {
 	
 	private Version version;
 
-	public SCMActionUseLastReleaseVersion(Component comp, List<IAction> actions, String masterBranchName, IVCSWorkspace ws) {
-		super(comp, actions, masterBranchName, ws);
+	public SCMActionUseLastReleaseVersion(Component comp, List<IAction> actions) {
+		super(comp, actions);
 		DevelopBranch db = new DevelopBranch(comp);
 		version = db.getVersion();
 	}

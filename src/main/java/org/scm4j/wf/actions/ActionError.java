@@ -3,15 +3,14 @@
 import java.util.List;
 
 import org.scm4j.commons.progress.IProgress;
-import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
 import org.scm4j.wf.conf.Component;
 
 public class ActionError extends ActionAbstract implements IAction {
 	
 	private String cause;
 
-	public ActionError(Component dep, List<IAction> childActions, String masterBranchName, String cause, IVCSWorkspace ws) {
-		super(dep, childActions, masterBranchName, ws);
+	public ActionError(Component comp, List<IAction> childActions, String cause	) {
+		super(comp, childActions);
 		this.cause = cause;
 	}
 

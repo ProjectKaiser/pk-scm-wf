@@ -3,6 +3,7 @@ package org.scm4j.wf;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
+import org.scm4j.wf.conf.IConfigSource;
 import org.scm4j.wf.exceptions.EConfig;
 
 import java.io.File;

@@ -1,5 +1,13 @@
 package org.scm4j.wf;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
+import java.util.List;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -11,10 +19,9 @@ import org.scm4j.wf.actions.PrintAction;
 import org.scm4j.wf.actions.results.ActionResultTag;
 import org.scm4j.wf.actions.results.ActionResultVersion;
 import org.scm4j.wf.conf.Version;
-
-import java.util.List;
-
-import static org.junit.Assert.*;
+import org.scm4j.wf.scmactions.ProductionReleaseReason;
+import org.scm4j.wf.scmactions.SCMActionProductionRelease;
+import org.scm4j.wf.scmactions.SCMActionUseLastReleaseVersion;
 
 public class SCMWorkflowTest {
 
@@ -24,25 +31,13 @@ public class SCMWorkflowTest {
 	public void setUp() throws Exception {
 		env = new TestEnvironment();
 		env.generateTestEnvironment();
-		SCMWorkflow.setConfigSource(new IConfigSource() {
-			@Override
-			public String getReposLocations() {
-				return "file://localhost/" + env.getReposFile().getPath().replace("\\", "/");
-			}
-
-			@Override
-			public String getCredentialsLocations() {
-				return "file://localhost/" + env.getCredsFile().getPath().replace("\\", "/");
-			}
-		});
 	}
 
 	@After
 	public void tearDown() throws Exception {
 		if (env != null) {
-			env.clean();
+			env.close();
 		}
-		SCMWorkflow.setConfigSource(new EnvVarsConfigSource());
 	}
 	
 	@Test

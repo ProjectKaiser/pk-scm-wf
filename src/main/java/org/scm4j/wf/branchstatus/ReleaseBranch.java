@@ -33,15 +33,15 @@ public class ReleaseBranch {
 	}
 	
 	public ReleaseBranchStatus getStatus () {
-		if (isReleaseBranchMissing()) {
+		if (!exists()) {
 			return ReleaseBranchStatus.MISSING;
 		}
 		
-		if (isLastCommitTaggedInReleaseBranch()) {
+		if (isLastCommitTagged()) {
 			return ReleaseBranchStatus.TAGGED;
 		}
 		
-		if (isLastCommitHasSCM_BUILTLogTagInReleaseBranch(comp)) {
+		if (isLastCommitHasSCM_BUILTLogTag(comp)) {
 			return ReleaseBranchStatus.BUILT;
 		}
 		
@@ -72,21 +72,20 @@ public class ReleaseBranch {
 		for (Component mDep : mDeps) {
 			rb = new ReleaseBranch(mDep, repos);
 			status = rb.getStatus();
-			if (status != ReleaseBranchStatus.TAGGED || !isLastCommitHasSCM_BUILTLogTagInReleaseBranch(mDep)) {
+			if (status != ReleaseBranchStatus.TAGGED || !isLastCommitHasSCM_BUILTLogTag(mDep)) {
 				return false;
 			}
 		}
 		return true;
 	}
 
-	private boolean isLastCommitTaggedInReleaseBranch() {
+	private boolean isLastCommitTagged() {
 		List<VCSCommit> log = vcs.log(getReleaseBranchName(), 1);
 		if (log != null && !log.isEmpty()) { // what to return if no commits at all?
 			VCSCommit lastCommit = log.get(0);
 			List<VCSTag> tags = vcs.getTags();
-			DevelopBranch db;
+			DevelopBranch db = new DevelopBranch(comp);
 			for (VCSTag tag : tags) {
-				db = new DevelopBranch(comp);
 				if (tag.getRelatedCommit().equals(lastCommit) && tag.getTagName().equals(db.getVersion().toPreviousMinorRelease())) {
 					return true;
 				}
@@ -95,13 +94,13 @@ public class ReleaseBranch {
 		return false;
 	}
 
-	private boolean isReleaseBranchMissing() {
+	public boolean exists() {
 		String releaseBranchName = getReleaseBranchName();
 		Set<String> branches = vcs.getBranches();
-		return !branches.contains(releaseBranchName);
+		return branches.contains(releaseBranchName);
 	}
 
-	private boolean isLastCommitHasSCM_BUILTLogTagInReleaseBranch(Component comp) {
+	private boolean isLastCommitHasSCM_BUILTLogTag(Component comp) {
 		IVCS vcs = comp.getVcsRepository().getVcs();
 		ReleaseBranch rb = new ReleaseBranch(comp, repos);
 		List<VCSCommit> log = vcs.log(rb.getReleaseBranchName(), 1);
@@ -137,5 +136,21 @@ public class ReleaseBranch {
 	@Override
 	public String toString() {
 		return "ReleaseBranch [comp=" + comp + "]";
+	}
+
+	public VCSTag getReleaseTag() {
+		if (exists() || !isLastCommitTagged()) {
+			return null;
+		}
+		
+		VCSCommit releaseHeadCommit = vcs.getHeadCommit(getReleaseBranchName());
+		List<VCSTag> tags = vcs.getTags();
+		DevelopBranch db = new DevelopBranch(comp);
+		for (VCSTag tag : tags) {
+			if (tag.getRelatedCommit().equals(releaseHeadCommit) && tag.getTagName().equals(db.getVersion().toPreviousMinorRelease())) {
+				return tag;
+			}
+		}
+		throw new IllegalStateException("No tag on release branch '" + getReleaseBranchName() + "' head commit for component:" + comp);
 	}
 }

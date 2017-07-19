@@ -1,11 +1,13 @@
 package org.scm4j.wf.branchstatus;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.wf.LogTag;
 import org.scm4j.wf.SCMWorkflow;
 import org.scm4j.wf.conf.Component;
+import org.scm4j.wf.conf.MDepsFile;
 import org.scm4j.wf.conf.Version;
 
 public class DevelopBranch {
@@ -34,16 +36,37 @@ public class DevelopBranch {
 	
 	public DevelopBranch(Component comp) {
 		this.comp = comp;
-		String verFileContent = comp.getVcsRepository().getVcs().getFileContent(comp.getVcsRepository().getDevBranch(), SCMWorkflow.VER_FILE_NAME);
-		version = new Version(verFileContent.trim());
+		if (comp.getVcsRepository().getVcs().fileExists(comp.getVcsRepository().getDevBranch(), SCMWorkflow.VER_FILE_NAME)) {
+			String verFileContent = comp.getVcsRepository().getVcs().getFileContent(comp.getVcsRepository().getDevBranch(), SCMWorkflow.VER_FILE_NAME);
+			version = new Version(verFileContent.trim());
+		} else {
+			version = null;
+		}
 	}
-
+	
 	public String getReleaseBranchName() {
 		return comp.getVcsRepository().getReleaseBranchPrefix() + getVersion().toReleaseString();
 	}
 
 	public String getPreviousMinorReleaseBranchName() {
 		return comp.getVcsRepository().getReleaseBranchPrefix() + getVersion().toPreviousMinorRelease();
+	}
+	
+	public boolean hasVersionFile() {
+		return comp.getVcsRepository().getVcs().fileExists(comp.getVcsRepository().getDevBranch(), SCMWorkflow.VER_FILE_NAME);
+	}
+	
+	public String getName() {
+		return comp.getVcsRepository().getDevBranch();
+	}
+	
+	public List<Component> getMDeps() {
+		if (!comp.getVcsRepository().getVcs().fileExists(getName(), SCMWorkflow.MDEPS_FILE_NAME)) {
+			return new ArrayList<>();
+		}
+		String mDepsFileContent = comp.getVcsRepository().getVcs().getFileContent(getName(), SCMWorkflow.MDEPS_FILE_NAME);
+		MDepsFile mDeps = new MDepsFile(mDepsFileContent, repos);
+		return mDeps.getMDeps();
 	}
 
 	@Override
