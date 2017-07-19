@@ -4,6 +4,7 @@ import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.scm4j.wf.conf.IConfigSource;
+import org.scm4j.wf.conf.VCSRepositories;
 import org.scm4j.wf.exceptions.EConfig;
 
 import java.io.File;
@@ -21,7 +22,7 @@ public class ConfigTest {
 
 	@Before
 	public void setUp() {
-		SCMWorkflow.setConfigSource(new IConfigSource() {
+		VCSRepositories.setConfigSource(new IConfigSource() {
 			@Override
 			public String getReposLocations() {
 				return repos;

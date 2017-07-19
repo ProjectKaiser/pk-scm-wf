@@ -1,10 +1,10 @@
 package org.scm4j.wf.actions.results;
 
 public class ActionResultVersion {
-	private String name;
-	private String version;
-	private Boolean isNewBuild;
-	private String newBranchName;
+	private final String name;
+	private final String version;
+	private final Boolean isNewBuild;
+	private final String newBranchName;
 	
 	public String getNewBranchName() {
 		return newBranchName;

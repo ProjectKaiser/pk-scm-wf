@@ -1,8 +1,5 @@
 package org.scm4j.wf.scmactions;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSCommit;
@@ -17,15 +14,12 @@ import org.scm4j.wf.conf.Component;
 import org.scm4j.wf.conf.MDepsFile;
 import org.scm4j.wf.conf.Version;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class SCMActionProductionRelease extends ActionAbstract {
 	
-
-	public static final String BRANCH_DEVELOP = "develop";
-	public static final String BRANCH_RELEASE = "release";
-	
-	private ProductionReleaseReason reason;
-	private String newBranchName = null;
-	private String newVersion = null;
+	private final ProductionReleaseReason reason;
 
 	public SCMActionProductionRelease(Component dep, List<IAction> childActions, ProductionReleaseReason reason) {
 		super(dep, childActions);
@@ -36,10 +30,6 @@ public class SCMActionProductionRelease extends ActionAbstract {
 		return reason;
 	}
 
-	public void setReason(ProductionReleaseReason reason) {
-		this.reason = reason;
-	}
-	
 	@Override
 	public Object execute(IProgress progress) {
 		try {
@@ -64,7 +54,7 @@ public class SCMActionProductionRelease extends ActionAbstract {
 			// Are we built already?
 			ActionResultVersion existingResult = (ActionResultVersion) getResult(getName(), ActionResultVersion.class);
 			if (existingResult != null) {
-				progress.reportStatus("using already built version " + ((ActionResultVersion) existingResult).getVersion()); 
+				progress.reportStatus("using already built version " + existingResult.getVersion());
 				return existingResult;
 			}
 			
@@ -110,8 +100,8 @@ public class SCMActionProductionRelease extends ActionAbstract {
 				newVersionStartsFromCommit = vcs.getHeadCommit(devBranch.getName());
 				progress.reportStatus("no mdeps. Going to branch from head " + newVersionStartsFromCommit);
 			}
-			
-			newBranchName = devBranch.getReleaseBranchName(); 
+
+			String newBranchName = devBranch.getReleaseBranchName();
 			vcs.createBranch(devBranch.getName(), newBranchName, "release branch created");
 			progress.reportStatus("branch " + newBranchName + " created");
 			
@@ -119,8 +109,8 @@ public class SCMActionProductionRelease extends ActionAbstract {
 			vcs.setFileContent(devBranch.getName(), SCMWorkflow.VER_FILE_NAME, 
 					verContent, LogTag.SCM_VER + " " + verContent);
 			progress.reportStatus("change to version " + verContent + " in trunk");
-			
-			newVersion = currentVer.toReleaseString();
+
+			String newVersion = currentVer.toReleaseString();
 			vcs.setFileContent(newBranchName, SCMWorkflow.VER_FILE_NAME, newVersion, 
 					LogTag.SCM_VER + " " + newVersion);
 			progress.reportStatus("change to version " + newVersion + " in branch " + newBranchName);
@@ -131,7 +121,7 @@ public class SCMActionProductionRelease extends ActionAbstract {
 				progress.reportStatus("mdeps-changed is written to branch " + newBranchName);
 			}
 			
-			ActionResultVersion res = new ActionResultVersion(comp.getName(), currentVer.toReleaseString(), true, 
+			ActionResultVersion res = new ActionResultVersion(comp.getName(), currentVer.toReleaseString(), true,
 					newBranchName);
 			progress.reportStatus("new " + comp.getName() + " " 
 					+ res.getVersion() + " is released in " + newBranchName);

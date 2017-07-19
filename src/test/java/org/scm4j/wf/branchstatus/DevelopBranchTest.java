@@ -1,15 +1,14 @@
 package org.scm4j.wf.branchstatus;
 
-import static org.junit.Assert.assertEquals;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.scm4j.wf.LogTag;
-import org.scm4j.wf.SCMWorkflow;
 import org.scm4j.wf.TestEnvironment;
 import org.scm4j.wf.conf.Component;
 import org.scm4j.wf.conf.VCSRepositories;
+
+import static org.junit.Assert.assertEquals;
 
 public class DevelopBranchTest {
 	
@@ -20,7 +19,7 @@ public class DevelopBranchTest {
 	public void setUp() throws Exception {
 		env = new TestEnvironment();
 		env.generateTestEnvironment();
-		repos = SCMWorkflow.loadVCSRepositories();
+		repos = VCSRepositories.loadVCSRepositories();
 	}
 	
 	@After

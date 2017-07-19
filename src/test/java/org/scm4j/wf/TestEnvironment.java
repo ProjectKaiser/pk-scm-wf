@@ -1,10 +1,5 @@
 package org.scm4j.wf;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.UUID;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.scm4j.vcs.GitVCS;
@@ -16,15 +11,19 @@ import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
 import org.scm4j.vcs.api.workingcopy.VCSWorkspace;
 import org.scm4j.wf.conf.EnvVarsConfigSource;
 import org.scm4j.wf.conf.IConfigSource;
+import org.scm4j.wf.conf.VCSRepositories;
 import org.scm4j.wf.conf.Version;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.UUID;
 
 public class TestEnvironment implements AutoCloseable {
 	public static final String TEST_REPOS_FILE_NAME = "repos";
 	public static final String TEST_CREDENTIALS_FILE_NAME = "credentials";
 	public static final String TEST_ENVIRONMENT_DIR = new File(System.getProperty("java.io.tmpdir"), "scm4j-wf-test").getPath();
 	public static final String TEST_ENVIRONMENT_URL = "file://localhost/" + TEST_ENVIRONMENT_DIR.replace("\\", "/");
-	public static final String TEST_VCS_REPO_FILE_URL = "file://localhost/" + TEST_ENVIRONMENT_URL + "/vcs-repo";
-	public static final String TEST_LOCAL_REPO_DIR = new File(TEST_ENVIRONMENT_DIR, "local-repos").getPath();
 	public static final String TEST_REMOTE_REPO_DIR = new File(TEST_ENVIRONMENT_DIR, "remote-repos").getPath();
 	public static final String TEST_FEATURE_FILE_NAME = "feature.txt";
 	public static final String TEST_DUMMY_FILE_NAME = "dummy.txt";
@@ -60,8 +59,8 @@ public class TestEnvironment implements AutoCloseable {
 		createCredentialsFile();
 
 		createReposFile();
-		
-		SCMWorkflow.setConfigSource(new IConfigSource() {
+
+		VCSRepositories.setConfigSource(new IConfigSource() {
 			@Override
 			public String getReposLocations() {
 				return "file://localhost/" + getReposFile().getPath().replace("\\", "/");
@@ -181,6 +180,6 @@ public class TestEnvironment implements AutoCloseable {
 		if (envDir != null && envDir.exists()) {
 			FileUtils.deleteDirectory(envDir);
 		}
-		SCMWorkflow.setConfigSource(new EnvVarsConfigSource());
+		VCSRepositories.setConfigSource(new EnvVarsConfigSource());
 	}
 }

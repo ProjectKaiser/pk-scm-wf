@@ -1,14 +1,15 @@
 package org.scm4j.wf.branchstatus;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.wf.LogTag;
 import org.scm4j.wf.SCMWorkflow;
 import org.scm4j.wf.conf.Component;
 import org.scm4j.wf.conf.MDepsFile;
+import org.scm4j.wf.conf.VCSRepositories;
 import org.scm4j.wf.conf.Version;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class DevelopBranch {
 	
@@ -65,7 +66,7 @@ public class DevelopBranch {
 			return new ArrayList<>();
 		}
 		String mDepsFileContent = comp.getVcsRepository().getVcs().getFileContent(getName(), SCMWorkflow.MDEPS_FILE_NAME);
-		MDepsFile mDeps = new MDepsFile(mDepsFileContent, repos);
+		MDepsFile mDeps = new MDepsFile(mDepsFileContent, VCSRepositories.loadVCSRepositories());
 		return mDeps.getMDeps();
 	}
 

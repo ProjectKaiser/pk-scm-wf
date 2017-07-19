@@ -1,12 +1,5 @@
 package org.scm4j.wf;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
-import org.scm4j.vcs.api.IVCS;
-import org.scm4j.vcs.api.workingcopy.VCSWorkspace;
 import org.scm4j.wf.actions.ActionError;
 import org.scm4j.wf.actions.ActionNone;
 import org.scm4j.wf.actions.IAction;
@@ -15,99 +8,38 @@ import org.scm4j.wf.branchstatus.DevelopBranchStatus;
 import org.scm4j.wf.branchstatus.ReleaseBranch;
 import org.scm4j.wf.branchstatus.ReleaseBranchStatus;
 import org.scm4j.wf.conf.Component;
-import org.scm4j.wf.conf.EnvVarsConfigSource;
-import org.scm4j.wf.conf.IConfigSource;
-import org.scm4j.wf.conf.MDepsFile;
-import org.scm4j.wf.conf.URLContentLoader;
 import org.scm4j.wf.conf.VCSRepositories;
-import org.scm4j.wf.conf.VCSRepository;
-import org.scm4j.wf.exceptions.EConfig;
 import org.scm4j.wf.exceptions.EComponentConfig;
-import org.scm4j.wf.scmactions.ProductionReleaseReason;
-import org.scm4j.wf.scmactions.SCMActionForkReleaseBranch;
-import org.scm4j.wf.scmactions.SCMActionProductionRelease;
-import org.scm4j.wf.scmactions.SCMActionTagRelease;
-import org.scm4j.wf.scmactions.SCMActionUseExistingTag;
-import org.scm4j.wf.scmactions.SCMActionUseLastReleaseVersion;
+import org.scm4j.wf.exceptions.EConfig;
+import org.scm4j.wf.scmactions.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class SCMWorkflow implements ISCMWorkflow {
 
-
-	public static final String DEFAULT_VCS_WORKSPACE_DIR = new File(System.getProperty("user.home"),
-			".scm4j" + File.separator + "wf-vcs-workspaces").getPath();
 	public static final String MDEPS_FILE_NAME = "mdeps";
 	public static final String VER_FILE_NAME = "version";
 	public static final String MDEPS_CHANGED_FILE_NAME = "mdeps-changed";
-	private static IConfigSource configSource = new EnvVarsConfigSource();
-	private static IVCSFactory vcsFactory = new VCSFactory();
-	private VCSRepositories repos;
-	private Component comp;
-	private IVCS vcs;
-	private List<Component> mDeps = new ArrayList<>();
-	
-	public void setMDeps(List<Component> mDeps) {
-		this.mDeps = mDeps;
-	}
-	
-	public static void setVCSFactory(IVCSFactory vcsFactory) {
-		SCMWorkflow.vcsFactory = vcsFactory;
-	}
 
-	public static void setConfigSource(IConfigSource configSource) {
-		SCMWorkflow.configSource = configSource;
-	}
-	
-	public VCSRepository getRepoByName(String depName) {
-		VCSRepository res = repos.getByComponent(depName);
-		if (res == null) {
-			throw new IllegalArgumentException("no repo url by name: " + depName);
-		}
-		return res;
-	}
+	private final VCSRepositories repos;
+	private final Component comp;
+	private final DevelopBranch db;
+	private final List<Component> mDeps;
 
 	public SCMWorkflow(String coords, VCSRepositories repos) {
 		this(new Component(coords, repos), repos);
 	}
-	
+
 	public SCMWorkflow(Component comp, VCSRepositories repos) {
 		this.repos = repos;
 		this.comp = comp;
-		String devBranchName = comp.getVcsRepository().getDevBranch();
-		vcs = comp.getVcsRepository().getVcs(); //VCSFactory.getVCS(dep.getVcsRepository(), ws);
-		if (vcs.fileExists(devBranchName, MDEPS_FILE_NAME)) {
-			String mDepsContent = vcs.getFileContent(devBranchName, MDEPS_FILE_NAME);
-			mDeps = new MDepsFile(mDepsContent, repos).getMDeps();
-		}
+		db = new DevelopBranch(comp);
+		mDeps = db.getMDeps();
 	}
 	
 	public SCMWorkflow(String coords) throws EConfig {
-		this(coords, loadVCSRepositories());
-	}
-	
-	public static VCSRepositories loadVCSRepositories() throws EConfig {
-		try {
-			URLContentLoader reposLoader = new URLContentLoader();
-			
-			String separatedReposUrlsStr = configSource.getReposLocations();
-			if (separatedReposUrlsStr == null) {
-				throw new EConfig(EnvVarsConfigSource.REPOS_LOCATION_ENV_VAR +
-						" environment var must contain a valid config path");
-			}
-			String reposContent = reposLoader.getContentFromUrls(separatedReposUrlsStr);
-			String separatedCredsUrlsStr = configSource.getCredentialsLocations();
-			if (separatedCredsUrlsStr == null) {
-				throw new EConfig(EnvVarsConfigSource.CREDENTIALS_LOCATION_ENV_VAR +
-						" environment var must contain a valid config path");
-			}
-			String credsContent = reposLoader.getContentFromUrls(separatedCredsUrlsStr);
-			try {
-				return new VCSRepositories(reposContent, credsContent, new VCSWorkspace(DEFAULT_VCS_WORKSPACE_DIR), vcsFactory);
-			} catch (Exception e) {
-				throw new EConfig(e);
-			}
-		} catch (IOException e) {
-			throw new EConfig("Failed to read config", e);
-		}
+		this(coords, VCSRepositories.loadVCSRepositories());
 	}
 
 	@Override
@@ -124,7 +56,6 @@ public class SCMWorkflow implements ISCMWorkflow {
 	}
 
 	public IAction getProductionReleaseActionRoot(List<IAction> childActions) {
-		DevelopBranch db  = new DevelopBranch(comp);
 		if (!db.hasVersionFile()) {
 			throw new EComponentConfig("no " + VER_FILE_NAME + " file for " + comp.toString());
 		}

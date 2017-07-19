@@ -36,10 +36,9 @@ public class SCMWorkflowGetActionTest {
 	public void setUp() throws Exception {
 		env = new TestEnvironment();
 		env.generateTestEnvironment();
-		repos = SCMWorkflow.loadVCSRepositories();
-
+		repos = VCSRepositories.loadVCSRepositories();
 	}
-	
+
 	@After
 	public void tearDown() throws Exception {
 		if (env != null) {
@@ -62,7 +61,7 @@ public class SCMWorkflowGetActionTest {
 	public void testActionNoneIfHasErrorActions() {
 		Component compUnTill = new Component(TestEnvironment.PRODUCT_UNTILL, repos);
 		SCMWorkflow wf = new SCMWorkflow(compUnTill, repos);
-		List<IAction> childActions = Arrays.<IAction>asList(new ActionError(compUnTill, new ArrayList<IAction>(), "test error action cause")); 
+		List<IAction> childActions = Arrays.<IAction>asList(new ActionError(compUnTill, new ArrayList<>(), "test error action cause"));
 		IAction action = wf.getProductionReleaseActionRoot(childActions);
 		assertTrue(action instanceof ActionNone);
 		ActionNone actionNone = (ActionNone) action;

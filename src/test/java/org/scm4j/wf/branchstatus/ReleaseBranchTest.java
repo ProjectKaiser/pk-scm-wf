@@ -1,10 +1,5 @@
 package org.scm4j.wf.branchstatus;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-
-import java.util.Arrays;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -15,6 +10,11 @@ import org.scm4j.wf.conf.Component;
 import org.scm4j.wf.conf.MDepsFile;
 import org.scm4j.wf.conf.VCSRepositories;
 
+import java.util.Arrays;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
 public class ReleaseBranchTest {
 	
 	private TestEnvironment env;
@@ -24,7 +24,7 @@ public class ReleaseBranchTest {
 	public void setUp() throws Exception {
 		env = new TestEnvironment();
 		env.generateTestEnvironment();
-		repos = SCMWorkflow.loadVCSRepositories();
+		repos = VCSRepositories.loadVCSRepositories();
 	}
 	
 	@After

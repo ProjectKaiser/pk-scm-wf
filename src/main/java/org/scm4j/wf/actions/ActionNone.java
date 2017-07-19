@@ -1,13 +1,13 @@
 package org.scm4j.wf.actions;
 
-import java.util.List;
-
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.wf.conf.Component;
 
+import java.util.List;
+
 public class ActionNone extends ActionAbstract {
 	
-	private String reason;
+	private final String reason;
 	
 	public ActionNone(Component comp, List<IAction> actions, String reason) {
 		super(comp, actions);

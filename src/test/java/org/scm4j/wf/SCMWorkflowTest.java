@@ -1,13 +1,5 @@
 package org.scm4j.wf;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
-import java.util.List;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -22,6 +14,10 @@ import org.scm4j.wf.conf.Version;
 import org.scm4j.wf.scmactions.ProductionReleaseReason;
 import org.scm4j.wf.scmactions.SCMActionProductionRelease;
 import org.scm4j.wf.scmactions.SCMActionUseLastReleaseVersion;
+
+import java.util.List;
+
+import static org.junit.Assert.*;
 
 public class SCMWorkflowTest {
 
@@ -155,7 +151,7 @@ public class SCMWorkflowTest {
 	}
 	
 	private void checkActionResultVersion(IAction action, String expectedName, Version expectedVersion, Boolean isNewBuildExpected) throws Exception {
-		Object res = null;;
+		Object res;
 		try (IProgress progress = new NullProgress()) {
 			res = action.execute(progress);
 		}

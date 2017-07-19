@@ -9,22 +9,36 @@ import org.scm4j.wf.exceptions.EConfig;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.error.YAMLException;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
 public class VCSRepositories {
+	public static final String DEFAULT_VCS_WORKSPACE_DIR = new File(System.getProperty("user.home"),
+			".scm4j" + File.separator + "wf-vcs-workspaces").getPath();
+
 	private Map<?, ?> urls;
 	private Map<?, ?> creds;
 	private final IVCSWorkspace ws;
-	private IVCSFactory vcsFactory;
-	
-	public VCSRepositories(String urlsStr, String credsStr) {
-		this(urlsStr, credsStr, new VCSWorkspace(), new VCSFactory());
+
+	private static IConfigSource configSource = new EnvVarsConfigSource();
+	private static IVCSFactory vcsFactory = new VCSFactory();
+
+	public static void setVCSFactory(IVCSFactory vcsFactory) {
+		VCSRepositories.vcsFactory = vcsFactory;
 	}
 
-	public VCSRepositories(String urlsStr, String credsStr, IVCSWorkspace ws, IVCSFactory vcsFactory) throws YAMLException {
+	public static void setConfigSource(IConfigSource configSource) {
+		VCSRepositories.configSource = configSource;
+	}
+
+	public VCSRepositories(String urlsStr, String credsStr) {
+		this(urlsStr, credsStr, new VCSWorkspace());
+	}
+
+	public VCSRepositories(String urlsStr, String credsStr, IVCSWorkspace ws) throws YAMLException {
 		this.ws = ws;
-		this.vcsFactory = vcsFactory;
 		Yaml yaml = new Yaml();
 		urls = yaml.loadAs(urlsStr, Map.class);
 		if (urls == null) {
@@ -104,5 +118,31 @@ public class VCSRepositories {
 	public VCSRepository getByCoords(String coordsStr) {
 		Coords coords = new Coords(coordsStr);
 		return getByComponent(coords.getName());
+	}
+
+	public static VCSRepositories loadVCSRepositories() throws EConfig {
+		try {
+			URLContentLoader reposLoader = new URLContentLoader();
+
+			String separatedReposUrlsStr = configSource.getReposLocations();
+			if (separatedReposUrlsStr == null) {
+				throw new EConfig(EnvVarsConfigSource.REPOS_LOCATION_ENV_VAR +
+						" environment var must contain a valid config path");
+			}
+			String reposContent = reposLoader.getContentFromUrls(separatedReposUrlsStr);
+			String separatedCredsUrlsStr = configSource.getCredentialsLocations();
+			if (separatedCredsUrlsStr == null) {
+				throw new EConfig(EnvVarsConfigSource.CREDENTIALS_LOCATION_ENV_VAR +
+						" environment var must contain a valid config path");
+			}
+			String credsContent = reposLoader.getContentFromUrls(separatedCredsUrlsStr);
+			try {
+				return new VCSRepositories(reposContent, credsContent, new VCSWorkspace(DEFAULT_VCS_WORKSPACE_DIR));
+			} catch (Exception e) {
+				throw new EConfig(e);
+			}
+		} catch (IOException e) {
+			throw new EConfig("Failed to read config", e);
+		}
 	}
 }

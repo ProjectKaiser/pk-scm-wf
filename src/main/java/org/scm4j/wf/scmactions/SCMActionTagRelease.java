@@ -1,7 +1,5 @@
 package org.scm4j.wf.scmactions;
 
-import java.util.List;
-
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSTag;
@@ -11,9 +9,11 @@ import org.scm4j.wf.actions.results.ActionResultTag;
 import org.scm4j.wf.branchstatus.DevelopBranch;
 import org.scm4j.wf.conf.Component;
 
+import java.util.List;
+
 public class SCMActionTagRelease extends ActionAbstract {
 
-	private String tagMessage;
+	private final String tagMessage;
 
 	public SCMActionTagRelease(Component dep, List<IAction> childActions, String tagMessage) {
 		super(dep, childActions);

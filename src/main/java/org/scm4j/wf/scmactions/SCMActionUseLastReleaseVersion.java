@@ -1,7 +1,5 @@
 package org.scm4j.wf.scmactions;
 
-import java.util.List;
-
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.wf.actions.ActionAbstract;
 import org.scm4j.wf.actions.IAction;
@@ -10,9 +8,11 @@ import org.scm4j.wf.branchstatus.DevelopBranch;
 import org.scm4j.wf.conf.Component;
 import org.scm4j.wf.conf.Version;
 
+import java.util.List;
+
 public class SCMActionUseLastReleaseVersion extends ActionAbstract {
 	
-	private Version version;
+	private final Version version;
 
 	public SCMActionUseLastReleaseVersion(Component comp, List<IAction> actions) {
 		super(comp, actions);
@@ -32,7 +32,6 @@ public class SCMActionUseLastReleaseVersion extends ActionAbstract {
 	@Override
 	public Object execute(IProgress progress) {
 		progress.reportStatus(toString());
-		ActionResultVersion res = new ActionResultVersion(getName(), getVersion().toPreviousMinorRelease(), false, null);
-		return res;
+		return new ActionResultVersion(getName(), getVersion().toPreviousMinorRelease(), false, null);
 	}
 }

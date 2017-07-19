@@ -1,5 +1,3 @@
-package org.scm4j.wf;
-
 @GrabResolver(name = 'jitpack', root = 'https://jitpack.io', changing = true, m2Compatible = true)
 @Grab(group = 'com.github.scm4j', module = 'scm4j-wf', version = 'dev-SNAPSHOT', changing = true)
 
