@@ -1,38 +1,25 @@
 package org.scm4j.wf;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
 import org.scm4j.wf.actions.ActionError;
 import org.scm4j.wf.actions.ActionNone;
 import org.scm4j.wf.actions.IAction;
-import org.scm4j.wf.conf.Credentials;
-import org.scm4j.wf.conf.Component;
-import org.scm4j.wf.conf.VCSRepositories;
-import org.scm4j.wf.conf.VCSRepository;
-import org.scm4j.wf.conf.VCSType;
-import org.scm4j.wf.conf.Version;
+import org.scm4j.wf.conf.*;
 import org.scm4j.wf.exceptions.EDepConfig;
 
-@PrepareForTest(VCSFactory.class)
-@RunWith(PowerMockRunner.class)
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import static org.junit.Assert.*;
+
 public class SCMWorkflowGetActionTest {
 
 	private static final String TEST_DEP = "test:dep";
@@ -56,10 +43,9 @@ public class SCMWorkflowGetActionTest {
 	@Before
 	public void setUp() {
 		MockitoAnnotations.initMocks(this);
-		testRepo = new VCSRepository(TEST_DEP, null, new Credentials(null, null, false), VCSType.GIT, TEST_MASTER_BRANCH, ws);
+		testRepo = new VCSRepository(TEST_DEP, null, new Credentials(null, null, false), VCSType.GIT,
+				TEST_MASTER_BRANCH, ws, mockedVcs);
 		Mockito.doReturn(testRepo).when(mockedRepos).getByComponent(testRepo.getName());
-		PowerMockito.mockStatic(VCSFactory.class);
-		PowerMockito.when(VCSFactory.getIVCS(testRepo, ws)).thenReturn(mockedVcs);
 		wf = new SCMWorkflow(new Component(TEST_DEP, testRepo), mockedRepos, ws);
 		Mockito.doReturn(true).when(mockedVcs).fileExists(testRepo.getDevBranch(), SCMWorkflow.VER_FILE_NAME);
 	}

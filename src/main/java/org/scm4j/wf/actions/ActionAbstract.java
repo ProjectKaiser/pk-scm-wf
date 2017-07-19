@@ -20,7 +20,7 @@ public abstract class ActionAbstract implements IAction {
 	protected IVCSWorkspace ws;
 
 	public IVCS getVCS() {
-		return VCSFactory.getIVCS(comp.getVcsRepository(), ws);
+		return comp.getVcsRepository().getVcs();
 	}
 
 	public Map<String, List<Object>> getExecutionResults() {

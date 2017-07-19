@@ -1,33 +1,29 @@
 package org.scm4j.wf;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
 import org.scm4j.vcs.api.workingcopy.VCSWorkspace;
 import org.scm4j.wf.actions.ActionError;
 import org.scm4j.wf.actions.ActionNone;
 import org.scm4j.wf.actions.IAction;
-import org.scm4j.wf.conf.Component;
-import org.scm4j.wf.conf.MDepsFile;
-import org.scm4j.wf.conf.URLContentLoader;
-import org.scm4j.wf.conf.VCSRepositories;
-import org.scm4j.wf.conf.VCSRepository;
+import org.scm4j.wf.conf.*;
 import org.scm4j.wf.exceptions.EConfig;
 import org.scm4j.wf.exceptions.EDepConfig;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
 public class SCMWorkflow implements ISCMWorkflow {
 
-	public static final String REPOS_LOCATION_ENV_VAR = "SCM4J_VCS_REPOS";
-	public static final String CREDENTIALS_LOCATION_ENV_VAR = "SCM4J_CREDENTIALS";
+
 	public static final String DEFAULT_VCS_WORKSPACE_DIR = new File(System.getProperty("user.home"),
 			".scm4j" + File.separator + "wf-vcs-workspaces").getPath();
 	public static final String MDEPS_FILE_NAME = "mdeps";
 	public static final String VER_FILE_NAME = "version";
 	public static final String MDEPS_CHANGED_FILE_NAME = "mdeps-changed";
+	private static IConfigSource configSource = new EnvVarsConfigSource();
 	private VCSRepositories repos;
 	private Component dep;
 	private String devBranchName;
@@ -37,6 +33,10 @@ public class SCMWorkflow implements ISCMWorkflow {
 
 	public void setMDeps(List<Component> mDeps) {
 		this.mDeps = mDeps;
+	}
+
+	public static void setConfigSource(IConfigSource configSource) {
+		SCMWorkflow.configSource = configSource;
 	}
 	
 	public VCSRepository getRepoByName(String depName) {
@@ -56,7 +56,7 @@ public class SCMWorkflow implements ISCMWorkflow {
 		this.dep = dep;
 		this.ws = ws;
 		devBranchName = dep.getVcsRepository().getDevBranch();
-		vcs = dep.getVcsRepository().getVcs(); //VCSFactory.getIVCS(dep.getVcsRepository(), ws);
+		vcs = dep.getVcsRepository().getVcs(); //VCSFactory.getVCS(dep.getVcsRepository(), ws);
 		if (vcs.fileExists(devBranchName, MDEPS_FILE_NAME)) {
 			String mDepsContent = vcs.getFileContent(devBranchName, MDEPS_FILE_NAME);
 			mDeps = new MDepsFile(mDepsContent, repos).getMDeps();
@@ -64,21 +64,23 @@ public class SCMWorkflow implements ISCMWorkflow {
 	}
 	
 	public SCMWorkflow(String depName) throws EConfig {
-		this(depName, getReposFromEnvironment(), new VCSWorkspace(DEFAULT_VCS_WORKSPACE_DIR));
+		this(depName, loadVCSRepositories(), new VCSWorkspace(DEFAULT_VCS_WORKSPACE_DIR));
 	}
 	
-	public static VCSRepositories getReposFromEnvironment() throws EConfig {
+	public static VCSRepositories loadVCSRepositories() throws EConfig {
 		try {
 			URLContentLoader reposLoader = new URLContentLoader();
 			
-			String separatedReposUrlsStr = System.getenv(REPOS_LOCATION_ENV_VAR);
+			String separatedReposUrlsStr = configSource.getReposLocations();
 			if (separatedReposUrlsStr == null) {
-				throw new EConfig(REPOS_LOCATION_ENV_VAR + " environment var must contain a valid config path");
+				throw new EConfig(EnvVarsConfigSource.REPOS_LOCATION_ENV_VAR +
+						" environment var must contain a valid config path");
 			}
 			String reposContent = reposLoader.getContentFromUrls(separatedReposUrlsStr);
-			String separatedCredsUrlsStr = System.getenv(CREDENTIALS_LOCATION_ENV_VAR);
+			String separatedCredsUrlsStr = configSource.getCredentialsLocations();
 			if (separatedCredsUrlsStr == null) {
-				throw new EConfig(CREDENTIALS_LOCATION_ENV_VAR + " environment var must contain a valid config path");
+				throw new EConfig(EnvVarsConfigSource.CREDENTIALS_LOCATION_ENV_VAR +
+						" environment var must contain a valid config path");
 			}
 			String credsContent = reposLoader.getContentFromUrls(separatedCredsUrlsStr);
 			try {

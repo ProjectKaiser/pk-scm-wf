@@ -42,18 +42,20 @@ public class VCSRepository {
 		return type;
 	}
 	
-	public VCSRepository(String name, String url, Credentials credentials, VCSType type, String devBranch, IVCSWorkspace ws, String releaseBranchPrefix) {
+	public VCSRepository(String name, String url, Credentials credentials,
+						 VCSType type, String devBranch, IVCSWorkspace ws, String releaseBranchPrefix, IVCS vcs) {
 		this.name = name;
 		this.url = url;
 		this.credentials = credentials;
 		this.type = type;
 		this.devBranch = devBranch;
-		this.vcs = VCSFactory.getIVCS(this, ws);
+		this.vcs = vcs;
 		this.releaseBanchPrefix = releaseBranchPrefix;
 	}
 
-	public VCSRepository(String name, String url, Credentials credentials, VCSType type, String devBranch, IVCSWorkspace ws) {
-		this(name, url, credentials, type, devBranch, ws, DEFAULT_RELEASE_BRANCH_PREFIX);
+	public VCSRepository(String name, String url, Credentials credentials, VCSType type, String devBranch,
+						 IVCSWorkspace ws, IVCS vcs) {
+		this(name, url, credentials, type, devBranch, ws, DEFAULT_RELEASE_BRANCH_PREFIX, vcs);
 	}
 
 	@Override
