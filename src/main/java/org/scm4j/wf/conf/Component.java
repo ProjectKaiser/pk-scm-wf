@@ -27,7 +27,7 @@ public class Component {
 
 	@Override
 	public String toString() {
-		return "Component [coords=" + coords + ", vcsRepository=" + vcsRepository + "]";
+		return coords.toString();
 	}
 	
 	public Version getVersion() {

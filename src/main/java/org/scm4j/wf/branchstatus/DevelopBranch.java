@@ -18,17 +18,18 @@ public class DevelopBranch {
 	}
 	
 	public DevelopBranchStatus getStatus() {
-		// Latest, for develop status and what was made in release (array of Objects?)
 		List<VCSCommit> log = comp.getVcsRepository().getVcs().log(comp.getVcsRepository().getDevBranch(), 1);
-		if (log != null && !log.isEmpty()) {
-			VCSCommit lastCommit = log.get(0);
-			if (lastCommit.getLogMessage().contains(LogTag.SCM_IGNORE)) {
-				return DevelopBranchStatus.IGNORED;
-			} else if (lastCommit.getLogMessage().contains(LogTag.SCM_VER)) {
-				return DevelopBranchStatus.BRANCHED;
-			} 
+		if (log == null || log.isEmpty()) {
+			return DevelopBranchStatus.IGNORED; // status if no commits?
 		}
-		return DevelopBranchStatus.MODIFIED; // status if no commits?
+		VCSCommit lastCommit = log.get(0);
+		if (lastCommit.getLogMessage().contains(LogTag.SCM_IGNORE)) {
+			return DevelopBranchStatus.IGNORED;
+		}
+		if (lastCommit.getLogMessage().contains(LogTag.SCM_VER)) {
+			return DevelopBranchStatus.BRANCHED;
+		}
+		return DevelopBranchStatus.MODIFIED;
 	}
 	
 	public DevelopBranch(Component comp) {

@@ -51,6 +51,10 @@ public class MDepsFile {
 		}
 	}
 	
+	public MDepsFile(List<Component> mDeps) {
+		this.mDeps = mDeps;
+	}
+
 	public String toFileContent() {
 		StringWriter sw = new StringWriter();
 		PrintWriter pw = new PrintWriter(sw);

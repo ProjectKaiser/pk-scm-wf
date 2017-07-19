@@ -49,6 +49,8 @@ public class SCMActionProductionRelease extends ActionAbstract {
 			Version currentVer = devBranch.getVersion();
 			progress.reportStatus("current trunk version: " + currentVer);
 			
+			
+			
 			Object nestedResult;
 			for (IAction action : childActions) {
 				try (IProgress nestedProgress = progress.createNestedProgress(action.getName())) {
