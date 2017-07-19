@@ -2,14 +2,14 @@ All statuses are calculated top-down using `BranchesStatuses` class
 
 # `develop` branch
 - `IGNORED`
-  - Last commit has `#scm-ignore`
+  - Last commit has `#scm-ignore` or no commits at all
 - `MODIFIED`
   - Last commit has no `#scm-ver`
 - `BRANCHED`
   - Last commit has `#scm-ver`
   
 # `release` branch
-- `MISSED`
+- `MISSING`
   - Branch does not exist
 - `TAGGED`
   - Tag exist
