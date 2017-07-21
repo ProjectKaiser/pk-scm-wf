@@ -114,4 +114,15 @@ public class VersionTest {
 				.usingGetClass()
 				.verify();
 	}
+	
+	@Test
+	public void testExactVersion() {
+		assertTrue(new Version("11.12.13-SNAPSHOT").isExactVersion());
+		assertTrue(new Version("11.12.13").isExactVersion());
+		assertTrue(new Version("11.13").isExactVersion());
+		assertTrue(new Version("11").isExactVersion());
+		assertFalse(new Version("").isExactVersion());
+		assertFalse(new Version("-SNAPSHOT").isExactVersion());
+		
+	}
 }

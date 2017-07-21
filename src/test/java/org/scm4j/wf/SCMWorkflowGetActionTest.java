@@ -1,42 +1,42 @@
 package org.scm4j.wf;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
-import org.scm4j.vcs.api.IVCS;
-import org.scm4j.vcs.api.VCSCommit;
-import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
-import org.scm4j.wf.actions.ActionError;
-import org.scm4j.wf.actions.ActionNone;
-import org.scm4j.wf.actions.IAction;
-import org.scm4j.wf.conf.*;
-import org.scm4j.wf.exceptions.EConfig;
-import org.scm4j.wf.exceptions.EComponentConfig;
-import org.scm4j.wf.scmactions.ProductionReleaseReason;
-import org.scm4j.wf.scmactions.SCMActionProductionRelease;
-import org.scm4j.wf.scmactions.SCMActionUseLastReleaseVersion;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
-import static org.junit.Assert.*;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.scm4j.wf.actions.ActionError;
+import org.scm4j.wf.actions.ActionNone;
+import org.scm4j.wf.actions.IAction;
+import org.scm4j.wf.branchstatus.DevelopBranch;
+import org.scm4j.wf.conf.Component;
+import org.scm4j.wf.conf.VCSRepositories;
+import org.scm4j.wf.exceptions.EComponentConfig;
+import org.scm4j.wf.scmactions.ProductionReleaseReason;
+import org.scm4j.wf.scmactions.SCMActionForkReleaseBranch;
+import org.scm4j.wf.scmactions.SCMActionProductionRelease;
+import org.scm4j.wf.scmactions.SCMActionUseLastReleaseVersion;
 
 public class SCMWorkflowGetActionTest {
 	
 	private TestEnvironment env;
 	private VCSRepositories repos;
-	
+	private Component compUnTill;
+	private Component compUBL;
 	
 	@Before
 	public void setUp() throws Exception {
 		env = new TestEnvironment();
 		env.generateTestEnvironment();
 		repos = VCSRepositories.loadVCSRepositories();
+		compUnTill = new Component(TestEnvironment.PRODUCT_UNTILL, repos);
+		compUBL = new Component(TestEnvironment.PRODUCT_UBL, repos);
 	}
 
 	@After
@@ -59,9 +59,8 @@ public class SCMWorkflowGetActionTest {
 	
 	@Test
 	public void testActionNoneIfHasErrorActions() {
-		Component compUnTill = new Component(TestEnvironment.PRODUCT_UNTILL, repos);
 		SCMWorkflow wf = new SCMWorkflow(compUnTill, repos);
-		List<IAction> childActions = Arrays.<IAction>asList(new ActionError(compUnTill, new ArrayList<>(), "test error action cause"));
+		List<IAction> childActions = Arrays.<IAction>asList(new ActionError(compUnTill, new ArrayList<IAction>(), "test error action cause"));
 		IAction action = wf.getProductionReleaseActionRoot(childActions);
 		assertTrue(action instanceof ActionNone);
 		ActionNone actionNone = (ActionNone) action;
@@ -70,70 +69,86 @@ public class SCMWorkflowGetActionTest {
 	}
 	
 	@Test
-	public void testProductionReleaseNewFeatures() {
-		Mockito.doReturn(COMMIT_FEATURE).when(mockedVcs).getHeadCommit(TEST_MASTER_BRANCH);
-		IAction action = wf.getProductionReleaseActionRoot(new ArrayList<IAction>());
+	public void testProductionReleaseIfNewFeatures() {
+		DevelopBranch db = new DevelopBranch(compUnTill);
+		env.getUnTillVCS().createBranch(db.getName(), db.getReleaseBranchName(), "release branch created");
+		env.generateFeatureCommit(env.getUnTillVCS(), compUnTill.getVcsRepository().getDevBranch(), "feature added");
+		SCMWorkflow wf = new SCMWorkflow(compUnTill, repos);
+		List<IAction> childActions = new ArrayList<IAction>();
+		IAction action = wf.getProductionReleaseActionRoot(childActions);
 		assertTrue(action instanceof SCMActionProductionRelease);
-		SCMActionProductionRelease r = (SCMActionProductionRelease) action;
-		assertEquals(r.getReason(), ProductionReleaseReason.NEW_FEATURES);
-	}
-	
-	@Test 
-	public void testActionNoneIfNoVersionFile() {
-		Mockito.doReturn(false).when(mockedVcs).fileExists(testRepo.getDevBranch(), SCMWorkflow.VER_FILE_NAME);
-		Mockito.doReturn(COMMIT_FEATURE).when(mockedVcs).getHeadCommit(TEST_MASTER_BRANCH);
-		try {
-			wf.getProductionReleaseActionRoot(new ArrayList<IAction>());
-			fail();
-		} catch (EComponentConfig e) {
-			
-		}
-	}
-	
-	@Test
-	public void testActionNoneIfHasErrors() {
-		List<Component> testMDeps = Collections.singletonList(new Component(TEST_DEP + ":1.0.0", mockedRepos));
-		wf.setMDeps(testMDeps);
-		List<IAction> childActions = new ArrayList<>();
-		childActions.add(new ActionError(new Component(TEST_DEP + ":1.0.0", mockedRepos), Collections.<IAction>emptyList(), "test error cause"));
-		
-		IAction res = wf.getProductionReleaseActionRoot(childActions);
-		assertTrue(res instanceof ActionNone);
+		SCMActionProductionRelease actionRelease = (SCMActionProductionRelease) action;
+		assertEquals(actionRelease.getReason(), ProductionReleaseReason.NEW_FEATURES);
+		assertEquals(compUnTill, actionRelease.getComponent());
+		assertEquals(childActions, actionRelease.getChildActions());
 	}
 	
 	@Test
 	public void testProductionReleaseNewDependencies() {
-		Mockito.doReturn("0.0.0").when(mockedVcs).getFileContent(TEST_MASTER_BRANCH, SCMWorkflow.VER_FILE_NAME);
-		Mockito.doReturn(COMMIT_VER).when(mockedVcs).getHeadCommit(TEST_MASTER_BRANCH);
-		List<Component> testMDeps = Collections.singletonList(new Component(TEST_DEP + ":1.0.0", mockedRepos));
-		wf.setMDeps(testMDeps);
-		List<IAction> childActions = new ArrayList<>();
-		childActions.add(new SCMActionUseLastReleaseVersion(new Component(TEST_DEP + ":1.0.0", mockedRepos), Collections.<IAction>emptyList()));
+		DevelopBranch db = new DevelopBranch(compUnTill);
+		env.getUnTillVCS().createBranch(db.getName(), db.getReleaseBranchName(), "release branch created");
+		SCMWorkflow wf = new SCMWorkflow(compUnTill, repos);
+		List<IAction> childActions = Arrays.<IAction>asList(new SCMActionProductionRelease(compUBL, new ArrayList<IAction>(), ProductionReleaseReason.NEW_FEATURES));
 		IAction action = wf.getProductionReleaseActionRoot(childActions);
 		assertTrue(action instanceof SCMActionProductionRelease);
-		SCMActionProductionRelease pr = (SCMActionProductionRelease) action;
-		assertEquals(pr.getReason(), ProductionReleaseReason.NEW_DEPENDENCIES);
+		SCMActionProductionRelease actionRelease = (SCMActionProductionRelease) action;
+		assertEquals(actionRelease.getReason(), ProductionReleaseReason.NEW_DEPENDENCIES);
+		assertEquals(compUnTill, actionRelease.getComponent());
+		assertEquals(childActions, actionRelease.getChildActions());
+	}
+	
+	@Test
+	public void testProductionReleaseNewDependenciesIfSignificantActions() {
+		DevelopBranch db = new DevelopBranch(compUnTill);
+		env.getUnTillVCS().createBranch(db.getName(), db.getReleaseBranchName(), "release branch created");
+		SCMWorkflow wf = new SCMWorkflow(compUnTill, repos);
+		List<IAction> childActions = Arrays.<IAction>asList(new SCMActionProductionRelease(compUBL, new ArrayList<IAction>(), ProductionReleaseReason.NEW_FEATURES));
+		IAction action = wf.getProductionReleaseActionRoot(childActions);
+		assertTrue(action instanceof SCMActionProductionRelease);
+		SCMActionProductionRelease actionRelease = (SCMActionProductionRelease) action;
+		assertEquals(actionRelease.getReason(), ProductionReleaseReason.NEW_DEPENDENCIES);
+		assertEquals(compUnTill, actionRelease.getComponent());
+		assertEquals(childActions, actionRelease.getChildActions());
 	}
 
 	@Test
-	public void testUseLastReleaseIfNoFeatures() {
-		Mockito.doReturn(COMMIT_VER).when(mockedVcs).getHeadCommit(TEST_MASTER_BRANCH);
-		Version ver = new Version("1.0.0");
-		Mockito.doReturn("1.0.0").when(mockedVcs).getFileContent(TEST_MASTER_BRANCH, SCMWorkflow.VER_FILE_NAME);
-		IAction action = wf.getProductionReleaseActionRoot(new ArrayList<IAction>());
+	public void testUseLastRelease() {
+		DevelopBranch db = new DevelopBranch(compUnTill);
+		env.getUnTillVCS().createBranch(db.getName(), db.getReleaseBranchName(), "release branch created");
+		SCMWorkflow wf = new SCMWorkflow(compUnTill, repos);
+		List<IAction> childActions = new ArrayList<IAction>();
+		IAction action = wf.getProductionReleaseActionRoot(childActions);
 		assertTrue(action instanceof SCMActionUseLastReleaseVersion);
 		SCMActionUseLastReleaseVersion lastRelease = (SCMActionUseLastReleaseVersion) action;
-		assertTrue(lastRelease.getVersion().equals(ver));
+		assertEquals(compUnTill, lastRelease.getComponent());
+		assertEquals(childActions, lastRelease.getChildActions());
+		assertTrue(lastRelease.getVersion().equals(env.getUnTillVer()));
+		
+		env.generateLogTag(env.getUnTillVCS(), db.getName(), LogTag.SCM_IGNORE);
+		action = wf.getProductionReleaseActionRoot(childActions);
+		assertTrue(action instanceof SCMActionUseLastReleaseVersion);
+		lastRelease = (SCMActionUseLastReleaseVersion) action;
+		assertEquals(compUnTill, lastRelease.getComponent());
+		assertEquals(childActions, lastRelease.getChildActions());
+		assertTrue(lastRelease.getVersion().equals(env.getUnTillVer()));
 	}
-
+	
 	@Test
-	public void testUseLastReleaseIfIgnore() {
-		Mockito.doReturn(COMMIT_IGNORE).when(mockedVcs).getHeadCommit(TEST_MASTER_BRANCH);
-		Version ver = new Version("1.0.0");
-		Mockito.doReturn("1.0.0").when(mockedVcs).getFileContent(TEST_MASTER_BRANCH, SCMWorkflow.VER_FILE_NAME);
-		IAction action = wf.getProductionReleaseActionRoot(new ArrayList<IAction>());
-		assertTrue(action instanceof SCMActionUseLastReleaseVersion);
-		SCMActionUseLastReleaseVersion lastRelease = (SCMActionUseLastReleaseVersion) action;
-		assertTrue(lastRelease.getVersion().equals(ver));
+	public void testForkBranch() {
+		SCMWorkflow wf = new SCMWorkflow(compUnTill, repos);
+		List<IAction> childActions = Arrays.<IAction>asList(new SCMActionProductionRelease(compUBL, new ArrayList<IAction>(), ProductionReleaseReason.NEW_FEATURES));
+		IAction action = wf.getProductionReleaseActionRoot(childActions);
+		assertTrue(action instanceof SCMActionForkReleaseBranch);
+		SCMActionForkReleaseBranch forkRelease = (SCMActionForkReleaseBranch) action;
+		assertEquals(compUnTill, forkRelease.getComponent());
+		assertEquals(childActions, forkRelease.getChildActions());
+		
+		env.generateFeatureCommit(env.getUnTillVCS(), compUnTill.getVcsRepository().getDevBranch(), "feature added");
+		childActions = new ArrayList<IAction>();
+		action = wf.getProductionReleaseActionRoot(childActions);
+		assertTrue(action instanceof SCMActionForkReleaseBranch);
+		forkRelease = (SCMActionForkReleaseBranch) action;
+		assertEquals(compUnTill, forkRelease.getComponent());
+		assertEquals(childActions, forkRelease.getChildActions());
 	}
 }

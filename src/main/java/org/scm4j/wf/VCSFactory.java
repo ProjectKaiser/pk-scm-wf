@@ -7,10 +7,9 @@ import org.scm4j.vcs.svn.SVNVCS;
 import org.scm4j.wf.conf.Credentials;
 import org.scm4j.wf.conf.VCSType;
 
-public class VCSFactory implements IVCSFactory {
+public class VCSFactory {
 
-	@Override
-	public IVCS getVCS(VCSType type, Credentials creds, String url, IVCSWorkspace ws) {
+	public static IVCS getVCS(VCSType type, Credentials creds, String url, IVCSWorkspace ws) {
 		IVCS vcs;
 		switch (type) {
 		case GIT: {

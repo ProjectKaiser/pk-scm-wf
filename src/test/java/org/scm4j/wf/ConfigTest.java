@@ -1,18 +1,21 @@
 package org.scm4j.wf;
 
-import org.apache.commons.io.FileUtils;
-import org.junit.Before;
-import org.junit.Test;
-import org.scm4j.wf.conf.IConfigSource;
-import org.scm4j.wf.conf.VCSRepositories;
-import org.scm4j.wf.exceptions.EConfig;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.nio.charset.StandardCharsets;
 
-import static org.junit.Assert.*;
+import org.apache.commons.io.FileUtils;
+import org.junit.Before;
+import org.junit.Test;
+import org.scm4j.wf.conf.IConfigSource;
+import org.scm4j.wf.conf.VCSRepositories;
+import org.scm4j.wf.exceptions.EConfig;
 
 public class ConfigTest {
 	

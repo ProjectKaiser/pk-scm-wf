@@ -3,6 +3,7 @@ package org.scm4j.wf.scmactions;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSCommit;
+import org.scm4j.vcs.api.workingcopy.IVCSLockedWorkingCopy;
 import org.scm4j.wf.LogTag;
 import org.scm4j.wf.SCMWorkflow;
 import org.scm4j.wf.Utils;
@@ -17,12 +18,12 @@ import org.scm4j.wf.conf.Version;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SCMActionProductionRelease extends ActionAbstract {
 	
+public class SCMActionProductionRelease extends ActionAbstract {
 	private final ProductionReleaseReason reason;
 
-	public SCMActionProductionRelease(Component dep, List<IAction> childActions, ProductionReleaseReason reason) {
-		super(dep, childActions);
+	public SCMActionProductionRelease(Component comp, List<IAction> childActions, ProductionReleaseReason reason) {
+		super(comp, childActions);
 		this.reason = reason;
 	}
 
@@ -119,6 +120,16 @@ public class SCMActionProductionRelease extends ActionAbstract {
 				vcs.setFileContent(newBranchName, SCMWorkflow.MDEPS_CHANGED_FILE_NAME, Utils.stringsToString(mDepsChanged), 
 						LogTag.SCM_IGNORE);
 				progress.reportStatus("mdeps-changed is written to branch " + newBranchName);
+			}
+			
+			if (comp.getVcsRepository().getBuilder() == null) {
+				progress.reportStatus("builder is undefined");
+			} else {
+				try (IVCSLockedWorkingCopy lwc = vcs.getWorkspace().getVCSRepositoryWorkspace(vcs.getRepoUrl()).getVCSLockedWorkingCopy()) {
+					lwc.setCorrupted(true); // one-off
+					vcs.checkout(newBranchName, lwc.getFolder().getPath());
+					comp.getVcsRepository().getBuilder().build(lwc.getFolder());
+				}
 			}
 			
 			ActionResultVersion res = new ActionResultVersion(comp.getName(), currentVer.toReleaseString(), true,

@@ -22,7 +22,7 @@ public class ReleaseBranch {
 	private final VCSRepositories repos;
 	
 	public ReleaseBranch(Component comp, VCSRepositories repos) {
-		this(comp, new Version(comp.getVcsRepository().getVcs().getFileContent(comp.getVcsRepository().getDevBranch(), SCMWorkflow.VER_FILE_NAME).trim()), repos);
+		this(comp, null, repos);
 	}
 	
 	public ReleaseBranch(Component comp, Version version, VCSRepositories repos) {
@@ -130,7 +130,7 @@ public class ReleaseBranch {
 	}
 	
 	public String getReleaseBranchName() {
-		return comp.getVcsRepository().getReleaseBranchPrefix() + version.toReleaseString();
+		return comp.getVcsRepository().getReleaseBranchPrefix() + getVersion().toReleaseString();
 	}
 
 	@Override
@@ -152,5 +152,23 @@ public class ReleaseBranch {
 			}
 		}
 		throw new IllegalStateException("No tag on release branch '" + getReleaseBranchName() + "' head commit for component:" + comp);
+	}
+	
+	public List<Component> getMDeps() {
+		if (!vcs.fileExists(getReleaseBranchName(), SCMWorkflow.MDEPS_FILE_NAME)) {
+			return new ArrayList<>();
+		}
+		
+		String mDepsFileContent = comp.getVcsRepository().getVcs().getFileContent(getReleaseBranchName(), SCMWorkflow.MDEPS_FILE_NAME);
+		MDepsFile mDeps = new MDepsFile(mDepsFileContent, repos);
+		return mDeps.getMDeps();
+	}
+	
+	public Version getVersion() {
+		if (version == null) {
+			return new Version(vcs.getFileContent(comp.getVcsRepository().getDevBranch(), SCMWorkflow.VER_FILE_NAME).trim());
+		} else {
+			return version;
+		}
 	}
 }

@@ -88,16 +88,16 @@ public class TestEnvironment implements AutoCloseable {
 	}
 
 	private void uploadVCSConfigFiles() {
-		unTillVCS.setFileContent(null, SCMWorkflow.VER_FILE_NAME, unTillVer.toString(), "ver file added");
+		unTillVCS.setFileContent(null, SCMWorkflow.VER_FILE_NAME, unTillVer.toString(), LogTag.SCM_VER + " ver file added");
 		unTillVCS.setFileContent(null, SCMWorkflow.MDEPS_FILE_NAME,
 				PRODUCT_UBL + ":" + ublVer.getSnapshot() + "\r\n" +
-				PRODUCT_UNTILLDB + ":" + unTillDbVer.getSnapshot() + "\r\n", "mdeps file added");
+				PRODUCT_UNTILLDB + ":" + unTillDbVer.getSnapshot() + "\r\n", LogTag.SCM_IGNORE + " mdeps file added");
 
-		ublVCS.setFileContent(null, SCMWorkflow.VER_FILE_NAME, ublVer.toString(), "ver file added");
+		ublVCS.setFileContent(null, SCMWorkflow.VER_FILE_NAME, ublVer.toString(), LogTag.SCM_VER + " ver file added");
 		ublVCS.setFileContent(null, SCMWorkflow.MDEPS_FILE_NAME,
-				PRODUCT_UNTILLDB + ":" + unTillDbVer.getSnapshot() + "\r\n", "mdeps file added");
+				PRODUCT_UNTILLDB + ":" + unTillDbVer.getSnapshot() + "\r\n", LogTag.SCM_IGNORE + " mdeps file added");
 
-		unTillDbVCS.setFileContent(null, SCMWorkflow.VER_FILE_NAME, unTillDbVer.toString(), "ver file added");
+		unTillDbVCS.setFileContent(null, SCMWorkflow.VER_FILE_NAME, unTillDbVer.toString(), LogTag.SCM_VER + " ver file added");
 	}
 
 	private void createTestVCSRepos() throws Exception {

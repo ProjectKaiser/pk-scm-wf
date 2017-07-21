@@ -14,10 +14,13 @@ import java.util.List;
 public class DevelopBranch {
 	
 	private final Component comp;
-	private final Version version;
 	
 	public Version getVersion() {
-		return version;
+		if (comp.getVcsRepository().getVcs().fileExists(comp.getVcsRepository().getDevBranch(), SCMWorkflow.VER_FILE_NAME)) {
+			String verFileContent = comp.getVcsRepository().getVcs().getFileContent(comp.getVcsRepository().getDevBranch(), SCMWorkflow.VER_FILE_NAME);
+			return new Version(verFileContent.trim());
+		} 
+		return null;
 	}
 	
 	public DevelopBranchStatus getStatus() {
@@ -37,12 +40,7 @@ public class DevelopBranch {
 	
 	public DevelopBranch(Component comp) {
 		this.comp = comp;
-		if (comp.getVcsRepository().getVcs().fileExists(comp.getVcsRepository().getDevBranch(), SCMWorkflow.VER_FILE_NAME)) {
-			String verFileContent = comp.getVcsRepository().getVcs().getFileContent(comp.getVcsRepository().getDevBranch(), SCMWorkflow.VER_FILE_NAME);
-			version = new Version(verFileContent.trim());
-		} else {
-			version = null;
-		}
+		
 	}
 	
 	public String getReleaseBranchName() {

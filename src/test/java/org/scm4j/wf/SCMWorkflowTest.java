@@ -12,6 +12,8 @@ import org.scm4j.wf.actions.results.ActionResultTag;
 import org.scm4j.wf.actions.results.ActionResultVersion;
 import org.scm4j.wf.conf.Version;
 import org.scm4j.wf.scmactions.ProductionReleaseReason;
+import org.scm4j.wf.scmactions.SCMActionForkReleaseBranch;
+import org.scm4j.wf.scmactions.SCMActionForkReleaseBranchChilds;
 import org.scm4j.wf.scmactions.SCMActionProductionRelease;
 import org.scm4j.wf.scmactions.SCMActionUseLastReleaseVersion;
 
@@ -166,6 +168,16 @@ public class SCMWorkflowTest {
 		}
 		assertEquals(arv.getVersion(), isNewBuildExpected ? expectedVersion.toReleaseString() : expectedVersion.toPreviousMinorRelease());
 	}
+	
+	private void checkForkReleaseAction(IAction action, IAction parentAction, String expectedName) {
+		checkAction(action, parentAction, expectedName);
+		assertTrue(action instanceof SCMActionForkReleaseBranch);
+	}
+	
+	private void checkForkReleaseChildsAction(IAction action, IAction parentAction, String expectedName) {
+		checkAction(action, parentAction, expectedName);
+		assertTrue(action instanceof SCMActionForkReleaseBranchChilds);
+	}
 
 	private void checkProductionReleaseAction(IAction action, IAction parentAction, ProductionReleaseReason expectedReason, 
 			String expectedName) {
@@ -221,5 +233,70 @@ public class SCMWorkflowTest {
 		pa.print(System.out, actionUnTill);
 		
 		checkActionResultVersion(actionUnTill, TestEnvironment.PRODUCT_UNTILL, env.getUnTillVer(), true);
+	}
+	
+	@Test
+	public void testForkReleaseBranch() {
+		//env.generateFeatureCommit(env.getUblVCS(), null, "feature commit");
+		//env.generateFeatureCommit(env.getUnTillVCS(), null, "feature commit");
+		env.generateFeatureCommit(env.getUnTillDbVCS(), null, "feature commit");
+		{ 
+			// unTill
+			SCMWorkflow wf = new SCMWorkflow(TestEnvironment.PRODUCT_UNTILL);
+			IAction actionUnTill = wf.getProductionReleaseAction(null);
+			
+			checkForkReleaseAction(actionUnTill, null, TestEnvironment.PRODUCT_UNTILL);
+			assertTrue(actionUnTill.getChildActions().size() == 2);
+			
+			IAction actionUBL = actionUnTill.getChildActions().get(0);
+			checkForkReleaseAction(actionUBL, actionUnTill, TestEnvironment.PRODUCT_UBL);
+			assertTrue(actionUBL.getChildActions().size() == 1);
+			
+			IAction actionUnTillDb = actionUnTill.getChildActions().get(1);
+			checkForkReleaseAction(actionUnTillDb, actionUnTill, TestEnvironment.PRODUCT_UNTILLDB);
+			
+			IAction actionUBLUnTillDb = actionUBL.getChildActions().get(0);
+			checkForkReleaseAction(actionUBLUnTillDb, actionUBL, TestEnvironment.PRODUCT_UNTILLDB);
+		}
+		
+		{
+			// UBL
+			env.generateFeatureCommit(env.getUblVCS(), null, "feature commit");
+			SCMWorkflow wf = new SCMWorkflow(TestEnvironment.PRODUCT_UNTILL);
+			IAction actionUnTill = wf.getProductionReleaseAction(null);
+			
+			checkForkReleaseChildsAction(actionUnTill, null, TestEnvironment.PRODUCT_UNTILL);
+			assertTrue(actionUnTill.getChildActions().size() == 2);
+			
+			IAction actionUBL = actionUnTill.getChildActions().get(0);
+			checkForkReleaseAction(actionUBL, actionUnTill, TestEnvironment.PRODUCT_UBL);
+			assertTrue(actionUBL.getChildActions().size() == 1);
+			
+			IAction actionUnTillDb = actionUnTill.getChildActions().get(1);
+			checkForkReleaseAction(actionUnTillDb, actionUnTill, TestEnvironment.PRODUCT_UNTILLDB);
+			
+			IAction actionUBLUnTillDb = actionUBL.getChildActions().get(0);
+			checkForkReleaseAction(actionUBLUnTillDb, actionUBL, TestEnvironment.PRODUCT_UNTILLDB);
+		}
+		
+		{
+			// unTill
+			env.generateFeatureCommit(env.getUnTillVCS(), null, "feature commit");
+			SCMWorkflow wf = new SCMWorkflow(TestEnvironment.PRODUCT_UNTILL);
+			IAction actionUnTill = wf.getProductionReleaseAction(null);
+			
+			checkForkReleaseAction(actionUnTill, null, TestEnvironment.PRODUCT_UNTILL);
+			assertTrue(actionUnTill.getChildActions().size() == 2);
+			
+			IAction actionUBL = actionUnTill.getChildActions().get(0);
+			checkForkReleaseAction(actionUBL, actionUnTill, TestEnvironment.PRODUCT_UBL);
+			assertTrue(actionUBL.getChildActions().size() == 1);
+			
+			IAction actionUnTillDb = actionUnTill.getChildActions().get(1);
+			checkForkReleaseAction(actionUnTillDb, actionUnTill, TestEnvironment.PRODUCT_UNTILLDB);
+			
+			IAction actionUBLUnTillDb = actionUBL.getChildActions().get(0);
+			checkForkReleaseAction(actionUBLUnTillDb, actionUBL, TestEnvironment.PRODUCT_UNTILLDB);
+		}
 	}
 }

@@ -39,7 +39,7 @@ public class Version {
 				}
 				prefix = ver.substring(0, ver.lastIndexOf(".") + 1);
 			} else {
-				prefix ="0.";
+				prefix = "0.";
 				minor = ver;
 				patch = ".0";
 			}
@@ -64,17 +64,17 @@ public class Version {
 		}
 		return toReleaseString() + snapshot;
 	}
-	
+
 	public String toReleaseString() {
 		checkMinor();
 		return prefix + minor + patch;
 	}
-	
+
 	public String toPreviousMinorRelease() {
 		checkMinor();
 		return prefix + Integer.toString(Integer.parseInt(minor) - 1) + patch;
 	}
-	
+
 	public String toNextMinorRelease() {
 		checkMinor();
 		return prefix + Integer.toString(Integer.parseInt(minor) + 1) + patch;
@@ -85,7 +85,7 @@ public class Version {
 			throw new IllegalArgumentException("wrong version" + verStr);
 		}
 	}
-	
+
 	public String toNextMinorSnapshot() {
 		checkMinor();
 		return prefix + Integer.toString(Integer.parseInt(minor) + 1) + patch + snapshot;
@@ -93,21 +93,24 @@ public class Version {
 
 	@Override
 	public boolean equals(Object o) {
-		if (this == o) return true;
-		if (o == null || getClass() != o.getClass()) return false;
-
+		if (this == o)
+			return true;
+		if (o == null || getClass() != o.getClass())
+			return false;
 		Version version = (Version) o;
-
 		return !(verStr != null ? !verStr.equals(version.verStr) : version.verStr != null);
-
 	}
 
 	@Override
 	public int hashCode() {
 		return verStr != null ? verStr.hashCode() : 0;
 	}
-	
+
 	public Boolean isEmpty() {
 		return isEmpty;
+	}
+	
+	public boolean isExactVersion() {
+		return !minor.isEmpty();
 	}
 }

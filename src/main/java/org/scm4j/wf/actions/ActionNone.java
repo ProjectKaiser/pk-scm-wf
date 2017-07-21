@@ -16,6 +16,7 @@ public class ActionNone extends ActionAbstract {
 
 	@Override
 	public Object execute(IProgress progress) {
+		progress.createNestedProgress(reason);
 		return null;
 	}
 	

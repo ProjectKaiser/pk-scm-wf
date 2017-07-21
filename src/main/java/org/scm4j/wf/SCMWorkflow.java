@@ -1,5 +1,9 @@
 package org.scm4j.wf;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.ListIterator;
+
 import org.scm4j.wf.actions.ActionError;
 import org.scm4j.wf.actions.ActionNone;
 import org.scm4j.wf.actions.IAction;
@@ -11,10 +15,12 @@ import org.scm4j.wf.conf.Component;
 import org.scm4j.wf.conf.VCSRepositories;
 import org.scm4j.wf.exceptions.EComponentConfig;
 import org.scm4j.wf.exceptions.EConfig;
-import org.scm4j.wf.scmactions.*;
-
-import java.util.ArrayList;
-import java.util.List;
+import org.scm4j.wf.scmactions.ProductionReleaseReason;
+import org.scm4j.wf.scmactions.SCMActionForkReleaseBranch;
+import org.scm4j.wf.scmactions.SCMActionProductionRelease;
+import org.scm4j.wf.scmactions.SCMActionTagRelease;
+import org.scm4j.wf.scmactions.SCMActionUseExistingTag;
+import org.scm4j.wf.scmactions.SCMActionUseLastReleaseVersion;
 
 public class SCMWorkflow implements ISCMWorkflow {
 
@@ -63,37 +69,48 @@ public class SCMWorkflow implements ISCMWorkflow {
 		if (hasErrorActions(childActions)) {
 			return new ActionNone(comp, childActions, "has child error actions");
 		}
+		
 		if (db.getStatus() == DevelopBranchStatus.MODIFIED) {
 			ReleaseBranch rb = new ReleaseBranch(comp, repos);
+			
 			if (!rb.exists()) {
+				skipAllBuilds(childActions);
 				return new SCMActionForkReleaseBranch(comp, childActions);
 			}
 			return new SCMActionProductionRelease(comp, childActions, ProductionReleaseReason.NEW_FEATURES);
 		}
-		if (hasSignificantActions(childActions) || hasNewerDependencies(childActions, mDeps)) {
+		
+		if (hasSignificantActions(childActions)) {
 			ReleaseBranch rb = new ReleaseBranch(comp, repos);
 			if (!rb.exists()) {
+				skipAllBuilds(childActions);
 				return new SCMActionForkReleaseBranch(comp, childActions);
 			}
 			return new SCMActionProductionRelease(comp, childActions, ProductionReleaseReason.NEW_DEPENDENCIES);
 		}
+		
 		return new SCMActionUseLastReleaseVersion(comp, childActions);
 	}
 
-	private boolean hasNewerDependencies(List<IAction> actions, List<Component> mDeps) {
-		for (IAction action : actions) {
-			if (action instanceof SCMActionUseLastReleaseVersion) {
-				SCMActionUseLastReleaseVersion verAction = (SCMActionUseLastReleaseVersion) action;
-				for (Component comp : mDeps) {
-					if (comp.getCoords().getName().equals(verAction.getName()) && (comp.getVersion() == null || !comp.getVersion()
-							.toPreviousMinorRelease().equals(verAction.getVersion().toPreviousMinorRelease()))) {
-						return true;
-					}
-				}
+	private void skipAllBuilds(List<IAction> childActions) {		
+		ListIterator<IAction> li = childActions.listIterator();
+		IAction action;
+		while (li.hasNext()) {
+			action = li.next();
+			if (action instanceof SCMActionProductionRelease) {
+				li.set(new ActionNone(((SCMActionProductionRelease) action).getComponent(), action.getChildActions(), "build skipped because not all parent components forked"));
 			}
 		}
-		return false;
 	}
+
+//	private boolean hasForkActions(List<IAction> childActions) {
+//		for (IAction childAction : childActions) {
+//			if (childAction instanceof SCMActionForkReleaseBranch) {
+//				return true;
+//			}
+//		}
+//		return false;
+//	}
 
 	private boolean hasErrorActions(List<IAction> actions) {
 		for (IAction action : actions) {

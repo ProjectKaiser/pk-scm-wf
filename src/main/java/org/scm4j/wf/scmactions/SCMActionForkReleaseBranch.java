@@ -1,5 +1,8 @@
 package org.scm4j.wf.scmactions;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.wf.LogTag;
@@ -8,17 +11,20 @@ import org.scm4j.wf.actions.ActionAbstract;
 import org.scm4j.wf.actions.IAction;
 import org.scm4j.wf.actions.results.ActionResultReleaseBranchFork;
 import org.scm4j.wf.branchstatus.DevelopBranch;
+import org.scm4j.wf.branchstatus.DevelopBranchStatus;
+import org.scm4j.wf.branchstatus.ReleaseBranch;
 import org.scm4j.wf.conf.Component;
 import org.scm4j.wf.conf.MDepsFile;
-
-import java.util.ArrayList;
-import java.util.List;
+import org.scm4j.wf.conf.VCSRepositories;
 
 public class SCMActionForkReleaseBranch extends ActionAbstract {
+	
+	private final VCSRepositories repos = VCSRepositories.loadVCSRepositories();
 
 	public SCMActionForkReleaseBranch(Component comp, List<IAction> childActions) {
 		super(comp, childActions);
 	}
+	
 
 	@Override
 	public Object execute(IProgress progress) {
@@ -35,31 +41,39 @@ public class SCMActionForkReleaseBranch extends ActionAbstract {
 			}
 			
 			// Are we forked already?
-			ActionResultReleaseBranchFork existingResult = (ActionResultReleaseBranchFork) getResult(getName(), ActionResultReleaseBranchFork.class);
-			if (existingResult != null) {
-				progress.reportStatus("release branch already forked: " + existingResult.getBranchName()); 
-				return existingResult;
-			}
-			
-			IVCS vcs = comp.getVcsRepository().getVcs();
+			ReleaseBranch rb = new ReleaseBranch(comp, repos);
 			DevelopBranch db = new DevelopBranch(comp);
-			
-			// fork branch
-			vcs.createBranch(db.getName(), db.getReleaseBranchName(), "release branch created");
-			progress.reportStatus("branch " + db.getReleaseBranchName() + " created");
+			IVCS vcs = comp.getVcsRepository().getVcs();
+			if (rb.exists()) {
+				progress.reportStatus("release branch already forked: " + rb.getReleaseBranchName());
+			} else {
+				vcs.createBranch(db.getName(), db.getReleaseBranchName(), "release branch created");
+				progress.reportStatus("branch " + db.getReleaseBranchName() + " created");
+			}
 			
 			// let's fix mdep versions
 			List<Component> actualMDeps = db.getMDeps();
-			List<Component> frozenMDeps = new ArrayList<>();
-			for (Component actualMDep : actualMDeps) {
-				DevelopBranch dbActualMDep = new DevelopBranch(actualMDep);
-				String futureRelaseVersionStr = dbActualMDep.getVersion().toReleaseString();
-				Component frozenMDep = actualMDep.cloneWithDifferentVersion(futureRelaseVersionStr);
-				frozenMDeps.add(frozenMDep);
+			if (actualMDeps.isEmpty()) {
+				progress.reportStatus("no mdeps");
+			} else {
+				if (mDepsFrozen()) {
+					progress.reportStatus("mdeps are frozen already");
+				} else {
+					List<Component> frozenMDeps = new ArrayList<>();
+					for (Component actualMDep : actualMDeps) {
+						DevelopBranch dbActualMDep = new DevelopBranch(actualMDep);
+						
+						String futureRelaseVersionStr = dbActualMDep.getStatus() == DevelopBranchStatus.MODIFIED ? dbActualMDep.getVersion().toReleaseString() :
+							dbActualMDep.getVersion().toPreviousMinorRelease();
+								
+						Component frozenMDep = actualMDep.cloneWithDifferentVersion(futureRelaseVersionStr);
+						frozenMDeps.add(frozenMDep);
+					}
+					MDepsFile frozenMDepsFile = new MDepsFile(frozenMDeps);
+					vcs.setFileContent(db.getReleaseBranchName(), SCMWorkflow.MDEPS_FILE_NAME, frozenMDepsFile.toFileContent(), LogTag.SCM_MDEPS);
+					progress.reportStatus("mdeps frozen");
+				}
 			}
-			MDepsFile frozenMDepsFile = new MDepsFile(frozenMDeps);
-			vcs.setFileContent(db.getReleaseBranchName(), SCMWorkflow.MDEPS_FILE_NAME, frozenMDepsFile.toFileContent(), LogTag.SCM_MDEPS);
-			progress.reportStatus("mdeps frozen");
 
 			return new ActionResultReleaseBranchFork(db.getReleaseBranchName());
 		} catch (Throwable t) {
@@ -67,5 +81,23 @@ public class SCMActionForkReleaseBranch extends ActionAbstract {
 			return t;
 		}  
 	}
+	
+	private boolean mDepsFrozen() {
+		ReleaseBranch rb = new ReleaseBranch(comp, repos);
+		List<Component> mDeps = rb.getMDeps();
+		if (mDeps.isEmpty()) {
+			return false;
+		}
+		for (Component mDep : mDeps) {
+			if (!mDep.getVersion().isExactVersion()) {
+				return false;
+			}
+		}
+		return true;
+	}
 
+	@Override
+	public String toString() {
+		return comp.getCoords().toString();
+	}
 }

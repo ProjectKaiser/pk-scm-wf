@@ -1,18 +1,16 @@
 package org.scm4j.wf.conf;
 
-import org.scm4j.vcs.api.IVCS;
-import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
-import org.scm4j.vcs.api.workingcopy.VCSWorkspace;
-import org.scm4j.wf.IVCSFactory;
-import org.scm4j.wf.VCSFactory;
-import org.scm4j.wf.exceptions.EConfig;
-import org.yaml.snakeyaml.Yaml;
-import org.yaml.snakeyaml.error.YAMLException;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
+import org.scm4j.vcs.api.workingcopy.VCSWorkspace;
+import org.scm4j.wf.VCSFactory;
+import org.scm4j.wf.exceptions.EConfig;
+import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.error.YAMLException;
 
 public class VCSRepositories {
 	public static final String DEFAULT_VCS_WORKSPACE_DIR = new File(System.getProperty("user.home"),
@@ -23,11 +21,6 @@ public class VCSRepositories {
 	private final IVCSWorkspace ws;
 
 	private static IConfigSource configSource = new EnvVarsConfigSource();
-	private static IVCSFactory vcsFactory = new VCSFactory();
-
-	public static void setVCSFactory(IVCSFactory vcsFactory) {
-		VCSRepositories.vcsFactory = vcsFactory;
-	}
 
 	public static void setConfigSource(IConfigSource configSource) {
 		VCSRepositories.configSource = configSource;
@@ -69,8 +62,9 @@ public class VCSRepositories {
 		String devBranch = (String) getPropByName(urls, componentName, "devBranch", VCSRepository.DEFAULT_DEV_BRANCH);
 		String releaseBranchPrefix = (String) getPropByName(urls, componentName, "releaseBanchPrefix",
 				VCSRepository.DEFAULT_RELEASE_BRANCH_PREFIX);
-		IVCS vcs = vcsFactory.getVCS(type, credentials, url, ws);
-		return new VCSRepository(componentName, url, credentials, type, devBranch, ws, releaseBranchPrefix, vcs);
+		String builder = (String) getPropByName(urls, componentName, "builder", null);
+		return new VCSRepository(componentName, url, credentials, type, devBranch, releaseBranchPrefix, VCSFactory.getVCS(type, credentials, url, ws), 
+				BuilderFactory.getBuilder(builder));
 	}
 
 	private VCSType getVCSType(String type, String url) {
