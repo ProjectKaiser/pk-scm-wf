@@ -42,7 +42,7 @@ public class ConfigTest {
 	public void testNoReposEnvVar() {
 		creds = "";
 		try {
-			new SCMWorkflow("eu.untill:unTill");
+			new SCMWorkflow();
 			fail();
 		} catch (EConfig e) {
 			assertNull(e.getCause());
@@ -52,8 +52,9 @@ public class ConfigTest {
 	@Test
 	public void testMalformedReposUrl() {
 		repos = "malformed url";
+		
 		try {
-			new SCMWorkflow("eu.untill:unTill");
+			new SCMWorkflow();
 			fail();
 		} catch (EConfig e) {
 			assertTrue(e.getCause() instanceof MalformedURLException);
@@ -64,7 +65,7 @@ public class ConfigTest {
 	public void testWrongReposLocation() {
 		repos = "file:///c:/wrong/Location";
 		try {
-			new SCMWorkflow("eu.untill:unTill");
+			new SCMWorkflow();
 			fail();
 		} catch (EConfig e) {
 			assertTrue(e.getCause() instanceof IOException);
@@ -80,7 +81,7 @@ public class ConfigTest {
 		repos = "file:///" + vcsRepos.getAbsolutePath().replace("\\", "/");
 		creds = "file:///" + vcsRepos.getAbsolutePath().replace("\\", "/");
 		try { 
-			new SCMWorkflow("eu.untill:unTill");
+			new SCMWorkflow();
 			fail();
 		} catch (EConfig e) {
 			assertNotNull(e.getCause());

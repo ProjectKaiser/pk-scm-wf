@@ -20,7 +20,7 @@ import org.scm4j.wf.conf.VCSRepositories;
 import org.scm4j.wf.exceptions.EComponentConfig;
 import org.scm4j.wf.scmactions.ProductionReleaseReason;
 import org.scm4j.wf.scmactions.SCMActionForkReleaseBranch;
-import org.scm4j.wf.scmactions.SCMActionProductionRelease;
+import org.scm4j.wf.scmactions.SCMActionBuild;
 import org.scm4j.wf.scmactions.SCMActionUseLastReleaseVersion;
 
 public class SCMWorkflowGetActionTest {
@@ -76,8 +76,8 @@ public class SCMWorkflowGetActionTest {
 		SCMWorkflow wf = new SCMWorkflow(compUnTill, repos);
 		List<IAction> childActions = new ArrayList<IAction>();
 		IAction action = wf.getProductionReleaseActionRoot(childActions);
-		assertTrue(action instanceof SCMActionProductionRelease);
-		SCMActionProductionRelease actionRelease = (SCMActionProductionRelease) action;
+		assertTrue(action instanceof SCMActionBuild);
+		SCMActionBuild actionRelease = (SCMActionBuild) action;
 		assertEquals(actionRelease.getReason(), ProductionReleaseReason.NEW_FEATURES);
 		assertEquals(compUnTill, actionRelease.getComponent());
 		assertEquals(childActions, actionRelease.getChildActions());
@@ -88,10 +88,10 @@ public class SCMWorkflowGetActionTest {
 		DevelopBranch db = new DevelopBranch(compUnTill);
 		env.getUnTillVCS().createBranch(db.getName(), db.getReleaseBranchName(), "release branch created");
 		SCMWorkflow wf = new SCMWorkflow(compUnTill, repos);
-		List<IAction> childActions = Arrays.<IAction>asList(new SCMActionProductionRelease(compUBL, new ArrayList<IAction>(), ProductionReleaseReason.NEW_FEATURES));
+		List<IAction> childActions = Arrays.<IAction>asList(new SCMActionBuild(compUBL, new ArrayList<IAction>(), ProductionReleaseReason.NEW_FEATURES));
 		IAction action = wf.getProductionReleaseActionRoot(childActions);
-		assertTrue(action instanceof SCMActionProductionRelease);
-		SCMActionProductionRelease actionRelease = (SCMActionProductionRelease) action;
+		assertTrue(action instanceof SCMActionBuild);
+		SCMActionBuild actionRelease = (SCMActionBuild) action;
 		assertEquals(actionRelease.getReason(), ProductionReleaseReason.NEW_DEPENDENCIES);
 		assertEquals(compUnTill, actionRelease.getComponent());
 		assertEquals(childActions, actionRelease.getChildActions());
@@ -102,10 +102,10 @@ public class SCMWorkflowGetActionTest {
 		DevelopBranch db = new DevelopBranch(compUnTill);
 		env.getUnTillVCS().createBranch(db.getName(), db.getReleaseBranchName(), "release branch created");
 		SCMWorkflow wf = new SCMWorkflow(compUnTill, repos);
-		List<IAction> childActions = Arrays.<IAction>asList(new SCMActionProductionRelease(compUBL, new ArrayList<IAction>(), ProductionReleaseReason.NEW_FEATURES));
+		List<IAction> childActions = Arrays.<IAction>asList(new SCMActionBuild(compUBL, new ArrayList<IAction>(), ProductionReleaseReason.NEW_FEATURES));
 		IAction action = wf.getProductionReleaseActionRoot(childActions);
-		assertTrue(action instanceof SCMActionProductionRelease);
-		SCMActionProductionRelease actionRelease = (SCMActionProductionRelease) action;
+		assertTrue(action instanceof SCMActionBuild);
+		SCMActionBuild actionRelease = (SCMActionBuild) action;
 		assertEquals(actionRelease.getReason(), ProductionReleaseReason.NEW_DEPENDENCIES);
 		assertEquals(compUnTill, actionRelease.getComponent());
 		assertEquals(childActions, actionRelease.getChildActions());
@@ -136,7 +136,7 @@ public class SCMWorkflowGetActionTest {
 	@Test
 	public void testForkBranch() {
 		SCMWorkflow wf = new SCMWorkflow(compUnTill, repos);
-		List<IAction> childActions = Arrays.<IAction>asList(new SCMActionProductionRelease(compUBL, new ArrayList<IAction>(), ProductionReleaseReason.NEW_FEATURES));
+		List<IAction> childActions = Arrays.<IAction>asList(new SCMActionBuild(compUBL, new ArrayList<IAction>(), ProductionReleaseReason.NEW_FEATURES));
 		IAction action = wf.getProductionReleaseActionRoot(childActions);
 		assertTrue(action instanceof SCMActionForkReleaseBranch);
 		SCMActionForkReleaseBranch forkRelease = (SCMActionForkReleaseBranch) action;

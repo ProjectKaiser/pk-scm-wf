@@ -13,11 +13,11 @@ import org.scm4j.wf.branchstatus.ReleaseBranch;
 import org.scm4j.wf.branchstatus.ReleaseBranchStatus;
 import org.scm4j.wf.conf.Component;
 import org.scm4j.wf.conf.VCSRepositories;
+import org.scm4j.wf.conf.Version;
 import org.scm4j.wf.exceptions.EComponentConfig;
-import org.scm4j.wf.exceptions.EConfig;
 import org.scm4j.wf.scmactions.ProductionReleaseReason;
 import org.scm4j.wf.scmactions.SCMActionForkReleaseBranch;
-import org.scm4j.wf.scmactions.SCMActionProductionRelease;
+import org.scm4j.wf.scmactions.SCMActionBuild;
 import org.scm4j.wf.scmactions.SCMActionTagRelease;
 import org.scm4j.wf.scmactions.SCMActionUseExistingTag;
 import org.scm4j.wf.scmactions.SCMActionUseLastReleaseVersion;
@@ -29,39 +29,51 @@ public class SCMWorkflow implements ISCMWorkflow {
 	public static final String MDEPS_CHANGED_FILE_NAME = "mdeps-changed";
 
 	private final VCSRepositories repos;
-	private final Component comp;
-	private final DevelopBranch db;
-	private final List<Component> mDeps;
-
-	public SCMWorkflow(String coords, VCSRepositories repos) {
-		this(new Component(coords, repos), repos);
-	}
-
-	public SCMWorkflow(Component comp, VCSRepositories repos) {
+	
+	public SCMWorkflow(VCSRepositories repos) {
 		this.repos = repos;
-		this.comp = comp;
-		db = new DevelopBranch(comp);
-		mDeps = db.getMDeps();
 	}
 	
-	public SCMWorkflow(String coords) throws EConfig {
-		this(coords, VCSRepositories.loadVCSRepositories());
+	public SCMWorkflow() {
+		this(VCSRepositories.loadVCSRepositories());
 	}
-
-	@Override
-	public IAction getProductionReleaseAction(List<IAction> childActions) {
-		if (childActions == null) {
-			childActions = new ArrayList<>();
-		}
+	
+	@Override 
+	public IAction getProductionReleaseAction(String componentName) {
+		return getProductionReleaseAction(new Component(componentName, repos));
+	}
+	
+	public IAction getProductionReleaseAction(Component comp) {
+		List<IAction> childActions = new ArrayList<>();
+		DevelopBranch db = new DevelopBranch(comp);
+		List<Component> mDeps = db.getMDeps();
 		
 		for (Component mDep : mDeps) {
-			ISCMWorkflow childWorkflow = new SCMWorkflow(mDep, repos);
-			childActions.add(childWorkflow.getProductionReleaseAction(null));
+			childActions.add(getProductionReleaseAction(mDep));
 		}
-		return getProductionReleaseActionRoot(childActions);
+		
+		return getProductionReleaseActionRoot(comp, childActions, mDeps);
+	}
+	
+	public ReleaseBranch getReleaseBranch(Component comp) {
+		DevelopBranch db = new DevelopBranch(comp);
+		Version ver = db.getVersion();
+		
+		ReleaseBranch rb = new ReleaseBranch(comp, ver, repos);
+		ReleaseBranch prevRb = rb;
+		for (int i = 0; i <= 1; i++) {
+			ReleaseBranchStatus rbs = rb.getStatus();
+			if (rbs == ReleaseBranchStatus.BUILT || rbs == ReleaseBranchStatus.TAGGED) {
+				return prevRb;
+			}
+			prevRb = rb;
+			rb = new ReleaseBranch(comp, new Version(ver.toPreviousMinorRelease()), repos);
+		}
+		return new ReleaseBranch(comp, repos);
 	}
 
-	public IAction getProductionReleaseActionRoot(List<IAction> childActions) {
+	public IAction getProductionReleaseActionRoot(Component comp, List<IAction> childActions, List<Component> mDeps) {
+		DevelopBranch db = new DevelopBranch(comp);
 		if (!db.hasVersionFile()) {
 			throw new EComponentConfig("no " + VER_FILE_NAME + " file for " + comp.toString());
 		}
@@ -71,22 +83,27 @@ public class SCMWorkflow implements ISCMWorkflow {
 		}
 		
 		if (db.getStatus() == DevelopBranchStatus.MODIFIED) {
-			ReleaseBranch rb = new ReleaseBranch(comp, repos);
+			ReleaseBranch rb = getReleaseBranch(comp);
 			
 			if (!rb.exists()) {
 				skipAllBuilds(childActions);
 				return new SCMActionForkReleaseBranch(comp, childActions);
 			}
-			return new SCMActionProductionRelease(comp, childActions, ProductionReleaseReason.NEW_FEATURES);
+			return new SCMActionBuild(comp, childActions, ProductionReleaseReason.NEW_FEATURES, rb.getVersion());
+		} else if (db.getStatus() == DevelopBranchStatus.BRANCHED) {
+			ReleaseBranch rb = new ReleaseBranch(comp, repos);
+			if (rb.getStatus() != ReleaseBranchStatus.BUILT && rb.getStatus() != ReleaseBranchStatus.TAGGED) {
+				
+			}
 		}
 		
 		if (hasSignificantActions(childActions)) {
-			ReleaseBranch rb = new ReleaseBranch(comp, repos);
+			ReleaseBranch rb = getReleaseBranch(comp);
 			if (!rb.exists()) {
 				skipAllBuilds(childActions);
 				return new SCMActionForkReleaseBranch(comp, childActions);
 			}
-			return new SCMActionProductionRelease(comp, childActions, ProductionReleaseReason.NEW_DEPENDENCIES);
+			return new SCMActionBuild(comp, childActions, ProductionReleaseReason.NEW_DEPENDENCIES, rb.getVersion());
 		}
 		
 		return new SCMActionUseLastReleaseVersion(comp, childActions);
@@ -97,8 +114,8 @@ public class SCMWorkflow implements ISCMWorkflow {
 		IAction action;
 		while (li.hasNext()) {
 			action = li.next();
-			if (action instanceof SCMActionProductionRelease) {
-				li.set(new ActionNone(((SCMActionProductionRelease) action).getComponent(), action.getChildActions(), "build skipped because not all parent components forked"));
+			if (action instanceof SCMActionBuild) {
+				li.set(new ActionNone(((SCMActionBuild) action).getComponent(), action.getChildActions(), "build skipped because not all parent components forked"));
 			}
 		}
 	}
@@ -131,18 +148,18 @@ public class SCMWorkflow implements ISCMWorkflow {
 	}
 
 	@Override
-	public IAction getTagReleaseAction(List<IAction> childActions) {
-		if (childActions == null) {
-			childActions = new ArrayList<>();
-		}
+	public IAction getTagReleaseAction(Component comp) {
+		List<IAction> childActions = new ArrayList<>();
+		DevelopBranch db = new DevelopBranch(comp);
+		List<Component> mDeps = db.getMDeps();
+		
 		for (Component mDep : mDeps) {
-			ISCMWorkflow childWorkflow = new SCMWorkflow(mDep, repos);
-			childActions.add(childWorkflow.getTagReleaseAction(null));
+			childActions.add(getTagReleaseAction(mDep));
 		}
-		return getTagReleaseActionRoot(childActions);
+		return getTagReleaseActionRoot(comp, childActions);
 	}
 
-	private IAction getTagReleaseActionRoot(List<IAction> childActions) {
+	private IAction getTagReleaseActionRoot(Component comp, List<IAction> childActions) {
 		ReleaseBranch rb = new ReleaseBranch(comp, repos);
 		if (rb.getStatus() == ReleaseBranchStatus.TAGGED) {
 			return new SCMActionUseExistingTag(comp, childActions, rb.getReleaseTag());

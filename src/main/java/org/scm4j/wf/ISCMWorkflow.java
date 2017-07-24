@@ -1,13 +1,12 @@
 package org.scm4j.wf;
 
-import java.util.List;
-
 import org.scm4j.wf.actions.IAction;
+import org.scm4j.wf.conf.Component;
 
 public interface ISCMWorkflow {
 
-	IAction getProductionReleaseAction(List<IAction> childActions);
+	IAction getProductionReleaseAction(String componentName);
 	
-	IAction getTagReleaseAction(List<IAction> childActions);
+	IAction getTagReleaseAction(Component comp);
 
 }

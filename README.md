@@ -56,3 +56,13 @@ try (IProgress progress = new ProgressConsole(action.getName(), ">>> ", "<<< "))
 	action.execute(progress);
 }
 ```
+# Workflow
+- call
+- get last unbuilt version
+- Release Branch of last unbuilt version missing? - fork
+- Release Branch of last unbuilt version exists? - build
+
+# Last unbuilt version determination
+- take current trunk version
+- Release Branch status is BUILT? 
+- 

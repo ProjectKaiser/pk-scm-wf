@@ -16,6 +16,7 @@ import org.scm4j.wf.branchstatus.ReleaseBranch;
 import org.scm4j.wf.conf.Component;
 import org.scm4j.wf.conf.MDepsFile;
 import org.scm4j.wf.conf.VCSRepositories;
+import org.scm4j.wf.conf.Version;
 
 public class SCMActionForkReleaseBranch extends ActionAbstract {
 	
@@ -43,6 +44,7 @@ public class SCMActionForkReleaseBranch extends ActionAbstract {
 			// Are we forked already?
 			ReleaseBranch rb = new ReleaseBranch(comp, repos);
 			DevelopBranch db = new DevelopBranch(comp);
+			Version currentVer = db.getVersion();
 			IVCS vcs = comp.getVcsRepository().getVcs();
 			if (rb.exists()) {
 				progress.reportStatus("release branch already forked: " + rb.getReleaseBranchName());
@@ -50,6 +52,7 @@ public class SCMActionForkReleaseBranch extends ActionAbstract {
 				vcs.createBranch(db.getName(), db.getReleaseBranchName(), "release branch created");
 				progress.reportStatus("branch " + db.getReleaseBranchName() + " created");
 			}
+			String newBranchName = db.getReleaseBranchName();
 			
 			// let's fix mdep versions
 			List<Component> actualMDeps = db.getMDeps();
@@ -74,6 +77,14 @@ public class SCMActionForkReleaseBranch extends ActionAbstract {
 					progress.reportStatus("mdeps frozen");
 				}
 			}
+			
+			String verContent = currentVer.toNextMinorSnapshot();
+			vcs.setFileContent(db.getName(), SCMWorkflow.VER_FILE_NAME, verContent, LogTag.SCM_VER + " " + verContent);
+			progress.reportStatus("change to version " + verContent + " in trunk");
+
+			String newVersion = currentVer.toReleaseString();
+			vcs.setFileContent(newBranchName, SCMWorkflow.VER_FILE_NAME, newVersion, LogTag.SCM_VER + " " + newVersion);
+			progress.reportStatus("change to version " + newVersion + " in branch " + newBranchName);
 
 			return new ActionResultReleaseBranchFork(db.getReleaseBranchName());
 		} catch (Throwable t) {
