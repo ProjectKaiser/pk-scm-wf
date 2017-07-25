@@ -154,6 +154,11 @@ public class SCMWorkflow implements ISCMWorkflow {
 			List<Component> mDepsFromPrevRB = prevRB.getMDeps();
 			// если в предыдущей версии mDeps вообще не было (или самого предыдущего релиза нет) - значит будем строиццо
 			if (mDepsFromPrevRB.isEmpty() && hasSignificantActions(childActions)) { // надо для testSkipBuildsIfParentUnforked
+				
+				
+				// !!! так вот. Тут надо по-любому выпускать новый релиз NEW_DEPENDENCIES. А то непонятно как в UBL учесть выпущенный отдельно untilldb
+				
+				
 				ReleaseBranchStatus rbs = rb.getStatus();
 				if (rbs == ReleaseBranchStatus.MISSING) {
 					skipAllBuilds(childActions);
