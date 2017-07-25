@@ -79,7 +79,7 @@ public class Version {
 		checkMinor();
 		return prefix + Integer.toString(Integer.parseInt(minor) + 1) + patch;
 	}
-
+	
 	private void checkMinor() {
 		if (!StringUtils.isNumeric(minor)) {
 			throw new IllegalArgumentException("wrong version" + verStr);

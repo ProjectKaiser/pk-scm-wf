@@ -14,8 +14,8 @@ public class SCMActionUseLastReleaseVersion extends ActionAbstract {
 	
 	private final Version version;
 
-	public SCMActionUseLastReleaseVersion(Component comp, List<IAction> actions) {
-		super(comp, actions);
+	public SCMActionUseLastReleaseVersion(Component comp, List<IAction> childActions) {
+		super(comp, childActions);
 		DevelopBranch db = new DevelopBranch(comp);
 		version = db.getVersion();
 	}

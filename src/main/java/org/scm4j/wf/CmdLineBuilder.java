@@ -2,6 +2,7 @@ package org.scm4j.wf;
 
 import java.io.File;
 
+import org.scm4j.wf.conf.Component;
 import org.scm4j.wf.exceptions.EBuilder;
 
 public class CmdLineBuilder implements IBuilder {
@@ -9,7 +10,7 @@ public class CmdLineBuilder implements IBuilder {
 	private final String cmdLine;
 
 	@Override
-	public void build(File workingFolder) throws EBuilder {
+	public void build(Component comp, File workingFolder) throws EBuilder {
 		try {
 			Runtime.getRuntime().exec(cmdLine, new String[0], workingFolder);
 		} catch (Exception e) {

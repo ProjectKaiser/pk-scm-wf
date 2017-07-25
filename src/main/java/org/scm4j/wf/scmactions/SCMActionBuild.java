@@ -1,25 +1,18 @@
 package org.scm4j.wf.scmactions;
 
+import java.util.List;
+
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.vcs.api.IVCS;
-import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.vcs.api.workingcopy.IVCSLockedWorkingCopy;
-import org.scm4j.wf.LogTag;
-import org.scm4j.wf.SCMWorkflow;
-import org.scm4j.wf.Utils;
 import org.scm4j.wf.actions.ActionAbstract;
 import org.scm4j.wf.actions.IAction;
 import org.scm4j.wf.actions.results.ActionResultVersion;
-import org.scm4j.wf.branchstatus.DevelopBranch;
 import org.scm4j.wf.branchstatus.ReleaseBranch;
 import org.scm4j.wf.branchstatus.ReleaseBranchStatus;
 import org.scm4j.wf.conf.Component;
-import org.scm4j.wf.conf.MDepsFile;
 import org.scm4j.wf.conf.VCSRepositories;
 import org.scm4j.wf.conf.Version;
-
-import java.util.ArrayList;
-import java.util.List;
 
 	
 public class SCMActionBuild extends ActionAbstract {
@@ -126,7 +119,7 @@ public class SCMActionBuild extends ActionAbstract {
 				try (IVCSLockedWorkingCopy lwc = vcs.getWorkspace().getVCSRepositoryWorkspace(vcs.getRepoUrl()).getVCSLockedWorkingCopy()) {
 					lwc.setCorrupted(true); // use lwc only once
 					vcs.checkout(rb.getReleaseBranchName(), lwc.getFolder().getPath());
-					comp.getVcsRepository().getBuilder().build(lwc.getFolder());
+					comp.getVcsRepository().getBuilder().build(comp, lwc.getFolder());
 				}
 			}
 			
@@ -134,7 +127,8 @@ public class SCMActionBuild extends ActionAbstract {
 			 * теперь поставим теги
 			 */
 			
-			vcs.createTag(branchName, tagName, tagMessage)
+			
+			vcs.createTag(rb.getReleaseBranchName(), targetVersion.toReleaseString(), "build tagged");
 			
 			ActionResultVersion res = new ActionResultVersion(comp.getName(), targetVersion.toReleaseString(), true,
 					rb.getReleaseBranchName());

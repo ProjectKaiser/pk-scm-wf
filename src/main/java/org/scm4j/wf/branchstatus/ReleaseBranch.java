@@ -102,8 +102,7 @@ public class ReleaseBranch {
 
 	private boolean isLastCommitHasSCM_BUILTLogTag(Component comp) {
 		IVCS vcs = comp.getVcsRepository().getVcs();
-		ReleaseBranch rb = new ReleaseBranch(comp, repos);
-		List<VCSCommit> log = vcs.log(rb.getReleaseBranchName(), 1);
+		List<VCSCommit> log = vcs.log(getReleaseBranchName(), 1);
 		if (log != null && !log.isEmpty()) {
 			VCSCommit lastCommit = log.get(0);
 			return lastCommit.getLogMessage().contains(LogTag.SCM_BUILT);
@@ -135,7 +134,7 @@ public class ReleaseBranch {
 
 	@Override
 	public String toString() {
-		return "ReleaseBranch [comp=" + comp + "]";
+		return "ReleaseBranch [comp=" + comp + ", targetVersion=" + getVersion() + "]";
 	}
 
 	public VCSTag getReleaseTag() {
@@ -155,7 +154,7 @@ public class ReleaseBranch {
 	}
 	
 	public List<Component> getMDeps() {
-		if (!vcs.fileExists(getReleaseBranchName(), SCMWorkflow.MDEPS_FILE_NAME)) {
+		if (!vcs.getBranches().contains(getReleaseBranchName()) || !vcs.fileExists(getReleaseBranchName(), SCMWorkflow.MDEPS_FILE_NAME)) {
 			return new ArrayList<>();
 		}
 		

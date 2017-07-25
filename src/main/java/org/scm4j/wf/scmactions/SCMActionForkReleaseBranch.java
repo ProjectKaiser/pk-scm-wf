@@ -13,6 +13,7 @@ import org.scm4j.wf.actions.results.ActionResultReleaseBranchFork;
 import org.scm4j.wf.branchstatus.DevelopBranch;
 import org.scm4j.wf.branchstatus.DevelopBranchStatus;
 import org.scm4j.wf.branchstatus.ReleaseBranch;
+import org.scm4j.wf.branchstatus.ReleaseBranchStatus;
 import org.scm4j.wf.conf.Component;
 import org.scm4j.wf.conf.MDepsFile;
 import org.scm4j.wf.conf.VCSRepositories;
@@ -26,6 +27,30 @@ public class SCMActionForkReleaseBranch extends ActionAbstract {
 		super(comp, childActions);
 	}
 	
+	public ReleaseBranch getReleaseBranch(Component comp) {
+		DevelopBranch db = new DevelopBranch(comp);
+		Version ver = db.getVersion();
+		
+		ReleaseBranch rb = new ReleaseBranch(comp, ver, repos);
+		ReleaseBranch prevRb = rb;
+		for (int i = 0; i <= 1; i++) {
+			ReleaseBranchStatus rbs = rb.getStatus();
+			/**
+			 * что значит статус BRANCHED? Это значит, что мы только отвели ветку, ничего больше не сделав или нет mDeps. Тогда нам надо  
+			 */
+			
+			if (rbs == ReleaseBranchStatus.BUILT || rbs == ReleaseBranchStatus.TAGGED) {
+				return prevRb;
+			}
+			
+			if (rbs != ReleaseBranchStatus.MISSING) {
+				return rb;
+			}
+			prevRb = rb;
+			rb = new ReleaseBranch(comp, new Version(ver.toPreviousMinorRelease()), repos);
+		}
+		return new ReleaseBranch(comp, repos);
+	}
 
 	@Override
 	public Object execute(IProgress progress) {
@@ -42,18 +67,19 @@ public class SCMActionForkReleaseBranch extends ActionAbstract {
 			}
 			
 			// Are we forked already?
-			ReleaseBranch rb = new ReleaseBranch(comp, repos);
+			ReleaseBranch rb = getReleaseBranch(comp); //new ReleaseBranch(comp, repos);
 			DevelopBranch db = new DevelopBranch(comp);
-			Version currentVer = db.getVersion();
+			Version currentVer = rb.getVersion();
 			IVCS vcs = comp.getVcsRepository().getVcs();
 			if (rb.exists()) {
 				progress.reportStatus("release branch already forked: " + rb.getReleaseBranchName());
+				return new ActionResultReleaseBranchFork(rb.getReleaseBranchName());
 			} else {
-				vcs.createBranch(db.getName(), db.getReleaseBranchName(), "release branch created");
-				progress.reportStatus("branch " + db.getReleaseBranchName() + " created");
+				vcs.createBranch(db.getName(), rb.getReleaseBranchName(), "release branch created");
+				progress.reportStatus("branch " + rb.getReleaseBranchName() + " created");
 			}
-			String newBranchName = db.getReleaseBranchName();
-			
+			String newBranchName = rb.getReleaseBranchName();
+
 			// let's fix mdep versions
 			List<Component> actualMDeps = db.getMDeps();
 			if (actualMDeps.isEmpty()) {
@@ -73,7 +99,7 @@ public class SCMActionForkReleaseBranch extends ActionAbstract {
 						frozenMDeps.add(frozenMDep);
 					}
 					MDepsFile frozenMDepsFile = new MDepsFile(frozenMDeps);
-					vcs.setFileContent(db.getReleaseBranchName(), SCMWorkflow.MDEPS_FILE_NAME, frozenMDepsFile.toFileContent(), LogTag.SCM_MDEPS);
+					vcs.setFileContent(rb.getReleaseBranchName(), SCMWorkflow.MDEPS_FILE_NAME, frozenMDepsFile.toFileContent(), LogTag.SCM_MDEPS);
 					progress.reportStatus("mdeps frozen");
 				}
 			}
@@ -86,7 +112,7 @@ public class SCMActionForkReleaseBranch extends ActionAbstract {
 			vcs.setFileContent(newBranchName, SCMWorkflow.VER_FILE_NAME, newVersion, LogTag.SCM_VER + " " + newVersion);
 			progress.reportStatus("change to version " + newVersion + " in branch " + newBranchName);
 
-			return new ActionResultReleaseBranchFork(db.getReleaseBranchName());
+			return new ActionResultReleaseBranchFork(rb.getReleaseBranchName());
 		} catch (Throwable t) {
 			progress.reportStatus("execution error: " + t.toString() + ": " + t.getMessage());
 			return t;
