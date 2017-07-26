@@ -1,5 +1,5 @@
 package org.scm4j.wf.scmactions;
 
-public enum ProductionReleaseReason {
+public enum ReleaseReason {
 	NEW_FEATURES, NEW_DEPENDENCIES
 }

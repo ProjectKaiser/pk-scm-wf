@@ -70,6 +70,6 @@ public class DevelopBranch {
 
 	@Override
 	public String toString() {
-		return "DevelopBranch [comp=" + comp + "]";
+		return "DevelopBranch [comp=" + comp + ", status=" + getStatus() + "]";
 	}
 }

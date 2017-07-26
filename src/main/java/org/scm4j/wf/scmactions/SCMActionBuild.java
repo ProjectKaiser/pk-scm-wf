@@ -16,16 +16,20 @@ import org.scm4j.wf.conf.Version;
 
 	
 public class SCMActionBuild extends ActionAbstract {
-	private final ProductionReleaseReason reason;
+	private final ReleaseReason reason;
 	private final Version targetVersion;
 
-	public SCMActionBuild(Component comp, List<IAction> childActions, ProductionReleaseReason reason, Version targetVersion) {
+	public SCMActionBuild(Component comp, List<IAction> childActions, ReleaseReason reason, Version targetVersion) {
 		super(comp, childActions);
 		this.reason = reason;
 		this.targetVersion = targetVersion;
 	}
 
-	public ProductionReleaseReason getReason() {
+	public Version getTargetVersion() {
+		return targetVersion;
+	}
+
+	public ReleaseReason getReason() {
 		return reason;
 	}
 
@@ -45,7 +49,7 @@ public class SCMActionBuild extends ActionAbstract {
 			
 			Object nestedResult;
 			for (IAction action : childActions) {
-				try (IProgress nestedProgress = progress.createNestedProgress(action.getName())) {
+				try (IProgress nestedProgress = progress.createNestedProgress(action.toString())) {
 					nestedResult = action.execute(nestedProgress);
 					if (nestedResult instanceof Throwable) {
 						return nestedResult;
@@ -145,7 +149,7 @@ public class SCMActionBuild extends ActionAbstract {
 
 	@Override
 	public String toString() {
-		return comp.getCoords().toString() + ": " + reason.toString();
+		return "build " + comp.getCoords().toString() + ", " + reason.toString();
 	}
 
 }

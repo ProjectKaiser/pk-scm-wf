@@ -134,7 +134,7 @@ public class ReleaseBranch {
 
 	@Override
 	public String toString() {
-		return "ReleaseBranch [comp=" + comp + ", targetVersion=" + getVersion() + "]";
+		return "ReleaseBranch [comp=" + comp + ", targetVersion=" + getVersion() + ", status=" + getStatus() + "]";
 	}
 
 	public VCSTag getReleaseTag() {

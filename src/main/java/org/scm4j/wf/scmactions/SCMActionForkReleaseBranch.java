@@ -22,9 +22,11 @@ import org.scm4j.wf.conf.Version;
 public class SCMActionForkReleaseBranch extends ActionAbstract {
 	
 	private final VCSRepositories repos = VCSRepositories.loadVCSRepositories();
+	private final ReleaseReason reason;
 
-	public SCMActionForkReleaseBranch(Component comp, List<IAction> childActions) {
+	public SCMActionForkReleaseBranch(Component comp, List<IAction> childActions, ReleaseReason reason) {
 		super(comp, childActions);
+		this.reason = reason;
 	}
 	
 	public ReleaseBranch getReleaseBranch(Component comp) {
@@ -57,7 +59,7 @@ public class SCMActionForkReleaseBranch extends ActionAbstract {
 		try {
 			Object nestedResult;
 			for (IAction action : childActions) {
-				try (IProgress nestedProgress = progress.createNestedProgress(action.getName())) {
+				try (IProgress nestedProgress = progress.createNestedProgress(action.toString())) {
 					nestedResult = action.execute(nestedProgress);
 					if (nestedResult instanceof Throwable) {
 						return nestedResult;
@@ -135,6 +137,6 @@ public class SCMActionForkReleaseBranch extends ActionAbstract {
 
 	@Override
 	public String toString() {
-		return comp.getCoords().toString();
+		return "fork " + comp.getCoords().toString() + ", " + reason.toString();
 	}
 }

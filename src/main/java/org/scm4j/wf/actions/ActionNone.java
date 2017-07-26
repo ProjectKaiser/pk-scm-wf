@@ -26,7 +26,7 @@ public class ActionNone extends ActionAbstract {
 	
 	@Override
 	public String toString() {
-		return "Nothing should be done [" + getName() + "]. Reason: " + reason;
+		return "none " + comp.getCoords().toString() + ". Reason: " + reason;
 	}
 
 }

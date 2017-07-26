@@ -24,7 +24,7 @@ public class SCMActionUseExistingTag extends ActionAbstract {
 	
 	@Override
 	public String toString() {
-		return "using existing tag for " + getName() + ": " + tag.toString();
+		return "using existing tag for " + comp.getCoords().toString() + ": " + tag.toString();
 	}
 
 	@Override
@@ -32,6 +32,4 @@ public class SCMActionUseExistingTag extends ActionAbstract {
 		progress.reportStatus(toString());
 		return new ActionResultTag(getName(), tag);
 	}
-
-	
 }

@@ -32,7 +32,7 @@ public class SCMActionTagRelease extends ActionAbstract {
 			
 			Object nestedResult;
 			for (IAction action : childActions) {
-				try (IProgress nestedProgress = progress.createNestedProgress(action.getName())) {
+				try (IProgress nestedProgress = progress.createNestedProgress(action.toString())) {
 					nestedResult = action.execute(nestedProgress);
 					if (nestedResult instanceof Throwable) {
 						return nestedResult;
@@ -55,5 +55,10 @@ public class SCMActionTagRelease extends ActionAbstract {
 			progress.error(t.getMessage());
 			return t;
 		}
+	}
+	
+	@Override
+	public String toString() {
+		return "tag " +  comp.getCoords().toString();
 	}
 }

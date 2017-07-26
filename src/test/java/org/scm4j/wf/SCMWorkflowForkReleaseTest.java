@@ -74,7 +74,7 @@ public class SCMWorkflowForkReleaseTest {
 		expected.put(UNTILLDB, SCMActionUseLastReleaseVersion.class);
 		checkChildActionsTypes(action, expected);
 		
-		try (IProgress progress = new ProgressConsole(UNTILL, ">>> ", "<<< ")) {
+		try (IProgress progress = new ProgressConsole(action.toString(), ">>> ", "<<< ")) {
 			action.execute(progress);
 		}
 		
@@ -118,7 +118,7 @@ public class SCMWorkflowForkReleaseTest {
 		expected.put(UNTILLDB, SCMActionUseLastReleaseVersion.class);
 		checkChildActionsTypes(action, expected);
 		
-		try (IProgress progress = new ProgressConsole(UNTILL, ">>> ", "<<< ")) {
+		try (IProgress progress = new ProgressConsole(action.toString(), ">>> ", "<<< ")) {
 			action.execute(progress);
 		}
 		
@@ -156,7 +156,7 @@ public class SCMWorkflowForkReleaseTest {
 		expected.put(UNTILLDB, SCMActionForkReleaseBranch.class);
 		checkChildActionsTypes(action, expected);
 		
-		try (IProgress progress = new ProgressConsole(UNTILL, ">>> ", "<<< ")) {
+		try (IProgress progress = new ProgressConsole(action.toString(), ">>> ", "<<< ")) {
 			action.execute(progress);
 		}
 		
@@ -192,7 +192,7 @@ public class SCMWorkflowForkReleaseTest {
 		expected.put(UNTILLDB, SCMActionForkReleaseBranch.class);
 		checkChildActionsTypes(action, expected);
 		
-		try (IProgress progress = new ProgressConsole(UNTILLDB, ">>> ", "<<< ")) {
+		try (IProgress progress = new ProgressConsole(action.toString(), ">>> ", "<<< ")) {
 			action.execute(progress);
 		}
 
@@ -208,7 +208,7 @@ public class SCMWorkflowForkReleaseTest {
 		expected.put(UBL, SCMActionForkReleaseBranch.class);
 		checkChildActionsTypes(action, expected);
 		
-		try (IProgress progress = new ProgressConsole(UNTILL, ">>> ", "<<< ")) {
+		try (IProgress progress = new ProgressConsole(action.toString(), ">>> ", "<<< ")) {
 			action.execute(progress);
 		}
 		

@@ -2,6 +2,7 @@ package org.scm4j.wf;
 
 import static org.junit.Assert.*;
 
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -10,12 +11,15 @@ import org.junit.Before;
 import org.junit.Test;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.commons.progress.ProgressConsole;
+import org.scm4j.wf.actions.ActionNone;
 import org.scm4j.wf.actions.IAction;
 import org.scm4j.wf.branchstatus.DevelopBranch;
 import org.scm4j.wf.branchstatus.ReleaseBranch;
 import org.scm4j.wf.conf.Component;
 import org.scm4j.wf.conf.VCSRepositories;
+import org.scm4j.wf.scmactions.ReleaseReason;
 import org.scm4j.wf.scmactions.SCMActionBuild;
+import org.scm4j.wf.scmactions.SCMActionForkReleaseBranch;
 import org.scm4j.wf.scmactions.SCMActionUseLastReleaseVersion;
 
 public class SCMWorkflowBuildTest {
@@ -61,7 +65,49 @@ public class SCMWorkflowBuildTest {
 	}
 	
 	@Test
-	public void testBuildUnTilDb() throws Exception {
+	public void testBuildUBLAndUnTillDb() throws Exception {
+		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), "feature added");
+		SCMWorkflow wf = new SCMWorkflow();
+		IAction action = wf.getProductionReleaseAction(UNTILLDB);
+		
+		// fork unTillDb release
+		action.execute(new NullProgress()); 
+		
+		// fork UBL
+		action = wf.getProductionReleaseAction(UBL);
+		try (IProgress progress = new ProgressConsole(action.toString(), ">>> ", "<<< ")) {;
+			action.execute(progress);
+		}
+		Expectations exp = new Expectations();
+		exp.put(UBL, SCMActionForkReleaseBranch.class);
+		exp.put(UBL, "reason", ReleaseReason.NEW_DEPENDENCIES);
+		exp.put(UNTILLDB, ActionNone.class);
+		checkChildActionsTypes(action, exp);
+		assertTrue(TestBuilder.getBuilders().isEmpty());
+		
+		// build UBL and unTillDb
+		action = wf.getProductionReleaseAction(UBL);
+		exp = new Expectations();
+		exp.put(UBL, SCMActionBuild.class);
+		exp.put(UBL, "reason", ReleaseReason.NEW_DEPENDENCIES);
+		exp.put(UBL, "targetVersion", rbUBL.getVersion());
+		exp.put(UNTILLDB, SCMActionBuild.class);
+		exp.put(UNTILLDB, "reason", ReleaseReason.NEW_FEATURES);
+		exp.put(UNTILLDB, "targetVersion", rbUnTillDb.getVersion());
+		checkChildActionsTypes(action, exp);
+		
+		try (IProgress progress = new ProgressConsole(action.toString(), ">>> ", "<<< ")) {
+			action.execute(progress);
+		}
+		
+		assertNotNull(TestBuilder.getBuilders());
+		assertTrue(TestBuilder.getBuilders().size() == 2);
+		assertNotNull(TestBuilder.getBuilders().get(UNTILLDB));
+		assertNotNull(TestBuilder.getBuilders().get(UBL));
+	}
+	
+	@Test
+	public void testBuildUnTillDb() throws Exception {
 		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), "feature added");
 		SCMWorkflow wf = new SCMWorkflow();
 		IAction action = wf.getProductionReleaseAction(UNTILLDB);
@@ -70,46 +116,74 @@ public class SCMWorkflowBuildTest {
 		action.execute(new NullProgress()); 
 		
 		action = wf.getProductionReleaseAction(UNTILLDB);
-		Map<String, Class<?>> expected = new HashMap<>();
-		expected.put(UNTILLDB, SCMActionBuild.class);
-		checkChildActionsTypes(action, expected);
+		Expectations exp = new Expectations();
+		exp.put(UNTILLDB, SCMActionBuild.class);
+		exp.put(UNTILLDB, "reason", ReleaseReason.NEW_FEATURES);
+		checkChildActionsTypes(action, exp);
 
 		// build unTillDb
 		assertTrue(TestBuilder.getBuilders().isEmpty());
-		try (IProgress progress = new ProgressConsole(UNTILLDB, ">>> ", "<<< ")) {
+		try (IProgress progress = new ProgressConsole(action.toString(), ">>> ", "<<< ")) {
 			action.execute(progress);
 		}
 		
-		assertNotNull(TestBuilder.getBuilders());
-		assertNotNull(TestBuilder.getBuilders().get(UNTILLDB));
+//		assertNotNull(TestBuilder.getBuilders());
+//		assertTrue(TestBuilder.getBuilders().size() == 1);
+//		assertNotNull(TestBuilder.getBuilders().get(UNTILLDB));
+//		
+//		// fork unTill. Built unTillDb should be used. UBL and unTill must be forked due of new dependencies
+//		action = wf.getProductionReleaseAction(UNTILL);
+//		exp = new Expectations();
+//		exp.put(UNTILLDB, ActionNone.class);
+//		exp.put(UBL, SCMActionForkReleaseBranch.class);
+//		exp.put(UBL, "reason", ReleaseReason.NEW_DEPENDENCIES);
+//		exp.put(UNTILL, SCMActionForkReleaseBranch.class);
+//		exp.put(UNTILL, "reason", ReleaseReason.NEW_DEPENDENCIES);
+//		checkChildActionsTypes(action, exp);
+//		
+//		TestBuilder.setBuilders(new HashMap<String, TestBuilder>());
+//		try (IProgress progress = new ProgressConsole(action.toString(), ">>> ", "<<< ")) {
+//			action.execute(progress);
+//		}
+//		assertNotNull(TestBuilder.getBuilders());
+//		assertTrue(TestBuilder.getBuilders().size() == 0);
 		
-		// build unTill. Built unTillDb should be used. UBL and unTill must be released due of new dependencies
-		action = wf.getProductionReleaseAction(UNTILL);
-		expected.clear();
-		expected.put(UNTILLDB, SCMActionUseLastReleaseVersion.class);
-		expected.put(UBL, SCMActionBuild.class);
-		expected.put(UNTILL, SCMActionBuild.class);
-		checkChildActionsTypes(action, expected);
-		
-		TestBuilder.setBuilders(new HashMap<String, TestBuilder>());
-		try (IProgress progress = new ProgressConsole(UNTILL, ">>> ", "<<< ")) {
-			action.execute(progress);
-		}
-		assertNotNull(TestBuilder.getBuilders());
-		assertTrue(TestBuilder.getBuilders().size() == 2);
-		assertNull(TestBuilder.getBuilders().get(UNTILLDB));
-		assertNotNull(TestBuilder.getBuilders().get(UNTILL));
-		assertNotNull(TestBuilder.getBuilders().get(UBL));
 	}
 	
-	private void checkChildActionsTypes(IAction action, Map<String, Class<?>> expected) {
+	private void checkChildActionsTypes(IAction action, Expectations exp) {
 		for (IAction nestedAction : action.getChildActions()) {
-			checkChildActionsTypes(nestedAction, expected);
+			checkChildActionsTypes(nestedAction, exp);
 		}
-
-		if (!action.getClass().isAssignableFrom(expected.get(action.getName()))) {
-			fail (action.toString() + " check failed. Expected: " + expected.get(action.getName()) + ", actual: " + action.getClass());
+		if (!exp.getProps().containsKey(action.getName())) {
+			fail("unexpected action: " + action.getName());
+		}
+		Map<String, Object> props = exp.getProps().get(action.getName());
+		Class<?> clazz = (Class<?>) props.get("class");
+		if (!action.getClass().isAssignableFrom(clazz)) {
+			fail("expected: " + clazz.toString() + ", actual: " + action.getClass().toString());
+		}
+		if (props.size() <= 1) {
+			return; 
+		}
+		
+		for (Method method : action.getClass().getMethods()) {
+			if (!method.getName().startsWith("get")) {
+				continue;
+			}
+			for (String propName : props.keySet()) {
+				if (method.getName().toLowerCase().equals("get" + propName)) {
+					Object propValue;
+					try {
+						propValue = method.invoke(action);
+					} catch (Exception e) {
+						throw new RuntimeException(e);
+					}
+					if (!propValue.equals(props.get(propName))) {
+						fail (String.format("%s: property %s failed: expected %s, actual %s", action.getName(), propName, propValue, props.get(propName)));
+					}
+					continue;
+				}
+			}
 		}
 	}
-
 }

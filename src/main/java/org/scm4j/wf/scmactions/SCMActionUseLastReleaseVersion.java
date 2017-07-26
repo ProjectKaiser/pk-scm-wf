@@ -22,7 +22,7 @@ public class SCMActionUseLastReleaseVersion extends ActionAbstract {
 
 	@Override
 	public String toString() {
-		return "using last release version " + getName() + ":" + getVersion().toPreviousMinorRelease();
+		return "using last release version " + comp.getCoords().toString() + ":" + getVersion().toPreviousMinorRelease();
 	}
 
 	public Version getVersion() {
@@ -34,4 +34,5 @@ public class SCMActionUseLastReleaseVersion extends ActionAbstract {
 		progress.reportStatus(toString());
 		return new ActionResultVersion(getName(), getVersion().toPreviousMinorRelease(), false, null);
 	}
+
 }
