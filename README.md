@@ -10,7 +10,18 @@ For low vcs operations scm4j-vcs-* libraries are used
 # Terms
 - `Managable dependency` (`mdeps`)
  - Component which has its own repository and is under control, i.e. can be built, branched and uploaded to a maven repository
-  
+- Release Branch
+ - Branch the new Release is building on
+ - named Release/<version>
+ - Has Status. See [branches-statuses.md](branches-statuses.md)
+ - Can exist or be missing
+- Last Unbuilt Release Branch
+ - Oldest Release Branch of last 2 versions which not TAGGED or BUILT or MISSING
+ - Otherwise - current Release Branch
+- Last Built Release Branch
+ - Latest BUILT or TAGGED Release Branch of last 2 versions
+ - Otherwise null
+
 # Data Structure
 - [branches-statuses.md](branches-statuses.md)
 - [data-structure.md](data-structure.md)
