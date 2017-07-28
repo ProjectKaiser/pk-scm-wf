@@ -13,7 +13,7 @@ For low vcs operations scm4j-vcs-* libraries are used
 - Component
   - Artifact alias 
   - Can be Root or nested
-- Develop Branch
+- Develop Branc
   - Branch new features are commited to
   - Has version with -SNAPSHOT
   - Has full mDeps list without versions (-SNAPSHOTs only are provided)
@@ -23,6 +23,16 @@ For low vcs operations scm4j-vcs-* libraries are used
   - Has Status. See [branches-statuses.md](branches-statuses.md)
   - Can exist or be MISSING
   - Can be Completed, i.e. have BUILT or TAGGED status
+  - Can be Uncompleted, i.e. exists but have neither BUILT nor TAGGED status 
+- Current Release Branch, CRB
+  - The Release Branch with last unbuilt version or Release Branch of current Develop version (if no unbuilt versions)
+  - Examples:
+    - Commit a feature, fork new version. 
+      - Trunk has version 2.0-SNAPSHOT, Current Release Branch is Release/1.0
+      - Release/1.0 is still used although new features are commited to Dev Branch 
+    - Build (and optinaly tag) Release/1.0
+      - CRB is Release/2.0 (MISSING for now)
+    
 - Last Unbuilt Release Branch
   - Oldest Release Branch of last 2 versions which not TAGGED or BUILT or MISSING
   - Otherwise - current Release Branch
@@ -85,18 +95,18 @@ try (IProgress progress = new ProgressConsole(action.getName(), ">>> ", "<<< "))
     - Child Actions are built for all nested Components (if any)
     - Action for Root compoent is created, all child Actions are attached to it.
 - Action determination workflow
-  - If a Component's Develop Branch has new commits:
-    - If Component's Release Branch is uncompleted then Component has to be built with NEW_FEATURES reason
-    - If Component's Release Branch is MISSING or Completed then Component has to be forked with NEW_FEATURES reason
-  - If a Component's Develop Branch has no new commits and not IGNORED, i.e. is BRRANCHED
-    - If Component's Uncompleted Release Branch is MISSING then nothing should be done
-    - If Compoents's Uncompleted Release Branch is Completed then Dependencies are checked for new versions:
+  - Component's Develop Branch has new commits:
+    - Compoent's CRB is determined
+    - CRB is Uncompleted 
+      - Component has to be built with NEW_FEATURES reason
+    - CRB is MISSING or Completed 
+      - Component has to be forked with NEW_FEATURES reason
+  - Develop Branch has no new commits and not IGNORED, i.e. is BRANCHED
+    - CRB is MISSING 
+      - then nothing should be done
+    - CRB is Completed then Dependencies are checked for new versions:
       - No mDeps - nothing should be done
-      - If at least one Dependency (last forked version is taken) is not used in Uncompleted Release Branch then the Component has to be forked or built with NEW_DEPENDENCIES reason
-        - If Release Branch is MISSING then fork
-	  - Any child Build Action (just first level, recusrsion is not necessary) is replaced with Action None. 
-	  - E.g. on childs processing we took a decision to build a child. But now we sees that Root has to be forked. That means that all builds must be skipped until the entire tree fork is completed
-	- otherwise build existing Uncompleted Release Branch
+      - If at least one Dependency (last forked version is taken) is not used in CRB then the Component has to be forked with NEW_DEPENDENCIES reason
     - otherwise Compoents's build is unfinished and it has to be built with NEW_FEATURES reason (if has no mDeps) or with NEW_DEPENDENCIES reason (has mDeps)
 - Action Fork workflow
   - All child actions are executed
@@ -116,5 +126,9 @@ try (IProgress progress = new ProgressConsole(action.getName(), ">>> ", "<<< "))
   - Release Branch is checked out to a separate Locked Working Copy
   - Builder is executed withing the LWC. Standard output is reported.
   - If no errors then "build" file is created with built version content, #csm-built log tag is attached
-  
+# To do
+  - throw exception if a version is missed
+    - Have Dev Branch version 1.0 
+    - manualy changed version to 3.0
+    - Exception must be thrown because we can not determine if we used 1.0 in parent Component
   
