@@ -1,7 +1,3 @@
-[![Release](https://jitpack.io/v/scm4j/scm4j-wf.svg)](https://jitpack.io/#scm4j/scm4j-wf)
-[![Build Status](https://travis-ci.org/scm4j/scm4j-wf.svg?branch=master)](https://travis-ci.org/scm4j/scm4j-wf)
-[![Coverage Status](https://coveralls.io/repos/github/scm4j/scm4j-wf/badge.svg?branch=master)](https://coveralls.io/github/scm4j/scm4j-wf?branch=master) 
-
 # Overview
 
 Library povides API and CLI to automate such tasks as
@@ -13,10 +9,47 @@ For low vcs operations scm4j-vcs-* libraries are used
 
 # Terms
 - `Managable dependency` (`mdeps`)
-  - Component which has its own repository and is under control, i.e. can be built, branched and uploaded to a maven repository
+ - Component which has its own repository and is under control, i.e. can be built, branched and uploaded to a maven repository
+- Component
+  - Artifact alias 
+  - Can be Root or nested
+- Develop Branc
+  - Branch new features are commited to
+  - Has version with -SNAPSHOT
+  - Has full mDeps list without versions (-SNAPSHOTs only are provided)
+- Release Branch
+  - Branch the new Release is building on
+  - named Release/<version>
+  - Has Status. See [branches-statuses.md](branches-statuses.md)
+  - Can exist or be MISSING
+  - Can be Completed, i.e. have BUILT or TAGGED status
+  - Can be Uncompleted, i.e. exists but have neither BUILT nor TAGGED status 
+- Current Release Branch, CRB
+  - The Release Branch with last unbuilt version or Release Branch of current Develop version (if no unbuilt versions)
+  - Examples:
+    - Commit a feature, fork new version. 
+      - Trunk has version 2.0-SNAPSHOT, Current Release Branch is Release/1.0
+      - Release/1.0 is still used although new features are commited to Dev Branch 
+    - Build (and optinaly tag) Release/1.0
+      - CRB is Release/2.0 (MISSING for now)
+    
+- Last Unbuilt Release Branch
+  - Oldest Release Branch of last 2 versions which not TAGGED or BUILT or MISSING
+  - Otherwise - current Release Branch
+- Last Built Release Branch
+  - Latest BUILT or TAGGED Release Branch of last 2 versions
+  - Otherwise null
+- Fork (verb), To Fork Release
+  - To create a Release Branch based on Develop Branch head
   
+  
+
 # Data Structure
-Ref. [data-structure.md](data-structure.md)
+- [branches-statuses.md](branches-statuses.md)
+- [data-structure.md](data-structure.md)
+  
+- [branches-statuses.md](branches-statuses.md)
+- [data-structure.md](data-structure.md)
   
 # Artifacts  
 Ref. [artifacts.md](artifacts.md)
@@ -56,13 +89,46 @@ try (IProgress progress = new ProgressConsole(action.getName(), ">>> ", "<<< "))
 	action.execute(progress);
 }
 ```
-# Workflow
-- call
-- get last unbuilt version
-- Release Branch of last unbuilt version missing? - fork
-- Release Branch of last unbuilt version exists? - build
-
-# Last unbuilt version determination
-- take current trunk version
-- Release Branch status is BUILT? 
-- 
+# How it works
+- First pass for root component
+  - Action tree is built
+    - Child Actions are built for all nested Components (if any)
+    - Action for Root compoent is created, all child Actions are attached to it.
+- Action determination workflow
+  - Component's Develop Branch has new commits:
+    - Compoent's CRB is determined
+    - CRB is Uncompleted 
+      - Component has to be built with NEW_FEATURES reason
+    - CRB is MISSING or Completed 
+      - Component has to be forked with NEW_FEATURES reason
+  - Develop Branch has no new commits and not IGNORED, i.e. is BRANCHED
+    - CRB is MISSING 
+      - then nothing should be done
+    - CRB is Completed then Dependencies are checked for new versions:
+      - No mDeps - nothing should be done
+      - If at least one Dependency (last forked version is taken) is not used in CRB then the Component has to be forked with NEW_DEPENDENCIES reason
+    - otherwise Compoents's build is unfinished and it has to be built with NEW_FEATURES reason (if has no mDeps) or with NEW_DEPENDENCIES reason (has mDeps)
+- Action Fork workflow
+  - All child actions are executed
+  - Current Release Branch is determined
+  - If CRB exists then we are already forked. According message is reported and fork process is considered as successful
+  - Release Branch is created
+    - mDeps versions are frozen and written to Release Branch
+      - #scm-mdeps log tag is attached
+    - Minor is increased in trunk
+      - #scm-ver log tag is attached
+    - version with no -SNAPSHOT is writen to Release Branch
+      - #csm-ver log tag is attached
+- Action Build workflow
+  - All child actions are executed
+  - Current Release Branch is determined
+  - if CRB is already built then according message is reported and build process is considered as successful
+  - Release Branch is checked out to a separate Locked Working Copy
+  - Builder is executed withing the LWC. Standard output is reported.
+  - If no errors then "build" file is created with built version content, #csm-built log tag is attached
+# To do
+  - throw exception if a version is missed
+    - Have Dev Branch version 1.0 
+    - manualy changed version to 3.0
+    - Exception must be thrown because we can not determine if we used 1.0 in parent Component
+  

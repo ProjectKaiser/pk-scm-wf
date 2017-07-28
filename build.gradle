@@ -21,12 +21,12 @@ test {
 dependencies {
 	testCompile 'junit:junit:4.12'
 	testCompile 'org.mockito:mockito-all:1.9.5'
-	testCompile 'nl.jqno.equalsverifier:equalsverifier:2.3'
+	testCompile 'org.powermock:powermock-mockito-release-full:1.6.3'
+	testCompile 'org.powermock:powermock-api-mockito:1.6.3'
 
 	compile 'com.github.scm4j:scm4j-vcs-git:master-SNAPSHOT'
 	compile 'com.github.scm4j:scm4j-vcs-svn:master-SNAPSHOT'
 	compile 'com.github.scm4j:scm4j-commons:master-SNAPSHOT'
-	compile 'com.google.code.gson:gson:2.8.0'
 	compile 'com.google.guava:guava:20.0'
 	compile 'org.yaml:snakeyaml:1.18'
 }
