@@ -28,7 +28,12 @@ class CLI {
 			PrintAction pa = new PrintAction();
 			pa.print(System.out, action);
 		} else if (opt.build) {
-
+			SCMWorkflow wf = new SCMWorkflow(opt.show)
+			IAction action = wf.getProductionReleaseAction(null);
+			PrintAction pa = new PrintAction();
+			pa.print(System.out, action);
+			IProgress progress = new ProgressConsole(action.toString, ">>> ", "<<< ");
+			action.execute(progress);
 		} else if (opt.tag) {
 
 		} else {
