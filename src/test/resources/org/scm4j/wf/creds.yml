@@ -4,6 +4,6 @@ https?://url\.com.*:
 http://localhost.*:
   name: null
   password: null
-~:
+.*:
   name: guest
   password: guest

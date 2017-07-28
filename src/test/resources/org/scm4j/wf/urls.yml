@@ -5,7 +5,7 @@ my(.*):
   type: git
   releaseBanchPrefix: B
   devBranch: null
-~:
+.*:
   url: https://github.com/qwerty/$0
   type: svn
   devBranch: branches/

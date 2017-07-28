@@ -4,30 +4,31 @@ import org.scm4j.vcs.GitVCS;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
 import org.scm4j.vcs.svn.SVNVCS;
-import org.scm4j.wf.conf.VCSRepository;
+import org.scm4j.wf.conf.Credentials;
+import org.scm4j.wf.conf.VCSType;
 
 public class VCSFactory {
 
-	public static IVCS getIVCS(VCSRepository repo, IVCSWorkspace ws) {
+	public static IVCS getVCS(VCSType type, Credentials creds, String url, IVCSWorkspace ws) {
 		IVCS vcs;
-		switch (repo.getType()) {
+		switch (type) {
 		case GIT: {
-			vcs = new GitVCS(ws.getVCSRepositoryWorkspace(repo.getUrl()));
-			if (repo.getCredentials().getName() != null) {
+			vcs = new GitVCS(ws.getVCSRepositoryWorkspace(url));
+			if (creds.getName() != null) {
 					vcs.setCredentials(
-							repo.getCredentials().getName(),
-							repo.getCredentials().getPassword());
+							creds.getName(),
+							creds.getPassword());
 			}
 			break;
 		}
 		case SVN: {
-			vcs = new SVNVCS(ws.getVCSRepositoryWorkspace(repo.getUrl()),
-					repo.getCredentials() == null ? null : repo.getCredentials().getName(),
-					repo.getCredentials() == null ? null : repo.getCredentials().getPassword());
+			vcs = new SVNVCS(ws.getVCSRepositoryWorkspace(url),
+					creds == null ? null : creds.getName(),
+					creds == null ? null : creds.getPassword());
 			break;
 		}
 		default: {
-			throw new RuntimeException("Unsupported VCSTtype for repository: " + repo.toString());
+			throw new RuntimeException("Unsupported VCSTtype for repository: " + url);
 		}
 		}
 		return vcs;

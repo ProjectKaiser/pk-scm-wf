@@ -11,6 +11,7 @@ public class Version {
 	private final String snapshot;
 	private final String patch;
 	private final String verStr;
+	private final Boolean isEmpty;
 
 	public Version(String ver) {
 		verStr = ver;
@@ -19,7 +20,9 @@ public class Version {
 			prefix = "";
 			minor = "";
 			patch = "";
+			isEmpty = true;
 		} else {
+			isEmpty = false;
 			if (ver.contains(SNAPSHOT)) {
 				snapshot = SNAPSHOT;
 				ver = ver.replace(SNAPSHOT, "");
@@ -36,12 +39,12 @@ public class Version {
 				}
 				prefix = ver.substring(0, ver.lastIndexOf(".") + 1);
 			} else {
-				prefix ="0.";
+				prefix = "0.";
 				minor = ver;
 				patch = ".0";
 			}
-			if (!StringUtils.isNumeric(minor)) {
-				throw new IllegalArgumentException("wrong version" + ver);
+			if (!minor.isEmpty() && !StringUtils.isNumeric(minor)) {
+				throw new IllegalArgumentException("wrong version: " + ver);
 			}
 		}
 	}
@@ -56,29 +59,33 @@ public class Version {
 
 	@Override
 	public String toString() {
+		if (!StringUtils.isNumeric(minor)) {
+			return verStr;
+		}
 		return toReleaseString() + snapshot;
 	}
-	
+
 	public String toReleaseString() {
+		checkMinor();
 		return prefix + minor + patch;
 	}
-	
+
 	public String toPreviousMinorRelease() {
 		checkMinor();
 		return prefix + Integer.toString(Integer.parseInt(minor) - 1) + patch;
 	}
-	
+
 	public String toNextMinorRelease() {
 		checkMinor();
 		return prefix + Integer.toString(Integer.parseInt(minor) + 1) + patch;
 	}
-
+	
 	private void checkMinor() {
 		if (!StringUtils.isNumeric(minor)) {
 			throw new IllegalArgumentException("wrong version" + verStr);
 		}
 	}
-	
+
 	public String toNextMinorSnapshot() {
 		checkMinor();
 		return prefix + Integer.toString(Integer.parseInt(minor) + 1) + patch + snapshot;
@@ -86,17 +93,24 @@ public class Version {
 
 	@Override
 	public boolean equals(Object o) {
-		if (this == o) return true;
-		if (o == null || getClass() != o.getClass()) return false;
-
+		if (this == o)
+			return true;
+		if (o == null || getClass() != o.getClass())
+			return false;
 		Version version = (Version) o;
-
 		return !(verStr != null ? !verStr.equals(version.verStr) : version.verStr != null);
-
 	}
 
 	@Override
 	public int hashCode() {
 		return verStr != null ? verStr.hashCode() : 0;
+	}
+
+	public Boolean isEmpty() {
+		return isEmpty;
+	}
+	
+	public boolean isExactVersion() {
+		return !minor.isEmpty();
 	}
 }

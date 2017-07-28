@@ -1,6 +1,8 @@
 package org.scm4j.wf.conf;
 
-public class DepCoords {
+import org.apache.commons.lang3.StringUtils;
+
+public class Coords {
 
 	private final String artifactId;
 	private final String commentStr;
@@ -12,8 +14,8 @@ public class DepCoords {
 	public String getComment() {
 		return commentStr;
 	}
-
-	public DepCoords(String coordsString) {
+	
+	public Coords(String coordsString) {
 		String str = coordsString;
 
 		// Comment
@@ -21,8 +23,9 @@ public class DepCoords {
 			Integer pos = coordsString.indexOf("#");
 			
 			if (pos > 0) {
-				commentStr = str.substring(pos);
-				str = str.substring(0, pos);
+				// add spaces between valuable chars and # to comment
+				commentStr = StringUtils.difference(str.substring(0, pos).trim(), str.substring(0, pos)) + str.substring(pos); 
+				str = str.substring(0, pos).trim();
 			} else {
 				commentStr = "";
 			}
@@ -63,7 +66,7 @@ public class DepCoords {
 
 	public String toString(String versionStr) {
 		String str = versionStr + classifier + extension;
-		return getName() + (str.isEmpty() ? "" : ":" + str);
+		return getName() + (str.isEmpty() ? "" : ":" + str) + commentStr;
 	}
 	
 	public String getName() {
@@ -85,5 +88,4 @@ public class DepCoords {
 	public String getClassifier() {
 		return classifier;
 	}
-
 }

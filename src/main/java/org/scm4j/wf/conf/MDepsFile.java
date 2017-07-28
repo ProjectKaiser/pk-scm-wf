@@ -10,7 +10,7 @@ import java.util.List;
 
 public class MDepsFile {
 	
-	private List<Dep> mDeps = new ArrayList<>();
+	private List<Component> mDeps = new ArrayList<>();
 	
 	public MDepsFile(String content, VCSRepositories repos) {
 		BufferedReader br = new BufferedReader(new StringReader(content));
@@ -18,7 +18,7 @@ public class MDepsFile {
 			String str = br.readLine();
 			while (str != null) {
 				if (isLineValueable(str)) {
-					Dep dep = new Dep(str, repos);
+					Component dep = new Component(str, repos);
 					mDeps.add(dep);
 
 				}
@@ -42,7 +42,7 @@ public class MDepsFile {
 		try {
 			String str = br.readLine();
 			while (str != null) {
-				Dep dep = new Dep(str, vcsRepo);
+				Component dep = new Component(str, vcsRepo);
 				mDeps.add(dep);
 				str = br.readLine();
 			}
@@ -51,16 +51,20 @@ public class MDepsFile {
 		}
 	}
 	
+	public MDepsFile(List<Component> mDeps) {
+		this.mDeps = mDeps;
+	}
+
 	public String toFileContent() {
 		StringWriter sw = new StringWriter();
 		PrintWriter pw = new PrintWriter(sw);
-		for (Dep mDep : mDeps) {
+		for (Component mDep : mDeps) {
 			pw.println(mDep.toString());
 		}
 		return sw.toString();
 	}
 	
-	public List<Dep> getMDeps() {
+	public List<Component> getMDeps() {
 		return mDeps;
 	}
 
