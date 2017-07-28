@@ -82,10 +82,8 @@ public class SCMWorkflowBuildTest extends SCMWorkflowTestBase {
 		exp = new Expectations();
 		exp.put(UBL, SCMActionBuild.class);
 		exp.put(UBL, "reason", ReleaseReason.NEW_DEPENDENCIES);
-		exp.put(UBL, "targetVersion", rbUBLFixedVer.getVersion());
 		exp.put(UNTILLDB, SCMActionBuild.class);
 		exp.put(UNTILLDB, "reason", ReleaseReason.NEW_FEATURES);
-		exp.put(UNTILLDB, "targetVersion", rbUnTillDbFixedVer.getVersion());
 		checkChildActionsTypes(action, exp);
 		
 		try (IProgress progress = new ProgressConsole(action.toString(), ">>> ", "<<< ")) {
@@ -111,7 +109,6 @@ public class SCMWorkflowBuildTest extends SCMWorkflowTestBase {
 		Expectations exp = new Expectations();
 		exp.put(UNTILLDB, SCMActionBuild.class);
 		exp.put(UNTILLDB, "reason", ReleaseReason.NEW_FEATURES);
-		exp.put(UNTILLDB, "targetVersion", rbUnTillDbFixedVer.getVersion());
 		checkChildActionsTypes(action, exp);
 
 		// build unTillDb

@@ -5,14 +5,17 @@ import java.util.List;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.workingcopy.IVCSLockedWorkingCopy;
+import org.scm4j.wf.LogTag;
 import org.scm4j.wf.actions.ActionAbstract;
 import org.scm4j.wf.actions.IAction;
 import org.scm4j.wf.actions.results.ActionResultVersion;
+import org.scm4j.wf.branch.DevelopBranch;
 import org.scm4j.wf.branch.ReleaseBranch;
 import org.scm4j.wf.branch.ReleaseBranchStatus;
 import org.scm4j.wf.conf.Component;
 import org.scm4j.wf.conf.VCSRepositories;
 import org.scm4j.wf.conf.Version;
+import org.scm4j.wf.exceptions.EBuilder;
 
 	
 public class SCMActionBuild extends ActionAbstract {
@@ -39,8 +42,10 @@ public class SCMActionBuild extends ActionAbstract {
 			
 			IVCS vcs = getVCS();
 			VCSRepositories repos = VCSRepositories.loadVCSRepositories();
-			ReleaseBranch rb = new ReleaseBranch(comp, targetVersion, repos);
-			if (rb.getStatus() == ReleaseBranchStatus.BUILT) {
+			DevelopBranch db = new DevelopBranch(comp);
+			ReleaseBranch rb = db.getCurrentReleaseBranch(repos);
+			ReleaseBranchStatus rbs = rb.getStatus();
+			if (rbs == ReleaseBranchStatus.BUILT || rbs == ReleaseBranchStatus.TAGGED) {
 				progress.reportStatus("version " + rb.getVersion().toString() + " already built");
 				return new ActionResultVersion(comp.getName(), rb.getVersion().toString(), true, rb.getReleaseBranchName());
 			}
@@ -58,98 +63,34 @@ public class SCMActionBuild extends ActionAbstract {
 				addResult(action.getName(), nestedResult);
 			}
 			
-//			// Are we built already?
-//			ActionResultVersion existingResult = (ActionResultVersion) getResult(getName(), ActionResultVersion.class);
-//			if (existingResult != null) {
-//				progress.reportStatus("using already built version " + existingResult.getVersion());
-//				return existingResult;
-//			}
-			
-			// We have a new versions map. Will write it to mdeps on the ground
-//			ActionResultVersion existingResult;
-//			VCSCommit newVersionStartsFromCommit;
-//			List<String> mDepsChanged = new ArrayList<>();
-//			if (vcs.fileExists(devBranch.getName(), SCMWorkflow.MDEPS_FILE_NAME)) {
-//				String mDepsContent = vcs.getFileContent(devBranch.getName(), SCMWorkflow.MDEPS_FILE_NAME);
-//				MDepsFile mDepsFile = new MDepsFile(mDepsContent, comp.getVcsRepository());
-//				List<String> mDepsOut = new ArrayList<>();
-//				String mDepOut;
-//				for (Component mDep : mDepsFile.getMDeps()) {
-//					existingResult = (ActionResultVersion) getResult(mDep.getName(), ActionResultVersion.class);
-//					mDepOut = "";
-//					if (existingResult != null) {
-//						if (existingResult.getIsNewBuild()) {
-//							mDepOut = mDep.getCoords().toString(existingResult.getVersion());
-//						} else {
-//							if (!existingResult.getVersion().equals(mDep.getCoords().getVersion().toReleaseString())) {
-//								mDepOut = mDep.getCoords().toString(existingResult.getVersion());
-//							} 
-//						}
-//					} 
-//					if (mDepOut.isEmpty()) {
-//						mDepOut = mDep.toString();
-//					} else {
-//						mDepsChanged.add(mDepOut);
-//					}
-//					mDepsOut.add(mDepOut);
-//				}
-//				progress.reportStatus("new mdeps generated");
-//				
-//				String mDepsOutContent = Utils.stringsToString(mDepsOut);
-//				newVersionStartsFromCommit = vcs.setFileContent(devBranch.getName(), SCMWorkflow.MDEPS_FILE_NAME, 
-//						mDepsOutContent, LogTag.SCM_MDEPS);
-//				if (newVersionStartsFromCommit == VCSCommit.EMPTY) {
-//					newVersionStartsFromCommit = vcs.getHeadCommit(devBranch.getName());
-//					progress.reportStatus("mdeps file is not changed. Going to branch from " + newVersionStartsFromCommit);
-//				} else {
-//					progress.reportStatus("mdeps updated in trunk, revision " + newVersionStartsFromCommit);
-//				}
-//			} else {
-//				newVersionStartsFromCommit = vcs.getHeadCommit(devBranch.getName());
-//				progress.reportStatus("no mdeps. Going to branch from head " + newVersionStartsFromCommit);
-//			}
-
-			
-			
-//			if (!mDepsChanged.isEmpty()) {
-//				vcs.setFileContent(newBranchName, SCMWorkflow.MDEPS_CHANGED_FILE_NAME, Utils.stringsToString(mDepsChanged), 
-//						LogTag.SCM_IGNORE);
-//				progress.reportStatus("mdeps-changed is written to branch " + newBranchName);
-//			}
 			
 			if (comp.getVcsRepository().getBuilder() == null) {
-				progress.reportStatus("builder is undefined");
+				throw new EBuilder("no builder defined");
 			} else {
 				try (IVCSLockedWorkingCopy lwc = vcs.getWorkspace().getVCSRepositoryWorkspace(vcs.getRepoUrl()).getVCSLockedWorkingCopy()) {
 					lwc.setCorrupted(true); // use lwc only once
+					progress.reportStatus(String.format("checking out %s into %s", getName(), lwc.getFolder().getPath()));
 					vcs.checkout(rb.getReleaseBranchName(), lwc.getFolder().getPath());
 					comp.getVcsRepository().getBuilder().build(comp, lwc.getFolder(), progress);
 				}
 			}
 			
-			/**
-			 * теперь поставим теги
-			 */
-			
-			
-			vcs.createTag(rb.getReleaseBranchName(), targetVersion.toReleaseString(), "build tagged");
+			vcs.setFileContent(rb.getReleaseBranchName(), "build", targetVersion.toReleaseString(), LogTag.SCM_BUILT + " " + targetVersion.toReleaseString());
 			
 			ActionResultVersion res = new ActionResultVersion(comp.getName(), targetVersion.toReleaseString(), true,
 					rb.getReleaseBranchName());
 			progress.reportStatus(comp.getName() + " " + res.getVersion() + " is built in " + rb.getReleaseBranchName());
-			//if (parentAction == null) {
-				addResult(getName(), res); 
-			//}
+			addResult(getName(), res); 
 			return res;
 		} catch (Throwable t) {
-			progress.reportStatus("execution error: " + t.toString() + ": " + t.getMessage());
+			progress.error("execution error: " + t.toString() + ": " + t.getMessage());
 			return t;
 		} 
 	}
 
 	@Override
 	public String toString() {
-		return "build " + comp.getCoords().toString() + ", " + reason.toString();
+		return "build " + comp.getCoords().toString() + ", targetVersion=" + targetVersion.toString() + ", " + reason.toString();
 	}
 
 }

@@ -74,4 +74,21 @@ public class DevelopBranch {
 	public String toString() {
 		return "DevelopBranch [comp=" + comp + ", status=" + getStatus() + "]";
 	}
+	
+	public ReleaseBranch getCurrentReleaseBranch(VCSRepositories repos) {
+		DevelopBranch db = new DevelopBranch(comp);
+		Version ver = db.getVersion();
+		
+		ReleaseBranch rb = new ReleaseBranch(comp, new Version(ver.toPreviousMinorRelease()), repos);
+		ReleaseBranch oldestRB = null;
+		for (int i = 0; i <= 1; i++) {
+			ReleaseBranchStatus rbs = rb.getStatus();
+			
+			if (rbs != ReleaseBranchStatus.MISSING && rbs != ReleaseBranchStatus.BUILT && rbs != ReleaseBranchStatus.TAGGED) {
+				oldestRB = rb;
+			}
+			rb = new ReleaseBranch(comp, new Version(ver.toPreviousMinorRelease()), repos);
+		}
+		return oldestRB != null ? oldestRB : new ReleaseBranch(comp, repos);
+	}
 }

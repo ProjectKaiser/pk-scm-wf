@@ -13,7 +13,6 @@ import org.scm4j.wf.actions.results.ActionResultReleaseBranchFork;
 import org.scm4j.wf.branch.DevelopBranch;
 import org.scm4j.wf.branch.DevelopBranchStatus;
 import org.scm4j.wf.branch.ReleaseBranch;
-import org.scm4j.wf.branch.ReleaseBranchStatus;
 import org.scm4j.wf.conf.Component;
 import org.scm4j.wf.conf.MDepsFile;
 import org.scm4j.wf.conf.VCSRepositories;
@@ -33,31 +32,6 @@ public class SCMActionForkReleaseBranch extends ActionAbstract {
 		return reason;
 	}
 	
-	public ReleaseBranch getReleaseBranch(Component comp) {
-		DevelopBranch db = new DevelopBranch(comp);
-		Version ver = db.getVersion();
-		
-		ReleaseBranch rb = new ReleaseBranch(comp, ver, repos);
-		ReleaseBranch prevRb = rb;
-		for (int i = 0; i <= 1; i++) {
-			ReleaseBranchStatus rbs = rb.getStatus();
-			/**
-			 * что значит статус BRANCHED? Это значит, что мы только отвели ветку, ничего больше не сделав или нет mDeps. Тогда нам надо  
-			 */
-			
-			if (rbs == ReleaseBranchStatus.BUILT || rbs == ReleaseBranchStatus.TAGGED) {
-				return prevRb;
-			}
-			
-			if (rbs != ReleaseBranchStatus.MISSING) {
-				return rb;
-			}
-			prevRb = rb;
-			rb = new ReleaseBranch(comp, new Version(ver.toPreviousMinorRelease()), repos);
-		}
-		return new ReleaseBranch(comp, repos);
-	}
-
 	@Override
 	public Object execute(IProgress progress) {
 		try {
@@ -73,8 +47,8 @@ public class SCMActionForkReleaseBranch extends ActionAbstract {
 			}
 			
 			// Are we forked already?
-			ReleaseBranch rb = getReleaseBranch(comp); //new ReleaseBranch(comp, repos);
 			DevelopBranch db = new DevelopBranch(comp);
+			ReleaseBranch rb = db.getCurrentReleaseBranch(repos);
 			Version currentVer = rb.getVersion();
 			IVCS vcs = comp.getVcsRepository().getVcs();
 			if (rb.exists()) {
@@ -141,6 +115,6 @@ public class SCMActionForkReleaseBranch extends ActionAbstract {
 
 	@Override
 	public String toString() {
-		return "fork " + comp.getCoords().toString() + ", " + reason.toString();
+		return "fork " + comp.getCoords().toString() + " " + new DevelopBranch(comp).getCurrentReleaseBranch(repos).getReleaseBranchName() + ", " + reason.toString();
 	}
 }

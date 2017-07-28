@@ -91,7 +91,7 @@ public class ReleaseBranch {
 
 	public boolean exists() {
 		String releaseBranchName = getReleaseBranchName();
-		Set<String> branches = vcs.getBranches();
+		Set<String> branches = vcs.getBranches(comp.getVcsRepository().getReleaseBranchPrefix());
 		return branches.contains(releaseBranchName);
 	}
 
@@ -143,7 +143,7 @@ public class ReleaseBranch {
 	}
 	
 	public List<Component> getMDeps() {
-		if (!vcs.getBranches().contains(getReleaseBranchName()) || !vcs.fileExists(getReleaseBranchName(), SCMWorkflow.MDEPS_FILE_NAME)) {
+		if (!vcs.getBranches(comp.getVcsRepository().getReleaseBranchPrefix()).contains(getReleaseBranchName()) || !vcs.fileExists(getReleaseBranchName(), SCMWorkflow.MDEPS_FILE_NAME)) {
 			return new ArrayList<>();
 		}
 		

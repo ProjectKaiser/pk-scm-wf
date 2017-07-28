@@ -69,22 +69,22 @@ public class SCMWorkflow implements ISCMWorkflow {
 		return null;
 	}
 	
-	public ReleaseBranch getLastUnbuiltReleaseBranch(Component comp) {
-		DevelopBranch db = new DevelopBranch(comp);
-		Version ver = db.getVersion();
-		
-		ReleaseBranch rb = new ReleaseBranch(comp, new Version(ver.toPreviousMinorRelease()), repos);
-		ReleaseBranch oldestRB = null;
-		for (int i = 0; i <= 1; i++) {
-			ReleaseBranchStatus rbs = rb.getStatus();
-			
-			if (rbs != ReleaseBranchStatus.MISSING && rbs != ReleaseBranchStatus.BUILT && rbs != ReleaseBranchStatus.TAGGED) {
-				oldestRB = rb;
-			}
-			rb = new ReleaseBranch(comp, new Version(ver.toPreviousMinorRelease()), repos);
-		}
-		return oldestRB != null ? oldestRB : new ReleaseBranch(comp, repos);
-	}
+//	public ReleaseBranch getLastUnbuiltReleaseBranch(Component comp) {
+//		DevelopBranch db = new DevelopBranch(comp);
+//		Version ver = db.getVersion();
+//		
+//		ReleaseBranch rb = new ReleaseBranch(comp, new Version(ver.toPreviousMinorRelease()), repos);
+//		ReleaseBranch oldestRB = null;
+//		for (int i = 0; i <= 1; i++) {
+//			ReleaseBranchStatus rbs = rb.getStatus();
+//			
+//			if (rbs != ReleaseBranchStatus.MISSING && rbs != ReleaseBranchStatus.BUILT && rbs != ReleaseBranchStatus.TAGGED) {
+//				oldestRB = rb;
+//			}
+//			rb = new ReleaseBranch(comp, new Version(ver.toPreviousMinorRelease()), repos);
+//		}
+//		return oldestRB != null ? oldestRB : new ReleaseBranch(comp, repos);
+//	}
 	
 	public IAction getProductionReleaseActionRoot(Component comp, List<IAction> childActions) {
 		DevelopBranch db = new DevelopBranch(comp);
@@ -93,17 +93,20 @@ public class SCMWorkflow implements ISCMWorkflow {
 		}
 		
 		if (hasErrorActions(childActions)) {
-			return new ActionNone(comp, childActions, "has child error actions   ");
+			return new ActionNone(comp, childActions, "has child error actions      ");
 		}
 		
-		ReleaseBranch rb = getLastUnbuiltReleaseBranch(comp);
 		DevelopBranchStatus dbs = db.getStatus();
+		ReleaseBranch rb = db.getCurrentReleaseBranch(repos); //getLastUnbuiltReleaseBranch(comp);
+		ReleaseBranchStatus rbs = rb.getStatus();
 		if (dbs == DevelopBranchStatus.MODIFIED) {
-			/**
-			 * будем считать так: если мы MODIFIED, то значит мы по-любому не forked. Будем форкаться.
-			 */
-			skipAllBuilds(childActions);
-			return new SCMActionForkReleaseBranch(comp, childActions, ReleaseReason.NEW_FEATURES);
+			if (rbs == ReleaseBranchStatus.MISSING || rbs == ReleaseBranchStatus.BUILT || rbs == ReleaseBranchStatus.TAGGED) {
+				// если мы MODIFIED и RB MISSING или завершена, то значит надо форкать новый релиз
+				skipAllBuilds(childActions);
+				return new SCMActionForkReleaseBranch(comp, childActions, ReleaseReason.NEW_FEATURES);
+			}
+			// а если мы MODIFIED и RB в подвешенном состоянии, то надо добивать существующий RB
+			new SCMActionBuild(comp, childActions, ReleaseReason.NEW_FEATURES, rb.getVersion());
 		}
 		
 		// тут если BRANCHED, то по-любому forked. А если IGNORED, то по-любому не forked
@@ -112,16 +115,16 @@ public class SCMWorkflow implements ISCMWorkflow {
 			/**
 			 * это значит мы по-любому forked.
 			 */
-			ReleaseBranchStatus rbs = rb.getStatus();
+			
 			if (rbs == ReleaseBranchStatus.MISSING) {
 				// это значит мы только-только отвели ветку и поставили #scm-ver в транк. Мы пытаемся определить ветку текущего релиза, которой еще нет.
+				// А такое бывает? Бывает. Отвели 2.59, в trunk записали 2.60 => dbs BRANCHED, rbs MISSING
 				return new ActionNone(comp, childActions, "");
 			}
 			if (rbs == ReleaseBranchStatus.TAGGED || rbs == ReleaseBranchStatus.BUILT) {
 				return getActionIfNewDependencies(comp, childActions, rb);
 			}
 			// если релизная ветка в подвешенном состоянии, т.е. MDEPS_* или BRANCHED, то достраиваем недостроенное
-			// здесь не может быть NEW_FEATURES, т.к. тогда бы dbs была бы MODIFIED.
 			return rb.getMDeps().isEmpty() ? 
 					new SCMActionBuild(comp, childActions, ReleaseReason.NEW_FEATURES, rb.getVersion()) :
 					new SCMActionBuild(comp, childActions, ReleaseReason.NEW_DEPENDENCIES, rb.getVersion());
@@ -150,14 +153,21 @@ public class SCMWorkflow implements ISCMWorkflow {
 				// посмотрим, а не надо ли NEW_DEPENDENCIES из-за того, что мы только что отвели UDB?
 				continue;
 			}
+			// mDepsFromLastUnbuiltRB не может быть пустым только если UBL еще не строился
 			if (mDepsFromLastUnbuiltRB.isEmpty()) {
 				// если у нас вообще ничего не используется, а релиз UDB есть - значит есть NEW_DEPENDENCIES
-				return getForkOrBuildAction(comp, childActions, lastUnbuiltRB);
+				// здесь возможен только fork. Build невозможен потому, что нет релизной ветки, в которой были бы правильные mDeps 
+				//SCMWorkflow.return getForkOrBuildAction(comp, childActions, lastUnbuiltRB);
+				skipAllBuilds(childActions);
+				return new SCMActionForkReleaseBranch(comp, childActions, ReleaseReason.NEW_DEPENDENCIES);
 			}
 			// нашли последний релиз UDB. Посмотрим, используется ли этот релиз в lastUnbuiltRB
 			for (Component mDepFromLastUnbuiltRB : mDepsFromLastUnbuiltRB) {
 				if (mDepFromLastUnbuiltRB.getName().equals(mDepFromDev.getName()) && !mDepFromLastUnbuiltRB.getVersion().equals(lastMDepRelease.getVersion())) {
-					return getForkOrBuildAction(comp, childActions, lastUnbuiltRB);  
+					// здесь возможен только fork. Build невозможен потому, что нет релизной ветки, в которой были бы правильные mDeps
+					//return getForkOrBuildAction(comp, childActions, lastUnbuiltRB);  
+					skipAllBuilds(childActions);
+					return new SCMActionForkReleaseBranch(comp, childActions, ReleaseReason.NEW_DEPENDENCIES);
 				}
 			}
 		}
@@ -165,14 +175,14 @@ public class SCMWorkflow implements ISCMWorkflow {
 		return new ActionNone(comp, childActions, null);
 	}
 
-	private IAction getForkOrBuildAction(Component comp, List<IAction> childActions, ReleaseBranch rb) {
-		ReleaseBranchStatus rbs = rb.getStatus();
-		if (rbs == ReleaseBranchStatus.MISSING) {
-			skipAllBuilds(childActions);
-			return new SCMActionForkReleaseBranch(comp, childActions, ReleaseReason.NEW_DEPENDENCIES);
-		}
-		return new SCMActionBuild(comp, childActions, ReleaseReason.NEW_DEPENDENCIES, rb.getVersion());
-	}
+//	private IAction getForkOrBuildAction(Component comp, List<IAction> childActions, ReleaseBranch rb) {
+//		ReleaseBranchStatus rbs = rb.getStatus();
+//		if (rbs == ReleaseBranchStatus.MISSING) {
+//			skipAllBuilds(childActions);
+//			return new SCMActionForkReleaseBranch(comp, childActions, ReleaseReason.NEW_DEPENDENCIES);
+//		}
+//		return new SCMActionBuild(comp, childActions, ReleaseReason.NEW_DEPENDENCIES, rb.getVersion());
+//	}
 
 	private void skipAllBuilds(List<IAction> childActions) {		
 		ListIterator<IAction> li = childActions.listIterator();
