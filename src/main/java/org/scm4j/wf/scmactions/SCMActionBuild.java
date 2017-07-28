@@ -8,8 +8,8 @@ import org.scm4j.vcs.api.workingcopy.IVCSLockedWorkingCopy;
 import org.scm4j.wf.actions.ActionAbstract;
 import org.scm4j.wf.actions.IAction;
 import org.scm4j.wf.actions.results.ActionResultVersion;
-import org.scm4j.wf.branchstatus.ReleaseBranch;
-import org.scm4j.wf.branchstatus.ReleaseBranchStatus;
+import org.scm4j.wf.branch.ReleaseBranch;
+import org.scm4j.wf.branch.ReleaseBranchStatus;
 import org.scm4j.wf.conf.Component;
 import org.scm4j.wf.conf.VCSRepositories;
 import org.scm4j.wf.conf.Version;
@@ -123,7 +123,7 @@ public class SCMActionBuild extends ActionAbstract {
 				try (IVCSLockedWorkingCopy lwc = vcs.getWorkspace().getVCSRepositoryWorkspace(vcs.getRepoUrl()).getVCSLockedWorkingCopy()) {
 					lwc.setCorrupted(true); // use lwc only once
 					vcs.checkout(rb.getReleaseBranchName(), lwc.getFolder().getPath());
-					comp.getVcsRepository().getBuilder().build(comp, lwc.getFolder());
+					comp.getVcsRepository().getBuilder().build(comp, lwc.getFolder(), progress);
 				}
 			}
 			

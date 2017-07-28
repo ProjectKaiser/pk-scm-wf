@@ -1,7 +1,4 @@
-package org.scm4j.wf.conf;
-
-import org.scm4j.wf.CmdLineBuilder;
-import org.scm4j.wf.IBuilder;
+package org.scm4j.wf;
 
 public class BuilderFactory {
 	

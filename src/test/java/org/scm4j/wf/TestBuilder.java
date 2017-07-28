@@ -3,6 +3,7 @@ package org.scm4j.wf;
 import java.io.File;
 import java.util.Map;
 
+import org.scm4j.commons.progress.IProgress;
 import org.scm4j.wf.conf.Component;
 import org.scm4j.wf.exceptions.EBuilder;
 
@@ -19,7 +20,7 @@ public class TestBuilder implements IBuilder {
 	}
 
 	@Override
-	public void build(Component comp, File workingFolder) throws EBuilder {
+	public void build(Component comp, File workingFolder, IProgress progress ) throws EBuilder {
 		builders.put(comp.getName(), this);
 	}
 }

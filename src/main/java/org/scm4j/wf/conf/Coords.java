@@ -88,5 +88,4 @@ public class Coords {
 	public String getClassifier() {
 		return classifier;
 	}
-
 }

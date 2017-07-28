@@ -8,4 +8,8 @@ public class EBuilder extends RuntimeException {
 		super(e);
 	}
 
+	public EBuilder(String message) {
+		super(message);
+	}
+
 }

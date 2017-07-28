@@ -6,7 +6,7 @@ import org.scm4j.vcs.api.VCSTag;
 import org.scm4j.wf.actions.ActionAbstract;
 import org.scm4j.wf.actions.IAction;
 import org.scm4j.wf.actions.results.ActionResultTag;
-import org.scm4j.wf.branchstatus.DevelopBranch;
+import org.scm4j.wf.branch.DevelopBranch;
 import org.scm4j.wf.conf.Component;
 
 import java.util.List;

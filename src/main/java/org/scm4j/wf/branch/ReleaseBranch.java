@@ -1,4 +1,4 @@
-package org.scm4j.wf.branchstatus;
+package org.scm4j.wf.branch;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,7 +41,7 @@ public class ReleaseBranch {
 			return ReleaseBranchStatus.TAGGED;
 		}
 		
-		if (isLastCommitHasSCM_BUILTLogTag(comp)) {
+		if (hasLastCommitSCM_BUILTLogTag(comp)) {
 			return ReleaseBranchStatus.BUILT;
 		}
 		
@@ -57,12 +57,7 @@ public class ReleaseBranch {
 	}
 
 	private boolean mDepsTagged() {
-		String devBranchName = comp.getVcsRepository().getDevBranch();
-		List<Component> mDeps = new ArrayList<>();
-		if (vcs.fileExists(devBranchName, SCMWorkflow.MDEPS_FILE_NAME)) {
-			String mDepsContent = vcs.getFileContent(devBranchName, SCMWorkflow.MDEPS_FILE_NAME);
-			mDeps = new MDepsFile(mDepsContent, repos).getMDeps();
-		}
+		List<Component> mDeps = getMDeps();
 		if (mDeps.size() == 0) {
 			return false;
 		}
@@ -72,7 +67,7 @@ public class ReleaseBranch {
 		for (Component mDep : mDeps) {
 			rb = new ReleaseBranch(mDep, repos);
 			status = rb.getStatus();
-			if (status != ReleaseBranchStatus.TAGGED || !isLastCommitHasSCM_BUILTLogTag(mDep)) {
+			if (status != ReleaseBranchStatus.TAGGED && !hasLastCommitSCM_BUILTLogTag(mDep)) {
 				return false;
 			}
 		}
@@ -81,7 +76,7 @@ public class ReleaseBranch {
 
 	private boolean isLastCommitTagged() {
 		List<VCSCommit> log = vcs.log(getReleaseBranchName(), 1);
-		if (log != null && !log.isEmpty()) { // what to return if no commits at all?
+		if (log != null && !log.isEmpty()) {
 			VCSCommit lastCommit = log.get(0);
 			List<VCSTag> tags = vcs.getTags();
 			DevelopBranch db = new DevelopBranch(comp);
@@ -100,8 +95,7 @@ public class ReleaseBranch {
 		return branches.contains(releaseBranchName);
 	}
 
-	private boolean isLastCommitHasSCM_BUILTLogTag(Component comp) {
-		IVCS vcs = comp.getVcsRepository().getVcs();
+	private boolean hasLastCommitSCM_BUILTLogTag(Component comp) {
 		List<VCSCommit> log = vcs.log(getReleaseBranchName(), 1);
 		if (log != null && !log.isEmpty()) {
 			VCSCommit lastCommit = log.get(0);
@@ -111,12 +105,7 @@ public class ReleaseBranch {
 	}
 
 	private Boolean mDepsFrozen() {
-		IVCS vcs = comp.getVcsRepository().getVcs();
-		List<Component> mDeps = new ArrayList<>();
-		if (vcs.fileExists(getReleaseBranchName(), SCMWorkflow.MDEPS_FILE_NAME)) {
-			String mDepsContent = vcs.getFileContent(getReleaseBranchName(), SCMWorkflow.MDEPS_FILE_NAME);
-			mDeps = new MDepsFile(mDepsContent, repos).getMDeps();
-		}
+		List<Component> mDeps = getMDeps();
 		if (mDeps.isEmpty()) {
 			return false;
 		}

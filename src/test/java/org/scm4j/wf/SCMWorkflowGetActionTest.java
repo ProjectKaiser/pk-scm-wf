@@ -14,7 +14,7 @@ import org.junit.Test;
 import org.scm4j.wf.actions.ActionError;
 import org.scm4j.wf.actions.ActionNone;
 import org.scm4j.wf.actions.IAction;
-import org.scm4j.wf.branchstatus.DevelopBranch;
+import org.scm4j.wf.branch.DevelopBranch;
 import org.scm4j.wf.conf.Component;
 import org.scm4j.wf.conf.VCSRepositories;
 import org.scm4j.wf.exceptions.EComponentConfig;

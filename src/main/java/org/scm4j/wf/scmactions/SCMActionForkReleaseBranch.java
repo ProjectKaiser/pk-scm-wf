@@ -10,10 +10,10 @@ import org.scm4j.wf.SCMWorkflow;
 import org.scm4j.wf.actions.ActionAbstract;
 import org.scm4j.wf.actions.IAction;
 import org.scm4j.wf.actions.results.ActionResultReleaseBranchFork;
-import org.scm4j.wf.branchstatus.DevelopBranch;
-import org.scm4j.wf.branchstatus.DevelopBranchStatus;
-import org.scm4j.wf.branchstatus.ReleaseBranch;
-import org.scm4j.wf.branchstatus.ReleaseBranchStatus;
+import org.scm4j.wf.branch.DevelopBranch;
+import org.scm4j.wf.branch.DevelopBranchStatus;
+import org.scm4j.wf.branch.ReleaseBranch;
+import org.scm4j.wf.branch.ReleaseBranchStatus;
 import org.scm4j.wf.conf.Component;
 import org.scm4j.wf.conf.MDepsFile;
 import org.scm4j.wf.conf.VCSRepositories;
@@ -27,6 +27,10 @@ public class SCMActionForkReleaseBranch extends ActionAbstract {
 	public SCMActionForkReleaseBranch(Component comp, List<IAction> childActions, ReleaseReason reason) {
 		super(comp, childActions);
 		this.reason = reason;
+	}
+	
+	public ReleaseReason getReason() {
+		return reason;
 	}
 	
 	public ReleaseBranch getReleaseBranch(Component comp) {

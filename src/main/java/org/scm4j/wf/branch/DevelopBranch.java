@@ -1,5 +1,6 @@
-package org.scm4j.wf.branchstatus;
+package org.scm4j.wf.branch;
 
+import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.wf.LogTag;
 import org.scm4j.wf.SCMWorkflow;
@@ -14,17 +15,18 @@ import java.util.List;
 public class DevelopBranch {
 	
 	private final Component comp;
+	private final IVCS vcs;
 	
 	public Version getVersion() {
-		if (comp.getVcsRepository().getVcs().fileExists(comp.getVcsRepository().getDevBranch(), SCMWorkflow.VER_FILE_NAME)) {
-			String verFileContent = comp.getVcsRepository().getVcs().getFileContent(comp.getVcsRepository().getDevBranch(), SCMWorkflow.VER_FILE_NAME);
+		if (vcs.fileExists(comp.getVcsRepository().getDevBranch(), SCMWorkflow.VER_FILE_NAME)) {
+			String verFileContent = vcs.getFileContent(comp.getVcsRepository().getDevBranch(), SCMWorkflow.VER_FILE_NAME);
 			return new Version(verFileContent.trim());
 		} 
 		return null;
 	}
 	
 	public DevelopBranchStatus getStatus() {
-		List<VCSCommit> log = comp.getVcsRepository().getVcs().log(comp.getVcsRepository().getDevBranch(), 1);
+		List<VCSCommit> log = vcs.log(comp.getVcsRepository().getDevBranch(), 1);
 		if (log == null || log.isEmpty()) {
 			return DevelopBranchStatus.IGNORED; // status if no commits?
 		}
@@ -40,7 +42,7 @@ public class DevelopBranch {
 	
 	public DevelopBranch(Component comp) {
 		this.comp = comp;
-		
+		vcs = comp.getVcsRepository().getVcs();
 	}
 	
 	public String getReleaseBranchName() {
@@ -52,7 +54,7 @@ public class DevelopBranch {
 	}
 	
 	public boolean hasVersionFile() {
-		return comp.getVcsRepository().getVcs().fileExists(comp.getVcsRepository().getDevBranch(), SCMWorkflow.VER_FILE_NAME);
+		return vcs.fileExists(comp.getVcsRepository().getDevBranch(), SCMWorkflow.VER_FILE_NAME);
 	}
 	
 	public String getName() {
@@ -63,7 +65,7 @@ public class DevelopBranch {
 		if (!comp.getVcsRepository().getVcs().fileExists(getName(), SCMWorkflow.MDEPS_FILE_NAME)) {
 			return new ArrayList<>();
 		}
-		String mDepsFileContent = comp.getVcsRepository().getVcs().getFileContent(getName(), SCMWorkflow.MDEPS_FILE_NAME);
+		String mDepsFileContent = vcs.getFileContent(getName(), SCMWorkflow.MDEPS_FILE_NAME);
 		MDepsFile mDeps = new MDepsFile(mDepsFileContent, VCSRepositories.loadVCSRepositories());
 		return mDeps.getMDeps();
 	}

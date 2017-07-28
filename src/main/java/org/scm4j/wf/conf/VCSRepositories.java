@@ -7,6 +7,7 @@ import java.util.Map;
 
 import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
 import org.scm4j.vcs.api.workingcopy.VCSWorkspace;
+import org.scm4j.wf.BuilderFactory;
 import org.scm4j.wf.VCSFactory;
 import org.scm4j.wf.exceptions.EConfig;
 import org.yaml.snakeyaml.Yaml;

@@ -1,67 +1,59 @@
 package org.scm4j.wf;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
-import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.Map;
-
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.commons.progress.ProgressConsole;
 import org.scm4j.wf.actions.ActionNone;
 import org.scm4j.wf.actions.IAction;
-import org.scm4j.wf.branchstatus.DevelopBranch;
-import org.scm4j.wf.branchstatus.ReleaseBranch;
-import org.scm4j.wf.conf.Component;
-import org.scm4j.wf.conf.VCSRepositories;
 import org.scm4j.wf.scmactions.ReleaseReason;
 import org.scm4j.wf.scmactions.SCMActionBuild;
 import org.scm4j.wf.scmactions.SCMActionForkReleaseBranch;
-import org.scm4j.wf.scmactions.SCMActionUseLastReleaseVersion;
 
-public class SCMWorkflowBuildTest {
-	private TestEnvironment env;
-	private static final String UNTILL = TestEnvironment.PRODUCT_UNTILL;
-	private static final String UNTILLDB = TestEnvironment.PRODUCT_UNTILLDB;
-	private static final String UBL = TestEnvironment.PRODUCT_UBL;
-	private VCSRepositories repos;
-	private Component compUnTill;
-	private Component compUnTillDb;
-	private Component compUBL;
-	private DevelopBranch dbUnTill;
-	private DevelopBranch dbUnTillDb;
-	private DevelopBranch dbUBL;
-	private ReleaseBranch rbUnTill;
-	private ReleaseBranch rbUnTillDb;
-	private ReleaseBranch rbUBL;
+public class SCMWorkflowBuildTest extends SCMWorkflowTestBase {
 	
-	
-	@Before
-	public void setUp() throws Exception {
-		env = new TestEnvironment();
-		env.generateTestEnvironment();
-		repos = VCSRepositories.loadVCSRepositories();
-		compUnTill = new Component(UNTILL, repos);
-		compUnTillDb = new Component(UNTILLDB, repos);
-		compUBL = new Component(UBL, repos);
-		dbUnTill = new DevelopBranch(compUnTill);
-		dbUnTillDb = new DevelopBranch(compUnTillDb);
-		dbUBL = new DevelopBranch(compUBL);
-		rbUnTill = new ReleaseBranch(compUnTill, repos);
-		rbUnTillDb = new ReleaseBranch(compUnTillDb, repos);
-		rbUBL = new ReleaseBranch(compUBL, repos);
-		TestBuilder.setBuilders(new HashMap<String, TestBuilder>());
-	}
-
-	@After
-	public void tearDown() throws Exception {
-		if (env != null) {
-			env.close();
+	@Test
+	public void testBuildUBLAfterUnillDb() throws Exception {
+		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), "feature added");
+		SCMWorkflow wf = new SCMWorkflow();
+		
+		// fork unTillDb 
+		IAction action = wf.getProductionReleaseAction(UNTILLDB);
+		action.execute(new NullProgress());
+		
+		// build unTillDb
+		action = wf.getProductionReleaseAction(UNTILLDB);
+		action.execute(new NullProgress());
+		
+		// fork UBL
+		TestBuilder.getBuilders().clear();
+		action = wf.getProductionReleaseAction(UBL);
+		Expectations exp = new Expectations();
+		exp.put(UBL, SCMActionForkReleaseBranch.class);
+		exp.put(UBL, "reason", ReleaseReason.NEW_DEPENDENCIES);
+		exp.put(UNTILLDB, ActionNone.class);
+		checkChildActionsTypes(action, exp);
+		try (IProgress progress = new ProgressConsole(action.toString(), ">>> ", "<<< ")) {;
+			action.execute(progress);
 		}
-		TestBuilder.setBuilders(null);
+		assertTrue(TestBuilder.getBuilders().isEmpty());
+		
+		// build UBL
+		action = wf.getProductionReleaseAction(UBL);
+		exp = new Expectations();
+		exp.put(UBL, SCMActionBuild.class);
+		exp.put(UBL, "reason", ReleaseReason.NEW_DEPENDENCIES);
+		exp.put(UNTILLDB, ActionNone.class);
+		checkChildActionsTypes(action, exp);
+		try (IProgress progress = new ProgressConsole(action.toString(), ">>> ", "<<< ")) {;
+			action.execute(progress);
+		} 
+		assertFalse(TestBuilder.getBuilders().isEmpty());
+		assertTrue(TestBuilder.getBuilders().size() == 1);
+		
 	}
 	
 	@Test
@@ -90,10 +82,10 @@ public class SCMWorkflowBuildTest {
 		exp = new Expectations();
 		exp.put(UBL, SCMActionBuild.class);
 		exp.put(UBL, "reason", ReleaseReason.NEW_DEPENDENCIES);
-		exp.put(UBL, "targetVersion", rbUBL.getVersion());
+		exp.put(UBL, "targetVersion", rbUBLFixedVer.getVersion());
 		exp.put(UNTILLDB, SCMActionBuild.class);
 		exp.put(UNTILLDB, "reason", ReleaseReason.NEW_FEATURES);
-		exp.put(UNTILLDB, "targetVersion", rbUnTillDb.getVersion());
+		exp.put(UNTILLDB, "targetVersion", rbUnTillDbFixedVer.getVersion());
 		checkChildActionsTypes(action, exp);
 		
 		try (IProgress progress = new ProgressConsole(action.toString(), ">>> ", "<<< ")) {
@@ -119,6 +111,7 @@ public class SCMWorkflowBuildTest {
 		Expectations exp = new Expectations();
 		exp.put(UNTILLDB, SCMActionBuild.class);
 		exp.put(UNTILLDB, "reason", ReleaseReason.NEW_FEATURES);
+		exp.put(UNTILLDB, "targetVersion", rbUnTillDbFixedVer.getVersion());
 		checkChildActionsTypes(action, exp);
 
 		// build unTillDb
@@ -150,40 +143,5 @@ public class SCMWorkflowBuildTest {
 		
 	}
 	
-	private void checkChildActionsTypes(IAction action, Expectations exp) {
-		for (IAction nestedAction : action.getChildActions()) {
-			checkChildActionsTypes(nestedAction, exp);
-		}
-		if (!exp.getProps().containsKey(action.getName())) {
-			fail("unexpected action: " + action.getName());
-		}
-		Map<String, Object> props = exp.getProps().get(action.getName());
-		Class<?> clazz = (Class<?>) props.get("class");
-		if (!action.getClass().isAssignableFrom(clazz)) {
-			fail("expected: " + clazz.toString() + ", actual: " + action.getClass().toString());
-		}
-		if (props.size() <= 1) {
-			return; 
-		}
-		
-		for (Method method : action.getClass().getMethods()) {
-			if (!method.getName().startsWith("get")) {
-				continue;
-			}
-			for (String propName : props.keySet()) {
-				if (method.getName().toLowerCase().equals("get" + propName)) {
-					Object propValue;
-					try {
-						propValue = method.invoke(action);
-					} catch (Exception e) {
-						throw new RuntimeException(e);
-					}
-					if (!propValue.equals(props.get(propName))) {
-						fail (String.format("%s: property %s failed: expected %s, actual %s", action.getName(), propName, propValue, props.get(propName)));
-					}
-					continue;
-				}
-			}
-		}
-	}
+	
 }
