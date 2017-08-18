@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.ProcessBuilder.Redirect;
 import java.nio.charset.StandardCharsets;
 
 import org.apache.commons.io.IOUtils;
@@ -18,29 +19,24 @@ public class CmdLineBuilder implements IBuilder {
 	@Override
 	public void build(Component comp, File workingFolder, IProgress progress) throws Exception {
 		progress.reportStatus(String.format("executing \"%s\" in folder %s", cmdLine, workingFolder.getPath()));
-		//args[0] = new File(workingFolder, args[0]).getPath();
-//		String cmd = args[0];
-//		args = Arrays.copyOfRange(args, 1, args.length);
+		
 		String[] cmds = cmdLine.split(" ");
-		String[] args = new String[cmds.length + 1];
-		args[0] = "//c";
-		Integer i = 1;
-		for (String s : cmds) {
-			args[i] = s;
-			i++;
-		}
-		Process proc = Runtime.getRuntime().exec("cmd", args, workingFolder);
-		try (InputStream is = proc.getInputStream();
-			 InputStreamReader isr = new InputStreamReader(is);
-             BufferedReader br = new BufferedReader(isr)) {
-			String line; 
-			while ((line = br.readLine()) != null) {
-	            progress.reportStatus(line);
-	        }
-			//progress.reportStatus(IOUtils.toString(is, StandardCharsets.UTF_8));
-		}
-		if (proc.waitFor() != 0) {
-			try (InputStream is = proc.getErrorStream()) {
+		
+		ProcessBuilder pb = new ProcessBuilder(cmds);
+		pb.redirectErrorStream(true);
+		pb.redirectOutput(Redirect.INHERIT);
+	    pb.redirectError(Redirect.INHERIT);
+		pb.directory(workingFolder);
+		Process process = pb.start();
+
+	    BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()));
+	    String line = null;
+	    while ((line = br.readLine()) != null){
+	        System.out.println(line);
+	    }
+	    
+		if (process.waitFor() != 0) {
+			try (InputStream is = process.getErrorStream()) {
 				throw new EBuilder(IOUtils.toString(is, StandardCharsets.UTF_8));
 			}
 		}

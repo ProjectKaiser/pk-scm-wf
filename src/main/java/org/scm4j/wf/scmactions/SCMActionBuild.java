@@ -75,7 +75,7 @@ public class SCMActionBuild extends ActionAbstract {
 				}
 			}
 			
-			vcs.setFileContent(rb.getReleaseBranchName(), "build", targetVersion.toReleaseString(), LogTag.SCM_BUILT + " " + targetVersion.toReleaseString());
+			vcs.setFileContent(rb.getReleaseBranchName(), "built_version", targetVersion.toReleaseString(), LogTag.SCM_BUILT + " " + targetVersion.toReleaseString());
 			
 			ActionResultVersion res = new ActionResultVersion(comp.getName(), targetVersion.toReleaseString(), true,
 					rb.getReleaseBranchName());

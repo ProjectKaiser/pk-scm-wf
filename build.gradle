@@ -23,6 +23,7 @@ dependencies {
 	testCompile 'org.mockito:mockito-all:1.9.5'
 	testCompile 'org.powermock:powermock-mockito-release-full:1.6.3'
 	testCompile 'org.powermock:powermock-api-mockito:1.6.3'
+	testCompile 'nl.jqno.equalsverifier:equalsverifier:2.3'
 
 	compile 'com.github.scm4j:scm4j-vcs-git:master-SNAPSHOT'
 	compile 'com.github.scm4j:scm4j-vcs-svn:master-SNAPSHOT'

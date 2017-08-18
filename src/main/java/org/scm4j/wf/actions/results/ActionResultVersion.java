@@ -5,7 +5,6 @@ public class ActionResultVersion {
 	private final String version;
 	private final Boolean isNewBuild;
 	private final String newBranchName;
-	private String newBranchName;
 	
 	public String getNewBranchName() {
 		return newBranchName;
