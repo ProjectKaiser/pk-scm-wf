@@ -4,6 +4,11 @@
 import org.scm4j.wf.SCMWorkflow;
 import org.scm4j.wf.actions.IAction;
 import org.scm4j.wf.actions.PrintAction;
+import org.scm4j.commons.progress.IProgress;
+import org.scm4j.commons.progress.ProgressConsole;
+import org.scm4j.wf.actions.ActionKind;
+import org.scm4j.wf.conf.Component;
+//import org.apache.commons.cli.Option;
 
 class CLI {
 
@@ -12,7 +17,7 @@ class CLI {
 		def cli = new CliBuilder(usage: 'groovy run.groovy -show|-fork|-build|-tag productCoords')
 
 		cli.show('show actions will be made with product specified by productCoords', required: false, args: 1, argName: 'productCoords', type: String)
-		cli.fork('cerate all necessary release branches for product specified by productCoords', reuired: false, args: 1, argName: 'productCoords', type:String)
+		cli.fork('cerate all necessary release branches for product specified by productCoords', required: false, args: 1, argName: 'productCoords', type:String)
 		cli.build('execute production release action on product specified by productCoords', required: false, args: 1, argName: 'productCoords', type: String)
 		cli.tag('execute tag action on product specified by productCoords', required: false, args: 1, argName: 'productCoords', type: String)
 

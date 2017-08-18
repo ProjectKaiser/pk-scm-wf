@@ -66,9 +66,9 @@ public class Version {
 
 	@Override
 	public String toString() {
-//		if (!StringUtils.isNumeric(minor)) {
-//			return verStr;
-//		}
+		if (!StringUtils.isNumeric(minor)) {
+			return verStr;
+		}
 		return prefix + minor + getPatch() + getSnapshot();
 	}
 	
