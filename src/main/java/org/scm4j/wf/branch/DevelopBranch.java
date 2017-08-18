@@ -76,10 +76,14 @@ public class DevelopBranch {
 	}
 	
 	public ReleaseBranch getCurrentReleaseBranch(VCSRepositories repos) {
-		DevelopBranch db = new DevelopBranch(comp);
-		Version ver = db.getVersion();
+		//DevelopBranch db = new DevelopBranch(comp);
+		Version ver = new Version(getVersion().toPreviousMinorRelease());
 		
-		ReleaseBranch rb = new ReleaseBranch(comp, new Version(ver.toPreviousMinorRelease()), repos);
+		ReleaseBranch rb = new ReleaseBranch(comp, ver, repos);
+		DevelopBranchStatus dbs = getStatus();
+		if (dbs == DevelopBranchStatus.BRANCHED) {
+			return rb;
+		}
 		ReleaseBranch oldestRB = null;
 		for (int i = 0; i <= 1; i++) {
 			ReleaseBranchStatus rbs = rb.getStatus();
@@ -87,7 +91,11 @@ public class DevelopBranch {
 			if (rbs != ReleaseBranchStatus.MISSING && rbs != ReleaseBranchStatus.BUILT && rbs != ReleaseBranchStatus.TAGGED) {
 				oldestRB = rb;
 			}
-			rb = new ReleaseBranch(comp, new Version(ver.toPreviousMinorRelease()), repos);
+			ver = new Version(ver.toPreviousMinorRelease());
+			if (ver.getMinor().equals("0")) {
+				return oldestRB != null ? oldestRB : new ReleaseBranch(comp, repos);
+			}
+			rb = new ReleaseBranch(comp, ver, repos);
 		}
 		return oldestRB != null ? oldestRB : new ReleaseBranch(comp, repos);
 	}

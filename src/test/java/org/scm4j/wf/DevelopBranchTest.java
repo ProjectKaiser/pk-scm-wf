@@ -1,10 +1,10 @@
-package org.scm4j.wf.branch;
+package org.scm4j.wf;
 
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 import org.scm4j.wf.LogTag;
-import org.scm4j.wf.SCMWorkflowTestBase;
+import org.scm4j.wf.branch.DevelopBranchStatus;
 
 public class DevelopBranchTest extends SCMWorkflowTestBase {
 

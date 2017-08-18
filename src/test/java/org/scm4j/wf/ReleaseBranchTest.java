@@ -1,4 +1,4 @@
-package org.scm4j.wf.branch;
+package org.scm4j.wf;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -8,8 +8,8 @@ import java.util.Arrays;
 import org.junit.Test;
 import org.scm4j.wf.LogTag;
 import org.scm4j.wf.SCMWorkflow;
-import org.scm4j.wf.SCMWorkflowTestBase;
-import org.scm4j.wf.TestEnvironment;
+import org.scm4j.wf.branch.DevelopBranch;
+import org.scm4j.wf.branch.ReleaseBranchStatus;
 import org.scm4j.wf.conf.Component;
 import org.scm4j.wf.conf.MDepsFile;
 
@@ -99,7 +99,7 @@ public class ReleaseBranchTest extends SCMWorkflowTestBase {
 		env.getUnTillVCS().createBranch(null, rbUnTillFixedVer.getReleaseBranchName(), null);
 		env.getUnTillDbVCS().createBranch(null, rbUnTillDbFixedVer.getReleaseBranchName(), null);
 		env.getUblVCS().createBranch(null, rbUBLFixedVer.getReleaseBranchName(), null);
-		
+		 
 		// ubl: freeze unTillDb mdep 
 		Component compUntillDbVersioned = new Component(TestEnvironment.PRODUCT_UNTILLDB + ":" + env.getUnTillDbVer().toString(), repos);
 		MDepsFile ublMDepsFile = new MDepsFile(Arrays.asList(compUntillDbVersioned));
