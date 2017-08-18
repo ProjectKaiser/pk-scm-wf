@@ -13,6 +13,9 @@ public class Version {
 	private final String verStr;
 	private final Boolean isEmpty;
 
+	private boolean usePatch = true;
+	private boolean useSnapshot = true;
+	
 	public Version(String ver) {
 		verStr = ver;
 		if (ver.isEmpty()) {
@@ -48,47 +51,65 @@ public class Version {
 			}
 		}
 	}
+	
+	public String getPatch() {
+		return usePatch ? patch : "";
+	}
 
 	public String getMinor() {
 		return minor;
 	}
 
 	public String getSnapshot() {
-		return snapshot;
+		return useSnapshot ? snapshot : "";
 	}
 
 	@Override
 	public String toString() {
-		if (!StringUtils.isNumeric(minor)) {
-			return verStr;
+//		if (!StringUtils.isNumeric(minor)) {
+//			return verStr;
+//		}
+		return prefix + minor + getPatch() + getSnapshot();
+	}
+	
+	public Version usePatch(boolean usePath) {
+		this.usePatch = usePath;
+		return this;
+	}
+	
+	public Version useSnapshot(boolean useSnapshot) {
+		this.useSnapshot = useSnapshot;
+		return this;
+	}
+	
+	public Version toNextPatch() {
+		if (patch.isEmpty()) {
+			return new Version(prefix + minor + ".1" + snapshot);
 		}
-		return toReleaseString() + snapshot;
+		int i = 0;
+		while (i < patch.length() && Character.isDigit(patch.charAt(i))) i++;
+		if (i == 0) {
+			return new Version(prefix + minor + patch + ".1" + snapshot);
+		}
+		int patchInt = Integer.parseInt(patch.substring(0, i)) + 1;
+		String newPatch = Integer.toString(patchInt) + patch.substring(i, patch.length());
+		return new Version(prefix + minor + newPatch + snapshot);
 	}
 
-	public String toReleaseString() {
+	public Version toPreviousMinor() {
 		checkMinor();
-		return prefix + minor + patch;
+		return new Version(prefix + Integer.toString(Integer.parseInt(minor) - 1) + patch + snapshot);
 	}
 
-	public String toPreviousMinorRelease() {
+	public Version toNextMinor() {
 		checkMinor();
-		return prefix + Integer.toString(Integer.parseInt(minor) - 1) + patch;
-	}
-
-	public String toNextMinorRelease() {
-		checkMinor();
-		return prefix + Integer.toString(Integer.parseInt(minor) + 1) + patch;
+		return new Version(prefix + Integer.toString(Integer.parseInt(minor) + 1) + patch + snapshot);
 	}
 	
 	private void checkMinor() {
 		if (!StringUtils.isNumeric(minor)) {
 			throw new IllegalArgumentException("wrong version" + verStr);
 		}
-	}
-
-	public String toNextMinorSnapshot() {
-		checkMinor();
-		return prefix + Integer.toString(Integer.parseInt(minor) + 1) + patch + snapshot;
 	}
 
 	@Override
@@ -112,5 +133,9 @@ public class Version {
 	
 	public boolean isExactVersion() {
 		return !minor.isEmpty();
+	}
+
+	public String toReleaseString() {
+		return new Version(verStr).useSnapshot(false).toString();
 	}
 }

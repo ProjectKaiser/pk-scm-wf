@@ -6,6 +6,7 @@ import org.scm4j.commons.progress.IProgress;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.workingcopy.IVCSLockedWorkingCopy;
 import org.scm4j.wf.LogTag;
+import org.scm4j.wf.SCMWorkflow;
 import org.scm4j.wf.actions.ActionAbstract;
 import org.scm4j.wf.actions.IAction;
 import org.scm4j.wf.actions.results.ActionResultVersion;
@@ -75,7 +76,7 @@ public class SCMActionBuild extends ActionAbstract {
 				}
 			}
 			
-			vcs.setFileContent(rb.getReleaseBranchName(), "built_version", targetVersion.toReleaseString(), LogTag.SCM_BUILT + " " + targetVersion.toReleaseString());
+			vcs.setFileContent(rb.getReleaseBranchName(), SCMWorkflow.VER_FILE_NAME, targetVersion.toNextPatch().toReleaseString(), LogTag.SCM_BUILT + " " + targetVersion.toNextPatch().toReleaseString());
 			
 			ActionResultVersion res = new ActionResultVersion(comp.getName(), targetVersion.toReleaseString(), true,
 					rb.getReleaseBranchName());

@@ -11,6 +11,8 @@ import org.scm4j.commons.progress.IProgress;
 import org.scm4j.commons.progress.ProgressConsole;
 import org.scm4j.wf.actions.ActionNone;
 import org.scm4j.wf.actions.IAction;
+import org.scm4j.wf.actions.results.ActionResultFork;
+import org.scm4j.wf.actions.results.ActionResultVersion;
 import org.scm4j.wf.branch.ReleaseBranch;
 import org.scm4j.wf.conf.Component;
 import org.scm4j.wf.scmactions.ReleaseReason;
@@ -31,7 +33,7 @@ public class SCMWorkflowForkReleaseTest extends SCMWorkflowTestBase {
 		checkChildActionsTypes(action, exp);
 		
 		try (IProgress progress = new ProgressConsole(action.toString(), ">>> ", "<<< ")) {
-			action.execute(progress);
+			assertTrue(action.execute(progress) instanceof ActionResultFork);
 		}
 		
 		// check branches
@@ -40,7 +42,7 @@ public class SCMWorkflowForkReleaseTest extends SCMWorkflowTestBase {
 		assertFalse(env.getUblVCS().getBranches("").contains(rbUBLFixedVer.getReleaseBranchName()));
 		
 		// check versions
-		assertEquals(env.getUnTillVer().toNextMinorSnapshot(), dbUnTill.getVersion().toString());
+		assertEquals(env.getUnTillVer().toNextMinor(), dbUnTill.getVersion());
 		ReleaseBranch newUnTillRB = new ReleaseBranch(compUnTill, env.getUnTillVer(), repos);
 		assertEquals(env.getUnTillVer(), newUnTillRB.getVersion());
 		
@@ -49,9 +51,9 @@ public class SCMWorkflowForkReleaseTest extends SCMWorkflowTestBase {
 		assertTrue(unTillReleaseMDeps.size() == 2);
 		for (Component unTillReleaseMDep : unTillReleaseMDeps) {
 			if (unTillReleaseMDep.getName().equals(UBL)) {
-				assertEquals(dbUBL.getVersion().toPreviousMinorRelease(), unTillReleaseMDep.getVersion().toReleaseString());
+				assertEquals(dbUBL.getVersion().toPreviousMinor().toReleaseString(), unTillReleaseMDep.getVersion().toReleaseString());
 			} else if (unTillReleaseMDep.getName().equals(UNTILLDB)) {
-				assertEquals(dbUnTillDb.getVersion().toPreviousMinorRelease(), unTillReleaseMDep.getVersion().toReleaseString());
+				assertEquals(dbUnTillDb.getVersion().toPreviousMinor().toReleaseString(), unTillReleaseMDep.getVersion().toReleaseString());
 			} else {
 				fail();
 			}
@@ -65,23 +67,25 @@ public class SCMWorkflowForkReleaseTest extends SCMWorkflowTestBase {
 		
 		// fork unTillDb
 		IAction action = wf.getProductionReleaseAction(UNTILLDB);
-		action.execute(new NullProgress());
+		assertTrue(action.execute(new NullProgress()) instanceof ActionResultFork);
 		
 		// build unTillDb
 		action = wf.getProductionReleaseAction(UNTILLDB);
-		action.execute(new NullProgress());
+		assertTrue(action.execute(new NullProgress()) instanceof ActionResultVersion);
 		
 		// fork UBL
 		action = wf.getProductionReleaseAction(UBL);
-		action.execute(new NullProgress());
+		assertTrue(action.execute(new NullProgress()) instanceof ActionResultFork);
 		Expectations exp = new Expectations();
 		exp.put(UNTILLDB, ActionNone.class);
 		exp.put(UBL, SCMActionForkReleaseBranch.class);
 		exp.put(UBL,  "reason", ReleaseReason.NEW_DEPENDENCIES);
 		checkChildActionsTypes(action, exp);
+		
+		// build UBL
 		action = wf.getProductionReleaseAction(UBL);
 		try (IProgress progress = new ProgressConsole(action.toString(), ">>> ", "<<< ")) {
-			action.execute(progress);
+			assertTrue(action.execute(progress) instanceof ActionResultVersion);
 		}
 		
 		// check branches
@@ -90,12 +94,12 @@ public class SCMWorkflowForkReleaseTest extends SCMWorkflowTestBase {
 		assertTrue(env.getUblVCS().getBranches("").contains(rbUBLFixedVer.getReleaseBranchName()));
 		
 		// check UBL versions
-		assertEquals(env.getUblVer().toNextMinorSnapshot(), dbUBL.getVersion().toString());
+		assertEquals(env.getUblVer().toNextMinor(), dbUBL.getVersion());
 		ReleaseBranch newUBLRB = new ReleaseBranch(compUBL, env.getUblVer(), repos);
 		assertEquals(env.getUblVer(), newUBLRB.getVersion());
 		
 		// check unTillDb versions
-		assertEquals(env.getUnTillDbVer().toNextMinorSnapshot(), dbUnTillDb.getVersion().toString());
+		assertEquals(env.getUnTillDbVer().toNextMinor(), dbUnTillDb.getVersion());
 		ReleaseBranch newUnTillDbRB = new ReleaseBranch(compUnTillDb, env.getUnTillDbVer(), repos);
 		assertEquals(env.getUnTillDbVer(), newUnTillDbRB.getVersion());
 		
@@ -103,7 +107,7 @@ public class SCMWorkflowForkReleaseTest extends SCMWorkflowTestBase {
 		List<Component> ublReleaseMDeps = rbUBLFixedVer.getMDeps();
 		assertTrue(ublReleaseMDeps.size() == 1);
 		assertEquals(compUnTillDb.getName(), ublReleaseMDeps.get(0).getName());
-		assertEquals(dbUnTillDb.getVersion().toPreviousMinorRelease(), ublReleaseMDeps.get(0).getVersion().toReleaseString());
+		assertEquals(dbUnTillDb.getVersion().toPreviousMinor().toReleaseString(), ublReleaseMDeps.get(0).getVersion().toReleaseString());
 	}
 
 	@Test
@@ -121,7 +125,7 @@ public class SCMWorkflowForkReleaseTest extends SCMWorkflowTestBase {
 		checkChildActionsTypes(action, exp);
 		
 		try (IProgress progress = new ProgressConsole(action.toString(), ">>> ", "<<< ")) {
-			action.execute(progress);
+			assertTrue(action.execute(progress) instanceof ActionResultFork);
 		}
 		
 		assertTrue(env.getUnTillVCS().getBranches("").contains(rbUnTillFixedVer.getReleaseBranchName()));
@@ -132,9 +136,9 @@ public class SCMWorkflowForkReleaseTest extends SCMWorkflowTestBase {
 		assertTrue(unTillReleaseMDeps.size() == 2);
 		for (Component unTillReleaseMDep : unTillReleaseMDeps) {
 			if (unTillReleaseMDep.getName().equals(UBL)) {
-				assertEquals(dbUBL.getVersion().toPreviousMinorRelease(), unTillReleaseMDep.getVersion().toReleaseString());
+				assertEquals(dbUBL.getVersion().toPreviousMinor().toReleaseString(), unTillReleaseMDep.getVersion().toReleaseString());
 			} else if (unTillReleaseMDep.getName().equals(UNTILLDB)) {
-				assertEquals(dbUnTillDb.getVersion().toPreviousMinorRelease(), unTillReleaseMDep.getVersion().toReleaseString());
+				assertEquals(dbUnTillDb.getVersion().toPreviousMinor().toReleaseString(), unTillReleaseMDep.getVersion().toReleaseString());
 			} else {
 				fail();
 			}
@@ -142,7 +146,7 @@ public class SCMWorkflowForkReleaseTest extends SCMWorkflowTestBase {
 		
 		List<Component> ublReleaseMDeps = rbUBLFixedVer.getMDeps();
 		assertTrue(ublReleaseMDeps.size() == 1);
-		assertEquals(dbUnTillDb.getVersion().toPreviousMinorRelease(), ublReleaseMDeps.get(0).getVersion().toReleaseString());
+		assertEquals(dbUnTillDb.getVersion().toPreviousMinor().toReleaseString(), ublReleaseMDeps.get(0).getVersion().toReleaseString());
 	}
 	
 	@Test
@@ -162,7 +166,7 @@ public class SCMWorkflowForkReleaseTest extends SCMWorkflowTestBase {
 		checkChildActionsTypes(action, exp);
 		
 		try (IProgress progress = new ProgressConsole(action.toString(), ">>> ", "<<< ")) {
-			action.execute(progress);
+			assertTrue(action.execute(progress) instanceof ActionResultFork);
 		}
 		
 		assertTrue(env.getUnTillVCS().getBranches("").contains(rbUnTillFixedVer.getReleaseBranchName()));
@@ -173,9 +177,9 @@ public class SCMWorkflowForkReleaseTest extends SCMWorkflowTestBase {
 		assertTrue(unTillReleaseMDeps.size() == 2);
 		for (Component unTillReleaseMDep : unTillReleaseMDeps) {
 			if (unTillReleaseMDep.getName().equals(UBL)) {
-				assertEquals(dbUBL.getVersion().toPreviousMinorRelease(), unTillReleaseMDep.getVersion().toReleaseString());
+				assertEquals(dbUBL.getVersion().toPreviousMinor().toReleaseString(), unTillReleaseMDep.getVersion().toReleaseString());
 			} else if (unTillReleaseMDep.getName().equals(UNTILLDB)) {
-				assertEquals(dbUnTillDb.getVersion().toPreviousMinorRelease(), unTillReleaseMDep.getVersion().toReleaseString());
+				assertEquals(dbUnTillDb.getVersion().toPreviousMinor().toReleaseString(), unTillReleaseMDep.getVersion().toReleaseString());
 			} else {
 				fail();
 			}
@@ -183,7 +187,7 @@ public class SCMWorkflowForkReleaseTest extends SCMWorkflowTestBase {
 		
 		List<Component> ublReleaseMDeps = rbUBLFixedVer.getMDeps();
 		assertTrue(ublReleaseMDeps.size() == 1);
-		assertEquals(dbUnTillDb.getVersion().toPreviousMinorRelease(), ublReleaseMDeps.get(0).getVersion().toReleaseString());
+		assertEquals(dbUnTillDb.getVersion().toPreviousMinor().toReleaseString(), ublReleaseMDeps.get(0).getVersion().toReleaseString());
 		
 		assertTrue(rbUnTillDbFixedVer.getMDeps().isEmpty());
 	}
@@ -198,7 +202,7 @@ public class SCMWorkflowForkReleaseTest extends SCMWorkflowTestBase {
 		checkChildActionsTypes(action, exp);
 		
 		try (IProgress progress = new ProgressConsole(action.toString(), ">>> ", "<<< ")) {
-			action.execute(progress);
+			assertTrue(action.execute(progress) instanceof ActionResultFork);
 		}
 
 		assertFalse(env.getUnTillVCS().getBranches("").contains(rbUnTillFixedVer.getReleaseBranchName()));
@@ -216,7 +220,7 @@ public class SCMWorkflowForkReleaseTest extends SCMWorkflowTestBase {
 		checkChildActionsTypes(action, exp);
 		
 		try (IProgress progress = new ProgressConsole(action.toString(), ">>> ", "<<< ")) {
-			action.execute(progress);
+			assertTrue(action.execute(progress) instanceof ActionResultFork);
 		}
 		
 		assertTrue(env.getUnTillVCS().getBranches("").contains(rbUnTillFixedVer.getReleaseBranchName()));

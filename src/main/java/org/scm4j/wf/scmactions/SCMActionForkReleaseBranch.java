@@ -9,7 +9,7 @@ import org.scm4j.wf.LogTag;
 import org.scm4j.wf.SCMWorkflow;
 import org.scm4j.wf.actions.ActionAbstract;
 import org.scm4j.wf.actions.IAction;
-import org.scm4j.wf.actions.results.ActionResultReleaseBranchFork;
+import org.scm4j.wf.actions.results.ActionResultFork;
 import org.scm4j.wf.branch.DevelopBranch;
 import org.scm4j.wf.branch.DevelopBranchStatus;
 import org.scm4j.wf.branch.ReleaseBranch;
@@ -53,7 +53,7 @@ public class SCMActionForkReleaseBranch extends ActionAbstract {
 			IVCS vcs = comp.getVcsRepository().getVcs();
 			if (rb.exists()) {
 				progress.reportStatus("release branch already forked: " + rb.getReleaseBranchName());
-				return new ActionResultReleaseBranchFork(rb.getReleaseBranchName());
+				return new ActionResultFork(rb.getReleaseBranchName());
 			} else {
 				vcs.createBranch(db.getName(), rb.getReleaseBranchName(), "release branch created");
 				progress.reportStatus("branch " + rb.getReleaseBranchName() + " created");
@@ -73,7 +73,7 @@ public class SCMActionForkReleaseBranch extends ActionAbstract {
 						DevelopBranch dbActualMDep = new DevelopBranch(actualMDep);
 						
 						String futureRelaseVersionStr = dbActualMDep.getStatus() == DevelopBranchStatus.MODIFIED ? dbActualMDep.getVersion().toReleaseString() :
-							dbActualMDep.getVersion().toPreviousMinorRelease();
+							dbActualMDep.getVersion().toPreviousMinor().toReleaseString();
 								
 						Component frozenMDep = actualMDep.cloneWithDifferentVersion(futureRelaseVersionStr);
 						frozenMDeps.add(frozenMDep);
@@ -84,7 +84,7 @@ public class SCMActionForkReleaseBranch extends ActionAbstract {
 				}
 			}
 			
-			String verContent = currentVer.toNextMinorSnapshot();
+			String verContent = currentVer.toNextMinor().toString();
 			vcs.setFileContent(db.getName(), SCMWorkflow.VER_FILE_NAME, verContent, LogTag.SCM_VER + " " + verContent);
 			progress.reportStatus("change to version " + verContent + " in trunk");
 
@@ -92,7 +92,7 @@ public class SCMActionForkReleaseBranch extends ActionAbstract {
 			vcs.setFileContent(newBranchName, SCMWorkflow.VER_FILE_NAME, newVersion, LogTag.SCM_VER + " " + newVersion);
 			progress.reportStatus("change to version " + newVersion + " in branch " + newBranchName);
 
-			return new ActionResultReleaseBranchFork(rb.getReleaseBranchName());
+			return new ActionResultFork(rb.getReleaseBranchName());
 		} catch (Throwable t) {
 			progress.reportStatus("execution error: " + t.toString() + ": " + t.getMessage());
 			return t;

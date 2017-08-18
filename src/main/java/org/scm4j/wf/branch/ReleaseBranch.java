@@ -81,7 +81,7 @@ public class ReleaseBranch {
 			List<VCSTag> tags = vcs.getTags();
 			DevelopBranch db = new DevelopBranch(comp);
 			for (VCSTag tag : tags) {
-				if (tag.getRelatedCommit().equals(lastCommit) && tag.getTagName().equals(db.getVersion().toPreviousMinorRelease())) {
+				if (tag.getRelatedCommit().equals(lastCommit) && tag.getTagName().equals(db.getVersion().toPreviousMinor().toReleaseString())) {
 					return true;
 				}
 			}
@@ -118,7 +118,7 @@ public class ReleaseBranch {
 	}
 	
 	public String getReleaseBranchName() {
-		return comp.getVcsRepository().getReleaseBranchPrefix() + getVersion().toReleaseString();
+		return comp.getVcsRepository().getReleaseBranchPrefix() + getVersion().usePatch(false).toReleaseString();
 	}
 
 	@Override
@@ -135,7 +135,7 @@ public class ReleaseBranch {
 		List<VCSTag> tags = vcs.getTags();
 		DevelopBranch db = new DevelopBranch(comp);
 		for (VCSTag tag : tags) {
-			if (tag.getRelatedCommit().equals(releaseHeadCommit) && tag.getTagName().equals(db.getVersion().toPreviousMinorRelease())) {
+			if (tag.getRelatedCommit().equals(releaseHeadCommit) && tag.getTagName().equals(db.getVersion().toPreviousMinor().toReleaseString())) {
 				return tag;
 			}
 		}

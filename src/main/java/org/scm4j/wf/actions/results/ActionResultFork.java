@@ -1,6 +1,6 @@
 package org.scm4j.wf.actions.results;
 
-public class ActionResultReleaseBranchFork {
+public class ActionResultFork {
 
 	private final String branchName;
 
@@ -8,13 +8,12 @@ public class ActionResultReleaseBranchFork {
 		return branchName;
 	}
 
-	public ActionResultReleaseBranchFork(String branchName) {
-		super();
+	public ActionResultFork(String branchName) {
 		this.branchName = branchName;
 	}
 
 	@Override
 	public String toString() {
-		return "ActionResultReleaseBranchFork [branchName=" + branchName + "]";
+		return "ActionResultFork [branchName=" + branchName + "]";
 	}
 }

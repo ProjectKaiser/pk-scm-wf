@@ -50,7 +50,7 @@ public class DevelopBranch {
 	}
 
 	public String getPreviousMinorReleaseBranchName() {
-		return comp.getVcsRepository().getReleaseBranchPrefix() + getVersion().toPreviousMinorRelease();
+		return comp.getVcsRepository().getReleaseBranchPrefix() + getVersion().toPreviousMinor().usePatch(false).useSnapshot(false).toString();
 	}
 	
 	public boolean hasVersionFile() {
@@ -77,7 +77,7 @@ public class DevelopBranch {
 	
 	public ReleaseBranch getCurrentReleaseBranch(VCSRepositories repos) {
 		//DevelopBranch db = new DevelopBranch(comp);
-		Version ver = new Version(getVersion().toPreviousMinorRelease());
+		Version ver = getVersion().toPreviousMinor();
 		
 		ReleaseBranch rb = new ReleaseBranch(comp, ver, repos);
 		DevelopBranchStatus dbs = getStatus();
@@ -91,7 +91,7 @@ public class DevelopBranch {
 			if (rbs != ReleaseBranchStatus.MISSING && rbs != ReleaseBranchStatus.BUILT && rbs != ReleaseBranchStatus.TAGGED) {
 				oldestRB = rb;
 			}
-			ver = new Version(ver.toPreviousMinorRelease());
+			ver = ver.toPreviousMinor();
 			if (ver.getMinor().equals("0")) {
 				return oldestRB != null ? oldestRB : new ReleaseBranch(comp, repos);
 			}
