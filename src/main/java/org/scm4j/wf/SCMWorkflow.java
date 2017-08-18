@@ -38,9 +38,13 @@ public class SCMWorkflow implements ISCMWorkflow {
 		this(VCSRepositories.loadVCSRepositories());
 	}
 	
-	@Override 
+	@Override
 	public IAction getProductionReleaseAction(String componentName) {
-		return getProductionReleaseAction(new Component(componentName, repos));
+		return getProductionReleaseAction(new Component(componentName, repos), ActionKind.AUTO);
+	}
+	
+	public IAction getProductionReleaseAction(String componentName, ActionKind actionKind) {
+		return getProductionReleaseAction(new Component(componentName, repos), actionKind);
 	}
 	
 	public IAction getProductionReleaseAction(Component comp) {
