@@ -84,31 +84,31 @@ public class SCMWorkflow implements ISCMWorkflow {
 		ReleaseBranchStatus rbs = rb.getStatus();
 		if (dbs == DevelopBranchStatus.MODIFIED) {
 			if (rbs == ReleaseBranchStatus.MISSING || rbs == ReleaseBranchStatus.BUILT || rbs == ReleaseBranchStatus.TAGGED) {
-				// если мы MODIFIED и=\ RB MISSING или завершена, то значит надо форкать новый релиз
+				// if we are MODIFIED and RB is MISSING or completed then need to fork a new release
 				skipAllBuilds(childActions);
 				return new SCMActionForkReleaseBranch(comp, childActions, ReleaseReason.NEW_FEATURES);
 			}
-			// а если мы MODIFIED и RB в подвешенном состоянии, то надо добивать существующий RB
+			// if we are MODIFIED and RB is not completed then need to accomplish the existsing RB
 			skipAllForks(childActions);
 			return new SCMActionBuild(comp, childActions, ReleaseReason.NEW_FEATURES, rb.getVersion());
 		}
 		
-		// тут если BRANCHED, то по-любому forked. А если IGNORED, то по-любому не forked
+		// If BRANCHED then surely forked. And if IGNORED then surely not forked
 		
 		if (dbs == DevelopBranchStatus.BRANCHED) {
 			/**
-			 * это значит мы по-любому forked.
+			 * this means we are surely forked
 			 */
 			
 			if (rbs == ReleaseBranchStatus.MISSING) {
-				// это значит мы только-только отвели ветку и поставили #scm-ver в транк. Мы пытаемся определить ветку текущего релиза, которой еще нет.
-				// А такое бывает? Бывает. Отвели 2.59, в trunk записали 2.60 => dbs BRANCHED, rbs MISSING
+				// this means that weare just forked a branch and set #scm-ver tag in trunk. We are trying to determine the current release branch which does not exist yet.
+				// Is this possible? Possible: forked 2.59, 2.60 is written to trunk => dbs is BRANCHED, rbs is MISSING
 				return new ActionNone(comp, childActions, "");
 			}
 			if (rbs == ReleaseBranchStatus.TAGGED || rbs == ReleaseBranchStatus.BUILT) {
 				return getActionIfNewDependencies(comp, childActions, rb);
 			}
-			// если релизная ветка в подвешенном состоянии, т.е. MDEPS_* или BRANCHED, то достраиваем недостроенное
+			// if a Release branch is not completed, i.e. MDEPS_* or BRANCHED then need to build the unbuilt
 			skipAllForks(childActions);
 			return rb.getMDeps().isEmpty() ? 
 					new SCMActionBuild(comp, childActions, ReleaseReason.NEW_FEATURES, rb.getVersion()) :
@@ -125,34 +125,33 @@ public class SCMWorkflow implements ISCMWorkflow {
 			ReleaseBranch lastUnbuiltRB) {
 		
 		/**
-		 * для каждого mDep посмотрим его предыдущий релиз. Если он есть, то посмотрим, а использовался ли этот mDeps в данной (она здесь последняя unbuilt) версии данного компонента?
+		 * Will check previous release for each mDep. If it exists then check if this release was used in the current (here it is the last unbuilt) version of the current component?
 		 */
 		
 		List<Component> mDepsFromDev = new DevelopBranch(comp).getMDeps();
 		List<Component> mDepsFromLastUnbuiltRB = lastUnbuiltRB.getMDeps();
 		for (Component mDepFromDev : mDepsFromDev) {
 			/**
-			 * берем последний релиз UDB. 
+			 * Take the last UDB release
 			 */
 			ReleaseBranch lastMDepRelease = getLastForkedReleaseBranch(mDepFromDev);
 			if (lastMDepRelease == null) {
-				// это значит udb не собирался.
-				// посмотрим, а не надо ли NEW_DEPENDENCIES из-за того, что мы только что отвели UDB?
+				// UDB was not built
+				// let's see is NEW_DEPENDENCIES required due of we just forked UDB?
 				continue;
 			}
-			// mDepsFromLastUnbuiltRB не может быть пустым только если UBL еще не строился
 			if (mDepsFromLastUnbuiltRB.isEmpty()) {
-				// если у нас вообще ничего не используется, а релиз UDB есть - значит есть NEW_DEPENDENCIES
-				// здесь возможен только fork. Build невозможен потому, что нет релизной ветки, в которой были бы правильные mDeps 
-				//SCMWorkflow.return getForkOrBuildAction(comp, childActions, lastUnbuiltRB);
+				/**
+				 * If we are use nothing and UDB release exists then we have NEW_DEPENDENCIES
+				 * Fork only is possible here. Build is impossible because release branch with correct mDeps does not exists
+				 */
 				skipAllBuilds(childActions);
 				return new SCMActionForkReleaseBranch(comp, childActions, ReleaseReason.NEW_DEPENDENCIES);
 			}
-			// нашли последний релиз UDB. Посмотрим, используется ли этот релиз в lastUnbuiltRB
+			// The last UDB release found. Check if this release is used in lastUnbuiltRB
 			for (Component mDepFromLastUnbuiltRB : mDepsFromLastUnbuiltRB) {
 				if (mDepFromLastUnbuiltRB.getName().equals(mDepFromDev.getName()) && !mDepFromLastUnbuiltRB.getVersion().equals(lastMDepRelease.getVersion())) {
-					// здесь возможен только fork. Build невозможен потому, что нет релизной ветки, в которой были бы правильные mDeps
-					//return getForkOrBuildAction(comp, childActions, lastUnbuiltRB);  
+					//  Fork only is possible here. Build is impossible because release branch with correct mDeps does not exists
 					skipAllBuilds(childActions);
 					return new SCMActionForkReleaseBranch(comp, childActions, ReleaseReason.NEW_DEPENDENCIES);
 				}
