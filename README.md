@@ -23,17 +23,20 @@ For low vcs operations scm4j-vcs-* libraries are used
 
 # Terms
 - `Managable dependency` (`mdeps`)
- - Component which has its own repository and is under control, i.e. can be built, branched and uploaded to a maven repository
+  - Component which has its own repository and is under control, i.e. can be built, branched and uploaded to a maven repository
 - Component
   - Artifact alias 
-  - Can be Root or nested
-- Develop Branc
+  - Can be Root or Nested
+- Component Repository
+  - Component's VCS Repository
+  - SVN and Git are supported
+- Develop Branch
   - Branch new features are commited to
   - Has version with -SNAPSHOT
   - Has full mDeps list without versions (-SNAPSHOTs only are provided)
 - Release Branch
   - Branch the new Release is building on
-  - named Release/<version>
+  - named Release/<version without patch and -SNAPSHOT>
   - Has Status. See [branches-statuses.md](branches-statuses.md)
   - Can exist or be MISSING
   - Can be Completed, i.e. have BUILT or TAGGED status
@@ -46,6 +49,16 @@ For low vcs operations scm4j-vcs-* libraries are used
       - Release/1.0 is still used although new features are commited to Dev Branch 
     - Build (and optinaly tag) Release/1.0
       - CRB is Release/2.0 (MISSING for now)
+- Version file
+  - file `version` which contains current product version. Located in the Product Repository root
+    - has -SNAPSHOT in Develop Branch
+    - has no -SNAPSHOT in Release Branch
+    - See [data-structure.md](data-structure.md)
+- MDeps file
+  - Managed Dependencies definition file. Located in the Component Repository root
+  - Must not contain exact versions in Develop Branch i.e. com.my:component:-SNAPSHOT
+  - Exact versions are written automatically in Release Branch on Fork stage. This process calls "MDeps freezing"
+  
 # Usage
 - Install [groovy](http://groovy-lang.org/install.html)
 - Download and save [run.groovy](run.groovy) file
