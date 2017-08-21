@@ -6,6 +6,7 @@ import org.scm4j.commons.progress.IProgress;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.workingcopy.IVCSLockedWorkingCopy;
 import org.scm4j.wf.LogTag;
+import org.scm4j.wf.SCMWorkflow;
 import org.scm4j.wf.actions.ActionAbstract;
 import org.scm4j.wf.actions.IAction;
 import org.scm4j.wf.actions.results.ActionResultVersion;
@@ -46,8 +47,8 @@ public class SCMActionBuild extends ActionAbstract {
 			ReleaseBranch rb = db.getCurrentReleaseBranch(repos);
 			ReleaseBranchStatus rbs = rb.getStatus();
 			if (rbs == ReleaseBranchStatus.BUILT || rbs == ReleaseBranchStatus.TAGGED) {
-				progress.reportStatus("version " + rb.getVersion().toString() + " already built");
-				return new ActionResultVersion(comp.getName(), rb.getVersion().toString(), true, rb.getReleaseBranchName());
+				progress.reportStatus("version " + rb.getTargetVersion().toString() + " already built");
+				return new ActionResultVersion(comp.getName(), rb.getTargetVersion().toString(), true, rb.getReleaseBranchName());
 			}
 			
 			progress.reportStatus("target version to build: " + targetVersion);
@@ -75,9 +76,9 @@ public class SCMActionBuild extends ActionAbstract {
 				}
 			}
 			
-			vcs.setFileContent(rb.getReleaseBranchName(), "built_version", targetVersion.toReleaseString(), LogTag.SCM_BUILT + " " + targetVersion.toReleaseString());
+			vcs.setFileContent(rb.getReleaseBranchName(), SCMWorkflow.VER_FILE_NAME, targetVersion.toString(), LogTag.SCM_BUILT + " " + targetVersion.toString());
 			
-			ActionResultVersion res = new ActionResultVersion(comp.getName(), targetVersion.toReleaseString(), true,
+			ActionResultVersion res = new ActionResultVersion(comp.getName(), targetVersion.toString(), true,
 					rb.getReleaseBranchName());
 			progress.reportStatus(comp.getName() + " " + res.getVersion() + " is built in " + rb.getReleaseBranchName());
 			addResult(getName(), res); 

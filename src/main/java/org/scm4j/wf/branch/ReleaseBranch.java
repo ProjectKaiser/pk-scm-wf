@@ -22,7 +22,7 @@ public class ReleaseBranch {
 	private final VCSRepositories repos;
 	
 	public ReleaseBranch(Component comp, VCSRepositories repos) {
-		this(comp, null, repos);
+		this(comp, new Version(comp.getVcsRepository().getVcs().getFileContent(comp.getVcsRepository().getDevBranch(), SCMWorkflow.VER_FILE_NAME).trim()),  repos);
 	}
 	
 	public ReleaseBranch(Component comp, Version version, VCSRepositories repos) {
@@ -81,7 +81,7 @@ public class ReleaseBranch {
 			List<VCSTag> tags = vcs.getTags();
 			DevelopBranch db = new DevelopBranch(comp);
 			for (VCSTag tag : tags) {
-				if (tag.getRelatedCommit().equals(lastCommit) && tag.getTagName().equals(db.getVersion().toPreviousMinorRelease())) {
+				if (tag.getRelatedCommit().equals(lastCommit) && tag.getTagName().equals(db.getVersion().toPreviousMinor().toReleaseString())) {
 					return true;
 				}
 			}
@@ -117,14 +117,13 @@ public class ReleaseBranch {
 		return true;
 	}
 	
-	public String getReleaseBranchName() {
-		return comp.getVcsRepository().getReleaseBranchPrefix() + getVersion().toReleaseString();
-	}
+	
 
 	@Override
 	public String toString() {
-		return "ReleaseBranch [comp=" + comp + ", targetVersion=" + getVersion() + ", status=" + getStatus() + "]";
+		return "ReleaseBranch [comp=" + comp + ", targetVersion=" + getTargetVersion().toReleaseString() + ", status=" + getStatus() + "]";
 	}
+
 
 	public VCSTag getReleaseTag() {
 		if (exists() || !isLastCommitTagged()) {
@@ -135,7 +134,7 @@ public class ReleaseBranch {
 		List<VCSTag> tags = vcs.getTags();
 		DevelopBranch db = new DevelopBranch(comp);
 		for (VCSTag tag : tags) {
-			if (tag.getRelatedCommit().equals(releaseHeadCommit) && tag.getTagName().equals(db.getVersion().toPreviousMinorRelease())) {
+			if (tag.getRelatedCommit().equals(releaseHeadCommit) && tag.getTagName().equals(db.getVersion().toPreviousMinor().toReleaseString())) {
 				return tag;
 			}
 		}
@@ -152,11 +151,37 @@ public class ReleaseBranch {
 		return mDeps.getMDeps();
 	}
 	
-	public Version getVersion() {
-		if (version == null) {
-			return new Version(vcs.getFileContent(comp.getVcsRepository().getDevBranch(), SCMWorkflow.VER_FILE_NAME).trim());
-		} else {
-			return version;
-		}
+	public String getReleaseBranchName() {
+		return comp.getVcsRepository().getReleaseBranchPrefix() + version.usePatch(false).toReleaseString();
 	}
+	
+	public Version getCurrentVersion() {
+		return new Version(comp.getVcsRepository().getVcs().getFileContent(getReleaseBranchName(), SCMWorkflow.VER_FILE_NAME).trim()).useSnapshot(false);
+	}
+	
+	public Version getVersion() {
+		return version.useSnapshot(false);
+	}
+	
+	public Version getTargetVersion() {
+		return getVersion().toNextPatch();
+	}
+
+//	private boolean isModified() {
+//		if (!exists()) {
+//			return false;
+//		}
+//		List<VCSCommit> log = vcs.log(getReleaseBranchName(), 1);
+//		if (log == null || log.isEmpty()) {
+//			return false;
+//		}
+//		VCSCommit lastCommit = log.get(0);
+//		if (lastCommit.getLogMessage().contains(LogTag.SCM_IGNORE)) {
+//			return false;
+//		}
+//		if (lastCommit.getLogMessage().contains(LogTag.SCM_VER)) {
+//			return false;
+//		}
+//		return true;
+//	}
 }

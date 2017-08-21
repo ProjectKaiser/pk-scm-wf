@@ -1,18 +1,23 @@
 @GrabResolver(name = 'jitpack', root = 'https://jitpack.io', changing = true, m2Compatible = true)
 @Grab(group = 'com.github.scm4j', module = 'scm4j-wf', version = 'dev-SNAPSHOT', changing = true)
-// исправить dev-SNAPSHOT
 
 import org.scm4j.wf.SCMWorkflow;
 import org.scm4j.wf.actions.IAction;
 import org.scm4j.wf.actions.PrintAction;
+import org.scm4j.commons.progress.IProgress;
+import org.scm4j.commons.progress.ProgressConsole;
+import org.scm4j.wf.actions.ActionKind;
+import org.scm4j.wf.conf.Component;
+//import org.apache.commons.cli.Option;
 
 class CLI {
 
 	static void main(args) {
 
-		def cli = new CliBuilder(usage: 'groovy run.groovy -show|-build|-tag productCoords')
+		def cli = new CliBuilder(usage: 'groovy run.groovy -show|-fork|-build|-tag productCoords')
 
 		cli.show('show actions will be made with product specified by productCoords', required: false, args: 1, argName: 'productCoords', type: String)
+		cli.fork('cerate all necessary release branches for product specified by productCoords', required: false, args: 1, argName: 'productCoords', type:String)
 		cli.build('execute production release action on product specified by productCoords', required: false, args: 1, argName: 'productCoords', type: String)
 		cli.tag('execute tag action on product specified by productCoords', required: false, args: 1, argName: 'productCoords', type: String)
 
@@ -22,19 +27,37 @@ class CLI {
 		}
 		
 		if (opt.show) {
-			SCMWorkflow wf = new SCMWorkflow(opt.show)
-			IAction action = wf.getProductionReleaseAction(null);
+			SCMWorkflow wf = new SCMWorkflow()
+			IAction action = wf.getProductionReleaseAction(opt.show);
 			PrintAction pa = new PrintAction();
 			pa.print(System.out, action);
+		} else if (opt.fork) {
+			SCMWorkflow wf = new SCMWorkflow()
+			IAction action = wf.getProductionReleaseAction(opt.fork, ActionKind.FORK);
+			IProgress progress = new ProgressConsole(System.out, ">>> ", "<<< ");
+			Object res = action.execute(progress);
+			progress.close();
+			if (res instanceof Throwable) {
+				System.exit(1);
+			}
 		} else if (opt.build) {
-			SCMWorkflow wf = new SCMWorkflow(opt.show)
-			IAction action = wf.getProductionReleaseAction(null);
-			PrintAction pa = new PrintAction();
-			pa.print(System.out, action);
-			IProgress progress = new ProgressConsole(action.toString, ">>> ", "<<< ");
-			action.execute(progress);
+			SCMWorkflow wf = new SCMWorkflow()
+			IAction action = wf.getProductionReleaseAction(opt.fork, ActionKind.BUILD);
+			IProgress progress = new ProgressConsole(System.out, ">>> ", "<<< ");
+			Object res = action.execute(progress);
+			progress.close();
+			if (res instanceof Throwable) {
+				System.exit(1);
+			}
 		} else if (opt.tag) {
-
+			SCMWorkflow wf = new SCMWorkflow()
+			IAction action = wf.getTagReleaseAction(new Component(opt.fork));
+			IProgress progress = new ProgressConsole(System.out, ">>> ", "<<< ");
+			Object res = action.execute(progress);
+			progress.close();
+			if (res instanceof Throwable) {
+				System.exit(1);
+			}
 		} else {
 			cli.usage()
 		}

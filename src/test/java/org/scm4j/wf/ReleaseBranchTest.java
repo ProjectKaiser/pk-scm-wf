@@ -57,7 +57,7 @@ public class ReleaseBranchTest extends SCMWorkflowTestBase {
 	public void testTagged() {
 		env.getUnTillDbVCS().createBranch(null, rbUnTillDbFixedVer.getReleaseBranchName(), null);
 		env.generateLogTag(env.getUnTillDbVCS(), rbUnTillDbFixedVer.getReleaseBranchName(), LogTag.SCM_VER);
-		String tagName = dbUnTillDb.getVersion().toPreviousMinorRelease();
+		String tagName = dbUnTillDb.getVersion().toPreviousMinor().toReleaseString();
 		env.getUnTillDbVCS().createTag(rbUnTillDbFixedVer.getReleaseBranchName(), tagName, "release " + tagName);
 		
 		ReleaseBranchStatus rbs = rbUnTillDbFixedVer.getStatus();
@@ -75,14 +75,14 @@ public class ReleaseBranchTest extends SCMWorkflowTestBase {
 		env.getUnTillDbVCS().createBranch(null, rbUnTillDbFixedVer.getReleaseBranchName(), null);
 		env.getUblVCS().createBranch(null, rbUBLFixedVer.getReleaseBranchName(), null);
 		
-		String unTillDbTagName = new DevelopBranch(compUnTillDb).getVersion().toPreviousMinorRelease();
+		String unTillDbTagName = new DevelopBranch(compUnTillDb).getVersion().toPreviousMinor().toReleaseString();
 		env.generateLogTag(env.getUnTillDbVCS(), rbUnTillDbFixedVer.getReleaseBranchName(), LogTag.SCM_BUILT);
 		env.getUnTillDbVCS().createTag(rbUnTillDbFixedVer.getReleaseBranchName(), unTillDbTagName, "release " + unTillDbTagName);
 		
 		ReleaseBranchStatus rbs = rbUnTillFixedVer.getStatus();
 		assertEquals(ReleaseBranchStatus.BRANCHED, rbs);
 		
-		String ublTagName = new DevelopBranch(compUBL).getVersion().toPreviousMinorRelease();
+		String ublTagName = new DevelopBranch(compUBL).getVersion().toPreviousMinor().toReleaseString();
 		env.generateLogTag(env.getUblVCS(), rbUBLFixedVer.getReleaseBranchName(), LogTag.SCM_BUILT);
 		env.getUblVCS().createTag(rbUBLFixedVer.getReleaseBranchName(), ublTagName, "release " + ublTagName);
 		
