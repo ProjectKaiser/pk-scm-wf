@@ -13,12 +13,18 @@ public class Version {
 	private final String verStr;
 	private final Boolean isEmpty;
 
-	private boolean usePatch = true;
-	private boolean useSnapshot = true;
+	private final boolean usePatch;
+	private final boolean useSnapshot;
 	
-	public Version(String ver) {
-		verStr = ver;
-		if (ver.isEmpty()) {
+	public Version(String verStr) {
+		this(verStr, true, true);
+	}
+	
+	private Version(String verStr, boolean usePatch, boolean useSnapshot) {
+		this.verStr = verStr;
+		this.usePatch = usePatch;
+		this.useSnapshot = useSnapshot;
+		if (verStr.isEmpty()) {
 			snapshot = "";
 			prefix = "";
 			minor = "";
@@ -26,32 +32,32 @@ public class Version {
 			isEmpty = true;
 		} else {
 			isEmpty = false;
-			if (ver.contains(SNAPSHOT)) {
+			if (verStr.contains(SNAPSHOT)) {
 				snapshot = SNAPSHOT;
-				ver = ver.replace(SNAPSHOT, "");
+				verStr = verStr.replace(SNAPSHOT, "");
 			} else {
 				snapshot = "";
 			}
-			if (ver.lastIndexOf(".") > 0) {
-				patch = ver.substring(ver.lastIndexOf("."), ver.length());
-				ver = ver.substring(0, ver.lastIndexOf("."));
-				if (ver.lastIndexOf(".") > 0) {
-					minor = ver.substring(ver.lastIndexOf(".") + 1, ver.length());
+			if (verStr.lastIndexOf(".") > 0) {
+				patch = verStr.substring(verStr.lastIndexOf("."), verStr.length());
+				verStr = verStr.substring(0, verStr.lastIndexOf("."));
+				if (verStr.lastIndexOf(".") > 0) {
+					minor = verStr.substring(verStr.lastIndexOf(".") + 1, verStr.length());
 				} else {
-					minor = ver;
+					minor = verStr;
 				}
-				prefix = ver.substring(0, ver.lastIndexOf(".") + 1);
+				prefix = verStr.substring(0, verStr.lastIndexOf(".") + 1);
 			} else {
 				prefix = "0.";
-				minor = ver;
+				minor = verStr;
 				patch = ".0";
 			}
 			if (!minor.isEmpty() && !StringUtils.isNumeric(minor)) {
-				throw new IllegalArgumentException("wrong version: " + ver);
+				throw new IllegalArgumentException("wrong version: " + verStr);
 			}
 		}
 	}
-	
+
 	public String getPatch() {
 		return usePatch ? patch : "";
 	}
@@ -72,40 +78,44 @@ public class Version {
 		return prefix + minor + getPatch() + getSnapshot();
 	}
 	
-	public Version usePatch(boolean usePath) {
-		this.usePatch = usePath;
-		return this;
+	public Version usePatch(boolean usePatch) {
+		return new Version(verStr, usePatch, useSnapshot);
 	}
 	
 	public Version useSnapshot(boolean useSnapshot) {
-		this.useSnapshot = useSnapshot;
-		return this;
+		return new Version(verStr, usePatch, useSnapshot);
 	}
 	
 	public Version toNextPatch() {
 		if (patch.isEmpty()) {
-			return new Version(prefix + minor + ".1" + snapshot);
+			return clone(prefix + minor + ".1" + snapshot);
 		}
 		int i = 0;
+		while (i < patch.length() && !Character.isDigit(patch.charAt(i))) i++;
+		int firstDigitStart = i;
 		while (i < patch.length() && Character.isDigit(patch.charAt(i))) i++;
-		if (i == 0) {
+		if (i == firstDigitStart) {
 			return new Version(prefix + minor + patch + ".1" + snapshot);
 		}
-		int patchInt = Integer.parseInt(patch.substring(0, i)) + 1;
-		String newPatch = Integer.toString(patchInt) + patch.substring(i, patch.length());
-		return new Version(prefix + minor + newPatch + snapshot);
+		int patchInt = Integer.parseInt(patch.substring(firstDigitStart, i)) + 1;
+		String newPatch = patch.substring(0, firstDigitStart) + Integer.toString(patchInt) +  patch.substring(i, patch.length());
+		return clone(prefix + minor + newPatch + snapshot);
 	}
 
 	public Version toPreviousMinor() {
 		checkMinor();
-		return new Version(prefix + Integer.toString(Integer.parseInt(minor) - 1) + patch + snapshot);
+		return clone(prefix + Integer.toString(Integer.parseInt(minor) - 1) + patch + snapshot);
 	}
 
 	public Version toNextMinor() {
 		checkMinor();
-		return new Version(prefix + Integer.toString(Integer.parseInt(minor) + 1) + patch + snapshot);
+		return clone(prefix + Integer.toString(Integer.parseInt(minor) + 1) + patch + snapshot);
 	}
 	
+	private Version clone(String verStr) {
+		return new Version(verStr, usePatch, useSnapshot);
+	}
+
 	private void checkMinor() {
 		if (!StringUtils.isNumeric(minor)) {
 			throw new IllegalArgumentException("wrong version" + verStr);
@@ -113,18 +123,46 @@ public class Version {
 	}
 
 	@Override
-	public boolean equals(Object o) {
-		if (this == o)
+	public boolean equals(Object obj) {
+		if (this == obj)
 			return true;
-		if (o == null || getClass() != o.getClass())
+		if (obj == null)
 			return false;
-		Version version = (Version) o;
-		return !(verStr != null ? !verStr.equals(version.verStr) : version.verStr != null);
+		if (getClass() != obj.getClass())
+			return false;
+		Version other = (Version) obj;
+		if (minor == null) {
+			if (other.minor != null)
+				return false;
+		} else if (!minor.equals(other.minor))
+			return false;
+		if (patch == null) {
+			if (other.patch != null)
+				return false;
+		} else if (!patch.equals(other.patch))
+			return false;
+		if (prefix == null) {
+			if (other.prefix != null)
+				return false;
+		} else if (!prefix.equals(other.prefix))
+			return false;
+		if (usePatch != other.usePatch)
+			return false;
+		if (useSnapshot != other.useSnapshot)
+			return false;
+		return true;
 	}
 
 	@Override
 	public int hashCode() {
-		return verStr != null ? verStr.hashCode() : 0;
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((minor == null) ? 0 : minor.hashCode());
+		result = prime * result + ((patch == null) ? 0 : patch.hashCode());
+		result = prime * result + ((prefix == null) ? 0 : prefix.hashCode());
+		result = prime * result + (usePatch ? 1231 : 1237);
+		result = prime * result + (useSnapshot ? 1231 : 1237);
+		return result;
 	}
 
 	public Boolean isEmpty() {
@@ -136,6 +174,6 @@ public class Version {
 	}
 
 	public String toReleaseString() {
-		return new Version(verStr).useSnapshot(false).toString();
+		return useSnapshot(false).toString();
 	}
 }

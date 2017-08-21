@@ -47,8 +47,8 @@ public class SCMActionBuild extends ActionAbstract {
 			ReleaseBranch rb = db.getCurrentReleaseBranch(repos);
 			ReleaseBranchStatus rbs = rb.getStatus();
 			if (rbs == ReleaseBranchStatus.BUILT || rbs == ReleaseBranchStatus.TAGGED) {
-				progress.reportStatus("version " + rb.getVersion().toString() + " already built");
-				return new ActionResultVersion(comp.getName(), rb.getVersion().toString(), true, rb.getReleaseBranchName());
+				progress.reportStatus("version " + rb.getTargetVersion().toString() + " already built");
+				return new ActionResultVersion(comp.getName(), rb.getTargetVersion().toString(), true, rb.getReleaseBranchName());
 			}
 			
 			progress.reportStatus("target version to build: " + targetVersion);
@@ -76,9 +76,9 @@ public class SCMActionBuild extends ActionAbstract {
 				}
 			}
 			
-			vcs.setFileContent(rb.getReleaseBranchName(), SCMWorkflow.VER_FILE_NAME, targetVersion.toNextPatch().toReleaseString(), LogTag.SCM_BUILT + " " + targetVersion.toNextPatch().toReleaseString());
+			vcs.setFileContent(rb.getReleaseBranchName(), SCMWorkflow.VER_FILE_NAME, targetVersion.toString(), LogTag.SCM_BUILT + " " + targetVersion.toString());
 			
-			ActionResultVersion res = new ActionResultVersion(comp.getName(), targetVersion.toReleaseString(), true,
+			ActionResultVersion res = new ActionResultVersion(comp.getName(), targetVersion.toString(), true,
 					rb.getReleaseBranchName());
 			progress.reportStatus(comp.getName() + " " + res.getVersion() + " is built in " + rb.getReleaseBranchName());
 			addResult(getName(), res); 

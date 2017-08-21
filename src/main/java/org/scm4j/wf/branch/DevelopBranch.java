@@ -84,17 +84,21 @@ public class DevelopBranch {
 		if (dbs == DevelopBranchStatus.BRANCHED) {
 			return rb;
 		}
+		
 		ReleaseBranch oldestRB = null;
 		for (int i = 0; i <= 1; i++) {
 			ReleaseBranchStatus rbs = rb.getStatus();
-			
+
 			if (rbs != ReleaseBranchStatus.MISSING && rbs != ReleaseBranchStatus.BUILT && rbs != ReleaseBranchStatus.TAGGED) {
 				oldestRB = rb;
 			}
-			ver = ver.toPreviousMinor();
+			
 			if (ver.getMinor().equals("0")) {
 				return oldestRB != null ? oldestRB : new ReleaseBranch(comp, repos);
 			}
+			
+			ver = ver.toPreviousMinor();
+			
 			rb = new ReleaseBranch(comp, ver, repos);
 		}
 		return oldestRB != null ? oldestRB : new ReleaseBranch(comp, repos);

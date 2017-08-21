@@ -41,10 +41,7 @@ public class VersionTest {
 		assertEquals(new Version("11.21.31").toReleaseString(), "11.21.31");
 		assertEquals(new Version("11.21").toReleaseString(), "11.21");
 		assertEquals(new Version("11-SNAPSHOT").toReleaseString(), "0.11.0");
-		try {
-			assertEquals(new Version("-SNAPSHOT").toReleaseString(), "0..0");
-		} catch (IllegalArgumentException e) {
-		}
+		assertEquals(new Version("-SNAPSHOT").toReleaseString(), "-SNAPSHOT");
 	}
 	
 	@Test
@@ -110,7 +107,7 @@ public class VersionTest {
 	public void testEqualsAndHashcode() {
 		EqualsVerifier
 				.forClass(Version.class)
-				.withOnlyTheseFields("verStr")
+				.withOnlyTheseFields("minor", "prefix", "patch", "usePatch", "useSnapshot")
 				.usingGetClass()
 				.verify();
 	}

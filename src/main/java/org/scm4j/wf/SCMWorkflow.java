@@ -85,7 +85,7 @@ public class SCMWorkflow implements ISCMWorkflow {
 		}
 		
 		if (hasErrorActions(childActions)) {
-			return new ActionNone(comp, childActions, "has child error actions ");
+			return new ActionNone(comp, childActions, "has child error actions    ");
 		}
 		
 		DevelopBranchStatus dbs = db.getStatus();
@@ -105,7 +105,7 @@ public class SCMWorkflow implements ISCMWorkflow {
 			if (actionKind == ActionKind.FORK) {
 				return new ActionNone(comp, childActions, "nothing to fork");
 			}
-			return new SCMActionBuild(comp, childActions, ReleaseReason.NEW_FEATURES, rb.getVersion());
+			return new SCMActionBuild(comp, childActions, ReleaseReason.NEW_FEATURES, rb.getTargetVersion());
 		}
 		
 		// If BRANCHED then surely forked. And if IGNORED then surely not forked
@@ -129,8 +129,8 @@ public class SCMWorkflow implements ISCMWorkflow {
 				return new ActionNone(comp, childActions, "nothing to fork");
 			}
 			return rb.getMDeps().isEmpty() ? 
-					new SCMActionBuild(comp, childActions, ReleaseReason.NEW_FEATURES, rb.getVersion()) :
-					new SCMActionBuild(comp, childActions, ReleaseReason.NEW_DEPENDENCIES, rb.getVersion());
+					new SCMActionBuild(comp, childActions, ReleaseReason.NEW_FEATURES, rb.getTargetVersion().useSnapshot(false)) :
+					new SCMActionBuild(comp, childActions, ReleaseReason.NEW_DEPENDENCIES, rb.getTargetVersion().useSnapshot(false));
 		}
 		
 		return  getActionIfNewDependencies(comp, childActions, rb, actionKind); 
@@ -169,7 +169,7 @@ public class SCMWorkflow implements ISCMWorkflow {
 			}
 			// The last UDB release found. Check if this release is used in lastUnbuiltRB
 			for (Component mDepFromLastUnbuiltRB : mDepsFromLastUnbuiltRB) {
-				if (mDepFromLastUnbuiltRB.getName().equals(mDepFromDev.getName()) && !mDepFromLastUnbuiltRB.getVersion().equals(lastMDepRelease.getVersion())) {
+				if (mDepFromLastUnbuiltRB.getName().equals(mDepFromDev.getName()) && !mDepFromLastUnbuiltRB.getVersion().equals(lastMDepRelease.getTargetVersion())) {
 					//  Fork only is possible here. Build is impossible because release branch with correct mDeps does not exists
 					skipAllBuilds(childActions);
 					if (actionKind == ActionKind.BUILD) {

@@ -15,13 +15,38 @@ import org.scm4j.wf.actions.results.ActionResultFork;
 import org.scm4j.wf.actions.results.ActionResultVersion;
 import org.scm4j.wf.branch.ReleaseBranch;
 import org.scm4j.wf.conf.Component;
+import org.scm4j.wf.conf.Version;
 import org.scm4j.wf.scmactions.ReleaseReason;
 import org.scm4j.wf.scmactions.SCMActionForkReleaseBranch;
 
 public class SCMWorkflowForkReleaseTest extends SCMWorkflowTestBase {
 	
 	@Test
-	public void testForkUnTill() throws Exception {
+	public void testForkSingleComponent() throws Exception {
+		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), "feature added");
+		SCMWorkflow wf = new SCMWorkflow();
+		IAction action = wf.getProductionReleaseAction(UNTILLDB);
+		Expectations exp = new Expectations();
+		exp.put(UNTILLDB, SCMActionForkReleaseBranch.class);
+		exp.put(UNTILLDB, "reason", ReleaseReason.NEW_FEATURES);
+		checkChildActionsTypes(action, exp);
+		try (IProgress progress = new ProgressConsole(action.toString(), ">>> ", "<<< ")) {
+			assertTrue(action.execute(progress) instanceof ActionResultFork);
+		}
+		
+		// check branches
+		assertTrue(env.getUnTillDbVCS().getBranches("").contains(rbUnTillDbFixedVer.getReleaseBranchName()));
+		
+		// check versions
+		Version verTrunk = dbUnTillDb.getVersion();
+		ReleaseBranch newUnTillDbRB = dbUnTillDb.getCurrentReleaseBranch(repos);
+		Version verRelease = newUnTillDbRB.getCurrentVersion();
+		assertEquals(env.getUnTillDbVer().toNextMinor(), verTrunk);
+		assertEquals(env.getUnTillDbVer().useSnapshot(false), verRelease);
+	}
+	
+	@Test
+	public void testForkRootComponentWithMDeps() throws Exception {
 		env.generateFeatureCommit(env.getUnTillVCS(), compUnTill.getVcsRepository().getDevBranch(), "feature added");
 		SCMWorkflow wf = new SCMWorkflow();
 		IAction action = wf.getProductionReleaseAction(UNTILL);
@@ -44,7 +69,7 @@ public class SCMWorkflowForkReleaseTest extends SCMWorkflowTestBase {
 		// check versions
 		assertEquals(env.getUnTillVer().toNextMinor(), dbUnTill.getVersion());
 		ReleaseBranch newUnTillRB = new ReleaseBranch(compUnTill, env.getUnTillVer(), repos);
-		assertEquals(env.getUnTillVer(), newUnTillRB.getVersion());
+		assertEquals(env.getUnTillVer().toNextPatch().useSnapshot(false), newUnTillRB.getTargetVersion());
 		
 		// check mDeps
 		List<Component> unTillReleaseMDeps = rbUnTillFixedVer.getMDeps();
@@ -61,7 +86,7 @@ public class SCMWorkflowForkReleaseTest extends SCMWorkflowTestBase {
 	}
 	
 	@Test
-	public void testForkUBLAfterUnTillDb() throws Exception {
+	public void testForkRootIfNestedForkedAlready() throws Exception {
 		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), "feature added");
 		SCMWorkflow wf = new SCMWorkflow();
 		
@@ -96,12 +121,12 @@ public class SCMWorkflowForkReleaseTest extends SCMWorkflowTestBase {
 		// check UBL versions
 		assertEquals(env.getUblVer().toNextMinor(), dbUBL.getVersion());
 		ReleaseBranch newUBLRB = new ReleaseBranch(compUBL, env.getUblVer(), repos);
-		assertEquals(env.getUblVer(), newUBLRB.getVersion());
+		assertEquals(env.getUblVer().toNextPatch().useSnapshot(false), newUBLRB.getCurrentVersion());
 		
 		// check unTillDb versions
 		assertEquals(env.getUnTillDbVer().toNextMinor(), dbUnTillDb.getVersion());
 		ReleaseBranch newUnTillDbRB = new ReleaseBranch(compUnTillDb, env.getUnTillDbVer(), repos);
-		assertEquals(env.getUnTillDbVer(), newUnTillDbRB.getVersion());
+		assertEquals(env.getUnTillDbVer().toNextPatch().useSnapshot(false), newUnTillDbRB.getCurrentVersion());
 		
 		// check UBL mDeps
 		List<Component> ublReleaseMDeps = rbUBLFixedVer.getMDeps();
@@ -111,7 +136,7 @@ public class SCMWorkflowForkReleaseTest extends SCMWorkflowTestBase {
 	}
 
 	@Test
-	public void testForkUnTillAndUBL() throws Exception {
+	public void testForkRootWithNotAllMDeps() throws Exception {
 		env.generateFeatureCommit(env.getUnTillVCS(), compUnTill.getVcsRepository().getDevBranch(), "feature added");
 		env.generateFeatureCommit(env.getUblVCS(), compUBL.getVcsRepository().getDevBranch(), "feature added");
 		SCMWorkflow wf = new SCMWorkflow();
@@ -150,7 +175,7 @@ public class SCMWorkflowForkReleaseTest extends SCMWorkflowTestBase {
 	}
 	
 	@Test
-	public void testForkUnTillAndUBLAndUnTillDb() throws Exception {
+	public void testForkAll() throws Exception {
 		env.generateFeatureCommit(env.getUnTillVCS(), compUnTill.getVcsRepository().getDevBranch(), "feature added");
 		env.generateFeatureCommit(env.getUblVCS(), compUBL.getVcsRepository().getDevBranch(), "feature added");
 		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), "feature added");
@@ -192,39 +217,5 @@ public class SCMWorkflowForkReleaseTest extends SCMWorkflowTestBase {
 		assertTrue(rbUnTillDbFixedVer.getMDeps().isEmpty());
 	}
 	
-	@Test
-	public void testSkipBuildsIfParentUnforked() throws Exception {
-		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), "feature added");
-		SCMWorkflow wf = new SCMWorkflow();
-		IAction action = wf.getProductionReleaseAction(UNTILLDB);
-		Expectations exp = new Expectations();
-		exp.put(UNTILLDB, SCMActionForkReleaseBranch.class);
-		checkChildActionsTypes(action, exp);
-		
-		try (IProgress progress = new ProgressConsole(action.toString(), ">>> ", "<<< ")) {
-			assertTrue(action.execute(progress) instanceof ActionResultFork);
-		}
-
-		assertFalse(env.getUnTillVCS().getBranches("").contains(rbUnTillFixedVer.getReleaseBranchName()));
-		assertTrue(env.getUnTillDbVCS().getBranches("").contains(rbUnTillDbFixedVer.getReleaseBranchName()));
-		assertFalse(env.getUblVCS().getBranches("").contains(rbUBLFixedVer.getReleaseBranchName()));
-		
-		wf = new SCMWorkflow();
-		action = wf.getProductionReleaseAction(UNTILL);
-		exp = new Expectations();
-		exp.put(UNTILLDB, ActionNone.class);
-		exp.put(UNTILL, SCMActionForkReleaseBranch.class);
-		exp.put(UNTILL, "reason", ReleaseReason.NEW_DEPENDENCIES);
-		exp.put(UBL, SCMActionForkReleaseBranch.class);
-		exp.put(UBL, "reason", ReleaseReason.NEW_DEPENDENCIES);
-		checkChildActionsTypes(action, exp);
-		
-		try (IProgress progress = new ProgressConsole(action.toString(), ">>> ", "<<< ")) {
-			assertTrue(action.execute(progress) instanceof ActionResultFork);
-		}
-		
-		assertTrue(env.getUnTillVCS().getBranches("").contains(rbUnTillFixedVer.getReleaseBranchName()));
-		assertTrue(env.getUnTillDbVCS().getBranches("").contains(rbUnTillDbFixedVer.getReleaseBranchName()));
-		assertTrue(env.getUblVCS().getBranches("").contains(rbUBLFixedVer.getReleaseBranchName()));
-	}
+	
 }

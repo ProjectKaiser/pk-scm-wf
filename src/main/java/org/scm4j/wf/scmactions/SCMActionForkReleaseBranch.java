@@ -49,7 +49,7 @@ public class SCMActionForkReleaseBranch extends ActionAbstract {
 			// Are we forked already?
 			DevelopBranch db = new DevelopBranch(comp);
 			ReleaseBranch rb = db.getCurrentReleaseBranch(repos);
-			Version currentVer = rb.getVersion();
+			Version currentVer = db.getVersion();
 			IVCS vcs = comp.getVcsRepository().getVcs();
 			if (rb.exists()) {
 				progress.reportStatus("release branch already forked: " + rb.getReleaseBranchName());
@@ -84,7 +84,7 @@ public class SCMActionForkReleaseBranch extends ActionAbstract {
 				}
 			}
 			
-			String verContent = currentVer.toNextMinor().toString();
+			String verContent = db.getVersion().toNextMinor().toString();
 			vcs.setFileContent(db.getName(), SCMWorkflow.VER_FILE_NAME, verContent, LogTag.SCM_VER + " " + verContent);
 			progress.reportStatus("change to version " + verContent + " in trunk");
 
