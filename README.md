@@ -11,6 +11,16 @@ Library povides API and CLI to automate such tasks as
  Ref. [Semantic Versioning 2.0.0](http://semver.org/) for definitions.
 For low vcs operations scm4j-vcs-* libraries are used
 
+- Last Unbuilt Release Branch
+  - Oldest Release Branch of last 2 versions which not TAGGED or BUILT or MISSING
+  - Otherwise - current Release Branch
+- Last Built Release Branch
+  - Latest BUILT or TAGGED Release Branch of last 2 versions
+  - Otherwise null
+- Fork (verb), To Fork Release
+  - To create a Release Branch based on Develop Branch head
+  
+
 # Terms
 - `Managable dependency` (`mdeps`)
  - Component which has its own repository and is under control, i.e. can be built, branched and uploaded to a maven repository
@@ -36,17 +46,24 @@ For low vcs operations scm4j-vcs-* libraries are used
       - Release/1.0 is still used although new features are commited to Dev Branch 
     - Build (and optinaly tag) Release/1.0
       - CRB is Release/2.0 (MISSING for now)
-    
-- Last Unbuilt Release Branch
-  - Oldest Release Branch of last 2 versions which not TAGGED or BUILT or MISSING
-  - Otherwise - current Release Branch
-- Last Built Release Branch
-  - Latest BUILT or TAGGED Release Branch of last 2 versions
-  - Otherwise null
-- Fork (verb), To Fork Release
-  - To create a Release Branch based on Develop Branch head
-  
-  
+# Usage
+- Install [groovy](http://groovy-lang.org/install.html)
+- Download and save [run.groovy](run.groovy) file
+- Add Version file to all repositories
+- Add MDeps file to all repositories if necessary
+- Configure repositories
+  - Create repository definition yaml file
+    - Can be file or url
+  - Create Credentials definition yaml 
+    - Can be file or url
+    - Optional
+  - Set SCM4J_VCS_REPOS environment var value as url to Repository definition yaml file
+    - file:///c:/repos.yaml
+    - http://my.server/repos.yaml
+  - Set SCM4J_CREDENTIALS environment var value as url to Credentials definition yaml file
+- Execute `groovy run.groovy -show <product coords>` to show what actions are needed to execute as the next step to build a release
+- Execute `groovy run.groovy -fork <product coords>` to fork all necessary release branches. Note: if all branches are created alredy then nothing will be made
+- Execute `groovy run.groovy -build show <product coords>` to build all components. Note: if not all release branches are created or eveerything is built already then nothing will be done
 
 # Data Structure
 - [branches-statuses.md](branches-statuses.md)
