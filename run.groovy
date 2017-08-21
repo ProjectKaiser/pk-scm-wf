@@ -1,5 +1,5 @@
 @GrabResolver(name = 'jitpack', root = 'https://jitpack.io', changing = true, m2Compatible = true)
-@Grab(group = 'com.github.scm4j', module = 'scm4j-wf', version = 'master-SNAPSHOT', changing = true)
+@Grab(group = 'com.github.scm4j', module = 'scm4j-wf', version = '1.1', changing = true)
 
 import org.scm4j.wf.SCMWorkflow;
 import org.scm4j.wf.actions.IAction;
