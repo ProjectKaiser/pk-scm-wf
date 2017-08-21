@@ -1,5 +1,5 @@
 @GrabResolver(name = 'jitpack', root = 'https://jitpack.io', changing = true, m2Compatible = true)
-@Grab(group = 'com.github.scm4j', module = 'scm4j-wf', version = 'dev-SNAPSHOT', changing = true)
+@Grab(group = 'com.github.scm4j', module = 'scm4j-wf', version = 'master-SNAPSHOT', changing = true)
 
 import org.scm4j.wf.SCMWorkflow;
 import org.scm4j.wf.actions.IAction;
@@ -16,8 +16,8 @@ class CLI {
 
 		def cli = new CliBuilder(usage: 'groovy run.groovy -show|-fork|-build|-tag productCoords')
 
-		cli.show('show actions will be made with product specified by productCoords', required: false, args: 1, argName: 'productCoords', type: String)
-		cli.fork('cerate all necessary release branches for product specified by productCoords', required: false, args: 1, argName: 'productCoords', type:String)
+		cli.show('show actions which will be made with product specified by productCoords', required: false, args: 1, argName: 'productCoords', type: String)
+		cli.fork('create all necessary release branches for product specified by productCoords', required: false, args: 1, argName: 'productCoords', type:String)
 		cli.build('execute production release action on product specified by productCoords', required: false, args: 1, argName: 'productCoords', type: String)
 		cli.tag('execute tag action on product specified by productCoords', required: false, args: 1, argName: 'productCoords', type: String)
 
@@ -34,7 +34,7 @@ class CLI {
 		} else if (opt.fork) {
 			SCMWorkflow wf = new SCMWorkflow()
 			IAction action = wf.getProductionReleaseAction(opt.fork, ActionKind.FORK);
-			IProgress progress = new ProgressConsole(System.out, ">>> ", "<<< ");
+			IProgress progress = new ProgressConsole(action.toString(), ">>> ", "<<< ");
 			Object res = action.execute(progress);
 			progress.close();
 			if (res instanceof Throwable) {
@@ -43,7 +43,7 @@ class CLI {
 		} else if (opt.build) {
 			SCMWorkflow wf = new SCMWorkflow()
 			IAction action = wf.getProductionReleaseAction(opt.fork, ActionKind.BUILD);
-			IProgress progress = new ProgressConsole(System.out, ">>> ", "<<< ");
+			IProgress progress = new ProgressConsole(action.toString(), ">>> ", "<<< ");
 			Object res = action.execute(progress);
 			progress.close();
 			if (res instanceof Throwable) {
@@ -52,7 +52,7 @@ class CLI {
 		} else if (opt.tag) {
 			SCMWorkflow wf = new SCMWorkflow()
 			IAction action = wf.getTagReleaseAction(new Component(opt.fork));
-			IProgress progress = new ProgressConsole(System.out, ">>> ", "<<< ");
+			IProgress progress = new ProgressConsole(action.toString(), ">>> ", "<<< ");
 			Object res = action.execute(progress);
 			progress.close();
 			if (res instanceof Throwable) {
