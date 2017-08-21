@@ -42,7 +42,7 @@ class CLI {
 			}
 		} else if (opt.build) {
 			SCMWorkflow wf = new SCMWorkflow()
-			IAction action = wf.getProductionReleaseAction(opt.fork, ActionKind.BUILD);
+			IAction action = wf.getProductionReleaseAction(opt.build, ActionKind.BUILD);
 			IProgress progress = new ProgressConsole(action.toString(), ">>> ", "<<< ");
 			Object res = action.execute(progress);
 			progress.close();
@@ -51,7 +51,7 @@ class CLI {
 			}
 		} else if (opt.tag) {
 			SCMWorkflow wf = new SCMWorkflow()
-			IAction action = wf.getTagReleaseAction(new Component(opt.fork));
+			IAction action = wf.getTagReleaseAction(new Component(opt.tag));
 			IProgress progress = new ProgressConsole(action.toString(), ">>> ", "<<< ");
 			Object res = action.execute(progress);
 			progress.close();
