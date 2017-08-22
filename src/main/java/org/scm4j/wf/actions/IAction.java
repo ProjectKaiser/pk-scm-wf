@@ -1,7 +1,6 @@
 package org.scm4j.wf.actions;
 
 import java.util.List;
-import java.util.Map;
 
 import org.scm4j.commons.progress.IProgress;
 
@@ -9,7 +8,7 @@ public interface IAction {
 
 	void setParent(IAction parent);
 	
-	Object execute(IProgress progress);
+	void execute(IProgress progress);
 
 	IAction getParent(); // may be null
 	
@@ -17,6 +16,4 @@ public interface IAction {
 	
 	String getName();
 
-	Map<String, List<Object>> getExecutionResults();
-	
 }

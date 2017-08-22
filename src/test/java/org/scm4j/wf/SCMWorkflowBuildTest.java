@@ -10,8 +10,6 @@ import org.scm4j.commons.progress.IProgress;
 import org.scm4j.commons.progress.ProgressConsole;
 import org.scm4j.wf.actions.ActionNone;
 import org.scm4j.wf.actions.IAction;
-import org.scm4j.wf.actions.results.ActionResultFork;
-import org.scm4j.wf.actions.results.ActionResultVersion;
 import org.scm4j.wf.branch.ReleaseBranch;
 import org.scm4j.wf.conf.Version;
 import org.scm4j.wf.scmactions.ReleaseReason;
@@ -27,11 +25,11 @@ public class SCMWorkflowBuildTest extends SCMWorkflowTestBase {
 		
 		// fork unTillDb 
 		IAction action = wf.getProductionReleaseAction(UNTILLDB);
-		assertTrue(action.execute(new NullProgress()) instanceof ActionResultFork);
+		action.execute(new NullProgress());
 		
 		// build unTillDb
 		action = wf.getProductionReleaseAction(UNTILLDB);
-		assertTrue(action.execute(new NullProgress()) instanceof ActionResultVersion);
+		action.execute(new NullProgress());
 		
 		// fork UBL
 		TestBuilder.getBuilders().clear();
@@ -42,7 +40,7 @@ public class SCMWorkflowBuildTest extends SCMWorkflowTestBase {
 		exp.put(UNTILLDB, ActionNone.class);
 		checkChildActionsTypes(action, exp);
 		try (IProgress progress = new ProgressConsole(action.toString(), ">>> ", "<<< ")) {;
-			assertTrue(action.execute(progress) instanceof ActionResultFork);
+			action.execute(progress);
 		}
 		assertTrue(TestBuilder.getBuilders().isEmpty());
 		
@@ -54,7 +52,7 @@ public class SCMWorkflowBuildTest extends SCMWorkflowTestBase {
 		exp.put(UNTILLDB, ActionNone.class);
 		checkChildActionsTypes(action, exp);
 		try (IProgress progress = new ProgressConsole(action.toString(), ">>> ", "<<< ")) {;
-			assertTrue(action.execute(progress) instanceof ActionResultVersion);
+			action.execute(progress);
 		} 
 		assertFalse(TestBuilder.getBuilders().isEmpty());
 		assertTrue(TestBuilder.getBuilders().size() == 1);
@@ -68,12 +66,12 @@ public class SCMWorkflowBuildTest extends SCMWorkflowTestBase {
 		IAction action = wf.getProductionReleaseAction(UNTILLDB);
 		
 		// fork unTillDb release
-		assertTrue(action.execute(new NullProgress()) instanceof ActionResultFork);
+		action.execute(new NullProgress());
 		
 		// fork UBL
 		action = wf.getProductionReleaseAction(UBL);
 		try (IProgress progress = new ProgressConsole(action.toString(), ">>> ", "<<< ")) {;
-			assertTrue(action.execute(progress) instanceof ActionResultFork);
+			action.execute(progress);
 		}
 		Expectations exp = new Expectations();
 		exp.put(UBL, SCMActionForkReleaseBranch.class);
@@ -92,7 +90,7 @@ public class SCMWorkflowBuildTest extends SCMWorkflowTestBase {
 		checkChildActionsTypes(action, exp);
 		
 		try (IProgress progress = new ProgressConsole(action.toString(), ">>> ", "<<< ")) {
-			assertTrue(action.execute(progress) instanceof ActionResultVersion);
+			action.execute(progress);
 		}
 		
 		assertNotNull(TestBuilder.getBuilders());
@@ -108,7 +106,7 @@ public class SCMWorkflowBuildTest extends SCMWorkflowTestBase {
 		IAction action = wf.getProductionReleaseAction(UNTILLDB);
 		
 		// fork unTillDb release
-		assertTrue(action.execute(new NullProgress()) instanceof ActionResultFork); 
+		action.execute(new NullProgress());
 		
 		action = wf.getProductionReleaseAction(UNTILLDB);
 		Expectations exp = new Expectations();
@@ -119,7 +117,7 @@ public class SCMWorkflowBuildTest extends SCMWorkflowTestBase {
 		// build unTillDb
 		assertTrue(TestBuilder.getBuilders().isEmpty());
 		try (IProgress progress = new ProgressConsole(action.toString(), ">>> ", "<<< ")) {
-			assertTrue(action.execute(progress) instanceof ActionResultVersion);
+			action.execute(progress);
 		}
 		
 		assertNotNull(TestBuilder.getBuilders());
@@ -160,7 +158,7 @@ public class SCMWorkflowBuildTest extends SCMWorkflowTestBase {
 		checkChildActionsTypes(action, exp);
 		
 		try (IProgress progress = new ProgressConsole(action.toString(), ">>> ", "<<< ")) {
-			assertTrue(action.execute(progress) instanceof ActionResultFork);
+			action.execute(progress);
 		}
 
 		assertFalse(env.getUnTillVCS().getBranches("").contains(rbUnTillFixedVer.getReleaseBranchName()));
@@ -178,7 +176,7 @@ public class SCMWorkflowBuildTest extends SCMWorkflowTestBase {
 		checkChildActionsTypes(action, exp);
 		
 		try (IProgress progress = new ProgressConsole(action.toString(), ">>> ", "<<< ")) {
-			assertTrue(action.execute(progress) instanceof ActionResultFork);
+			action.execute(progress);
 		}
 		
 		assertTrue(env.getUnTillVCS().getBranches("").contains(rbUnTillFixedVer.getReleaseBranchName()));

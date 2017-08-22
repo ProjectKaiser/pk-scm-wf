@@ -15,8 +15,7 @@ public class ActionError extends ActionAbstract implements IAction {
 	}
 
 	@Override
-	public Object execute(IProgress progress) {
-		return null;
+	public void execute(IProgress progress) {
 	}
 
 	@Override

@@ -9,7 +9,6 @@ import org.scm4j.wf.LogTag;
 import org.scm4j.wf.SCMWorkflow;
 import org.scm4j.wf.actions.ActionAbstract;
 import org.scm4j.wf.actions.IAction;
-import org.scm4j.wf.actions.results.ActionResultVersion;
 import org.scm4j.wf.branch.DevelopBranch;
 import org.scm4j.wf.branch.ReleaseBranch;
 import org.scm4j.wf.branch.ReleaseBranchStatus;
@@ -38,7 +37,7 @@ public class SCMActionBuild extends ActionAbstract {
 	}
 
 	@Override
-	public Object execute(IProgress progress) {
+	public void execute(IProgress progress) {
 		try {
 			
 			IVCS vcs = getVCS();
@@ -48,20 +47,16 @@ public class SCMActionBuild extends ActionAbstract {
 			ReleaseBranchStatus rbs = rb.getStatus();
 			if (rbs == ReleaseBranchStatus.BUILT || rbs == ReleaseBranchStatus.TAGGED) {
 				progress.reportStatus("version " + rb.getTargetVersion().toString() + " already built");
-				return new ActionResultVersion(comp.getName(), rb.getTargetVersion().toString(), true, rb.getReleaseBranchName());
+				return;
+				//return new ActionResultVersion(comp.getName(), rb.getTargetVersion().toString(), true, rb.getReleaseBranchName());
 			}
 			
 			progress.reportStatus("target version to build: " + targetVersion);
 			
-			Object nestedResult;
 			for (IAction action : childActions) {
 				try (IProgress nestedProgress = progress.createNestedProgress(action.toString())) {
-					nestedResult = action.execute(nestedProgress);
-					if (nestedResult instanceof Throwable) {
-						return nestedResult;
-					}
+					action.execute(nestedProgress);
 				}
-				addResult(action.getName(), nestedResult);
 			}
 			
 			
@@ -78,14 +73,10 @@ public class SCMActionBuild extends ActionAbstract {
 			
 			vcs.setFileContent(rb.getReleaseBranchName(), SCMWorkflow.VER_FILE_NAME, targetVersion.toString(), LogTag.SCM_BUILT + " " + targetVersion.toString());
 			
-			ActionResultVersion res = new ActionResultVersion(comp.getName(), targetVersion.toString(), true,
-					rb.getReleaseBranchName());
-			progress.reportStatus(comp.getName() + " " + res.getVersion() + " is built in " + rb.getReleaseBranchName());
-			addResult(getName(), res); 
-			return res;
+			progress.reportStatus(comp.getName() + " " + targetVersion.toString() + " is built in " + rb.getReleaseBranchName());
 		} catch (Throwable t) {
 			progress.error("execution error: " + t.toString() + ": " + t.getMessage());
-			return t;
+			throw new RuntimeException(t);
 		} 
 	}
 

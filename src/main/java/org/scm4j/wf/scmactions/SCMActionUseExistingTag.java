@@ -1,13 +1,12 @@
 package org.scm4j.wf.scmactions;
 
+import java.util.List;
+
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.vcs.api.VCSTag;
 import org.scm4j.wf.actions.ActionAbstract;
 import org.scm4j.wf.actions.IAction;
-import org.scm4j.wf.actions.results.ActionResultTag;
 import org.scm4j.wf.conf.Component;
-
-import java.util.List;
 
 public class SCMActionUseExistingTag extends ActionAbstract {
 	
@@ -28,8 +27,7 @@ public class SCMActionUseExistingTag extends ActionAbstract {
 	}
 
 	@Override
-	public Object execute(IProgress progress) {
+	public void execute(IProgress progress) {
 		progress.reportStatus(toString());
-		return new ActionResultTag(getName(), tag);
 	}
 }

@@ -11,8 +11,6 @@ import org.scm4j.commons.progress.IProgress;
 import org.scm4j.commons.progress.ProgressConsole;
 import org.scm4j.wf.actions.ActionNone;
 import org.scm4j.wf.actions.IAction;
-import org.scm4j.wf.actions.results.ActionResultFork;
-import org.scm4j.wf.actions.results.ActionResultVersion;
 import org.scm4j.wf.branch.ReleaseBranch;
 import org.scm4j.wf.conf.Component;
 import org.scm4j.wf.conf.Version;
@@ -31,7 +29,7 @@ public class SCMWorkflowForkReleaseTest extends SCMWorkflowTestBase {
 		exp.put(UNTILLDB, "reason", ReleaseReason.NEW_FEATURES);
 		checkChildActionsTypes(action, exp);
 		try (IProgress progress = new ProgressConsole(action.toString(), ">>> ", "<<< ")) {
-			assertTrue(action.execute(progress) instanceof ActionResultFork);
+			action.execute(progress);
 		}
 		
 		// check branches
@@ -58,7 +56,7 @@ public class SCMWorkflowForkReleaseTest extends SCMWorkflowTestBase {
 		checkChildActionsTypes(action, exp);
 		
 		try (IProgress progress = new ProgressConsole(action.toString(), ">>> ", "<<< ")) {
-			assertTrue(action.execute(progress) instanceof ActionResultFork);
+			action.execute(progress);
 		}
 		
 		// check branches
@@ -92,15 +90,15 @@ public class SCMWorkflowForkReleaseTest extends SCMWorkflowTestBase {
 		
 		// fork unTillDb
 		IAction action = wf.getProductionReleaseAction(UNTILLDB);
-		assertTrue(action.execute(new NullProgress()) instanceof ActionResultFork);
+		action.execute(new NullProgress());
 		
 		// build unTillDb
 		action = wf.getProductionReleaseAction(UNTILLDB);
-		assertTrue(action.execute(new NullProgress()) instanceof ActionResultVersion);
+		action.execute(new NullProgress());
 		
 		// fork UBL
 		action = wf.getProductionReleaseAction(UBL);
-		assertTrue(action.execute(new NullProgress()) instanceof ActionResultFork);
+		action.execute(new NullProgress());
 		Expectations exp = new Expectations();
 		exp.put(UNTILLDB, ActionNone.class);
 		exp.put(UBL, SCMActionForkReleaseBranch.class);
@@ -110,7 +108,7 @@ public class SCMWorkflowForkReleaseTest extends SCMWorkflowTestBase {
 		// build UBL
 		action = wf.getProductionReleaseAction(UBL);
 		try (IProgress progress = new ProgressConsole(action.toString(), ">>> ", "<<< ")) {
-			assertTrue(action.execute(progress) instanceof ActionResultVersion);
+			action.execute(progress);
 		}
 		
 		// check branches
@@ -150,7 +148,7 @@ public class SCMWorkflowForkReleaseTest extends SCMWorkflowTestBase {
 		checkChildActionsTypes(action, exp);
 		
 		try (IProgress progress = new ProgressConsole(action.toString(), ">>> ", "<<< ")) {
-			assertTrue(action.execute(progress) instanceof ActionResultFork);
+			action.execute(progress);
 		}
 		
 		assertTrue(env.getUnTillVCS().getBranches("").contains(rbUnTillFixedVer.getReleaseBranchName()));
@@ -191,7 +189,7 @@ public class SCMWorkflowForkReleaseTest extends SCMWorkflowTestBase {
 		checkChildActionsTypes(action, exp);
 		
 		try (IProgress progress = new ProgressConsole(action.toString(), ">>> ", "<<< ")) {
-			assertTrue(action.execute(progress) instanceof ActionResultFork);
+			action.execute(progress);
 		}
 		
 		assertTrue(env.getUnTillVCS().getBranches("").contains(rbUnTillFixedVer.getReleaseBranchName()));

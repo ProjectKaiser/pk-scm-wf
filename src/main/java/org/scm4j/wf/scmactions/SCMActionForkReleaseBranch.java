@@ -9,7 +9,6 @@ import org.scm4j.wf.LogTag;
 import org.scm4j.wf.SCMWorkflow;
 import org.scm4j.wf.actions.ActionAbstract;
 import org.scm4j.wf.actions.IAction;
-import org.scm4j.wf.actions.results.ActionResultFork;
 import org.scm4j.wf.branch.DevelopBranch;
 import org.scm4j.wf.branch.DevelopBranchStatus;
 import org.scm4j.wf.branch.ReleaseBranch;
@@ -33,17 +32,12 @@ public class SCMActionForkReleaseBranch extends ActionAbstract {
 	}
 	
 	@Override
-	public Object execute(IProgress progress) {
+	public void execute(IProgress progress) {
 		try {
-			Object nestedResult;
 			for (IAction action : childActions) {
 				try (IProgress nestedProgress = progress.createNestedProgress(action.toString())) {
-					nestedResult = action.execute(nestedProgress);
-					if (nestedResult instanceof Throwable) {
-						return nestedResult;
-					}
+					action.execute(nestedProgress);
 				}
-				addResult(action.getName(), nestedResult);
 			}
 			
 			// Are we forked already?
@@ -53,7 +47,7 @@ public class SCMActionForkReleaseBranch extends ActionAbstract {
 			IVCS vcs = comp.getVcsRepository().getVcs();
 			if (rb.exists()) {
 				progress.reportStatus("release branch already forked: " + rb.getReleaseBranchName());
-				return new ActionResultFork(rb.getReleaseBranchName());
+				return;
 			} else {
 				vcs.createBranch(db.getName(), rb.getReleaseBranchName(), "release branch created");
 				progress.reportStatus("branch " + rb.getReleaseBranchName() + " created");
@@ -92,10 +86,9 @@ public class SCMActionForkReleaseBranch extends ActionAbstract {
 			vcs.setFileContent(newBranchName, SCMWorkflow.VER_FILE_NAME, newVersion, LogTag.SCM_VER + " " + newVersion);
 			progress.reportStatus("change to version " + newVersion + " in branch " + newBranchName);
 
-			return new ActionResultFork(rb.getReleaseBranchName());
 		} catch (Throwable t) {
 			progress.reportStatus("execution error: " + t.toString() + ": " + t.getMessage());
-			return t;
+			throw new RuntimeException(t);
 		}  
 	}
 	

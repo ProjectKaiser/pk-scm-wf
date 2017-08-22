@@ -1,15 +1,14 @@
 package org.scm4j.wf.scmactions;
 
+import java.util.List;
+
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSTag;
 import org.scm4j.wf.actions.ActionAbstract;
 import org.scm4j.wf.actions.IAction;
-import org.scm4j.wf.actions.results.ActionResultTag;
 import org.scm4j.wf.branch.DevelopBranch;
 import org.scm4j.wf.conf.Component;
-
-import java.util.List;
 
 public class SCMActionTagRelease extends ActionAbstract {
 
@@ -21,25 +20,16 @@ public class SCMActionTagRelease extends ActionAbstract {
 	}
 
 	@Override
-	public Object execute(IProgress progress) {
+	public void execute(IProgress progress) {
 		try {
 			
-			ActionResultTag actionTag = (ActionResultTag) getResult(getName(), ActionResultTag.class);
-			if (actionTag != null) {
-				progress.reportStatus("already tagged: " + actionTag.toString());
-				return actionTag;
-			}
+			/**
+			 * add already tagged check
+			 */
 			
-			Object nestedResult;
 			for (IAction action : childActions) {
 				try (IProgress nestedProgress = progress.createNestedProgress(action.toString())) {
-					nestedResult = action.execute(nestedProgress);
-					if (nestedResult instanceof Throwable) {
-						return nestedResult;
-					}
-					addResult(action.getName(), nestedResult);
-				} catch (Exception e) {
-					throw new RuntimeException(e);
+					action.execute(nestedProgress);
 				}
 			}
 			
@@ -50,10 +40,9 @@ public class SCMActionTagRelease extends ActionAbstract {
 			String tagName = db.getVersion().toPreviousMinor().toReleaseString();
 			VCSTag tag = vcs.createTag(releaseBranchName, tagName, tagMessage);
 			progress.reportStatus("head of \"" + releaseBranchName + "\" tagged: " + tag.toString());
-			return new ActionResultTag(getName(), tag);
 		} catch (Throwable t) {
 			progress.error(t.getMessage());
-			return t;
+			throw new RuntimeException(t);
 		}
 	}
 	
