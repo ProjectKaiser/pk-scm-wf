@@ -30,6 +30,7 @@ dependencies {
 	compile 'com.github.scm4j:scm4j-commons:master-SNAPSHOT'
 	compile 'com.google.guava:guava:20.0'
 	compile 'org.yaml:snakeyaml:1.18'
+	compile 'ch.qos.logback:logback-classic:1.2.3'
 }
 
 task sourcesJar(type: Jar, dependsOn: classes) {
