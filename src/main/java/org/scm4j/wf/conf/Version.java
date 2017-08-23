@@ -39,7 +39,7 @@ public class Version {
 				snapshot = "";
 			}
 			if (verStr.lastIndexOf(".") > 0) {
-				patch = verStr.substring(verStr.lastIndexOf("."), verStr.length());
+				patch = verStr.substring(verStr.lastIndexOf(".") + 1, verStr.length());
 				verStr = verStr.substring(0, verStr.lastIndexOf("."));
 				if (verStr.lastIndexOf(".") > 0) {
 					minor = verStr.substring(verStr.lastIndexOf(".") + 1, verStr.length());
@@ -50,7 +50,7 @@ public class Version {
 			} else {
 				prefix = "0.";
 				minor = verStr;
-				patch = ".0";
+				patch = "0";
 			}
 			if (!minor.isEmpty() && !StringUtils.isNumeric(minor)) {
 				throw new IllegalArgumentException("wrong version: " + verStr);
@@ -75,7 +75,7 @@ public class Version {
 		if (!StringUtils.isNumeric(minor)) {
 			return verStr;
 		}
-		return prefix + minor + getPatch() + getSnapshot();
+		return prefix + minor + (usePatch ? "." : "") + getPatch() + getSnapshot();
 	}
 	
 	public Version usePatch(boolean usePatch) {
@@ -86,27 +86,28 @@ public class Version {
 		return new Version(verStr, usePatch, useSnapshot);
 	}
 	
+	
 	public Version toNextPatch() {
 		int i = 0;
 		while (i < patch.length() && !Character.isDigit(patch.charAt(i))) i++;
 		int firstDigitStart = i;
 		while (i < patch.length() && Character.isDigit(patch.charAt(i))) i++;
 		if (i == firstDigitStart) {
-			return new Version(prefix + minor + patch + "1" + snapshot);
+			return new Version(prefix + minor + "." + patch + "1" + snapshot);
 		}
 		int patchInt = Integer.parseInt(patch.substring(firstDigitStart, i)) + 1;
-		String newPatch = patch.substring(0, firstDigitStart) + Integer.toString(patchInt) +  patch.substring(i, patch.length());
-		return clone(prefix + minor + newPatch + snapshot);
+		String newPatch = patch.substring(0, firstDigitStart) + Integer.toString(patchInt) + patch.substring(i, patch.length());
+		return clone(prefix + minor + "." + newPatch + snapshot);
 	}
 
 	public Version toPreviousMinor() {
 		checkMinor();
-		return clone(prefix + Integer.toString(Integer.parseInt(minor) - 1) + patch + snapshot);
+		return clone(prefix + Integer.toString(Integer.parseInt(minor) - 1) + "." + patch + snapshot);
 	}
 
 	public Version toNextMinor() {
 		checkMinor();
-		return clone(prefix + Integer.toString(Integer.parseInt(minor) + 1) + patch + snapshot);
+		return clone(prefix + Integer.toString(Integer.parseInt(minor) + 1) + "." + patch + snapshot);
 	}
 	
 	private Version clone(String verStr) {
@@ -172,5 +173,36 @@ public class Version {
 
 	public String toReleaseString() {
 		return useSnapshot(false).toString();
+	}
+	
+	public Boolean isGreaterThan(Version other) {
+		if (other.isEmpty() || !other.isExactVersion()) {
+			return !isEmpty() && isExactVersion();
+		}
+		if (!StringUtils.isNumeric(getMinor()) || !StringUtils.isNumeric(other.getMinor())) {
+			return false;
+		}
+		int minor = Integer.parseInt(getMinor());
+		int otherMinor = Integer.parseInt(other.getMinor());
+		if (minor > otherMinor) {
+			return true;
+		} 
+		if (minor < otherMinor) {
+			return false;
+		}
+		
+		if (!StringUtils.isNumeric(getPatch()) || !StringUtils.isNumeric(other.getPatch())) {
+			return false;
+		}
+		
+		int patch = Integer.parseInt(getPatch());
+		int otherPatch = Integer.parseInt(other.getPatch());
+		
+		if (patch == otherPatch) {
+			return false;
+		}
+		
+		return patch > otherPatch;
+		
 	}
 }

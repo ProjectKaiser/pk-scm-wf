@@ -55,7 +55,7 @@ public class SCMActionTagRelease extends ActionAbstract {
 	}
 	
 	private String getRevisionToTag() throws IOException {
-		File commitsFile = new File(SCMWorkflow.BASE_WORKING_DIR, SCMWorkflow.COMMITS_FILE_NAME);
+		File commitsFile = SCMWorkflow.getCommitsFile();
 		if (!commitsFile.exists()) {
 			return null;
 		}

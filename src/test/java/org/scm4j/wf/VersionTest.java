@@ -124,15 +124,15 @@ public class VersionTest {
 
 	@Test
 	public void testPatch() {
-		assertEquals(".13", new Version("11.12.13-SNAPSHOT").getPatch());
-		assertEquals(".dfgdfg", new Version("11.12.dfgdfg-SNAPSHOT").getPatch());
-		assertEquals(".14", new Version("11.12.13.14-SNAPSHOT").getPatch());
+		assertEquals("13", new Version("11.12.13-SNAPSHOT").getPatch());
+		assertEquals("dfgdfg", new Version("11.12.dfgdfg-SNAPSHOT").getPatch());
+		assertEquals("14", new Version("11.12.13.14-SNAPSHOT").getPatch());
 	}
 
 	@Test
 	public void testToNextPatch() {
 		assertEquals("11.12.14-SNAPSHOT", new Version("11.12.13-SNAPSHOT").toNextPatch().toString());
-		assertEquals(".14", new Version("11.12.13-SNAPSHOT").toNextPatch().getPatch());
+		assertEquals("14", new Version("11.12.13-SNAPSHOT").toNextPatch().getPatch());
 		assertEquals("11.12.14fgdfg-SNAPSHOT", new Version("11.12.13fgdfg-SNAPSHOT").toNextPatch().toString());
 		assertEquals("11.12.14fgdfg15-SNAPSHOT", new Version("11.12.13fgdfg15-SNAPSHOT").toNextPatch().toString());
 		assertEquals("0.13.1", new Version("13").toNextPatch().toString());
@@ -155,5 +155,24 @@ public class VersionTest {
 		assertEquals("", ver.getSnapshot());
 		ver = ver.useSnapshot(true);
 		assertEquals("11.12.13-SNAPSHOT", ver.toString());
+	}
+	
+	@Test
+	public void testIsGreaterThan() {
+		assertTrue(new Version("11.12.13.14-SNAPSHOT").isGreaterThan(new Version("11.12.13.13-SNAPSHOT")));
+		assertFalse(new Version("11.12.13.14df-SNAPSHOT").isGreaterThan(new Version("11.12.13.13gh-SNAPSHOT")));
+		assertFalse(new Version("11.12.13.14-SNAPSHOT").isGreaterThan(new Version("11.12.13.13gh-SNAPSHOT")));
+		assertFalse(new Version("11.12.13.14dfg-SNAPSHOT").isGreaterThan(new Version("11.12.13.13-SNAPSHOT")));
+		assertTrue(new Version("11.12.14-SNAPSHOT").isGreaterThan(new Version("11.12.13-SNAPSHOT")));
+		assertTrue(new Version("11.12-SNAPSHOT").isGreaterThan(new Version("11.11-SNAPSHOT")));
+		assertTrue(new Version("11-SNAPSHOT").isGreaterThan(new Version("10-SNAPSHOT")));
+		
+		assertFalse(new Version("").isGreaterThan(new Version("")));
+		assertFalse(new Version("").isGreaterThan(new Version("11.12.13")));
+		assertTrue(new Version("11.12.13").isGreaterThan(new Version("")));
+		
+		assertFalse(new Version("11.12.13-SNAPSHOT").isGreaterThan(new Version("11.12.14-SNAPSHOT")));
+		assertFalse(new Version("11.12-SNAPSHOT").isGreaterThan(new Version("11.13-SNAPSHOT")));
+		assertFalse(new Version("11-SNAPSHOT").isGreaterThan(new Version("12-SNAPSHOT")));
 	}
 }

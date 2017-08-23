@@ -63,10 +63,11 @@ public class SCMActionForkReleaseBranch extends ActionAbstract {
 				} else {
 					List<Component> frozenMDeps = new ArrayList<>();
 					for (Component actualMDep : actualMDeps) {
-						DevelopBranch dbActualMDep = new DevelopBranch(actualMDep);
-						
-						String futureRelaseVersionStr = dbActualMDep.getStatus() == DevelopBranchStatus.MODIFIED ? dbActualMDep.getVersion().toReleaseString() :
-							dbActualMDep.getVersion().toPreviousMinor().toReleaseString();
+						//DevelopBranch dbActualMDep = new DevelopBranch(actualMDep);
+						ReleaseBranch rbActualMDep = new ReleaseBranch(actualMDep, repos);
+						String futureRelaseVersionStr = rbActualMDep.getTargetVersion().toReleaseString();
+//								dbActualMDep.getStatus() == DevelopBranchStatus.MODIFIED ? dbActualMDep.getVersion().toReleaseString() :
+//							dbActualMDep.getVersion().toPreviousMinor().toReleaseString();
 								
 						Component frozenMDep = actualMDep.cloneWithDifferentVersion(futureRelaseVersionStr);
 						frozenMDeps.add(frozenMDep);
@@ -77,13 +78,13 @@ public class SCMActionForkReleaseBranch extends ActionAbstract {
 				}
 			}
 			
-			String verContent = db.getVersion().toNextMinor().toString();
-			vcs.setFileContent(db.getName(), SCMWorkflow.VER_FILE_NAME, verContent, LogTag.SCM_VER + " " + verContent);
-			progress.reportStatus("change to version " + verContent + " in trunk");
+			String newTrunkVersion = db.getVersion().toNextMinor().toString();
+			vcs.setFileContent(db.getName(), SCMWorkflow.VER_FILE_NAME, newTrunkVersion, LogTag.SCM_VER + " " + newTrunkVersion);
+			progress.reportStatus("change to version " + newTrunkVersion + " in trunk");
 
-			String newVersion = currentVer.toReleaseString();
-			vcs.setFileContent(newBranchName, SCMWorkflow.VER_FILE_NAME, newVersion, LogTag.SCM_VER + " " + newVersion);
-			progress.reportStatus("change to version " + newVersion + " in branch " + newBranchName);
+			String newReleaseVersion = currentVer.toReleaseString();
+			vcs.setFileContent(newBranchName, SCMWorkflow.VER_FILE_NAME, newReleaseVersion, LogTag.SCM_VER + " " + newReleaseVersion);
+			progress.reportStatus("change to version " + newReleaseVersion + " in branch " + newBranchName);
 
 		} catch (Throwable t) {
 			progress.reportStatus("execution error: " + t.toString() + ": " + t.getMessage());

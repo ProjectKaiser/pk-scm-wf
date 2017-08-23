@@ -116,12 +116,10 @@ public class ReleaseBranch {
 		}
 		return true;
 	}
-	
-	
 
 	@Override
 	public String toString() {
-		return "ReleaseBranch [comp=" + comp + ", targetVersion=" + getTargetVersion().toReleaseString() + ", status=" + getStatus() + "]";
+		return "ReleaseBranch [comp=" + comp + ", targetVersion=" + getTargetVersion().toReleaseString() + ", status=" + getStatus() + ", name=" + getReleaseBranchName() + "]";
 	}
 
 
@@ -168,7 +166,15 @@ public class ReleaseBranch {
 	}
 	
 	public Version getTargetVersion() {
-		return getVersion().toNextPatch();
+		Version res = getVersion().toNextPatch();
+		Version current = exists() ? getCurrentVersion() : res;
+		if (current.equals(res)) {
+			return res.toNextPatch();
+		}
+		if (current.isGreaterThan(res)) {
+			return current.toNextPatch();
+		}
+		return res;
 	}
 
 //	private boolean isModified() {

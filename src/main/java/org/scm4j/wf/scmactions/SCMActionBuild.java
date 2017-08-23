@@ -53,7 +53,7 @@ public class SCMActionBuild extends ActionAbstract {
 			ReleaseBranch rb = db.getCurrentReleaseBranch(repos);
 			ReleaseBranchStatus rbs = rb.getStatus();
 			if (rbs == ReleaseBranchStatus.BUILT || rbs == ReleaseBranchStatus.TAGGED) {
-				progress.reportStatus("version " + rb.getTargetVersion().toString() + " already built");
+				progress.reportStatus("version " + rb.getTargetVersion().toString() + " already built ");
 				return;
 				//return new ActionResultVersion(comp.getName(), rb.getTargetVersion().toString(), true, rb.getReleaseBranchName());
 			}
@@ -80,7 +80,10 @@ public class SCMActionBuild extends ActionAbstract {
 			}
 			
 			// need to detect that we are built already
-			vcs.setFileContent(rb.getReleaseBranchName(), SCMWorkflow.VER_FILE_NAME, targetVersion.toString(), LogTag.SCM_BUILT + " " + targetVersion.toString());
+			VCSCommit builtCommit = vcs.setFileContent(rb.getReleaseBranchName(), SCMWorkflow.VER_FILE_NAME, targetVersion.toString(), LogTag.SCM_BUILT + " " + targetVersion.toString());
+			if (builtCommit.equals(VCSCommit.EMPTY)) {
+				throw new RuntimeException("built tag can not be set because release version is not changed");
+			}
 			if (options.contains(Option.DELAYED_TAG)) {
 				saveDelayedTag(headCommit);
 				progress.reportStatus("build commit " + headCommit.getRevision() + " is saved for delayed tagging");
@@ -102,7 +105,7 @@ public class SCMActionBuild extends ActionAbstract {
 	}
 
 	private void saveDelayedTag(VCSCommit commitToTag) throws IOException {
-		File commitsFile = new File(SCMWorkflow.BASE_WORKING_DIR, SCMWorkflow.COMMITS_FILE_NAME);
+		File commitsFile = SCMWorkflow.getCommitsFile();
 		if (!commitsFile.exists()) {
 			commitsFile.createNewFile();
 		}

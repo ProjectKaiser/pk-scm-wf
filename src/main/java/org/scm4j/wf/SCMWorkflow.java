@@ -101,7 +101,7 @@ public class SCMWorkflow implements ISCMWorkflow {
 		}
 		
 		if (hasErrorActions(childActions)) {
-			return new ActionNone(comp, childActions, "has child error actions    ");
+			return new ActionNone(comp, childActions, "has child error actions     ");
 		}
 		
 		DevelopBranchStatus dbs = db.getStatus();
@@ -267,5 +267,9 @@ public class SCMWorkflow implements ISCMWorkflow {
 		} else {
 			return new SCMActionTagRelease(comp, childActions, "tag message", options);
 		}
+	}
+
+	public static File getCommitsFile() {
+		return new File(SCMWorkflow.COMMITS_FILE_NAME);
 	}
 }

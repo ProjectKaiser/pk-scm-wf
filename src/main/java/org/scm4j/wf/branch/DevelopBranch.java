@@ -79,7 +79,6 @@ public class DevelopBranch {
 		ReleaseBranch oldestRB = null;
 		for (int i = 0; i <= 1; i++) {
 			ReleaseBranchStatus rbs = rb.getStatus();
-
 			if (rbs != ReleaseBranchStatus.MISSING && rbs != ReleaseBranchStatus.BUILT && rbs != ReleaseBranchStatus.TAGGED) {
 				oldestRB = rb;
 			}
