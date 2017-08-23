@@ -7,13 +7,14 @@ import org.scm4j.vcs.api.VCSTag;
 import org.scm4j.wf.actions.ActionAbstract;
 import org.scm4j.wf.actions.IAction;
 import org.scm4j.wf.conf.Component;
+import org.scm4j.wf.conf.Option;
 
 public class SCMActionUseExistingTag extends ActionAbstract {
 	
 	private final VCSTag tag;
 
-	public SCMActionUseExistingTag(Component dep, List<IAction> childActions, VCSTag tag) {
-		super(dep, childActions);
+	public SCMActionUseExistingTag(Component dep, List<IAction> childActions, VCSTag tag, List<Option> options) {
+		super(dep, childActions, options);
 		this.tag = tag;
 	}
 	

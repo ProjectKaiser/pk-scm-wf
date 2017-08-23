@@ -22,14 +22,14 @@ public class ReleaseBranch {
 	private final VCSRepositories repos;
 	
 	public ReleaseBranch(Component comp, VCSRepositories repos) {
-		this(comp, new Version(comp.getVcsRepository().getVcs().getFileContent(comp.getVcsRepository().getDevBranch(), SCMWorkflow.VER_FILE_NAME).trim()),  repos);
+		this(comp, new Version(comp.getVCS().getFileContent(comp.getVcsRepository().getDevBranch(), SCMWorkflow.VER_FILE_NAME).trim()),  repos);
 	}
 	
 	public ReleaseBranch(Component comp, Version version, VCSRepositories repos) {
 		this.version = version;
 		this.comp = comp;
 		this.repos = repos;
-		vcs = comp.getVcsRepository().getVcs();
+		vcs = comp.getVCS();
 	}
 	
 	public ReleaseBranchStatus getStatus () {
@@ -146,7 +146,7 @@ public class ReleaseBranch {
 			return new ArrayList<>();
 		}
 		
-		String mDepsFileContent = comp.getVcsRepository().getVcs().getFileContent(getReleaseBranchName(), SCMWorkflow.MDEPS_FILE_NAME);
+		String mDepsFileContent = comp.getVCS().getFileContent(getReleaseBranchName(), SCMWorkflow.MDEPS_FILE_NAME);
 		MDepsFile mDeps = new MDepsFile(mDepsFileContent, repos);
 		return mDeps.getMDeps();
 	}
@@ -155,8 +155,12 @@ public class ReleaseBranch {
 		return comp.getVcsRepository().getReleaseBranchPrefix() + version.usePatch(false).toReleaseString();
 	}
 	
+	public String getPreviousMinorReleaseBranchName() {
+		return comp.getVcsRepository().getReleaseBranchPrefix() + getVersion().toPreviousMinor().usePatch(false).useSnapshot(false).toString();
+	}
+	
 	public Version getCurrentVersion() {
-		return new Version(comp.getVcsRepository().getVcs().getFileContent(getReleaseBranchName(), SCMWorkflow.VER_FILE_NAME).trim()).useSnapshot(false);
+		return new Version(comp.getVCS().getFileContent(getReleaseBranchName(), SCMWorkflow.VER_FILE_NAME).trim()).useSnapshot(false);
 	}
 	
 	public Version getVersion() {

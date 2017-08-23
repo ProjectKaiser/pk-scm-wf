@@ -8,14 +8,14 @@ import java.util.Map;
 import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
 import org.scm4j.vcs.api.workingcopy.VCSWorkspace;
 import org.scm4j.wf.BuilderFactory;
+import org.scm4j.wf.SCMWorkflow;
 import org.scm4j.wf.VCSFactory;
 import org.scm4j.wf.exceptions.EConfig;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.error.YAMLException;
 
 public class VCSRepositories {
-	public static final String DEFAULT_VCS_WORKSPACE_DIR = new File(System.getProperty("user.home"),
-			".scm4j" + File.separator + "wf-vcs-workspaces").getPath();
+	public static final String DEFAULT_VCS_WORKSPACE_DIR = new File(SCMWorkflow.BASE_WORKING_DIR, "wf-vcs-workspaces").getPath();
 
 	private Map<?, ?> urls;
 	private Map<?, ?> creds;
@@ -49,8 +49,8 @@ public class VCSRepositories {
 		if (url == null) {
 			throw new EConfig("no repo url for: " + componentName);
 		}
-		
-		Credentials credentials; 
+
+		Credentials credentials;
 		if (getPropByName(creds, url, "name", null) != null) {
 			String user = (String) getPropByName(creds, url, "name", null);
 			String pass = (String) getPropByName(creds, url, "password", null);
@@ -64,8 +64,8 @@ public class VCSRepositories {
 		String releaseBranchPrefix = (String) getPropByName(urls, componentName, "releaseBanchPrefix",
 				VCSRepository.DEFAULT_RELEASE_BRANCH_PREFIX);
 		String builder = (String) getPropByName(urls, componentName, "builder", null);
-		return new VCSRepository(componentName, url, credentials, type, devBranch, releaseBranchPrefix, VCSFactory.getVCS(type, credentials, url, ws), 
-				BuilderFactory.getBuilder(builder));
+		return new VCSRepository(componentName, url, credentials, type, devBranch, releaseBranchPrefix,
+				VCSFactory.getVCS(type, credentials, url, ws), BuilderFactory.getBuilder(builder));
 	}
 
 	private VCSType getVCSType(String type, String url) {
@@ -81,7 +81,7 @@ public class VCSRepositories {
 
 	private Object getPropByName(Map<?, ?> map, String name, Object propName, Object defaultValue) {
 		if (map != null) {
-			for (Object key: map.keySet()) {
+			for (Object key : map.keySet()) {
 				if (name.matches((String) key)) {
 					Map<?, ?> props = (Map<?, ?>) map.get(key);
 					if (props.containsKey(propName))
@@ -95,7 +95,7 @@ public class VCSRepositories {
 	private String getPropByNameAsStringWithReplace(Map<?, ?> map, String name, Object propName, String defaultValue) {
 		String result = defaultValue;
 		if (map != null) {
-			for (Object key: map.keySet()) {
+			for (Object key : map.keySet()) {
 				if (name.matches((String) key)) {
 					Map<?, ?> props = (Map<?, ?>) map.get(key);
 					if (props.containsKey(propName)) {
@@ -121,14 +121,14 @@ public class VCSRepositories {
 
 			String separatedReposUrlsStr = configSource.getReposLocations();
 			if (separatedReposUrlsStr == null) {
-				throw new EConfig(EnvVarsConfigSource.REPOS_LOCATION_ENV_VAR +
-						" environment var must contain a valid config path");
+				throw new EConfig(EnvVarsConfigSource.REPOS_LOCATION_ENV_VAR
+						+ " environment var must contain a valid config path");
 			}
 			String reposContent = reposLoader.getContentFromUrls(separatedReposUrlsStr);
 			String separatedCredsUrlsStr = configSource.getCredentialsLocations();
 			if (separatedCredsUrlsStr == null) {
-				throw new EConfig(EnvVarsConfigSource.CREDENTIALS_LOCATION_ENV_VAR +
-						" environment var must contain a valid config path");
+				throw new EConfig(EnvVarsConfigSource.CREDENTIALS_LOCATION_ENV_VAR
+						+ " environment var must contain a valid config path");
 			}
 			String credsContent = reposLoader.getContentFromUrls(separatedCredsUrlsStr);
 			try {

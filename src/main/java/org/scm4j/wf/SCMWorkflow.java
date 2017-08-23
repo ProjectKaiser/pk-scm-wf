@@ -1,5 +1,6 @@
 package org.scm4j.wf;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
@@ -13,6 +14,7 @@ import org.scm4j.wf.branch.DevelopBranchStatus;
 import org.scm4j.wf.branch.ReleaseBranch;
 import org.scm4j.wf.branch.ReleaseBranchStatus;
 import org.scm4j.wf.conf.Component;
+import org.scm4j.wf.conf.Option;
 import org.scm4j.wf.conf.VCSRepositories;
 import org.scm4j.wf.conf.Version;
 import org.scm4j.wf.exceptions.EComponentConfig;
@@ -27,15 +29,29 @@ public class SCMWorkflow implements ISCMWorkflow {
 	public static final String MDEPS_FILE_NAME = "mdeps";
 	public static final String VER_FILE_NAME = "version";
 	public static final String MDEPS_CHANGED_FILE_NAME = "mdeps-changed";
+	public static final String COMMITS_FILE_NAME = "commits.yml"; 
+	public static final File BASE_WORKING_DIR = new File(System.getProperty("user.home"), ".scm4j");
 
 	private final VCSRepositories repos;
+	private final List<Option> options;
 	
-	public SCMWorkflow(VCSRepositories repos) {
+	public SCMWorkflow(VCSRepositories repos, List<Option> options) {
 		this.repos = repos;
+		this.options = options;
 	}
 	
-	public SCMWorkflow() {
-		this(VCSRepositories.loadVCSRepositories());
+	public SCMWorkflow(List<Option> options) {
+		this(VCSRepositories.loadVCSRepositories(), options);
+	}
+	
+	public static List<Option> parseArgs(String[] args) {
+		List<Option> options = new ArrayList<>();
+		for (String arg : args) {
+			if (Option.getArgsMap().containsKey(arg)) {
+				options.add(Option.getArgsMap().get(arg));
+			}
+		}
+		return options;
 	}
 	
 	@Override
@@ -91,21 +107,22 @@ public class SCMWorkflow implements ISCMWorkflow {
 		DevelopBranchStatus dbs = db.getStatus();
 		ReleaseBranch rb = db.getCurrentReleaseBranch(repos); //getLastUnbuiltReleaseBranch(comp);
 		ReleaseBranchStatus rbs = rb.getStatus();
+		
 		if (dbs == DevelopBranchStatus.MODIFIED) {
 			if (rbs == ReleaseBranchStatus.MISSING || rbs == ReleaseBranchStatus.BUILT || rbs == ReleaseBranchStatus.TAGGED) {
 				// if we are MODIFIED and RB is MISSING or completed then need to fork a new release
 				skipAllBuilds(childActions);
 				if (actionKind == ActionKind.BUILD) {
-					return new ActionNone(comp, childActions, "nothing to build");
+					return new ActionNone(comp, childActions, "nothing to build ");
 				} 
-				return new SCMActionForkReleaseBranch(comp, childActions, ReleaseReason.NEW_FEATURES);
+				return new SCMActionForkReleaseBranch(comp, childActions, ReleaseReason.NEW_FEATURES, options);
 			}
 			// if we are MODIFIED and RB is not completed then need to accomplish the existsing RB
 			skipAllForks(childActions);
 			if (actionKind == ActionKind.FORK) {
 				return new ActionNone(comp, childActions, "nothing to fork");
 			}
-			return new SCMActionBuild(comp, childActions, ReleaseReason.NEW_FEATURES, rb.getTargetVersion());
+			return new SCMActionBuild(comp, childActions, ReleaseReason.NEW_FEATURES, rb.getTargetVersion(), options);
 		}
 		
 		// If BRANCHED then surely forked. And if IGNORED then surely not forked
@@ -118,7 +135,7 @@ public class SCMWorkflow implements ISCMWorkflow {
 			if (rbs == ReleaseBranchStatus.MISSING) {
 				// this means that weare just forked a branch and set #scm-ver tag in trunk. We are trying to determine the current release branch which does not exist yet.
 				// Is this possible? Possible: forked 2.59, 2.60 is written to trunk => dbs is BRANCHED, rbs is MISSING
-				return new ActionNone(comp, childActions, "");
+				return getActionIfNewDependencies(comp, childActions, rb, actionKind); //new ActionNone(comp, childActions, "");
 			}
 			if (rbs == ReleaseBranchStatus.TAGGED || rbs == ReleaseBranchStatus.BUILT) {
 				return getActionIfNewDependencies(comp, childActions, rb, actionKind);
@@ -129,11 +146,11 @@ public class SCMWorkflow implements ISCMWorkflow {
 				return new ActionNone(comp, childActions, "nothing to fork");
 			}
 			return rb.getMDeps().isEmpty() ? 
-					new SCMActionBuild(comp, childActions, ReleaseReason.NEW_FEATURES, rb.getTargetVersion().useSnapshot(false)) :
-					new SCMActionBuild(comp, childActions, ReleaseReason.NEW_DEPENDENCIES, rb.getTargetVersion().useSnapshot(false));
+					new SCMActionBuild(comp, childActions, ReleaseReason.NEW_FEATURES, rb.getTargetVersion().useSnapshot(false), options) :
+					new SCMActionBuild(comp, childActions, ReleaseReason.NEW_DEPENDENCIES, rb.getTargetVersion().useSnapshot(false), options);
 		}
 		
-		return  getActionIfNewDependencies(comp, childActions, rb, actionKind); 
+		return getActionIfNewDependencies(comp, childActions, rb, actionKind); 
 	}
 
 	
@@ -156,6 +173,10 @@ public class SCMWorkflow implements ISCMWorkflow {
 				// let's see is NEW_DEPENDENCIES required due of we just forked UDB?
 				continue;
 			}
+			ReleaseBranchStatus rbs = lastMDepRelease.getStatus();
+			if (rbs != ReleaseBranchStatus.BUILT || rbs != ReleaseBranchStatus.TAGGED) {
+				continue;
+			}
 			if (mDepsFromLastUnbuiltRB.isEmpty()) {
 				/**
 				 * If we are use nothing and UDB release exists then we have NEW_DEPENDENCIES
@@ -165,7 +186,7 @@ public class SCMWorkflow implements ISCMWorkflow {
 				if (actionKind == ActionKind.BUILD) {
 					return new ActionNone(comp, childActions, "nothing to build");
 				}
-				return new SCMActionForkReleaseBranch(comp, childActions, ReleaseReason.NEW_DEPENDENCIES);
+				return new SCMActionForkReleaseBranch(comp, childActions, ReleaseReason.NEW_DEPENDENCIES, options);
 			}
 			// The last UDB release found. Check if this release is used in lastUnbuiltRB
 			for (Component mDepFromLastUnbuiltRB : mDepsFromLastUnbuiltRB) {
@@ -175,12 +196,25 @@ public class SCMWorkflow implements ISCMWorkflow {
 					if (actionKind == ActionKind.BUILD) {
 						return new ActionNone(comp, childActions, "nothing to build");
 					}
-					return new SCMActionForkReleaseBranch(comp, childActions, ReleaseReason.NEW_DEPENDENCIES);
+					return new SCMActionForkReleaseBranch(comp, childActions, ReleaseReason.NEW_DEPENDENCIES, options);
 				}
 			}
 		}
 		
+		if (hasForkChildActions(childActions)) {
+			return new SCMActionForkReleaseBranch(comp, childActions, ReleaseReason.NEW_DEPENDENCIES, options);
+		}
+		
 		return new ActionNone(comp, childActions, "already built");
+	}
+
+	private boolean hasForkChildActions(List<IAction> childActions) {
+		for (IAction action : childActions) {
+			if (action instanceof SCMActionForkReleaseBranch) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private void skipAllForks(List<IAction> childActions) {
@@ -229,9 +263,9 @@ public class SCMWorkflow implements ISCMWorkflow {
 	private IAction getTagReleaseActionRoot(Component comp, List<IAction> childActions) {
 		ReleaseBranch rb = new ReleaseBranch(comp, repos);
 		if (rb.getStatus() == ReleaseBranchStatus.TAGGED) {
-			return new SCMActionUseExistingTag(comp, childActions, rb.getReleaseTag());
+			return new SCMActionUseExistingTag(comp, childActions, rb.getReleaseTag(), options);
 		} else {
-			return new SCMActionTagRelease(comp, childActions, "tag message");
+			return new SCMActionTagRelease(comp, childActions, "tag message", options);
 		}
 	}
 }

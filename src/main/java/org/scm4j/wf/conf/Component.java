@@ -1,5 +1,7 @@
 package org.scm4j.wf.conf;
 
+import org.scm4j.vcs.api.IVCS;
+
 public class Component {
 	private final VCSRepository vcsRepository;
 	private final Coords coords;
@@ -11,6 +13,10 @@ public class Component {
 	public Component(String coordsStr, VCSRepository repo) {
 		coords = new Coords(coordsStr);
 		vcsRepository = repo;
+	}
+	
+	public IVCS getVCS() {
+		return vcsRepository.getVcs();
 	}
 	
 	public Component(String coordsStr, VCSRepositories repos) {

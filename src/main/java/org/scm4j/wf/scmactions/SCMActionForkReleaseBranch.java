@@ -14,16 +14,15 @@ import org.scm4j.wf.branch.DevelopBranchStatus;
 import org.scm4j.wf.branch.ReleaseBranch;
 import org.scm4j.wf.conf.Component;
 import org.scm4j.wf.conf.MDepsFile;
-import org.scm4j.wf.conf.VCSRepositories;
+import org.scm4j.wf.conf.Option;
 import org.scm4j.wf.conf.Version;
 
 public class SCMActionForkReleaseBranch extends ActionAbstract {
 	
-	private final VCSRepositories repos = VCSRepositories.loadVCSRepositories();
 	private final ReleaseReason reason;
 
-	public SCMActionForkReleaseBranch(Component comp, List<IAction> childActions, ReleaseReason reason) {
-		super(comp, childActions);
+	public SCMActionForkReleaseBranch(Component comp, List<IAction> childActions, ReleaseReason reason, List<Option> options) {
+		super(comp, childActions, options);
 		this.reason = reason;
 	}
 	
@@ -44,7 +43,7 @@ public class SCMActionForkReleaseBranch extends ActionAbstract {
 			DevelopBranch db = new DevelopBranch(comp);
 			ReleaseBranch rb = db.getCurrentReleaseBranch(repos);
 			Version currentVer = db.getVersion();
-			IVCS vcs = comp.getVcsRepository().getVcs();
+			IVCS vcs = getVCS();
 			if (rb.exists()) {
 				progress.reportStatus("release branch already forked: " + rb.getReleaseBranchName());
 				return;

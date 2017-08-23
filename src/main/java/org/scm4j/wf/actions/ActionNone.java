@@ -10,7 +10,7 @@ public class ActionNone extends ActionAbstract {
 	private final String reason;
 	
 	public ActionNone(Component comp, List<IAction> actions, String reason) {
-		super(comp, actions);
+		super(comp, actions, null);
 		this.reason = reason;
 	}
 

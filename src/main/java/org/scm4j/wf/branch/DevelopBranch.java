@@ -42,15 +42,7 @@ public class DevelopBranch {
 	
 	public DevelopBranch(Component comp) {
 		this.comp = comp;
-		vcs = comp.getVcsRepository().getVcs();
-	}
-	
-	public String getReleaseBranchName() {
-		return comp.getVcsRepository().getReleaseBranchPrefix() + getVersion().toReleaseString();
-	}
-
-	public String getPreviousMinorReleaseBranchName() {
-		return comp.getVcsRepository().getReleaseBranchPrefix() + getVersion().toPreviousMinor().usePatch(false).useSnapshot(false).toString();
+		vcs = comp.getVCS();
 	}
 	
 	public boolean hasVersionFile() {
@@ -62,7 +54,7 @@ public class DevelopBranch {
 	}
 	
 	public List<Component> getMDeps() {
-		if (!comp.getVcsRepository().getVcs().fileExists(getName(), SCMWorkflow.MDEPS_FILE_NAME)) {
+		if (!comp.getVCS().fileExists(getName(), SCMWorkflow.MDEPS_FILE_NAME)) {
 			return new ArrayList<>();
 		}
 		String mDepsFileContent = vcs.getFileContent(getName(), SCMWorkflow.MDEPS_FILE_NAME);
@@ -76,7 +68,6 @@ public class DevelopBranch {
 	}
 	
 	public ReleaseBranch getCurrentReleaseBranch(VCSRepositories repos) {
-		//DevelopBranch db = new DevelopBranch(comp);
 		Version ver = getVersion().toPreviousMinor();
 		
 		ReleaseBranch rb = new ReleaseBranch(comp, ver, repos);
