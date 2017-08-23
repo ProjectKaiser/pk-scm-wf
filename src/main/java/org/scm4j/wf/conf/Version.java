@@ -87,15 +87,12 @@ public class Version {
 	}
 	
 	public Version toNextPatch() {
-		if (patch.isEmpty()) {
-			return clone(prefix + minor + ".1" + snapshot);
-		}
 		int i = 0;
 		while (i < patch.length() && !Character.isDigit(patch.charAt(i))) i++;
 		int firstDigitStart = i;
 		while (i < patch.length() && Character.isDigit(patch.charAt(i))) i++;
 		if (i == firstDigitStart) {
-			return new Version(prefix + minor + patch + ".1" + snapshot);
+			return new Version(prefix + minor + patch + "1" + snapshot);
 		}
 		int patchInt = Integer.parseInt(patch.substring(firstDigitStart, i)) + 1;
 		String newPatch = patch.substring(0, firstDigitStart) + Integer.toString(patchInt) +  patch.substring(i, patch.length());
