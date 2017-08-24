@@ -85,6 +85,22 @@ public class Version {
 	public Version useSnapshot(boolean useSnapshot) {
 		return new Version(verStr, usePatch, useSnapshot);
 	}
+	
+	public Version toPreviousPatch() {
+		int i = 0;
+		while (i < patch.length() && !Character.isDigit(patch.charAt(i)))
+			i++;
+		int firstDigitStart = i;
+		while (i < patch.length() && Character.isDigit(patch.charAt(i)))
+			i++;
+		if (i == firstDigitStart) {
+			return new Version(prefix + minor + "." + patch + "0" + snapshot);
+		}
+		int patchInt = Integer.parseInt(patch.substring(firstDigitStart, i)) - 1;
+		String newPatch = patch.substring(0, firstDigitStart) + Integer.toString(patchInt)
+				+ patch.substring(i, patch.length());
+		return clone(prefix + minor + "." + newPatch + snapshot);
+	}
 
 	public Version toNextPatch() {
 		int i = 0;
@@ -207,4 +223,5 @@ public class Version {
 		return patch > otherPatch;
 
 	}
+
 }

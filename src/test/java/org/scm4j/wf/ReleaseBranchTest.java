@@ -1,11 +1,15 @@
 package org.scm4j.wf;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
 
 import org.junit.Test;
+import org.scm4j.vcs.api.VCSCommit;
+import org.scm4j.vcs.api.VCSTag;
 import org.scm4j.wf.LogTag;
 import org.scm4j.wf.SCMWorkflow;
 import org.scm4j.wf.branch.DevelopBranch;
@@ -44,25 +48,23 @@ public class ReleaseBranchTest extends SCMWorkflowTestBase {
 	}
 	
 	@Test
-	public void testBuilt() {
-		env.getUnTillDbVCS().createBranch(null, rbUnTillDbFixedVer.getReleaseBranchName(), null);
-		env.generateLogTag(env.getUnTillDbVCS(), rbUnTillDbFixedVer.getReleaseBranchName(), LogTag.SCM_BUILT);
-		
-		ReleaseBranchStatus rbs = rbUnTillDbFixedVer.getStatus();
-		assertNotNull(rbs);
-		assertEquals(rbs, ReleaseBranchStatus.BUILT);
-	}
-	
-	@Test
 	public void testTagged() {
-		env.getUnTillDbVCS().createBranch(null, rbUnTillDbFixedVer.getReleaseBranchName(), null);
-		env.generateLogTag(env.getUnTillDbVCS(), rbUnTillDbFixedVer.getReleaseBranchName(), LogTag.SCM_VER);
-		String tagName = dbUnTillDb.getVersion().toPreviousMinor().toReleaseString();
-		env.getUnTillDbVCS().createTag(rbUnTillDbFixedVer.getReleaseBranchName(), tagName, "release " + tagName, null);
+		assertFalse(rbUnTillDbFixedVer.getStatus() == ReleaseBranchStatus.TAGGED);
 		
-		ReleaseBranchStatus rbs = rbUnTillDbFixedVer.getStatus();
-		assertNotNull(rbs);
-		assertEquals(rbs, ReleaseBranchStatus.TAGGED);
+		env.getUnTillDbVCS().createBranch(null, rbUnTillDbFixedVer.getReleaseBranchName(), null);
+		assertFalse(rbUnTillDbFixedVer.getStatus() == ReleaseBranchStatus.TAGGED);
+		
+		VCSCommit commit = env.getUnTillDbVCS().setFileContent(rbUnTillDbFixedVer.getReleaseBranchName(), SCMWorkflow.VER_FILE_NAME, env.getUnTillVer().toReleaseString(), LogTag.SCM_VER);
+		assertFalse(rbUnTillDbFixedVer.getStatus() == ReleaseBranchStatus.TAGGED);
+		
+		env.getUnTillDbVCS().createTag(rbUnTillDbFixedVer.getReleaseBranchName(), "wrong_tag", "wrong tag", commit.getRevision());
+		assertFalse(rbUnTillDbFixedVer.getStatus() == ReleaseBranchStatus.TAGGED);
+		
+		env.getUnTillDbVCS().setFileContent(rbUnTillDbFixedVer.getReleaseBranchName(), SCMWorkflow.VER_FILE_NAME, env.getUnTillDbVer().toNextPatch().toReleaseString(), LogTag.SCM_VER);
+		assertFalse(rbUnTillDbFixedVer.getStatus() == ReleaseBranchStatus.TAGGED);
+		
+		env.getUnTillDbVCS().createTag(rbUnTillDbFixedVer.getReleaseBranchName(), env.getUnTillDbVer().toReleaseString(), "wrong tag", commit.getRevision());
+		assertTrue(rbUnTillDbFixedVer.getStatus() == ReleaseBranchStatus.TAGGED);
 	}
 	
 	@Test

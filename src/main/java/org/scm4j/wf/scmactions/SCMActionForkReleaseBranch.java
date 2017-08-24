@@ -64,7 +64,7 @@ public class SCMActionForkReleaseBranch extends ActionAbstract {
 					for (Component actualMDep : actualMDeps) {
 						//DevelopBranch dbActualMDep = new DevelopBranch(actualMDep);
 						ReleaseBranch rbActualMDep = new ReleaseBranch(actualMDep, repos);
-						String futureRelaseVersionStr = rbActualMDep.getTargetVersion().toReleaseString();
+						String futureRelaseVersionStr = rbActualMDep.getVersion().toReleaseString();
 //								dbActualMDep.getStatus() == DevelopBranchStatus.MODIFIED ? dbActualMDep.getVersion().toReleaseString() :
 //							dbActualMDep.getVersion().toPreviousMinor().toReleaseString();
 								

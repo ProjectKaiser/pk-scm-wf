@@ -7,7 +7,7 @@ import java.util.Set;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.vcs.api.VCSTag;
-import org.scm4j.wf.LogTag;
+import org.scm4j.vcs.api.WalkDirection;
 import org.scm4j.wf.SCMWorkflow;
 import org.scm4j.wf.conf.Component;
 import org.scm4j.wf.conf.MDepsFile;
@@ -37,16 +37,12 @@ public class ReleaseBranch {
 			return ReleaseBranchStatus.MISSING;
 		}
 		
-		if (isLastCommitTagged()) {
+		if (isPreHeadCommitTaggedWitchPrevPatch()) {
 			return ReleaseBranchStatus.TAGGED;
 		}
 		
-		if (hasLastCommitSCM_BUILTLogTag(comp)) {
-			return ReleaseBranchStatus.BUILT;
-		}
-		
-		if (mDepsTagged()) {
-			return ReleaseBranchStatus.MDEPS_TAGGED;
+		if (mDepsPatchesActual()) {
+			return ReleaseBranchStatus.MDEPS_PATCHES_ACTUAL;
 		}
 		
 		if (mDepsFrozen()) {
@@ -55,53 +51,56 @@ public class ReleaseBranch {
 		
 		return ReleaseBranchStatus.BRANCHED;
 	}
+	
+	
 
-	private boolean mDepsTagged() {
-		List<Component> mDeps = getMDeps();
-		if (mDeps.size() == 0) {
-			return false;
-		}
+	private boolean mDepsPatchesActual() {
 		
-		ReleaseBranch rb;
-		ReleaseBranchStatus status;
-		for (Component mDep : mDeps) {
-			rb = new ReleaseBranch(mDep, repos);
-			status = rb.getStatus();
-			if (status != ReleaseBranchStatus.TAGGED && !hasLastCommitSCM_BUILTLogTag(mDep)) {
-				return false;
-			}
-		}
-		return true;
+	
+		return false;
 	}
 
-	private boolean isLastCommitTagged() {
-		List<VCSCommit> log = vcs.log(getReleaseBranchName(), 1);
-		if (log != null && !log.isEmpty()) {
-			VCSCommit lastCommit = log.get(0);
-			List<VCSTag> tags = vcs.getTags();
-			DevelopBranch db = new DevelopBranch(comp);
-			for (VCSTag tag : tags) {
-				if (tag.getRelatedCommit().equals(lastCommit) && tag.getTagName().equals(db.getVersion().toPreviousMinor().toReleaseString())) {
-					return true;
-				}
-			}
+//	private boolean mDepsTagged() {
+//		List<Component> mDeps = getMDeps();
+//		if (mDeps.size() == 0) {
+//			return false;
+//		}
+//		
+//		ReleaseBranch rb;
+//		ReleaseBranchStatus status;
+//		for (Component mDep : mDeps) {
+//			rb = new ReleaseBranch(mDep, repos);
+//			status = rb.getStatus();
+//			if (status != ReleaseBranchStatus.TAGGED && !hasLastCommitSCM_BUILTLogTag(mDep)) {
+//				return false;
+//			}
+//		}
+//		return true;
+//	}
+	
+	private VCSTag getCurrentVersionTag() {
+		Version ver = getCurrentVersion().toPreviousPatch();
+		return vcs.getTagByName(ver.toReleaseString());
+		
+	}
+
+	private boolean isPreHeadCommitTaggedWitchPrevPatch() {
+		VCSTag tag = getCurrentVersionTag();
+		if (tag == null) {
+			return false;
 		}
-		return false;
+		// check is tagged commit is head-1
+		List<VCSCommit> commits = vcs.getCommitsRange(getReleaseBranchName(), null, WalkDirection.DESC, 2);
+		if (commits.size() < 2) {
+			return false;
+		}
+		return commits.get(1).equals(tag.getRelatedCommit());
 	}
 
 	public boolean exists() {
 		String releaseBranchName = getReleaseBranchName();
 		Set<String> branches = vcs.getBranches(comp.getVcsRepository().getReleaseBranchPrefix());
 		return branches.contains(releaseBranchName);
-	}
-
-	private boolean hasLastCommitSCM_BUILTLogTag(Component comp) {
-		List<VCSCommit> log = vcs.log(getReleaseBranchName(), 1);
-		if (log != null && !log.isEmpty()) {
-			VCSCommit lastCommit = log.get(0);
-			return lastCommit.getLogMessage().contains(LogTag.SCM_BUILT);
-		}
-		return false;
 	}
 
 	private Boolean mDepsFrozen() {
@@ -119,11 +118,11 @@ public class ReleaseBranch {
 
 	@Override
 	public String toString() {
-		return "ReleaseBranch [comp=" + comp + ", targetVersion=" + getTargetVersion().toReleaseString() + ", status=" + getStatus() + ", name=" + getReleaseBranchName() + "]";
+		return "ReleaseBranch [comp=" + comp + ", version=" + version.toReleaseString() + ", status=" + getStatus() + ", name=" + getReleaseBranchName() + "]";
 	}
 
 	public VCSTag getReleaseTag() {
-		if (exists() || !isLastCommitTagged()) {
+		if (!exists() || getCurrentVersionTag() == null) {
 			return null;
 		}
 		
@@ -165,22 +164,6 @@ public class ReleaseBranch {
 		return version.useSnapshot(false);
 	}
 	
-	public Version getTargetVersion() {
-		Version res = getVersion().toNextPatch();
-		Version current = exists() ? getCurrentVersion() : res;
-		ReleaseBranchStatus rbs = getStatus();
-		if (current.equals(res)) {
-			if (rbs == ReleaseBranchStatus.BUILT || rbs == ReleaseBranchStatus.TAGGED) {
-				return res;
-			}
-			return res.toNextPatch();
-		}
-		if (current.isGreaterThan(res)) {
-			return current.toNextPatch();
-		}
-		return res;
-	}
-
 //	private boolean isModified() {
 //		if (!exists()) {
 //			return false;
