@@ -122,7 +122,6 @@ public class ReleaseBranch {
 		return "ReleaseBranch [comp=" + comp + ", targetVersion=" + getTargetVersion().toReleaseString() + ", status=" + getStatus() + ", name=" + getReleaseBranchName() + "]";
 	}
 
-
 	public VCSTag getReleaseTag() {
 		if (exists() || !isLastCommitTagged()) {
 			return null;
@@ -131,12 +130,13 @@ public class ReleaseBranch {
 		VCSCommit releaseHeadCommit = vcs.getHeadCommit(getReleaseBranchName());
 		List<VCSTag> tags = vcs.getTags();
 		DevelopBranch db = new DevelopBranch(comp);
+		// need last tag on release branch 
 		for (VCSTag tag : tags) {
 			if (tag.getRelatedCommit().equals(releaseHeadCommit) && tag.getTagName().equals(db.getVersion().toPreviousMinor().toReleaseString())) {
 				return tag;
 			}
 		}
-		throw new IllegalStateException("No tag on release branch '" + getReleaseBranchName() + "' head commit for component:" + comp);
+		throw new IllegalStateException("No tag on release branch " + getReleaseBranchName() + " head commit for component:" + comp);
 	}
 	
 	public List<Component> getMDeps() {
@@ -168,7 +168,11 @@ public class ReleaseBranch {
 	public Version getTargetVersion() {
 		Version res = getVersion().toNextPatch();
 		Version current = exists() ? getCurrentVersion() : res;
+		ReleaseBranchStatus rbs = getStatus();
 		if (current.equals(res)) {
+			if (rbs == ReleaseBranchStatus.BUILT || rbs == ReleaseBranchStatus.TAGGED) {
+				return res;
+			}
 			return res.toNextPatch();
 		}
 		if (current.isGreaterThan(res)) {

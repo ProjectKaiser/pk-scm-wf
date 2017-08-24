@@ -1,13 +1,7 @@
 package org.scm4j.wf.scmactions;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-import org.apache.commons.io.FileUtils;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSCommit;
@@ -24,7 +18,6 @@ import org.scm4j.wf.conf.Component;
 import org.scm4j.wf.conf.Option;
 import org.scm4j.wf.conf.Version;
 import org.scm4j.wf.exceptions.EBuilder;
-import org.yaml.snakeyaml.Yaml;
 
 	
 public class SCMActionBuild extends ActionAbstract {
@@ -85,12 +78,13 @@ public class SCMActionBuild extends ActionAbstract {
 				throw new RuntimeException("built tag can not be set because release version is not changed");
 			}
 			if (options.contains(Option.DELAYED_TAG)) {
-				saveDelayedTag(headCommit);
+				CommitsFile commitsFile = new CommitsFile();
+				commitsFile.writeCompRevision(comp.getName(), headCommit.getRevision());
 				progress.reportStatus("build commit " + headCommit.getRevision() + " is saved for delayed tagging");
 			} else {
 				
 				
-				String releaseBranchName = rb.getPreviousMinorReleaseBranchName();
+				String releaseBranchName = rb.getReleaseBranchName();
 				String tagName = rb.getTargetVersion().toString();
 				String tagMessage = tagName + " release"; 
 				VCSTag tag = vcs.createTag(releaseBranchName, tagName, tagMessage, headCommit.getRevision());
@@ -102,28 +96,6 @@ public class SCMActionBuild extends ActionAbstract {
 			progress.error("execution error: " + t.toString() + ": " + t.getMessage());
 			throw new RuntimeException(t);
 		} 
-	}
-
-	private void saveDelayedTag(VCSCommit commitToTag) throws IOException {
-		File commitsFile = SCMWorkflow.getCommitsFile();
-		if (!commitsFile.exists()) {
-			commitsFile.createNewFile();
-		}
-		
-		Yaml yaml = new Yaml();
-		@SuppressWarnings("unchecked")
-		Map<String, Map<String, String>> repos = yaml.loadAs(FileUtils.readFileToString(commitsFile, StandardCharsets.UTF_8), Map.class);
-		if (repos == null) {
-			repos = new HashMap<>();
-		}
-		Map<String, String> comps = repos.get(comp.getVCS().getRepoUrl());
-		if (comps == null) {
-			comps = new HashMap<>();
-			repos.put(comp.getVCS().getRepoUrl(), comps);
-		}
-		comps.put(comp.getName(), commitToTag.getRevision());
-		
-		FileUtils.writeStringToFile(commitsFile, yaml.dumpAsMap(repos), StandardCharsets.UTF_8);
 	}
 
 	@Override

@@ -15,11 +15,11 @@ public class Version {
 
 	private final boolean usePatch;
 	private final boolean useSnapshot;
-	
+
 	public Version(String verStr) {
 		this(verStr, true, true);
 	}
-	
+
 	private Version(String verStr, boolean usePatch, boolean useSnapshot) {
 		this.verStr = verStr;
 		this.usePatch = usePatch;
@@ -77,26 +77,28 @@ public class Version {
 		}
 		return prefix + minor + (usePatch ? "." : "") + getPatch() + getSnapshot();
 	}
-	
+
 	public Version usePatch(boolean usePatch) {
 		return new Version(verStr, usePatch, useSnapshot);
 	}
-	
+
 	public Version useSnapshot(boolean useSnapshot) {
 		return new Version(verStr, usePatch, useSnapshot);
 	}
-	
-	
+
 	public Version toNextPatch() {
 		int i = 0;
-		while (i < patch.length() && !Character.isDigit(patch.charAt(i))) i++;
+		while (i < patch.length() && !Character.isDigit(patch.charAt(i)))
+			i++;
 		int firstDigitStart = i;
-		while (i < patch.length() && Character.isDigit(patch.charAt(i))) i++;
+		while (i < patch.length() && Character.isDigit(patch.charAt(i)))
+			i++;
 		if (i == firstDigitStart) {
 			return new Version(prefix + minor + "." + patch + "1" + snapshot);
 		}
 		int patchInt = Integer.parseInt(patch.substring(firstDigitStart, i)) + 1;
-		String newPatch = patch.substring(0, firstDigitStart) + Integer.toString(patchInt) + patch.substring(i, patch.length());
+		String newPatch = patch.substring(0, firstDigitStart) + Integer.toString(patchInt)
+				+ patch.substring(i, patch.length());
 		return clone(prefix + minor + "." + newPatch + snapshot);
 	}
 
@@ -109,7 +111,7 @@ public class Version {
 		checkMinor();
 		return clone(prefix + Integer.toString(Integer.parseInt(minor) + 1) + "." + patch + snapshot);
 	}
-	
+
 	private Version clone(String verStr) {
 		return new Version(verStr, usePatch, useSnapshot);
 	}
@@ -166,7 +168,7 @@ public class Version {
 	public Boolean isEmpty() {
 		return isEmpty;
 	}
-	
+
 	public boolean isExactVersion() {
 		return !minor.isEmpty();
 	}
@@ -174,7 +176,7 @@ public class Version {
 	public String toReleaseString() {
 		return useSnapshot(false).toString();
 	}
-	
+
 	public Boolean isGreaterThan(Version other) {
 		if (other.isEmpty() || !other.isExactVersion()) {
 			return !isEmpty() && isExactVersion();
@@ -186,23 +188,23 @@ public class Version {
 		int otherMinor = Integer.parseInt(other.getMinor());
 		if (minor > otherMinor) {
 			return true;
-		} 
+		}
 		if (minor < otherMinor) {
 			return false;
 		}
-		
+
 		if (!StringUtils.isNumeric(getPatch()) || !StringUtils.isNumeric(other.getPatch())) {
 			return false;
 		}
-		
+
 		int patch = Integer.parseInt(getPatch());
 		int otherPatch = Integer.parseInt(other.getPatch());
-		
+
 		if (patch == otherPatch) {
 			return false;
 		}
-		
+
 		return patch > otherPatch;
-		
+
 	}
 }

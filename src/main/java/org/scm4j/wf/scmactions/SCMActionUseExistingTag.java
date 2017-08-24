@@ -29,6 +29,13 @@ public class SCMActionUseExistingTag extends ActionAbstract {
 
 	@Override
 	public void execute(IProgress progress) {
+		for (IAction action : childActions) {
+			try (IProgress nestedProgress = progress.createNestedProgress(action.toString())) {
+				action.execute(nestedProgress);
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			} 
+		}
 		progress.reportStatus(toString());
 	}
 }

@@ -16,7 +16,13 @@ public class ActionNone extends ActionAbstract {
 
 	@Override
 	public void execute(IProgress progress) {
-		progress.createNestedProgress(reason);
+		for (IAction action : childActions) {
+			try (IProgress nestedProgress = progress.createNestedProgress(action.toString())) {
+				action.execute(nestedProgress);
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			} 
+		}
 	}
 	
 	public String getReason() {

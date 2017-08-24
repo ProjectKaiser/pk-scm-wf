@@ -10,7 +10,6 @@ import org.scm4j.wf.SCMWorkflow;
 import org.scm4j.wf.actions.ActionAbstract;
 import org.scm4j.wf.actions.IAction;
 import org.scm4j.wf.branch.DevelopBranch;
-import org.scm4j.wf.branch.DevelopBranchStatus;
 import org.scm4j.wf.branch.ReleaseBranch;
 import org.scm4j.wf.conf.Component;
 import org.scm4j.wf.conf.MDepsFile;

@@ -17,7 +17,9 @@ public class Cli {
 		
 		List<Option> options = SCMWorkflow.parseArgs(args);
 
+		
 		SCMWorkflow wf = new SCMWorkflow(options);
+		//IAction action = wf.getTagReleaseAction(depName);
 		IAction action = wf.getProductionReleaseAction(depName);
 
 		PrintAction pa = new PrintAction();

@@ -40,6 +40,10 @@ public class SCMWorkflow implements ISCMWorkflow {
 		this.options = options;
 	}
 	
+	public SCMWorkflow() {
+		this(new ArrayList<Option>());
+	}
+	
 	public SCMWorkflow(List<Option> options) {
 		this(VCSRepositories.loadVCSRepositories(), options);
 	}
@@ -249,23 +253,31 @@ public class SCMWorkflow implements ISCMWorkflow {
 	}
 
 	@Override
-	public IAction getTagReleaseAction(Component comp) {
+	public IAction getTagReleaseAction(String depName) {
+		Component comp = new Component(depName, repos);
 		List<IAction> childActions = new ArrayList<>();
 		DevelopBranch db = new DevelopBranch(comp);
 		List<Component> mDeps = db.getMDeps();
 		
 		for (Component mDep : mDeps) {
-			childActions.add(getTagReleaseAction(mDep));
+			childActions.add(getTagReleaseAction(mDep.getName()));
 		}
 		return getTagReleaseActionRoot(comp, childActions);
 	}
 
 	private IAction getTagReleaseActionRoot(Component comp, List<IAction> childActions) {
-		ReleaseBranch rb = new ReleaseBranch(comp, repos);
-		if (rb.getStatus() == ReleaseBranchStatus.TAGGED) {
+		DevelopBranch db = new DevelopBranch(comp);
+		ReleaseBranch rb = db.getCurrentReleaseBranch(repos);
+		switch (rb.getStatus()) {
+		case TAGGED: {
 			return new SCMActionUseExistingTag(comp, childActions, rb.getReleaseTag(), options);
-		} else {
+		}
+		case BUILT: {
 			return new SCMActionTagRelease(comp, childActions, "tag message", options);
+		}
+		default: {
+			return new ActionNone(comp, childActions, "no builds to tag");
+		}
 		}
 	}
 

@@ -70,14 +70,14 @@ public class SCMWorkflowBuildTest extends SCMWorkflowTestBase {
 		
 		// fork UBL
 		action = wf.getProductionReleaseAction(UBL);
-		try (IProgress progress = new ProgressConsole(action.toString(), ">>> ", "<<< ")) {;
-			action.execute(progress);
-		}
 		Expectations exp = new Expectations();
 		exp.put(UBL, SCMActionForkReleaseBranch.class);
 		exp.put(UBL, "reason", ReleaseReason.NEW_DEPENDENCIES);
 		exp.put(UNTILLDB, ActionNone.class);
 		checkChildActionsTypes(action, exp);
+		try (IProgress progress = new ProgressConsole(action.toString(), ">>> ", "<<< ")) {;
+			action.execute(progress);
+		}
 		assertTrue(TestBuilder.getBuilders().isEmpty());
 		
 		// build UBL and unTillDb
