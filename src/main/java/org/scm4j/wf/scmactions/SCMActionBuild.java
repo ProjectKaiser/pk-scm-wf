@@ -45,10 +45,9 @@ public class SCMActionBuild extends ActionAbstract {
 			DevelopBranch db = new DevelopBranch(comp);
 			ReleaseBranch rb = db.getCurrentReleaseBranch(repos);
 			ReleaseBranchStatus rbs = rb.getStatus();
-			if (rbs == ReleaseBranchStatus.BUILT || rbs == ReleaseBranchStatus.TAGGED) {
-				progress.reportStatus("version " + rb.getTargetVersion().toString() + " already built ");
+			if (rbs == ReleaseBranchStatus.ACTUAL) {
+				progress.reportStatus("version " + rb.getVersion().toString() + " already built ");
 				return;
-				//return new ActionResultVersion(comp.getName(), rb.getTargetVersion().toString(), true, rb.getReleaseBranchName());
 			}
 			
 			progress.reportStatus("target version to build: " + targetVersion);
@@ -72,24 +71,20 @@ public class SCMActionBuild extends ActionAbstract {
 				comp.getVcsRepository().getBuilder().build(comp, lwc.getFolder(), progress);
 			}
 			
-			// need to detect that we are built already
-			VCSCommit builtCommit = vcs.setFileContent(rb.getReleaseBranchName(), SCMWorkflow.VER_FILE_NAME, targetVersion.toString(), LogTag.SCM_BUILT + " " + targetVersion.toString());
-			if (builtCommit.equals(VCSCommit.EMPTY)) {
-				throw new RuntimeException("built tag can not be set because release version is not changed");
-			}
 			if (options.contains(Option.DELAYED_TAG)) {
 				CommitsFile commitsFile = new CommitsFile();
 				commitsFile.writeCompRevision(comp.getName(), headCommit.getRevision());
 				progress.reportStatus("build commit " + headCommit.getRevision() + " is saved for delayed tagging");
 			} else {
-				
-				
 				String releaseBranchName = rb.getReleaseBranchName();
-				String tagName = rb.getTargetVersion().toString();
+				String tagName = rb.getVersion().toString();
 				String tagMessage = tagName + " release"; 
 				VCSTag tag = vcs.createTag(releaseBranchName, tagName, tagMessage, headCommit.getRevision());
 				progress.reportStatus("head of \"" + releaseBranchName + "\" tagged: " + tag.toString());
 			}
+
+			VCSCommit builtCommit = vcs.setFileContent(rb.getReleaseBranchName(), SCMWorkflow.VER_FILE_NAME, targetVersion.toNextPatch().toReleaseString(), 
+					LogTag.SCM_VER + " " + targetVersion.toNextPatch().toReleaseString());
 			
 			progress.reportStatus(comp.getName() + " " + targetVersion.toString() + " is built in " + rb.getReleaseBranchName());
 		} catch (Throwable t) {

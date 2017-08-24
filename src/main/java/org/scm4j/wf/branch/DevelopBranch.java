@@ -27,8 +27,8 @@ public class DevelopBranch {
 	
 	public DevelopBranchStatus getStatus() {
 		List<VCSCommit> log = vcs.log(comp.getVcsRepository().getDevBranch(), 1);
-		if (log == null || log.isEmpty()) {
-			return DevelopBranchStatus.IGNORED; // status if no commits?
+		if (log.isEmpty()) {
+			return DevelopBranchStatus.IGNORED;
 		}
 		VCSCommit lastCommit = log.get(0);
 		if (lastCommit.getLogMessage().contains(LogTag.SCM_IGNORE)) {
@@ -68,29 +68,41 @@ public class DevelopBranch {
 	}
 	
 	public ReleaseBranch getCurrentReleaseBranch(VCSRepositories repos) {
-		Version ver = getVersion().toPreviousMinor();
+		Version ver = getVersion();
 		
 		ReleaseBranch rb = new ReleaseBranch(comp, ver, repos);
-		DevelopBranchStatus dbs = getStatus();
-		if (dbs == DevelopBranchStatus.BRANCHED) {
-			return rb;
-		}
+		/**
+		 * just built the compoennt. db is BRANCHED, and we want to see the just built release.
+		 */
 		
-		ReleaseBranch oldestRB = null;
-		for (int i = 0; i <= 1; i++) {
-			ReleaseBranchStatus rbs = rb.getStatus();
-			if (rbs != ReleaseBranchStatus.MISSING && rbs != ReleaseBranchStatus.BUILT && rbs != ReleaseBranchStatus.TAGGED) {
-				oldestRB = rb;
+		if (getStatus() == DevelopBranchStatus.BRANCHED) {
+			ReleaseBranch justBuiltRB = new ReleaseBranch(comp, ver.toPreviousMinor(), repos);
+			if (justBuiltRB.getStatus() != ReleaseBranchStatus.MISSING) {
+				return justBuiltRB;
 			}
-			
-			if (ver.getMinor().equals("0")) {
-				return oldestRB != null ? oldestRB : new ReleaseBranch(comp, repos);
-			}
-			
-			ver = ver.toPreviousMinor();
-			
-			rb = new ReleaseBranch(comp, ver, repos);
 		}
-		return oldestRB != null ? oldestRB : new ReleaseBranch(comp, repos);
+
+		ReleaseBranchStatus rbs;
+		ReleaseBranchStatus prevRBS = null;
+		ReleaseBranch prevRB = rb;
+		while (true) {
+			rbs = rb.getStatus();
+			if (rbs == ReleaseBranchStatus.MISSING && prevRBS == ReleaseBranchStatus.MISSING) {
+				return new ReleaseBranch(comp, getVersion(), repos);
+			}
+			if (rbs == ReleaseBranchStatus.ACTUAL) {
+				return prevRB;
+			}
+			if (rbs != ReleaseBranchStatus.MISSING) {
+				return rb;
+			}
+			ver = ver.toPreviousMinor();
+			if (ver.getMinor().equals("0")) {
+				return rb;
+			}
+			prevRB = rb;
+			prevRBS = rbs;
+			rb = new ReleaseBranch(comp,  ver, repos);
+		}
 	}
 }

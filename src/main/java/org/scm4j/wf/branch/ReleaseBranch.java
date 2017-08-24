@@ -7,7 +7,7 @@ import java.util.Set;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.vcs.api.VCSTag;
-import org.scm4j.wf.LogTag;
+import org.scm4j.vcs.api.WalkDirection;
 import org.scm4j.wf.SCMWorkflow;
 import org.scm4j.wf.conf.Component;
 import org.scm4j.wf.conf.MDepsFile;
@@ -26,7 +26,7 @@ public class ReleaseBranch {
 	}
 	
 	public ReleaseBranch(Component comp, Version version, VCSRepositories repos) {
-		this.version = version;
+		this.version = version.toRelease();
 		this.comp = comp;
 		this.repos = repos;
 		vcs = comp.getVCS();
@@ -37,56 +37,52 @@ public class ReleaseBranch {
 			return ReleaseBranchStatus.MISSING;
 		}
 		
-		if (isLastCommitTagged()) {
-			return ReleaseBranchStatus.TAGGED;
-		}
-		
-		if (hasLastCommitSCM_BUILTLogTag(comp)) {
-			return ReleaseBranchStatus.BUILT;
-		}
-		
-		if (mDepsTagged()) {
-			return ReleaseBranchStatus.MDEPS_TAGGED;
-		}
-		
 		if (mDepsFrozen()) {
+			if (mDepsActual()) {
+				if (isPreHeadCommitTaggedWithVersion()) {
+					return ReleaseBranchStatus.ACTUAL;
+				}
+				return ReleaseBranchStatus.MDEPS_ACTUAL;
+			}
 			return ReleaseBranchStatus.MDEPS_FROZEN;
 		}
 		
 		return ReleaseBranchStatus.BRANCHED;
 	}
-
-	private boolean mDepsTagged() {
+	
+	private boolean mDepsActual() {
 		List<Component> mDeps = getMDeps();
-		if (mDeps.size() == 0) {
-			return false;
+		if (mDeps.isEmpty()) {
+			return true;
 		}
-		
-		ReleaseBranch rb;
-		ReleaseBranchStatus status;
+		ReleaseBranch mDepRB;
 		for (Component mDep : mDeps) {
-			rb = new ReleaseBranch(mDep, repos);
-			status = rb.getStatus();
-			if (status != ReleaseBranchStatus.TAGGED && !hasLastCommitSCM_BUILTLogTag(mDep)) {
+			if (!mDep.getVersion().isExactVersion()) {
+				return false;
+			}
+			mDepRB = new ReleaseBranch(mDep, mDep.getVersion(), repos);
+			if (!mDepRB.isPreHeadCommitTaggedWithVersion()) {
 				return false;
 			}
 		}
 		return true;
 	}
+	
+	private VCSTag getVersionTag() {
+		return vcs.getTagByName(version.toReleaseString());
+	}
 
-	private boolean isLastCommitTagged() {
-		List<VCSCommit> log = vcs.log(getReleaseBranchName(), 1);
-		if (log != null && !log.isEmpty()) {
-			VCSCommit lastCommit = log.get(0);
-			List<VCSTag> tags = vcs.getTags();
-			DevelopBranch db = new DevelopBranch(comp);
-			for (VCSTag tag : tags) {
-				if (tag.getRelatedCommit().equals(lastCommit) && tag.getTagName().equals(db.getVersion().toPreviousMinor().toReleaseString())) {
-					return true;
-				}
-			}
+	public boolean isPreHeadCommitTaggedWithVersion() {
+		VCSTag tag = getVersionTag();
+		if (tag == null) {
+			return false;
 		}
-		return false;
+		// check is tagged commit is head-1
+		List<VCSCommit> commits = vcs.getCommitsRange(getReleaseBranchName(), null, WalkDirection.DESC, 2);
+		if (commits.size() < 2) {
+			return false;
+		}
+		return commits.get(1).equals(tag.getRelatedCommit());
 	}
 
 	public boolean exists() {
@@ -95,22 +91,13 @@ public class ReleaseBranch {
 		return branches.contains(releaseBranchName);
 	}
 
-	private boolean hasLastCommitSCM_BUILTLogTag(Component comp) {
-		List<VCSCommit> log = vcs.log(getReleaseBranchName(), 1);
-		if (log != null && !log.isEmpty()) {
-			VCSCommit lastCommit = log.get(0);
-			return lastCommit.getLogMessage().contains(LogTag.SCM_BUILT);
-		}
-		return false;
-	}
-
 	private Boolean mDepsFrozen() {
 		List<Component> mDeps = getMDeps();
 		if (mDeps.isEmpty()) {
-			return false;
+			return true;
 		}
 		for (Component mDep : mDeps) {
-			if (mDep.getVersion().getMinor().isEmpty()) {
+			if (!mDep.getVersion().isExactVersion()) {
 				return false;
 			}
 		}
@@ -119,11 +106,11 @@ public class ReleaseBranch {
 
 	@Override
 	public String toString() {
-		return "ReleaseBranch [comp=" + comp + ", targetVersion=" + getTargetVersion().toReleaseString() + ", status=" + getStatus() + ", name=" + getReleaseBranchName() + "]";
+		return "ReleaseBranch [comp=" + comp + ", version=" + version.toReleaseString() + ", status=" + getStatus() + ", name=" + getReleaseBranchName() + "]";
 	}
 
 	public VCSTag getReleaseTag() {
-		if (exists() || !isLastCommitTagged()) {
+		if (!exists() || getVersionTag() == null) {
 			return null;
 		}
 		
@@ -150,35 +137,15 @@ public class ReleaseBranch {
 	}
 	
 	public String getReleaseBranchName() {
-		return comp.getVcsRepository().getReleaseBranchPrefix() + version.usePatch(false).toReleaseString();
-	}
-	
-	public String getPreviousMinorReleaseBranchName() {
-		return comp.getVcsRepository().getReleaseBranchPrefix() + getVersion().toPreviousMinor().usePatch(false).useSnapshot(false).toString();
+		return comp.getVcsRepository().getReleaseBranchPrefix() + version.getReleaseNoPatchString();
 	}
 	
 	public Version getCurrentVersion() {
-		return new Version(comp.getVCS().getFileContent(getReleaseBranchName(), SCMWorkflow.VER_FILE_NAME).trim()).useSnapshot(false);
+		return new Version(comp.getVCS().getFileContent(getReleaseBranchName(), SCMWorkflow.VER_FILE_NAME).trim());
 	}
 	
 	public Version getVersion() {
-		return version.useSnapshot(false);
-	}
-	
-	public Version getTargetVersion() {
-		Version res = getVersion().toNextPatch();
-		Version current = exists() ? getCurrentVersion() : res;
-		ReleaseBranchStatus rbs = getStatus();
-		if (current.equals(res)) {
-			if (rbs == ReleaseBranchStatus.BUILT || rbs == ReleaseBranchStatus.TAGGED) {
-				return res;
-			}
-			return res.toNextPatch();
-		}
-		if (current.isGreaterThan(res)) {
-			return current.toNextPatch();
-		}
-		return res;
+		return version;
 	}
 
 //	private boolean isModified() {

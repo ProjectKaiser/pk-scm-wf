@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
 
-import org.scm4j.wf.actions.ActionError;
+import org.scm4j.vcs.api.VCSTag;
 import org.scm4j.wf.actions.ActionKind;
 import org.scm4j.wf.actions.ActionNone;
 import org.scm4j.wf.actions.IAction;
@@ -90,7 +90,7 @@ public class SCMWorkflow implements ISCMWorkflow {
 		ReleaseBranch rb = new ReleaseBranch(comp, repos);
 		for (int i = 0; i <= 1; i++) {
 			ReleaseBranchStatus rbs = rb.getStatus();
-			if (rbs == ReleaseBranchStatus.BRANCHED || rbs == ReleaseBranchStatus.BUILT || rbs == ReleaseBranchStatus.TAGGED) {
+			if (rbs == ReleaseBranchStatus.BRANCHED || rbs == ReleaseBranchStatus.MDEPS_FROZEN|| rbs == ReleaseBranchStatus.MDEPS_ACTUAL) {
 				return rb;
 			}
 			rb = new ReleaseBranch(comp, new Version(ver.toPreviousMinor().toReleaseString()), repos);
@@ -103,113 +103,222 @@ public class SCMWorkflow implements ISCMWorkflow {
 		if (!db.hasVersionFile()) {
 			throw new EComponentConfig("no " + VER_FILE_NAME + " file for " + comp.toString());
 		}
+		DevelopBranchStatus dbs = db.getStatus();
 		
-		if (hasErrorActions(childActions)) {
-			return new ActionNone(comp, childActions, "has child error actions     ");
+		if (dbs == DevelopBranchStatus.IGNORED) {
+			// если существуют такие ветки (пусть и непостроенные еще) mdeps, которые не используются в предыдущем релизе, то надо форкать.
+			return new ActionNone(comp, childActions, "develop branch is IGNORED");
 		}
 		
-		DevelopBranchStatus dbs = db.getStatus();
-		ReleaseBranch rb = db.getCurrentReleaseBranch(repos); //getLastUnbuiltReleaseBranch(comp);
+		ReleaseBranch rb = db.getCurrentReleaseBranch(repos);
 		ReleaseBranchStatus rbs = rb.getStatus();
 		
-		if (dbs == DevelopBranchStatus.MODIFIED) {
-			if (rbs == ReleaseBranchStatus.MISSING || rbs == ReleaseBranchStatus.BUILT || rbs == ReleaseBranchStatus.TAGGED) {
-				// if we are MODIFIED and RB is MISSING or completed then need to fork a new release
-				skipAllBuilds(childActions);
-				if (actionKind == ActionKind.BUILD) {
-					return new ActionNone(comp, childActions, "nothing to build ");
-				} 
+		if (rbs == ReleaseBranchStatus.MISSING) {
+			skipAllBuilds(childActions);
+			if (actionKind == ActionKind.BUILD) {
+				return new ActionNone(comp, childActions, "nothing to build ");
+			}
+			if (dbs == DevelopBranchStatus.MODIFIED) {
 				return new SCMActionForkReleaseBranch(comp, childActions, ReleaseReason.NEW_FEATURES, options);
+			} else {
+				return new SCMActionForkReleaseBranch(comp, childActions, ReleaseReason.NEW_DEPENDENCIES, options);
 			}
-			// if we are MODIFIED and RB is not completed then need to accomplish the existsing RB
-			skipAllForks(childActions);
-			if (actionKind == ActionKind.FORK) {
-				return new ActionNone(comp, childActions, "nothing to fork");
-			}
-			return new SCMActionBuild(comp, childActions, ReleaseReason.NEW_FEATURES, rb.getTargetVersion(), options);
 		}
 		
-		// If BRANCHED then surely forked. And if IGNORED then surely not forked
-		
-		if (dbs == DevelopBranchStatus.BRANCHED) {
-			/**
-			 * this means we are surely forked
-			 */
-			
-			if (rbs == ReleaseBranchStatus.MISSING) {
-				// this means that weare just forked a branch and set #scm-ver tag in trunk. We are trying to determine the current release branch which does not exist yet.
-				// Is this possible? Possible: forked 2.59, 2.60 is written to trunk => dbs is BRANCHED, rbs is MISSING
-				return getActionIfNewDependencies(comp, childActions, rb, actionKind); //new ActionNone(comp, childActions, "");
+		if (rbs == ReleaseBranchStatus.BRANCHED) {
+			// BRANCHED - need to freeze mdeps
+			// MDEPS_FROZEN - need to actualize mdeps
+			skipAllBuilds(childActions);
+			if (actionKind == ActionKind.BUILD) {
+				return new ActionNone(comp, childActions, "nothing to build");
 			}
-			if (rbs == ReleaseBranchStatus.TAGGED || rbs == ReleaseBranchStatus.BUILT) {
-				return getActionIfNewDependencies(comp, childActions, rb, actionKind);
-			}
-			// if a Release branch is not completed, i.e. MDEPS_* or BRANCHED then need to build the unbuilt
-			skipAllForks(childActions);
-			if (actionKind == ActionKind.FORK) {
-				return new ActionNone(comp, childActions, "nothing to fork");
-			}
-			return rb.getMDeps().isEmpty() ? 
-					new SCMActionBuild(comp, childActions, ReleaseReason.NEW_FEATURES, rb.getTargetVersion().useSnapshot(false), options) :
-					new SCMActionBuild(comp, childActions, ReleaseReason.NEW_DEPENDENCIES, rb.getTargetVersion().useSnapshot(false), options);
+			return new SCMActionForkReleaseBranch(comp, childActions, ReleaseReason.NEW_FEATURES, options);
 		}
 		
-		return getActionIfNewDependencies(comp, childActions, rb, actionKind); 
-	}
-
-	
-
-	private IAction getActionIfNewDependencies(Component comp, List<IAction> childActions, ReleaseBranch lastUnbuiltRB, ActionKind actionKind) {
-		
-		/**
-		 * Will check previous release for each mDep. If it exists then check if this release was used in the current (here it is the last unbuilt) version of the current component?
-		 */
-		
-		List<Component> mDepsFromDev = new DevelopBranch(comp).getMDeps();
-		List<Component> mDepsFromLastUnbuiltRB = lastUnbuiltRB.getMDeps();
-		for (Component mDepFromDev : mDepsFromDev) {
-			/**
-			 * Take the last UDB release
-			 */
-			ReleaseBranch lastMDepRelease = getLastForkedReleaseBranch(mDepFromDev);
-			if (lastMDepRelease == null) {
-				// UDB was not built
-				// let's see is NEW_DEPENDENCIES required due of we just forked UDB?
-				continue;
-			}
-			ReleaseBranchStatus rbs = lastMDepRelease.getStatus();
-			if (rbs != ReleaseBranchStatus.BUILT || rbs != ReleaseBranchStatus.TAGGED) {
-				continue;
-			}
-			if (mDepsFromLastUnbuiltRB.isEmpty()) {
-				/**
-				 * If we are use nothing and UDB release exists then we have NEW_DEPENDENCIES
-				 * Fork only is possible here. Build is impossible because release branch with correct mDeps does not exists
-				 */
+		if (rbs == ReleaseBranchStatus.MDEPS_FROZEN) {
+			if (needToActualizeMDeps(childActions, rb)) {
+				// need to actualize
 				skipAllBuilds(childActions);
 				if (actionKind == ActionKind.BUILD) {
 					return new ActionNone(comp, childActions, "nothing to build");
 				}
 				return new SCMActionForkReleaseBranch(comp, childActions, ReleaseReason.NEW_DEPENDENCIES, options);
-			}
-			// The last UDB release found. Check if this release is used in lastUnbuiltRB
-			for (Component mDepFromLastUnbuiltRB : mDepsFromLastUnbuiltRB) {
-				if (mDepFromLastUnbuiltRB.getName().equals(mDepFromDev.getName()) && !mDepFromLastUnbuiltRB.getVersion().equals(lastMDepRelease.getTargetVersion())) {
-					//  Fork only is possible here. Build is impossible because release branch with correct mDeps does not exists
-					skipAllBuilds(childActions);
-					if (actionKind == ActionKind.BUILD) {
-						return new ActionNone(comp, childActions, "nothing to build");
-					}
-					return new SCMActionForkReleaseBranch(comp, childActions, ReleaseReason.NEW_DEPENDENCIES, options);
+			} else {
+				// need to build
+				skipAllForks(childActions);
+				if (actionKind == ActionKind.FORK) {
+					return new ActionNone(comp, childActions, "nothing to fork");
 				}
+				return new SCMActionBuild(comp, childActions, ReleaseReason.NEW_DEPENDENCIES, rb.getVersion(), options);
 			}
+		}
+		
+		if (rbs == ReleaseBranchStatus.MDEPS_ACTUAL) {
+			// need to build
+			if (actionKind == ActionKind.FORK) {
+				return new ActionNone(comp, childActions, "nothing to fork");
+			}
+			return new SCMActionBuild(comp, childActions, ReleaseReason.NEW_FEATURES, rb.getVersion(), options);
 		}
 		
 		if (hasForkChildActions(childActions)) {
+			skipAllBuilds(childActions);
+			if (actionKind == ActionKind.FORK) {
+				return new ActionNone(comp, childActions, "nothing to build");
+			}
 			return new SCMActionForkReleaseBranch(comp, childActions, ReleaseReason.NEW_DEPENDENCIES, options);
 		}
+//		
+//		if (hasBuildChildActions(childActions)) {
+//			skipAllBuilds(childActions);
+//			if (actionKind == ActionKind.FORK) {
+//				return new ActionNone(comp, childActions, "nothing to build");
+//			}
+//			return new SCMActionForkReleaseBranch(comp, childActions, ReleaseReason.NEW_DEPENDENCIES, options);
+//		}
+//		
+		return new ActionNone(comp, childActions, rbs.toString());
 		
-		return new ActionNone(comp, childActions, "already built");
+		
+		
+		
+//		
+//		if (dbs == DevelopBranchStatus.MODIFIED) {
+//			if (rbs == ReleaseBranchStatus.MISSING || rbs == ReleaseBranchStatus.BUILT || rbs == ReleaseBranchStatus.TAGGED) {
+//				// if we are MODIFIED and RB is MISSING or completed then need to fork a new release
+//				skipAllBuilds(childActions);
+//				if (actionKind == ActionKind.BUILD) {
+//					return new ActionNone(comp, childActions, "nothing to build ");
+//				} 
+//				return new SCMActionForkReleaseBranch(comp, childActions, ReleaseReason.NEW_FEATURES, options);
+//			}
+//			// if we are MODIFIED and RB is not completed then need to accomplish the existsing RB
+//			skipAllForks(childActions);
+//			if (actionKind == ActionKind.FORK) {
+//				return new ActionNone(comp, childActions, "nothing to fork");
+//			}
+//			return new SCMActionBuild(comp, childActions, ReleaseReason.NEW_FEATURES, rb.getTargetVersion(), options);
+//		}
+//		
+//		// If BRANCHED then surely forked. And if IGNORED then surely not forked
+//		
+//		if (dbs == DevelopBranchStatus.BRANCHED) {
+//			/**
+//			 * this means we are surely forked
+//			 */
+//			
+//			if (rbs == ReleaseBranchStatus.MISSING) {
+//				// this means that weare just forked a branch and set #scm-ver tag in trunk. We are trying to determine the current release branch which does not exist yet.
+//				// Is this possible? Possible: forked 2.59, 2.60 is written to trunk => dbs is BRANCHED, rbs is MISSING
+//				return getActionIfNewDependencies(comp, childActions, rb, actionKind); //new ActionNone(comp, childActions, "");
+//			}
+//			if (rbs == ReleaseBranchStatus.TAGGED || rbs == ReleaseBranchStatus.BUILT) {
+//				return getActionIfNewDependencies(comp, childActions, rb, actionKind);
+//			}
+//			// if a Release branch is not completed, i.e. MDEPS_* or BRANCHED then need to build the unbuilt
+//			skipAllForks(childActions);
+//			if (actionKind == ActionKind.FORK) {
+//				return new ActionNone(comp, childActions, "nothing to fork");
+//			}
+//			return rb.getMDeps().isEmpty() ? 
+//					new SCMActionBuild(comp, childActions, ReleaseReason.NEW_FEATURES, rb.getTargetVersion().useSnapshot(false), options) :
+//					new SCMActionBuild(comp, childActions, ReleaseReason.NEW_DEPENDENCIES, rb.getTargetVersion().useSnapshot(false), options);
+//		}
+//		
+//		return getActionIfNewDependencies(comp, childActions, rb, actionKind); 
+	}
+
+	
+
+	private boolean needToActualizeMDeps(List<IAction> childActions, ReleaseBranch currentCompRB) {
+		List<Component> mDeps = currentCompRB.getMDeps();
+		Boolean goingToBuild;
+		for (Component mDep : mDeps) {
+			goingToBuild = false;
+			for (IAction action : childActions) {
+				if (action.getName().equals(mDep.getName())) {
+					if (action instanceof SCMActionBuild) {
+						SCMActionBuild ab = (SCMActionBuild) action;
+						if (ab.getTargetVersion().equals(mDep.getVersion())) {
+							// Это значит мы собираемся построить требуемую версию mDep. Если встретили такую, которую ни то ни се, значит нельзя строить.
+							goingToBuild = true;
+							break;
+						}
+					}
+				}
+			}
+			if (!goingToBuild) {
+				// строить не собираемся. Глянем, а не прописана ли старая версия этого mDep в релизной ветке головного компонента
+				ReleaseBranch mDepRB = new ReleaseBranch(mDep, mDep.getVersion(), repos);
+				VCSTag lastTag = mDep.getVCS().getLastTag();
+				if (!lastTag.getTagName().equals(mDep.getVersion().toReleaseString())) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+//	private IAction getActionIfNewDependencies(Component comp, List<IAction> childActions, ReleaseBranch lastUnbuiltRB, ActionKind actionKind) {
+//		
+//		/**
+//		 * Will check previous release for each mDep. If it exists then check if this release was used in the current (here it is the last unbuilt) version of the current component?
+//		 */
+//		
+//		List<Component> mDepsFromDev = new DevelopBranch(comp).getMDeps();
+//		List<Component> mDepsFromLastUnbuiltRB = lastUnbuiltRB.getMDeps();
+//		for (Component mDepFromDev : mDepsFromDev) {
+//			/**
+//			 * Take the last UDB release
+//			 */
+//			ReleaseBranch lastMDepRelease = getLastForkedReleaseBranch(mDepFromDev);
+//			if (lastMDepRelease == null) {
+//				// UDB was not built
+//				// let's see is NEW_DEPENDENCIES required due of we just forked UDB?
+//				continue;
+//			}
+//			ReleaseBranchStatus rbs = lastMDepRelease.getStatus();
+//			if (rbs != ReleaseBranchStatus.BUILT || rbs != ReleaseBranchStatus.TAGGED) {
+//				continue;
+//			}
+//			if (mDepsFromLastUnbuiltRB.isEmpty()) {
+//				/**
+//				 * If we are use nothing and UDB release exists then we have NEW_DEPENDENCIES
+//				 * Fork only is possible here. Build is impossible because release branch with correct mDeps does not exists
+//				 */
+//				skipAllBuilds(childActions);
+//				if (actionKind == ActionKind.BUILD) {
+//					return new ActionNone(comp, childActions, "nothing to build");
+//				}
+//				return new SCMActionForkReleaseBranch(comp, childActions, ReleaseReason.NEW_DEPENDENCIES, options);
+//			}
+//			// The last UDB release found. Check if this release is used in lastUnbuiltRB
+//			for (Component mDepFromLastUnbuiltRB : mDepsFromLastUnbuiltRB) {
+//				if (mDepFromLastUnbuiltRB.getName().equals(mDepFromDev.getName()) && !mDepFromLastUnbuiltRB.getVersion().equals(lastMDepRelease.getTargetVersion())) {
+//					//  Fork only is possible here. Build is impossible because release branch with correct mDeps does not exists
+//					skipAllBuilds(childActions);
+//					if (actionKind == ActionKind.BUILD) {
+//						return new ActionNone(comp, childActions, "nothing to build");
+//					}
+//					return new SCMActionForkReleaseBranch(comp, childActions, ReleaseReason.NEW_DEPENDENCIES, options);
+//				}
+//			}
+//		}
+//		
+//		if (hasForkChildActions(childActions)) {
+//			return new SCMActionForkReleaseBranch(comp, childActions, ReleaseReason.NEW_DEPENDENCIES, options);
+//		}
+//		
+//		return new ActionNone(comp, childActions, "already built");
+//	}
+
+	private boolean hasBuildChildActions(List<IAction> childActions) {
+		for (IAction action : childActions) {
+			if (action instanceof SCMActionBuild) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private boolean hasForkChildActions(List<IAction> childActions) {
@@ -241,15 +350,6 @@ public class SCMWorkflow implements ISCMWorkflow {
 				li.set(new ActionNone(((SCMActionBuild) action).getComponent(), action.getChildActions(), "build skipped because not all parent components forked"));
 			}
 		}
-	}
-
-	private boolean hasErrorActions(List<IAction> actions) {
-		for (IAction action : actions) {
-			if (action instanceof ActionError) {
-				return true;
-			}
-		}
-		return false;
 	}
 
 	@Override
