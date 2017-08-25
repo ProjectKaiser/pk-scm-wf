@@ -12,7 +12,7 @@ All statuses are calculated top-down using `BranchesStatuses` class
 - `MISSING`
   - Branch does not exist
 - `TAGGED`
-  - Tag which corresponds to version.minor.patch-1 exists and points to head-1
+  - Tag which corresponds to version.minor.patch-1 exists and points to head-1 (no commits after last patch but `#scm-ver`)
 - `MDEPS_PATCHES_ACTUAL`
    - For every mdep release branch which corresponds to `mdeps` is `TAGGED`
 - `MDEPS_FROZEN`
