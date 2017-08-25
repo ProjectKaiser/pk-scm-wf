@@ -18,5 +18,5 @@ All statuses are calculated `BranchesStatuses` class
 - `MDEPS_ACTUAL`
    - For every mdeps entry tag which corresponds to mdeps.component.version exists and points to the component-repo.branches.version.commits.head-1  
 - `ACTUAL`
-  - `MDEPS_ACTUAL` and tag which corresponds to version.minor.patch-1 exists and points to head-1 (no commits after last patch but `#scm-ver`)
+  - `MDEPS_ACTUAL` (or no mdeps) and tag which corresponds to version.minor.patch-1 exists and points to head-1 (no commits after last patch but `#scm-ver`)
   
