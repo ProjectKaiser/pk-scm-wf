@@ -6,6 +6,6 @@
 
 # Overview
 
-Tool to build multi-repositiry projects. Tool detectes changes in repositories, build new versions and actualize dependency lists.
+Tool to manage multi-repositiry configuration. It  detectes changes in repositories, build new components versions and actualize dependency lists.
 
-E.g. we have a `project1` which depends on `component1.1` and `component1.2`, all components and `project1` sit in their own repositories. `project1` depends
+E.g. we have a `product3` which depends on `component39`:0.9.5 and `component50`:0.5.0, all components and `product3` sit in their own repositories. Now we add some commits to the `develop` branch of `component50` and run the tool in `show` mode. Tool analyzes repositories and suggests that new versions of `component50` and `product3` should be released. Tool in `fork` mode will create branches and fix dependency lists. `fork`
