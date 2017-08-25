@@ -21,12 +21,17 @@ public class SCMWorkflowForkReleaseTest extends SCMWorkflowTestBase {
 	
 	@Test
 	public void testForkSingleComponent() throws Exception {
-		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), "feature added");
 		SCMWorkflow wf = new SCMWorkflow();
-		IAction action = wf.getProductionReleaseAction(UNTILLDB);
 		Expectations exp = new Expectations();
+		exp.put(UNTILLDB, ActionNone.class);
+		IAction action = wf.getProductionReleaseAction(UNTILLDB);
+		checkChildActionsTypes(action, exp);
+		
+		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), "feature added");
+		exp = new Expectations();
 		exp.put(UNTILLDB, SCMActionForkReleaseBranch.class);
 		exp.put(UNTILLDB, "reason", ReleaseReason.NEW_FEATURES);
+		action = wf.getProductionReleaseAction(UNTILLDB);
 		checkChildActionsTypes(action, exp);
 		try (IProgress progress = new ProgressConsole(action.toString(), ">>> ", "<<< ")) {
 			action.execute(progress);
@@ -67,7 +72,7 @@ public class SCMWorkflowForkReleaseTest extends SCMWorkflowTestBase {
 		// check versions
 		assertEquals(env.getUnTillVer().toNextMinor(), dbUnTill.getVersion());
 		ReleaseBranch newUnTillRB = new ReleaseBranch(compUnTill, env.getUnTillVer(), repos);
-		assertEquals(env.getUnTillVer().toNextPatch().useSnapshot(false), newUnTillRB.getTargetVersion());
+		assertEquals(env.getUnTillVer().toNextPatch().useSnapshot(false), newUnTillRB.getVersion());
 		
 		// check mDeps
 		List<Component> unTillReleaseMDeps = rbUnTillFixedVer.getMDeps();

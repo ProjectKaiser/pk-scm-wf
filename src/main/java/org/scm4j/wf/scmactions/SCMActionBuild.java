@@ -45,10 +45,9 @@ public class SCMActionBuild extends ActionAbstract {
 			DevelopBranch db = new DevelopBranch(comp);
 			ReleaseBranch rb = db.getCurrentReleaseBranch(repos);
 			ReleaseBranchStatus rbs = rb.getStatus();
-			if (rbs == ReleaseBranchStatus.BUILT || rbs == ReleaseBranchStatus.TAGGED) {
-				progress.reportStatus("version " + rb.getTargetVersion().toString() + " already built ");
+			if (rbs == ReleaseBranchStatus.ACTUAL) {
+				progress.reportStatus("version " + rb.getVersion().toString() + " already built ");
 				return;
-				//return new ActionResultVersion(comp.getName(), rb.getTargetVersion().toString(), true, rb.getReleaseBranchName());
 			}
 			
 			progress.reportStatus("target version to build: " + targetVersion);
@@ -85,7 +84,7 @@ public class SCMActionBuild extends ActionAbstract {
 			}
 
 			VCSCommit builtCommit = vcs.setFileContent(rb.getReleaseBranchName(), SCMWorkflow.VER_FILE_NAME, targetVersion.toNextPatch().toReleaseString(), 
-					LogTag.SCM_VER+ " " + targetVersion.toNextPatch().toReleaseString());
+					LogTag.SCM_VER + " " + targetVersion.toNextPatch().toReleaseString());
 			
 			progress.reportStatus(comp.getName() + " " + targetVersion.toString() + " is built in " + rb.getReleaseBranchName());
 		} catch (Throwable t) {

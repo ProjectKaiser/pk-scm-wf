@@ -44,7 +44,7 @@ public class SCMActionTagRelease extends ActionAbstract {
 			}
 			
 			String releaseBranchName = rb.getReleaseBranchName();
-			String tagName = rb.getTargetVersion().toReleaseString();
+			String tagName = rb.getVersion().toReleaseString();
 			vcs.createTag(releaseBranchName, tagName, tagMessage, revisionToTag);
 			progress.reportStatus(String.format("%s of %s tagged: %s", revisionToTag == null ? "head " : "commit " + revisionToTag, rb.getReleaseBranchName(), tagName));
 		} catch (Throwable t) {

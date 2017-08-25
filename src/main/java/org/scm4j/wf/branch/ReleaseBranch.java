@@ -37,55 +37,40 @@ public class ReleaseBranch {
 			return ReleaseBranchStatus.MISSING;
 		}
 		
-		if (isPreHeadCommitTaggedWitchPrevPatch()) {
-			return ReleaseBranchStatus.TAGGED;
-		}
-		
-		if (mDepsPatchesActual()) {
-			return ReleaseBranchStatus.MDEPS_PATCHES_ACTUAL;
-		}
-		
 		if (mDepsFrozen()) {
+			if (mDepsActual()) {
+				if (isPreHeadCommitTaggedWithVersion()) {
+					return ReleaseBranchStatus.ACTUAL;
+				}
+				return ReleaseBranchStatus.MDEPS_ACTUAL;
+			}
 			return ReleaseBranchStatus.MDEPS_FROZEN;
 		}
 		
 		return ReleaseBranchStatus.BRANCHED;
 	}
 	
+	private boolean mDepsActual() {
+		List<Component> mDeps = getMDeps();
+		ReleaseBranch mDepRB;
+		for (Component mDep : mDeps) {
+			if (!mDep.getVersion().isExactVersion()) {
+				return false;
+			}
+			mDepRB = new ReleaseBranch(mDep, mDep.getVersion(), repos);
+			if (!mDepRB.isPreHeadCommitTaggedWithVersion()) {
+				return false;
+			}
+		}
+		return true;
+	}
 	
-
-	private boolean mDepsPatchesActual() {
-		
-	
-		return false;
+	private VCSTag getVersionTag() {
+		return vcs.getTagByName(version.toReleaseString());
 	}
 
-//	private boolean mDepsTagged() {
-//		List<Component> mDeps = getMDeps();
-//		if (mDeps.size() == 0) {
-//			return false;
-//		}
-//		
-//		ReleaseBranch rb;
-//		ReleaseBranchStatus status;
-//		for (Component mDep : mDeps) {
-//			rb = new ReleaseBranch(mDep, repos);
-//			status = rb.getStatus();
-//			if (status != ReleaseBranchStatus.TAGGED && !hasLastCommitSCM_BUILTLogTag(mDep)) {
-//				return false;
-//			}
-//		}
-//		return true;
-//	}
-	
-	private VCSTag getCurrentVersionTag() {
-		Version ver = getCurrentVersion().toPreviousPatch();
-		return vcs.getTagByName(ver.toReleaseString());
-		
-	}
-
-	private boolean isPreHeadCommitTaggedWitchPrevPatch() {
-		VCSTag tag = getCurrentVersionTag();
+	public boolean isPreHeadCommitTaggedWithVersion() {
+		VCSTag tag = getVersionTag();
 		if (tag == null) {
 			return false;
 		}
@@ -109,7 +94,7 @@ public class ReleaseBranch {
 			return false;
 		}
 		for (Component mDep : mDeps) {
-			if (mDep.getVersion().getMinor().isEmpty()) {
+			if (!mDep.getVersion().isExactVersion()) {
 				return false;
 			}
 		}
@@ -122,7 +107,7 @@ public class ReleaseBranch {
 	}
 
 	public VCSTag getReleaseTag() {
-		if (!exists() || getCurrentVersionTag() == null) {
+		if (!exists() || getVersionTag() == null) {
 			return null;
 		}
 		
@@ -149,19 +134,15 @@ public class ReleaseBranch {
 	}
 	
 	public String getReleaseBranchName() {
-		return comp.getVcsRepository().getReleaseBranchPrefix() + version.usePatch(false).toReleaseString();
-	}
-	
-	public String getPreviousMinorReleaseBranchName() {
-		return comp.getVcsRepository().getReleaseBranchPrefix() + getVersion().toPreviousMinor().usePatch(false).useSnapshot(false).toString();
+		return comp.getVcsRepository().getReleaseBranchPrefix() + version.getReleaseNoPatchString();
 	}
 	
 	public Version getCurrentVersion() {
-		return new Version(comp.getVCS().getFileContent(getReleaseBranchName(), SCMWorkflow.VER_FILE_NAME).trim()).useSnapshot(false);
+		return new Version(comp.getVCS().getFileContent(getReleaseBranchName(), SCMWorkflow.VER_FILE_NAME).trim());
 	}
 	
 	public Version getVersion() {
-		return version.useSnapshot(false);
+		return version;
 	}
 	
 //	private boolean isModified() {

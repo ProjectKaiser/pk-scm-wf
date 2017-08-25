@@ -127,7 +127,7 @@ public class SCMWorkflowBuildTest extends SCMWorkflowTestBase {
 		// check versions
 		ReleaseBranch newUnTillDbRB = dbUnTillDb.getCurrentReleaseBranch(repos);
 		Version verRelease = newUnTillDbRB.getCurrentVersion();
-		assertEquals(env.getUnTillDbVer().useSnapshot(false).toNextPatch(), verRelease);
+		assertEquals(env.getUnTillDbVer().toNextPatch().toString(), verRelease.toString());
 //		
 //		// fork unTill. Built unTillDb should be used. UBL and unTill must be forked due of new dependencies
 //		action = wf.getProductionReleaseAction(UNTILL);
