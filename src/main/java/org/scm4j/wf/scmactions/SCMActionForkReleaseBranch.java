@@ -45,7 +45,7 @@ public class SCMActionForkReleaseBranch extends ActionAbstract {
 			IVCS vcs = getVCS();
 			if (rb.exists()) {
 				progress.reportStatus("release branch already forked: " + rb.getReleaseBranchName());
-				return;
+				//return;
 			} else {
 				vcs.createBranch(db.getName(), rb.getReleaseBranchName(), "release branch created");
 				progress.reportStatus("branch " + rb.getReleaseBranchName() + " created");
@@ -62,12 +62,9 @@ public class SCMActionForkReleaseBranch extends ActionAbstract {
 				} else {
 					List<Component> frozenMDeps = new ArrayList<>();
 					for (Component actualMDep : actualMDeps) {
-						//DevelopBranch dbActualMDep = new DevelopBranch(actualMDep);
-						ReleaseBranch rbActualMDep = new ReleaseBranch(actualMDep, repos);
+						DevelopBranch dbActualMDep = new DevelopBranch(actualMDep);
+						ReleaseBranch rbActualMDep = dbActualMDep.getCurrentReleaseBranch(repos);
 						String futureRelaseVersionStr = rbActualMDep.getVersion().toReleaseString();
-//								dbActualMDep.getStatus() == DevelopBranchStatus.MODIFIED ? dbActualMDep.getVersion().toReleaseString() :
-//							dbActualMDep.getVersion().toPreviousMinor().toReleaseString();
-								
 						Component frozenMDep = actualMDep.cloneWithDifferentVersion(futureRelaseVersionStr);
 						frozenMDeps.add(frozenMDep);
 					}

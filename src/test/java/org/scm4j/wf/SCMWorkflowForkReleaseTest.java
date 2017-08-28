@@ -45,7 +45,7 @@ public class SCMWorkflowForkReleaseTest extends SCMWorkflowTestBase {
 		ReleaseBranch newUnTillDbRB = dbUnTillDb.getCurrentReleaseBranch(repos);
 		Version verRelease = newUnTillDbRB.getCurrentVersion();
 		assertEquals(env.getUnTillDbVer().toNextMinor(), verTrunk);
-		assertEquals(env.getUnTillDbVer().useSnapshot(false), verRelease);
+		assertEquals(env.getUnTillDbVer().toRelease(), verRelease);
 	}
 	
 	@Test
@@ -72,16 +72,16 @@ public class SCMWorkflowForkReleaseTest extends SCMWorkflowTestBase {
 		// check versions
 		assertEquals(env.getUnTillVer().toNextMinor(), dbUnTill.getVersion());
 		ReleaseBranch newUnTillRB = new ReleaseBranch(compUnTill, env.getUnTillVer(), repos);
-		assertEquals(env.getUnTillVer().toNextPatch().useSnapshot(false), newUnTillRB.getVersion());
+		assertEquals(env.getUnTillVer().toRelease() - check next patch is written!, newUnTillRB.getVersion());
 		
 		// check mDeps
 		List<Component> unTillReleaseMDeps = rbUnTillFixedVer.getMDeps();
 		assertTrue(unTillReleaseMDeps.size() == 2);
 		for (Component unTillReleaseMDep : unTillReleaseMDeps) {
 			if (unTillReleaseMDep.getName().equals(UBL)) {
-				assertEquals(dbUBL.getVersion().toPreviousMinor().toReleaseString(), unTillReleaseMDep.getVersion().toReleaseString());
+				assertEquals(dbUBL.getVersion().toRelease(), unTillReleaseMDep.getVersion());
 			} else if (unTillReleaseMDep.getName().equals(UNTILLDB)) {
-				assertEquals(dbUnTillDb.getVersion().toPreviousMinor().toReleaseString(), unTillReleaseMDep.getVersion().toReleaseString());
+				assertEquals(dbUnTillDb.getVersion().toRelease(), unTillReleaseMDep.getVersion());
 			} else {
 				fail();
 			}
@@ -102,6 +102,8 @@ public class SCMWorkflowForkReleaseTest extends SCMWorkflowTestBase {
 		action.execute(new NullProgress());
 		
 		// fork UBL
+		// simulate BRANCHED dev branch status
+		env.generateContent(env.getUblVCS(), compUBL.getVcsRepository().getDevBranch(), "test file", "test content", LogTag.SCM_VER);
 		action = wf.getProductionReleaseAction(UBL);
 		action.execute(new NullProgress());
 		Expectations exp = new Expectations();
@@ -123,13 +125,13 @@ public class SCMWorkflowForkReleaseTest extends SCMWorkflowTestBase {
 		
 		// check UBL versions
 		assertEquals(env.getUblVer().toNextMinor(), dbUBL.getVersion());
-		ReleaseBranch newUBLRB = new ReleaseBranch(compUBL, env.getUblVer(), repos);
-		assertEquals(env.getUblVer().toNextPatch().useSnapshot(false), newUBLRB.getCurrentVersion());
+		ReleaseBranch newUBLRB = dbUBL.getCurrentReleaseBranch(repos);
+		assertEquals(env.getUblVer().toRelease(), newUBLRB.getCurrentVersion());
 		
 		// check unTillDb versions
 		assertEquals(env.getUnTillDbVer().toNextMinor(), dbUnTillDb.getVersion());
-		ReleaseBranch newUnTillDbRB = new ReleaseBranch(compUnTillDb, env.getUnTillDbVer(), repos);
-		assertEquals(env.getUnTillDbVer().toNextPatch().useSnapshot(false), newUnTillDbRB.getCurrentVersion());
+		ReleaseBranch newUnTillDbRB = dbUnTillDb.getCurrentReleaseBranch(repos);
+		assertEquals(env.getUnTillDbVer().toRelease(), newUnTillDbRB.getCurrentVersion());
 		
 		// check UBL mDeps
 		List<Component> ublReleaseMDeps = rbUBLFixedVer.getMDeps();

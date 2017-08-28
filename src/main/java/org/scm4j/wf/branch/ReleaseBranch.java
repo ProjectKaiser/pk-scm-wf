@@ -26,7 +26,7 @@ public class ReleaseBranch {
 	}
 	
 	public ReleaseBranch(Component comp, Version version, VCSRepositories repos) {
-		this.version = version;
+		this.version = version.toRelease();
 		this.comp = comp;
 		this.repos = repos;
 		vcs = comp.getVCS();
@@ -52,6 +52,9 @@ public class ReleaseBranch {
 	
 	private boolean mDepsActual() {
 		List<Component> mDeps = getMDeps();
+		if (mDeps.isEmpty()) {
+			return true;
+		}
 		ReleaseBranch mDepRB;
 		for (Component mDep : mDeps) {
 			if (!mDep.getVersion().isExactVersion()) {
@@ -91,7 +94,7 @@ public class ReleaseBranch {
 	private Boolean mDepsFrozen() {
 		List<Component> mDeps = getMDeps();
 		if (mDeps.isEmpty()) {
-			return false;
+			return true;
 		}
 		for (Component mDep : mDeps) {
 			if (!mDep.getVersion().isExactVersion()) {
@@ -144,7 +147,7 @@ public class ReleaseBranch {
 	public Version getVersion() {
 		return version;
 	}
-	
+
 //	private boolean isModified() {
 //		if (!exists()) {
 //			return false;

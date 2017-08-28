@@ -9,6 +9,9 @@ import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.vcs.api.workingcopy.IVCSRepositoryWorkspace;
 import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
 import org.scm4j.vcs.api.workingcopy.VCSWorkspace;
+import org.scm4j.wf.branch.DevelopBranch;
+import org.scm4j.wf.branch.ReleaseBranch;
+import org.scm4j.wf.conf.Component;
 import org.scm4j.wf.conf.EnvVarsConfigSource;
 import org.scm4j.wf.conf.IConfigSource;
 import org.scm4j.wf.conf.VCSRepositories;
@@ -43,6 +46,7 @@ public class TestEnvironment implements AutoCloseable {
 	private final Version ublVer = new Version("1.18.5-SNAPSHOT");
 	private final Version unTillDbVer = new Version("2.59.1-SNAPSHOT");
 	private File envDir;
+	private VCSRepositories repos = VCSRepositories.loadVCSRepositories(); 
 	
 	public TestEnvironment() {
 		RANDOM_VCS_NAME_SUFFIX = UUID.randomUUID().toString();
@@ -182,5 +186,16 @@ public class TestEnvironment implements AutoCloseable {
 			FileUtils.deleteDirectory(envDir);
 		}
 		VCSRepositories.setConfigSource(new EnvVarsConfigSource());
+	}
+
+	public void generateRelease(Component comp) {
+		IVCS vcs = comp.getVCS();
+		DevelopBranch db = new DevelopBranch(comp);
+		ReleaseBranch rb = new ReleaseBranch(comp, comp.getVersion(), repos);
+		vcs.createBranch(db.getName(), rb.getReleaseBranchName(), null);
+		VCSCommit commit = vcs.setFileContent(rb.getReleaseBranchName(), SCMWorkflow.VER_FILE_NAME, comp.getVersion().toReleaseString(), LogTag.SCM_VER);
+		vcs.createTag(rb.getReleaseBranchName(), comp.getVersion().toReleaseString(), "tag created", commit.getRevision());
+		vcs.setFileContent(rb.getReleaseBranchName(), SCMWorkflow.VER_FILE_NAME, comp.getVersion().toNextPatch().toReleaseString(), LogTag.SCM_VER);
+		vcs.setFileContent(db.getName(), SCMWorkflow.VER_FILE_NAME, comp.getVersion().toNextMinor().toString(), LogTag.SCM_VER);
 	}
 }

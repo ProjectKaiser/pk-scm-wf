@@ -107,7 +107,7 @@ public class VersionTest {
 	public void testEqualsAndHashcode() {
 		EqualsVerifier
 				.forClass(Version.class)
-				.withOnlyTheseFields("minor", "prefix", "patch", "usePatch", "useSnapshot")
+				.withOnlyTheseFields("verStr")
 				.usingGetClass()
 				.verify();
 	}
@@ -139,24 +139,6 @@ public class VersionTest {
 		assertEquals("13.14.fgdfgd1", new Version("13.14.fgdfgd").toNextPatch().toString());
 	}
 
-	@Test
-	public void testUsePatch() {
-		Version ver = new Version("11.12.13-SNAPSHOT").usePatch(false);
-		assertEquals("11.12-SNAPSHOT", ver.toString());
-		assertEquals("", ver.getPatch());
-		ver = ver.usePatch(true);
-		assertEquals("11.12.13-SNAPSHOT", ver.toString());
-	}
-
-	@Test
-	public void testUseSnapshot() {
-		Version ver = new Version("11.12.13-SNAPSHOT").useSnapshot(false);
-		assertEquals("11.12.13", ver.toString());
-		assertEquals("", ver.getSnapshot());
-		ver = ver.useSnapshot(true);
-		assertEquals("11.12.13-SNAPSHOT", ver.toString());
-	}
-	
 	@Test
 	public void testIsGreaterThan() {
 		assertTrue(new Version("11.12.13.14-SNAPSHOT").isGreaterThan(new Version("11.12.13.13-SNAPSHOT")));

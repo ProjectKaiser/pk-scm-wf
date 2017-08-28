@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
 
+import org.scm4j.vcs.api.VCSTag;
 import org.scm4j.wf.actions.ActionKind;
 import org.scm4j.wf.actions.ActionNone;
 import org.scm4j.wf.actions.IAction;
@@ -102,21 +103,31 @@ public class SCMWorkflow implements ISCMWorkflow {
 		if (!db.hasVersionFile()) {
 			throw new EComponentConfig("no " + VER_FILE_NAME + " file for " + comp.toString());
 		}
-		
 		DevelopBranchStatus dbs = db.getStatus();
+		
+		if (dbs == DevelopBranchStatus.IGNORED) {
+			// если существуют такие ветки (пусть и непостроенные еще) mdeps, которые не используются в предыдущем релизе, то надо форкать.
+			return new ActionNone(comp, childActions, "develop branch is IGNORED");
+		}
+		
 		ReleaseBranch rb = db.getCurrentReleaseBranch(repos);
 		ReleaseBranchStatus rbs = rb.getStatus();
 		
-		if (rbs == ReleaseBranchStatus.MISSING && dbs == DevelopBranchStatus.MODIFIED) {
+		if (rbs == ReleaseBranchStatus.MISSING) {
 			skipAllBuilds(childActions);
 			if (actionKind == ActionKind.BUILD) {
 				return new ActionNone(comp, childActions, "nothing to build ");
 			}
-			return new SCMActionForkReleaseBranch(comp, childActions, ReleaseReason.NEW_FEATURES, options);
+			if (dbs == DevelopBranchStatus.MODIFIED) {
+				return new SCMActionForkReleaseBranch(comp, childActions, ReleaseReason.NEW_FEATURES, options);
+			} else {
+				return new SCMActionForkReleaseBranch(comp, childActions, ReleaseReason.NEW_DEPENDENCIES, options);
+			}
 		}
 		
-		if (rbs == ReleaseBranchStatus.BRANCHED || rbs == ReleaseBranchStatus.MDEPS_FROZEN) {
-			// need to freeze mdeps.
+		if (rbs == ReleaseBranchStatus.BRANCHED) {
+			// BRANCHED - need to freeze mdeps
+			// MDEPS_FROZEN - need to actualize mdeps
 			skipAllBuilds(childActions);
 			if (actionKind == ActionKind.BUILD) {
 				return new ActionNone(comp, childActions, "nothing to build");
@@ -124,9 +135,26 @@ public class SCMWorkflow implements ISCMWorkflow {
 			return new SCMActionForkReleaseBranch(comp, childActions, ReleaseReason.NEW_FEATURES, options);
 		}
 		
+		if (rbs == ReleaseBranchStatus.MDEPS_FROZEN) {
+			if (needToActualizeMDeps(childActions, rb)) {
+				// need to actualize
+				skipAllBuilds(childActions);
+				if (actionKind == ActionKind.BUILD) {
+					return new ActionNone(comp, childActions, "nothing to build");
+				}
+				return new SCMActionForkReleaseBranch(comp, childActions, ReleaseReason.NEW_DEPENDENCIES, options);
+			} else {
+				// need to build
+				skipAllForks(childActions);
+				if (actionKind == ActionKind.FORK) {
+					return new ActionNone(comp, childActions, "nothing to fork");
+				}
+				return new SCMActionBuild(comp, childActions, ReleaseReason.NEW_DEPENDENCIES, rb.getVersion(), options);
+			}
+		}
+		
 		if (rbs == ReleaseBranchStatus.MDEPS_ACTUAL) {
-			// need to actualize mdeps
-			skipAllForks(childActions);
+			// need to build
 			if (actionKind == ActionKind.FORK) {
 				return new ActionNone(comp, childActions, "nothing to fork");
 			}
@@ -134,9 +162,21 @@ public class SCMWorkflow implements ISCMWorkflow {
 		}
 		
 		if (hasForkChildActions(childActions)) {
+			skipAllBuilds(childActions);
+			if (actionKind == ActionKind.FORK) {
+				return new ActionNone(comp, childActions, "nothing to build");
+			}
 			return new SCMActionForkReleaseBranch(comp, childActions, ReleaseReason.NEW_DEPENDENCIES, options);
 		}
-		
+//		
+//		if (hasBuildChildActions(childActions)) {
+//			skipAllBuilds(childActions);
+//			if (actionKind == ActionKind.FORK) {
+//				return new ActionNone(comp, childActions, "nothing to build");
+//			}
+//			return new SCMActionForkReleaseBranch(comp, childActions, ReleaseReason.NEW_DEPENDENCIES, options);
+//		}
+//		
 		return new ActionNone(comp, childActions, rbs.toString());
 		
 		
@@ -190,6 +230,35 @@ public class SCMWorkflow implements ISCMWorkflow {
 
 	
 
+	private boolean needToActualizeMDeps(List<IAction> childActions, ReleaseBranch currentCompRB) {
+		List<Component> mDeps = currentCompRB.getMDeps();
+		Boolean goingToBuild;
+		for (Component mDep : mDeps) {
+			goingToBuild = false;
+			for (IAction action : childActions) {
+				if (action.getName().equals(mDep.getName())) {
+					if (action instanceof SCMActionBuild) {
+						SCMActionBuild ab = (SCMActionBuild) action;
+						if (ab.getTargetVersion().equals(mDep.getVersion())) {
+							// Это значит мы собираемся построить требуемую версию mDep. Если встретили такую, которую ни то ни се, значит нельзя строить.
+							goingToBuild = true;
+							break;
+						}
+					}
+				}
+			}
+			if (!goingToBuild) {
+				// строить не собираемся. Глянем, а не прописана ли старая версия этого mDep в релизной ветке головного компонента
+				ReleaseBranch mDepRB = new ReleaseBranch(mDep, mDep.getVersion(), repos);
+				VCSTag lastTag = mDep.getVCS().getLastTag();
+				if (!lastTag.getTagName().equals(mDep.getVersion().toReleaseString())) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
 //	private IAction getActionIfNewDependencies(Component comp, List<IAction> childActions, ReleaseBranch lastUnbuiltRB, ActionKind actionKind) {
 //		
 //		/**
@@ -242,6 +311,15 @@ public class SCMWorkflow implements ISCMWorkflow {
 //		
 //		return new ActionNone(comp, childActions, "already built");
 //	}
+
+	private boolean hasBuildChildActions(List<IAction> childActions) {
+		for (IAction action : childActions) {
+			if (action instanceof SCMActionBuild) {
+				return true;
+			}
+		}
+		return false;
+	}
 
 	private boolean hasForkChildActions(List<IAction> childActions) {
 		for (IAction action : childActions) {

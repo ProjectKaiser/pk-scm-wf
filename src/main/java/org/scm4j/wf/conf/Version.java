@@ -154,7 +154,7 @@ public class Version {
 		if (!StringUtils.isNumeric(minor)) {
 			return verStr;
 		}
-		return prefix + minor + (patch.isEmpty() ? "" : "." + patch) + snapshot;
+		return prefix + minor + (patch.isEmpty() ? "" : "." + patch);
 	}
 
 	public Boolean isGreaterThan(Version other) {
@@ -190,6 +190,10 @@ public class Version {
 
 	public String getReleaseNoPatchString() {
 		return prefix + minor;
+	}
+
+	public Version toRelease() {
+		return new Version(prefix + minor + (patch.isEmpty() ? "" : "." + patch));
 	}
 
 }

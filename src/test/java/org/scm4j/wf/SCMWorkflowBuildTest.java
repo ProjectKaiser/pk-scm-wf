@@ -10,7 +10,6 @@ import org.scm4j.commons.progress.IProgress;
 import org.scm4j.commons.progress.ProgressConsole;
 import org.scm4j.wf.actions.ActionNone;
 import org.scm4j.wf.actions.IAction;
-import org.scm4j.wf.branch.ReleaseBranch;
 import org.scm4j.wf.conf.Version;
 import org.scm4j.wf.scmactions.ReleaseReason;
 import org.scm4j.wf.scmactions.SCMActionBuild;
@@ -39,7 +38,7 @@ public class SCMWorkflowBuildTest extends SCMWorkflowTestBase {
 		exp.put(UBL, "reason", ReleaseReason.NEW_DEPENDENCIES);
 		exp.put(UNTILLDB, ActionNone.class);
 		checkChildActionsTypes(action, exp);
-		try (IProgress progress = new ProgressConsole(action.toString(), ">>> ", "<<< ")) {;
+		try (IProgress progress = new ProgressConsole(action.toString(), ">>> ", "<<< ")) {
 			action.execute(progress);
 		}
 		assertTrue(TestBuilder.getBuilders().isEmpty());
@@ -48,10 +47,10 @@ public class SCMWorkflowBuildTest extends SCMWorkflowTestBase {
 		action = wf.getProductionReleaseAction(UBL);
 		exp = new Expectations();
 		exp.put(UBL, SCMActionBuild.class);
-		exp.put(UBL, "reason", ReleaseReason.NEW_DEPENDENCIES);
+		exp.put(UBL, "reason", ReleaseReason.NEW_FEATURES);
 		exp.put(UNTILLDB, ActionNone.class);
 		checkChildActionsTypes(action, exp);
-		try (IProgress progress = new ProgressConsole(action.toString(), ">>> ", "<<< ")) {;
+		try (IProgress progress = new ProgressConsole(action.toString(), ">>> ", "<<< ")) {
 			action.execute(progress);
 		} 
 		assertFalse(TestBuilder.getBuilders().isEmpty());
@@ -66,7 +65,9 @@ public class SCMWorkflowBuildTest extends SCMWorkflowTestBase {
 		IAction action = wf.getProductionReleaseAction(UNTILLDB);
 		
 		// fork unTillDb release
-		action.execute(new NullProgress());
+		try (IProgress progress = new ProgressConsole(action.toString(), ">>> ", "<<< ")) {
+		action.execute(progress);
+		}
 		
 		// fork UBL
 		action = wf.getProductionReleaseAction(UBL);
@@ -75,7 +76,7 @@ public class SCMWorkflowBuildTest extends SCMWorkflowTestBase {
 		exp.put(UBL, "reason", ReleaseReason.NEW_DEPENDENCIES);
 		exp.put(UNTILLDB, ActionNone.class);
 		checkChildActionsTypes(action, exp);
-		try (IProgress progress = new ProgressConsole(action.toString(), ">>> ", "<<< ")) {;
+		try (IProgress progress = new ProgressConsole(action.toString(), ">>> ", "<<< ")) {
 			action.execute(progress);
 		}
 		assertTrue(TestBuilder.getBuilders().isEmpty());
@@ -125,9 +126,8 @@ public class SCMWorkflowBuildTest extends SCMWorkflowTestBase {
 		assertNotNull(TestBuilder.getBuilders().get(UNTILLDB));
 		
 		// check versions
-		ReleaseBranch newUnTillDbRB = dbUnTillDb.getCurrentReleaseBranch(repos);
-		Version verRelease = newUnTillDbRB.getCurrentVersion();
-		assertEquals(env.getUnTillDbVer().toNextPatch().toString(), verRelease.toString());
+		Version verRelease = rbUnTillDbFixedVer.getCurrentVersion();
+		assertEquals(env.getUnTillDbVer().toNextPatch().toReleaseString(), verRelease.toString());
 //		
 //		// fork unTill. Built unTillDb should be used. UBL and unTill must be forked due of new dependencies
 //		action = wf.getProductionReleaseAction(UNTILL);
