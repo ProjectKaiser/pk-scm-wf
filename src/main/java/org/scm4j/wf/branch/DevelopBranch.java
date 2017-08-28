@@ -87,7 +87,7 @@ public class DevelopBranch {
 		ReleaseBranch prevRB = rb;
 		while (true) {
 			rbs = rb.getStatus();
-			if (rbs == ReleaseBranchStatus.MISSING && prevRBS != null && prevRBS == ReleaseBranchStatus.MISSING) {
+			if (rbs == ReleaseBranchStatus.MISSING && prevRBS == ReleaseBranchStatus.MISSING) {
 				return new ReleaseBranch(comp, getVersion(), repos);
 			}
 			if (rbs == ReleaseBranchStatus.ACTUAL) {
