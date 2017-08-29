@@ -25,7 +25,7 @@ public class CommandLine {
 	}
 	
 	public CommandLine(String[] args) throws EConfig {
-		if (args.length < 2) {
+		if (args == null || args.length < 2) {
 			throw new EConfig ("too less parameters provided");
 		}
 		

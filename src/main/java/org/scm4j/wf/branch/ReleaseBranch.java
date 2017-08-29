@@ -147,22 +147,4 @@ public class ReleaseBranch {
 	public Version getVersion() {
 		return version;
 	}
-
-//	private boolean isModified() {
-//		if (!exists()) {
-//			return false;
-//		}
-//		List<VCSCommit> log = vcs.log(getReleaseBranchName(), 1);
-//		if (log == null || log.isEmpty()) {
-//			return false;
-//		}
-//		VCSCommit lastCommit = log.get(0);
-//		if (lastCommit.getLogMessage().contains(LogTag.SCM_IGNORE)) {
-//			return false;
-//		}
-//		if (lastCommit.getLogMessage().contains(LogTag.SCM_VER)) {
-//			return false;
-//		}
-//		return true;
-//	}
 }
