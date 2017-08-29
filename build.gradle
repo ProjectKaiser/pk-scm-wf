@@ -31,8 +31,6 @@ dependencies {
 	compile 'com.google.guava:guava:20.0'
 	compile 'org.yaml:snakeyaml:1.18'
 	compile 'ch.qos.logback:logback-classic:1.2.3'
-	compile 'com.github.scm4j:scm4j-wf:dev-SNAPSHOT'
-	
 }
 
 task sourcesJar(type: Jar, dependsOn: classes) {
