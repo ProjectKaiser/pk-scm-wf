@@ -46,7 +46,7 @@ public class SCMWorkflow implements ISCMWorkflow {
 		this(VCSRepositories.loadVCSRepositories(), options);
 	}
 	
-	public static List<Option> parseArgs(String[] args) {
+	public static List<Option> parseOptions(String[] args) {
 		List<Option> options = new ArrayList<>();
 		for (String arg : args) {
 			if (Option.getArgsMap().containsKey(arg)) {
