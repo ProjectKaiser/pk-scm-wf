@@ -180,10 +180,6 @@ public class Version {
 		int patch = Integer.parseInt(getPatch());
 		int otherPatch = Integer.parseInt(other.getPatch());
 
-		if (patch == otherPatch) {
-			return false;
-		}
-
 		return patch > otherPatch;
 
 	}

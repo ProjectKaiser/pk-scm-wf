@@ -6,8 +6,8 @@ import java.util.Map;
 public enum CLICommand {
 	STATUS("status"), FORK("fork"), BUILD("build");
 	
-	private static Map<String, CLICommand> map = new HashMap<>();
-	private String strValue;
+	private static final Map<String, CLICommand> map = new HashMap<>();
+	private final String strValue;
 	
 	static {
 		for (CLICommand cmd : values()) {

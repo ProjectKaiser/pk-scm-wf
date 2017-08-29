@@ -22,11 +22,11 @@ import org.scm4j.wf.scmactions.ReleaseReason;
 import org.scm4j.wf.scmactions.SCMActionBuild;
 import org.scm4j.wf.scmactions.SCMActionForkReleaseBranch;
 
-public class SCMWorkflow implements ISCMWorkflow {
+public class SCMWorkflow {
 
 	public static final String MDEPS_FILE_NAME = "mdeps";
 	public static final String VER_FILE_NAME = "version";
-	public static final String MDEPS_CHANGED_FILE_NAME = "mdeps-changed";
+	public static final String MDEPS_CHANGED_FILE_NAME = "mdeps-changed"; //FIXME: how to use?
 	public static final String COMMITS_FILE_NAME = "commits.yml"; 
 	public static final File BASE_WORKING_DIR = new File(System.getProperty("user.home"), ".scm4j");
 
@@ -56,7 +56,10 @@ public class SCMWorkflow implements ISCMWorkflow {
 		return options;
 	}
 	
-	@Override
+	public static File getCommitsFile() {
+		return new File(SCMWorkflow.COMMITS_FILE_NAME);
+	}
+	
 	public IAction getProductionReleaseAction(String componentName) {
 		return getProductionReleaseAction(new Component(componentName, repos), ActionKind.AUTO);
 	}
@@ -68,48 +71,33 @@ public class SCMWorkflow implements ISCMWorkflow {
 	public IAction getProductionReleaseAction(Component comp) {
 		return getProductionReleaseAction(comp, ActionKind.AUTO);
 	}
-	
+
 	public IAction getProductionReleaseAction(Component comp, ActionKind actionKind) {
 		List<IAction> childActions = new ArrayList<>();
 		DevelopBranch db = new DevelopBranch(comp);
 		List<Component> devMDeps = db.getMDeps();
-		
+
 		for (Component mDep : devMDeps) {
 			childActions.add(getProductionReleaseAction(mDep, actionKind));
 		}
-		
+
 		return getProductionReleaseActionRoot(comp, childActions, actionKind);
 	}
-	
-	public ReleaseBranch getLastForkedReleaseBranch(Component comp) {
-		DevelopBranch db = new DevelopBranch(comp);
-		Version ver = db.getVersion();
 		
-		ReleaseBranch rb = new ReleaseBranch(comp, repos);
-		for (int i = 0; i <= 1; i++) {
-			ReleaseBranchStatus rbs = rb.getStatus();
-			if (rbs == ReleaseBranchStatus.BRANCHED || rbs == ReleaseBranchStatus.MDEPS_FROZEN|| rbs == ReleaseBranchStatus.MDEPS_ACTUAL) {
-				return rb;
-			}
-			rb = new ReleaseBranch(comp, new Version(ver.toPreviousMinor().toReleaseString()), repos);
-		}
-		return null;
-	}
-	
 	public IAction getProductionReleaseActionRoot(Component comp, List<IAction> childActions, ActionKind actionKind) {
 		DevelopBranch db = new DevelopBranch(comp);
 		if (!db.hasVersionFile()) {
 			throw new EComponentConfig("no " + VER_FILE_NAME + " file for " + comp.toString());
 		}
 		DevelopBranchStatus dbs = db.getStatus();
-		
+
 		if (dbs == DevelopBranchStatus.IGNORED) {
 			return new ActionNone(comp, childActions, "develop branch is IGNORED");
 		}
-		
+
 		ReleaseBranch rb = db.getCurrentReleaseBranch(repos);
 		ReleaseBranchStatus rbs = rb.getStatus();
-		
+
 		if (rbs == ReleaseBranchStatus.MISSING) {
 			skipAllBuilds(childActions);
 			if (actionKind == ActionKind.BUILD) {
@@ -121,7 +109,7 @@ public class SCMWorkflow implements ISCMWorkflow {
 				return new SCMActionForkReleaseBranch(comp, childActions, ReleaseReason.NEW_DEPENDENCIES, options);
 			}
 		}
-		
+
 		if (rbs == ReleaseBranchStatus.BRANCHED) {
 			// BRANCHED - need to freeze mdeps
 			// MDEPS_FROZEN - need to actualize mdeps
@@ -131,7 +119,7 @@ public class SCMWorkflow implements ISCMWorkflow {
 			}
 			return new SCMActionForkReleaseBranch(comp, childActions, ReleaseReason.NEW_FEATURES, options);
 		}
-		
+
 		if (rbs == ReleaseBranchStatus.MDEPS_FROZEN) {
 			if (needToActualizeMDeps(childActions, rb)) {
 				// need to actualize
@@ -149,7 +137,7 @@ public class SCMWorkflow implements ISCMWorkflow {
 				return new SCMActionBuild(comp, childActions, ReleaseReason.NEW_DEPENDENCIES, rb.getVersion(), options);
 			}
 		}
-		
+
 		if (rbs == ReleaseBranchStatus.MDEPS_ACTUAL) {
 			// need to build
 			if (actionKind == ActionKind.FORK) {
@@ -157,7 +145,7 @@ public class SCMWorkflow implements ISCMWorkflow {
 			}
 			return new SCMActionBuild(comp, childActions, ReleaseReason.NEW_FEATURES, rb.getVersion(), options);
 		}
-		
+
 		if (hasForkChildActions(childActions)) {
 			skipAllBuilds(childActions);
 			if (actionKind == ActionKind.FORK) {
@@ -168,7 +156,6 @@ public class SCMWorkflow implements ISCMWorkflow {
 
 		return new ActionNone(comp, childActions, rbs.toString());
 	}
-		
 
 	private boolean needToActualizeMDeps(List<IAction> childActions, ReleaseBranch currentCompRB) {
 		List<Component> mDeps = currentCompRB.getMDeps();
@@ -188,7 +175,7 @@ public class SCMWorkflow implements ISCMWorkflow {
 				}
 			}
 			if (!goingToBuild) {
-				// check if old version of the mDep is used in root component's release branch 
+				// check if old version of the mDep is used in root component's release branch
 				VCSTag lastTag = mDep.getVCS().getLastTag();
 				if (!lastTag.getTagName().equals(mDep.getVersion().toReleaseString())) {
 					return true;
@@ -218,7 +205,7 @@ public class SCMWorkflow implements ISCMWorkflow {
 		}
 	}
 
-	private void skipAllBuilds(List<IAction> childActions) {		
+	private void skipAllBuilds(List<IAction> childActions) {
 		ListIterator<IAction> li = childActions.listIterator();
 		IAction action;
 		while (li.hasNext()) {
@@ -229,13 +216,12 @@ public class SCMWorkflow implements ISCMWorkflow {
 		}
 	}
 
-	@Override
 	public IAction getTagReleaseAction(String depName) {
 		Component comp = new Component(depName, repos);
 		List<IAction> childActions = new ArrayList<>();
 		DevelopBranch db = new DevelopBranch(comp);
 		List<Component> mDeps = db.getMDeps();
-		
+
 		for (Component mDep : mDeps) {
 			childActions.add(getTagReleaseAction(mDep.getName()));
 		}
@@ -256,9 +242,5 @@ public class SCMWorkflow implements ISCMWorkflow {
 			return new ActionNone(comp, childActions, "no builds to tag");
 		}
 		}
-	}
-
-	public static File getCommitsFile() {
-		return new File(SCMWorkflow.COMMITS_FILE_NAME);
 	}
 }

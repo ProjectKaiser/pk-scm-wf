@@ -55,11 +55,6 @@ public class VCSRepository {
 		this.builder = builder;
 	}
 
-	public VCSRepository(String name, String url, Credentials credentials, VCSType type, String devBranch,
-						 IVCSWorkspace ws, IVCS vcs, IBuilder builder) {
-		this(name, url, credentials, type, devBranch, DEFAULT_RELEASE_BRANCH_PREFIX, vcs, builder);
-	}
-
 	@Override
 	public String toString() {
 		return "VCSRepository [url=" + url + "]";

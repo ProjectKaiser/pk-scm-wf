@@ -15,28 +15,28 @@ import org.scm4j.wf.conf.VCSRepositories;
 import org.scm4j.wf.conf.Version;
 
 public class ReleaseBranch {
-	
+
 	private final Component comp;
 	private final Version version;
 	private final IVCS vcs;
 	private final VCSRepositories repos;
-	
+
 	public ReleaseBranch(Component comp, VCSRepositories repos) {
-		this(comp, new Version(comp.getVCS().getFileContent(comp.getVcsRepository().getDevBranch(), SCMWorkflow.VER_FILE_NAME).trim()),  repos);
+		this(comp, new Version(comp.getVCS().getFileContent(comp.getVcsRepository().getDevBranch(), SCMWorkflow.VER_FILE_NAME).trim()), repos);
 	}
-	
+
 	public ReleaseBranch(Component comp, Version version, VCSRepositories repos) {
 		this.version = version.toRelease();
 		this.comp = comp;
 		this.repos = repos;
 		vcs = comp.getVCS();
 	}
-	
-	public ReleaseBranchStatus getStatus () {
+
+	public ReleaseBranchStatus getStatus() {
 		if (!exists()) {
 			return ReleaseBranchStatus.MISSING;
 		}
-		
+
 		if (mDepsFrozen()) {
 			if (mDepsActual()) {
 				if (isPreHeadCommitTaggedWithVersion()) {
@@ -46,10 +46,10 @@ public class ReleaseBranch {
 			}
 			return ReleaseBranchStatus.MDEPS_FROZEN;
 		}
-		
+
 		return ReleaseBranchStatus.BRANCHED;
 	}
-	
+
 	private boolean mDepsActual() {
 		List<Component> mDeps = getMDeps();
 		if (mDeps.isEmpty()) {
@@ -67,7 +67,7 @@ public class ReleaseBranch {
 		}
 		return true;
 	}
-	
+
 	private VCSTag getVersionTag() {
 		return vcs.getTagByName(version.toReleaseString());
 	}
@@ -79,10 +79,7 @@ public class ReleaseBranch {
 		}
 		// check is tagged commit is head-1
 		List<VCSCommit> commits = vcs.getCommitsRange(getReleaseBranchName(), null, WalkDirection.DESC, 2);
-		if (commits.size() < 2) {
-			return false;
-		}
-		return commits.get(1).equals(tag.getRelatedCommit());
+		return commits.size() >= 2 && commits.get(1).equals(tag.getRelatedCommit());
 	}
 
 	public boolean exists() {
@@ -113,7 +110,7 @@ public class ReleaseBranch {
 		if (!exists() || getVersionTag() == null) {
 			return null;
 		}
-		
+
 		VCSCommit releaseHeadCommit = vcs.getHeadCommit(getReleaseBranchName());
 		List<VCSTag> tags = vcs.getTags();
 		DevelopBranch db = new DevelopBranch(comp);
@@ -125,25 +122,25 @@ public class ReleaseBranch {
 		}
 		throw new IllegalStateException("No tag on release branch " + getReleaseBranchName() + " head commit for component:" + comp);
 	}
-	
+
 	public List<Component> getMDeps() {
 		if (!vcs.getBranches(comp.getVcsRepository().getReleaseBranchPrefix()).contains(getReleaseBranchName()) || !vcs.fileExists(getReleaseBranchName(), SCMWorkflow.MDEPS_FILE_NAME)) {
 			return new ArrayList<>();
 		}
-		
+
 		String mDepsFileContent = comp.getVCS().getFileContent(getReleaseBranchName(), SCMWorkflow.MDEPS_FILE_NAME);
 		MDepsFile mDeps = new MDepsFile(mDepsFileContent, repos);
 		return mDeps.getMDeps();
 	}
-	
+
 	public String getReleaseBranchName() {
 		return comp.getVcsRepository().getReleaseBranchPrefix() + version.getReleaseNoPatchString();
 	}
-	
+
 	public Version getCurrentVersion() {
 		return new Version(comp.getVCS().getFileContent(getReleaseBranchName(), SCMWorkflow.VER_FILE_NAME).trim());
 	}
-	
+
 	public Version getVersion() {
 		return version;
 	}

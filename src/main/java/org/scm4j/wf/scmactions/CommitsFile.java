@@ -12,7 +12,7 @@ import org.yaml.snakeyaml.Yaml;
 
 public class CommitsFile {
 	
-	private File commitsFile;
+	private final File commitsFile;
 	
 	public CommitsFile() {
 		commitsFile = new File(SCMWorkflow.COMMITS_FILE_NAME);
