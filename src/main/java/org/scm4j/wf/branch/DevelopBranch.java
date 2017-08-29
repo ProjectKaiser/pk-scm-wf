@@ -17,11 +17,16 @@ public class DevelopBranch {
 	private final Component comp;
 	private final IVCS vcs;
 	
+	public DevelopBranch(Component comp) {
+		this.comp = comp;
+		vcs = comp.getVCS();
+	}
+	
 	public Version getVersion() {
 		if (vcs.fileExists(comp.getVcsRepository().getDevBranch(), SCMWorkflow.VER_FILE_NAME)) {
 			String verFileContent = vcs.getFileContent(comp.getVcsRepository().getDevBranch(), SCMWorkflow.VER_FILE_NAME);
 			return new Version(verFileContent.trim());
-		} 
+		}
 		return null;
 	}
 	
@@ -38,11 +43,6 @@ public class DevelopBranch {
 			return DevelopBranchStatus.BRANCHED;
 		}
 		return DevelopBranchStatus.MODIFIED;
-	}
-	
-	public DevelopBranch(Component comp) {
-		this.comp = comp;
-		vcs = comp.getVCS();
 	}
 	
 	public boolean hasVersionFile() {

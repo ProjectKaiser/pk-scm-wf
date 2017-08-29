@@ -3,7 +3,7 @@
 
 import  org.scm4j.wf.cli.CLI;
 
-class CLI {
+class CLIRunner {
 	static void main(args) {
 		CLI.main(args);
 	}

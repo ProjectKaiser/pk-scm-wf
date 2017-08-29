@@ -26,7 +26,6 @@ public class TestEnvironment implements AutoCloseable {
 	public static final String TEST_REPOS_FILE_NAME = "repos";
 	public static final String TEST_CREDENTIALS_FILE_NAME = "credentials";
 	public static final String TEST_ENVIRONMENT_DIR = new File(System.getProperty("java.io.tmpdir"), "scm4j-wf-test").getPath();
-	public static final String TEST_ENVIRONMENT_URL = "file://localhost/" + TEST_ENVIRONMENT_DIR.replace("\\", "/");
 	public static final String TEST_REMOTE_REPO_DIR = new File(TEST_ENVIRONMENT_DIR, "remote-repos").getPath();
 	public static final String TEST_FEATURE_FILE_NAME = "feature.txt";
 	public static final String TEST_DUMMY_FILE_NAME = "dummy.txt";
