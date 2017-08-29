@@ -7,7 +7,7 @@ sourceCompatibility = JavaVersion.VERSION_1_7
 targetCompatibility = JavaVersion.VERSION_1_7
 
 group = 'org.scm4j'
-version = '1.0-SNAPSHOT'
+version = new File('version').text
 
 repositories {
 	maven { url "https://jitpack.io" }
@@ -25,12 +25,14 @@ dependencies {
 	testCompile 'org.powermock:powermock-api-mockito:1.6.3'
 	testCompile 'nl.jqno.equalsverifier:equalsverifier:2.3'
 
-	compile 'com.github.scm4j:scm4j-vcs-git:master-SNAPSHOT'
-	compile 'com.github.scm4j:scm4j-vcs-svn:master-SNAPSHOT'
-	compile 'com.github.scm4j:scm4j-commons:master-SNAPSHOT'
+	compile 'com.github.scm4j:scm4j-vcs-git:develop-SNAPSHOT'
+	compile 'com.github.scm4j:scm4j-vcs-svn:develop-SNAPSHOT'
+	compile 'com.github.scm4j:scm4j-commons:develop-SNAPSHOT'
 	compile 'com.google.guava:guava:20.0'
 	compile 'org.yaml:snakeyaml:1.18'
 	compile 'ch.qos.logback:logback-classic:1.2.3'
+	compile 'com.github.scm4j:scm4j-wf:dev-SNAPSHOT'
+	
 }
 
 task sourcesJar(type: Jar, dependsOn: classes) {
