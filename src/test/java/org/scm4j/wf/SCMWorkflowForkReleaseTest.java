@@ -70,9 +70,11 @@ public class SCMWorkflowForkReleaseTest extends SCMWorkflowTestBase {
 		assertFalse(env.getUblVCS().getBranches("").contains(rbUBLFixedVer.getReleaseBranchName()));
 		
 		// check versions
-		assertEquals(env.getUnTillVer().toNextMinor(), dbUnTill.getVersion());
-		ReleaseBranch newUnTillRB = new ReleaseBranch(compUnTill, env.getUnTillVer(), repos);
-		assertEquals(env.getUnTillVer().toRelease() - check next patch is written!, newUnTillRB.getVersion());
+		Version verTrunk = dbUnTill.getVersion();
+		ReleaseBranch newUnTillRB = dbUnTill.getCurrentReleaseBranch(repos);
+		Version verRelease = newUnTillRB.getCurrentVersion();
+		assertEquals(env.getUnTillVer().toNextMinor(), verTrunk);
+		assertEquals(env.getUnTillVer().toRelease(), verRelease);
 		
 		// check mDeps
 		List<Component> unTillReleaseMDeps = rbUnTillFixedVer.getMDeps();
@@ -126,18 +128,18 @@ public class SCMWorkflowForkReleaseTest extends SCMWorkflowTestBase {
 		// check UBL versions
 		assertEquals(env.getUblVer().toNextMinor(), dbUBL.getVersion());
 		ReleaseBranch newUBLRB = dbUBL.getCurrentReleaseBranch(repos);
-		assertEquals(env.getUblVer().toRelease(), newUBLRB.getCurrentVersion());
+		assertEquals(env.getUblVer().toNextPatch().toRelease(), newUBLRB.getCurrentVersion());
 		
 		// check unTillDb versions
 		assertEquals(env.getUnTillDbVer().toNextMinor(), dbUnTillDb.getVersion());
 		ReleaseBranch newUnTillDbRB = dbUnTillDb.getCurrentReleaseBranch(repos);
-		assertEquals(env.getUnTillDbVer().toRelease(), newUnTillDbRB.getCurrentVersion());
+		assertEquals(env.getUnTillDbVer().toNextPatch().toRelease(), newUnTillDbRB.getCurrentVersion());
 		
 		// check UBL mDeps
 		List<Component> ublReleaseMDeps = rbUBLFixedVer.getMDeps();
 		assertTrue(ublReleaseMDeps.size() == 1);
 		assertEquals(compUnTillDb.getName(), ublReleaseMDeps.get(0).getName());
-		assertEquals(dbUnTillDb.getVersion().toPreviousMinor().toReleaseString(), ublReleaseMDeps.get(0).getVersion().toReleaseString());
+		assertEquals(dbUnTillDb.getVersion().toPreviousMinor().toRelease(), ublReleaseMDeps.get(0).getVersion());
 	}
 
 	@Test
@@ -162,21 +164,37 @@ public class SCMWorkflowForkReleaseTest extends SCMWorkflowTestBase {
 		assertFalse(env.getUnTillDbVCS().getBranches("").contains(rbUnTillDbFixedVer.getReleaseBranchName()));
 		assertTrue(env.getUblVCS().getBranches("").contains(rbUBLFixedVer.getReleaseBranchName()));
 		
+		// check UBL versions
+		assertEquals(env.getUblVer().toNextMinor(), dbUBL.getVersion());
+		ReleaseBranch newUBLRB = dbUBL.getCurrentReleaseBranch(repos);
+		assertEquals(env.getUblVer().toRelease(), newUBLRB.getCurrentVersion());
+		
+		// check unTillDb versions
+		assertEquals(env.getUnTillDbVer(), dbUnTillDb.getVersion());
+		
+		// check unTill versions
+		assertEquals(env.getUnTillVer().toNextMinor(), dbUnTill.getVersion());
+		ReleaseBranch newUnTillRB = dbUnTill.getCurrentReleaseBranch(repos);
+		assertEquals(env.getUnTillVer().toRelease(), newUnTillRB.getCurrentVersion());
+		
+		// check UBL mDeps
+		List<Component> ublReleaseMDeps = rbUBLFixedVer.getMDeps();
+		assertTrue(ublReleaseMDeps.size() == 1);
+		assertEquals(compUnTillDb.getName(), ublReleaseMDeps.get(0).getName());
+		assertEquals(dbUnTillDb.getVersion().toRelease(), ublReleaseMDeps.get(0).getVersion());
+		
+		// check unTill mDeps
 		List<Component> unTillReleaseMDeps = rbUnTillFixedVer.getMDeps();
 		assertTrue(unTillReleaseMDeps.size() == 2);
 		for (Component unTillReleaseMDep : unTillReleaseMDeps) {
 			if (unTillReleaseMDep.getName().equals(UBL)) {
-				assertEquals(dbUBL.getVersion().toPreviousMinor().toReleaseString(), unTillReleaseMDep.getVersion().toReleaseString());
+				assertEquals(dbUBL.getVersion().toPreviousMinor().toRelease(), unTillReleaseMDep.getVersion());
 			} else if (unTillReleaseMDep.getName().equals(UNTILLDB)) {
-				assertEquals(dbUnTillDb.getVersion().toPreviousMinor().toReleaseString(), unTillReleaseMDep.getVersion().toReleaseString());
+				assertEquals(dbUnTillDb.getVersion().toRelease(), unTillReleaseMDep.getVersion());
 			} else {
 				fail();
 			}
 		}
-		
-		List<Component> ublReleaseMDeps = rbUBLFixedVer.getMDeps();
-		assertTrue(ublReleaseMDeps.size() == 1);
-		assertEquals(dbUnTillDb.getVersion().toPreviousMinor().toReleaseString(), ublReleaseMDeps.get(0).getVersion().toReleaseString());
 	}
 	
 	@Test
@@ -203,23 +221,41 @@ public class SCMWorkflowForkReleaseTest extends SCMWorkflowTestBase {
 		assertTrue(env.getUnTillDbVCS().getBranches("").contains(rbUnTillDbFixedVer.getReleaseBranchName()));
 		assertTrue(env.getUblVCS().getBranches("").contains(rbUBLFixedVer.getReleaseBranchName()));
 		
+		// check UBL versions
+		assertEquals(env.getUblVer().toNextMinor(), dbUBL.getVersion());
+		ReleaseBranch newUBLRB = dbUBL.getCurrentReleaseBranch(repos);
+		assertEquals(env.getUblVer().toRelease(), newUBLRB.getCurrentVersion());
+		
+		// check unTillDb versions
+		assertEquals(env.getUnTillDbVer().toNextMinor(), dbUnTillDb.getVersion());
+		ReleaseBranch newUnTillDbRB = dbUnTillDb.getCurrentReleaseBranch(repos);
+		assertEquals(env.getUnTillDbVer().toRelease(), newUnTillDbRB.getCurrentVersion());
+		
+		// check unTill versions
+		assertEquals(env.getUnTillVer().toNextMinor(), dbUnTill.getVersion());
+		ReleaseBranch newUnTillRB = dbUnTill.getCurrentReleaseBranch(repos);
+		assertEquals(env.getUnTillVer().toRelease(), newUnTillRB.getCurrentVersion());
+		
+		// check UBL mDeps
+		List<Component> ublReleaseMDeps = rbUBLFixedVer.getMDeps();
+		assertTrue(ublReleaseMDeps.size() == 1);
+		assertEquals(compUnTillDb.getName(), ublReleaseMDeps.get(0).getName());
+		assertEquals(dbUnTillDb.getVersion().toPreviousMinor().toRelease(), ublReleaseMDeps.get(0).getVersion());
+		
+		// check unTill mDeps
 		List<Component> unTillReleaseMDeps = rbUnTillFixedVer.getMDeps();
 		assertTrue(unTillReleaseMDeps.size() == 2);
 		for (Component unTillReleaseMDep : unTillReleaseMDeps) {
 			if (unTillReleaseMDep.getName().equals(UBL)) {
-				assertEquals(dbUBL.getVersion().toPreviousMinor().toReleaseString(), unTillReleaseMDep.getVersion().toReleaseString());
+				assertEquals(dbUBL.getVersion().toPreviousMinor().toRelease(), unTillReleaseMDep.getVersion());
 			} else if (unTillReleaseMDep.getName().equals(UNTILLDB)) {
-				assertEquals(dbUnTillDb.getVersion().toPreviousMinor().toReleaseString(), unTillReleaseMDep.getVersion().toReleaseString());
+				assertEquals(dbUnTillDb.getVersion().toPreviousMinor().toRelease(), unTillReleaseMDep.getVersion());
 			} else {
 				fail();
 			}
 		}
 		
-		List<Component> ublReleaseMDeps = rbUBLFixedVer.getMDeps();
-		assertTrue(ublReleaseMDeps.size() == 1);
-		assertEquals(dbUnTillDb.getVersion().toPreviousMinor().toReleaseString(), ublReleaseMDeps.get(0).getVersion().toReleaseString());
-		
-		assertTrue(rbUnTillDbFixedVer.getMDeps().isEmpty());
+	
 	}
 	
 	

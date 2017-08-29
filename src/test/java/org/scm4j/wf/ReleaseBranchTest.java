@@ -20,9 +20,9 @@ public class ReleaseBranchTest extends SCMWorkflowTestBase {
 	}
 	
 	@Test
-	public void testBranchedIfNoMDeps() throws Exception {
+	public void testMDEPS_ACTUALIfNoMDeps() throws Exception {
 		env.getUnTillDbVCS().createBranch(null, rbUnTillDbFixedVer.getReleaseBranchName(), null);
-		assertTrue(rbUnTillDbFixedVer.getStatus() == ReleaseBranchStatus.BRANCHED);
+		assertTrue(rbUnTillDbFixedVer.getStatus() == ReleaseBranchStatus.MDEPS_ACTUAL);
 	}
 	
 	@Test

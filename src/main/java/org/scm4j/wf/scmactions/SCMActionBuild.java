@@ -83,7 +83,7 @@ public class SCMActionBuild extends ActionAbstract {
 				progress.reportStatus("head of \"" + releaseBranchName + "\" tagged: " + tag.toString());
 			}
 
-			VCSCommit builtCommit = vcs.setFileContent(rb.getReleaseBranchName(), SCMWorkflow.VER_FILE_NAME, targetVersion.toNextPatch().toReleaseString(), 
+			vcs.setFileContent(rb.getReleaseBranchName(), SCMWorkflow.VER_FILE_NAME, targetVersion.toNextPatch().toReleaseString(), 
 					LogTag.SCM_VER + " " + targetVersion.toNextPatch().toReleaseString());
 			
 			progress.reportStatus(comp.getName() + " " + targetVersion.toString() + " is built in " + rb.getReleaseBranchName());

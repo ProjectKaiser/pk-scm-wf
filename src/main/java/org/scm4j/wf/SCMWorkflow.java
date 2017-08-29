@@ -21,8 +21,6 @@ import org.scm4j.wf.exceptions.EComponentConfig;
 import org.scm4j.wf.scmactions.ReleaseReason;
 import org.scm4j.wf.scmactions.SCMActionBuild;
 import org.scm4j.wf.scmactions.SCMActionForkReleaseBranch;
-import org.scm4j.wf.scmactions.SCMActionTagRelease;
-import org.scm4j.wf.scmactions.SCMActionUseExistingTag;
 
 public class SCMWorkflow implements ISCMWorkflow {
 
@@ -106,7 +104,6 @@ public class SCMWorkflow implements ISCMWorkflow {
 		DevelopBranchStatus dbs = db.getStatus();
 		
 		if (dbs == DevelopBranchStatus.IGNORED) {
-			// если существуют такие ветки (пусть и непостроенные еще) mdeps, которые не используются в предыдущем релизе, то надо форкать.
 			return new ActionNone(comp, childActions, "develop branch is IGNORED");
 		}
 		
@@ -168,67 +165,10 @@ public class SCMWorkflow implements ISCMWorkflow {
 			}
 			return new SCMActionForkReleaseBranch(comp, childActions, ReleaseReason.NEW_DEPENDENCIES, options);
 		}
-//		
-//		if (hasBuildChildActions(childActions)) {
-//			skipAllBuilds(childActions);
-//			if (actionKind == ActionKind.FORK) {
-//				return new ActionNone(comp, childActions, "nothing to build");
-//			}
-//			return new SCMActionForkReleaseBranch(comp, childActions, ReleaseReason.NEW_DEPENDENCIES, options);
-//		}
-//		
-		return new ActionNone(comp, childActions, rbs.toString());
-		
-		
-		
-		
-//		
-//		if (dbs == DevelopBranchStatus.MODIFIED) {
-//			if (rbs == ReleaseBranchStatus.MISSING || rbs == ReleaseBranchStatus.BUILT || rbs == ReleaseBranchStatus.TAGGED) {
-//				// if we are MODIFIED and RB is MISSING or completed then need to fork a new release
-//				skipAllBuilds(childActions);
-//				if (actionKind == ActionKind.BUILD) {
-//					return new ActionNone(comp, childActions, "nothing to build ");
-//				} 
-//				return new SCMActionForkReleaseBranch(comp, childActions, ReleaseReason.NEW_FEATURES, options);
-//			}
-//			// if we are MODIFIED and RB is not completed then need to accomplish the existsing RB
-//			skipAllForks(childActions);
-//			if (actionKind == ActionKind.FORK) {
-//				return new ActionNone(comp, childActions, "nothing to fork");
-//			}
-//			return new SCMActionBuild(comp, childActions, ReleaseReason.NEW_FEATURES, rb.getTargetVersion(), options);
-//		}
-//		
-//		// If BRANCHED then surely forked. And if IGNORED then surely not forked
-//		
-//		if (dbs == DevelopBranchStatus.BRANCHED) {
-//			/**
-//			 * this means we are surely forked
-//			 */
-//			
-//			if (rbs == ReleaseBranchStatus.MISSING) {
-//				// this means that weare just forked a branch and set #scm-ver tag in trunk. We are trying to determine the current release branch which does not exist yet.
-//				// Is this possible? Possible: forked 2.59, 2.60 is written to trunk => dbs is BRANCHED, rbs is MISSING
-//				return getActionIfNewDependencies(comp, childActions, rb, actionKind); //new ActionNone(comp, childActions, "");
-//			}
-//			if (rbs == ReleaseBranchStatus.TAGGED || rbs == ReleaseBranchStatus.BUILT) {
-//				return getActionIfNewDependencies(comp, childActions, rb, actionKind);
-//			}
-//			// if a Release branch is not completed, i.e. MDEPS_* or BRANCHED then need to build the unbuilt
-//			skipAllForks(childActions);
-//			if (actionKind == ActionKind.FORK) {
-//				return new ActionNone(comp, childActions, "nothing to fork");
-//			}
-//			return rb.getMDeps().isEmpty() ? 
-//					new SCMActionBuild(comp, childActions, ReleaseReason.NEW_FEATURES, rb.getTargetVersion().useSnapshot(false), options) :
-//					new SCMActionBuild(comp, childActions, ReleaseReason.NEW_DEPENDENCIES, rb.getTargetVersion().useSnapshot(false), options);
-//		}
-//		
-//		return getActionIfNewDependencies(comp, childActions, rb, actionKind); 
-	}
 
-	
+		return new ActionNone(comp, childActions, rbs.toString());
+	}
+		
 
 	private boolean needToActualizeMDeps(List<IAction> childActions, ReleaseBranch currentCompRB) {
 		List<Component> mDeps = currentCompRB.getMDeps();
@@ -240,7 +180,7 @@ public class SCMWorkflow implements ISCMWorkflow {
 					if (action instanceof SCMActionBuild) {
 						SCMActionBuild ab = (SCMActionBuild) action;
 						if (ab.getTargetVersion().equals(mDep.getVersion())) {
-							// Это значит мы собираемся построить требуемую версию mDep. Если встретили такую, которую ни то ни се, значит нельзя строить.
+							// this means we are going to build the desired mDep version. If the middle-stage one is met then can not build
 							goingToBuild = true;
 							break;
 						}
@@ -248,74 +188,11 @@ public class SCMWorkflow implements ISCMWorkflow {
 				}
 			}
 			if (!goingToBuild) {
-				// строить не собираемся. Глянем, а не прописана ли старая версия этого mDep в релизной ветке головного компонента
-				ReleaseBranch mDepRB = new ReleaseBranch(mDep, mDep.getVersion(), repos);
+				// check if old version of the mDep is used in root component's release branch 
 				VCSTag lastTag = mDep.getVCS().getLastTag();
 				if (!lastTag.getTagName().equals(mDep.getVersion().toReleaseString())) {
 					return true;
 				}
-			}
-		}
-		return false;
-	}
-
-//	private IAction getActionIfNewDependencies(Component comp, List<IAction> childActions, ReleaseBranch lastUnbuiltRB, ActionKind actionKind) {
-//		
-//		/**
-//		 * Will check previous release for each mDep. If it exists then check if this release was used in the current (here it is the last unbuilt) version of the current component?
-//		 */
-//		
-//		List<Component> mDepsFromDev = new DevelopBranch(comp).getMDeps();
-//		List<Component> mDepsFromLastUnbuiltRB = lastUnbuiltRB.getMDeps();
-//		for (Component mDepFromDev : mDepsFromDev) {
-//			/**
-//			 * Take the last UDB release
-//			 */
-//			ReleaseBranch lastMDepRelease = getLastForkedReleaseBranch(mDepFromDev);
-//			if (lastMDepRelease == null) {
-//				// UDB was not built
-//				// let's see is NEW_DEPENDENCIES required due of we just forked UDB?
-//				continue;
-//			}
-//			ReleaseBranchStatus rbs = lastMDepRelease.getStatus();
-//			if (rbs != ReleaseBranchStatus.BUILT || rbs != ReleaseBranchStatus.TAGGED) {
-//				continue;
-//			}
-//			if (mDepsFromLastUnbuiltRB.isEmpty()) {
-//				/**
-//				 * If we are use nothing and UDB release exists then we have NEW_DEPENDENCIES
-//				 * Fork only is possible here. Build is impossible because release branch with correct mDeps does not exists
-//				 */
-//				skipAllBuilds(childActions);
-//				if (actionKind == ActionKind.BUILD) {
-//					return new ActionNone(comp, childActions, "nothing to build");
-//				}
-//				return new SCMActionForkReleaseBranch(comp, childActions, ReleaseReason.NEW_DEPENDENCIES, options);
-//			}
-//			// The last UDB release found. Check if this release is used in lastUnbuiltRB
-//			for (Component mDepFromLastUnbuiltRB : mDepsFromLastUnbuiltRB) {
-//				if (mDepFromLastUnbuiltRB.getName().equals(mDepFromDev.getName()) && !mDepFromLastUnbuiltRB.getVersion().equals(lastMDepRelease.getTargetVersion())) {
-//					//  Fork only is possible here. Build is impossible because release branch with correct mDeps does not exists
-//					skipAllBuilds(childActions);
-//					if (actionKind == ActionKind.BUILD) {
-//						return new ActionNone(comp, childActions, "nothing to build");
-//					}
-//					return new SCMActionForkReleaseBranch(comp, childActions, ReleaseReason.NEW_DEPENDENCIES, options);
-//				}
-//			}
-//		}
-//		
-//		if (hasForkChildActions(childActions)) {
-//			return new SCMActionForkReleaseBranch(comp, childActions, ReleaseReason.NEW_DEPENDENCIES, options);
-//		}
-//		
-//		return new ActionNone(comp, childActions, "already built");
-//	}
-
-	private boolean hasBuildChildActions(List<IAction> childActions) {
-		for (IAction action : childActions) {
-			if (action instanceof SCMActionBuild) {
-				return true;
 			}
 		}
 		return false;
@@ -369,12 +246,12 @@ public class SCMWorkflow implements ISCMWorkflow {
 		DevelopBranch db = new DevelopBranch(comp);
 		ReleaseBranch rb = db.getCurrentReleaseBranch(repos);
 		switch (rb.getStatus()) {
-		case TAGGED: {
-			return new SCMActionUseExistingTag(comp, childActions, rb.getReleaseTag(), options);
-		}
-		case BUILT: {
-			return new SCMActionTagRelease(comp, childActions, "tag message", options);
-		}
+//		case TAGGED: {
+//			return new SCMActionUseExistingTag(comp, childActions, rb.getReleaseTag(), options);
+//		}
+//		case BUILT: {
+//			return new SCMActionTagRelease(comp, childActions, "tag message", options);
+//		}
 		default: {
 			return new ActionNone(comp, childActions, "no builds to tag");
 		}
