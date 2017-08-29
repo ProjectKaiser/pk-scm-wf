@@ -45,7 +45,7 @@ public class SCMActionForkReleaseBranch extends ActionAbstract {
 			IVCS vcs = getVCS();
 			if (rb.exists()) {
 				progress.reportStatus("release branch already forked: " + rb.getReleaseBranchName());
-				//return;
+				return;
 			} else {
 				vcs.createBranch(db.getName(), rb.getReleaseBranchName(), "release branch created");
 				progress.reportStatus("branch " + rb.getReleaseBranchName() + " created");

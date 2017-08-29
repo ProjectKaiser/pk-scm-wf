@@ -11,8 +11,10 @@ import java.net.MalformedURLException;
 import java.nio.charset.StandardCharsets;
 
 import org.apache.commons.io.FileUtils;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.scm4j.wf.conf.EnvVarsConfigSource;
 import org.scm4j.wf.conf.IConfigSource;
 import org.scm4j.wf.conf.VCSRepositories;
 import org.scm4j.wf.exceptions.EConfig;
@@ -36,6 +38,11 @@ public class ConfigTest {
 				return creds;
 			}
 		});
+	}
+	
+	@After
+	public void tearDown() {
+		VCSRepositories.setConfigSource(new EnvVarsConfigSource());
 	}
 	
 	@Test
