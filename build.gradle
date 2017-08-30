@@ -9,6 +9,10 @@ targetCompatibility = JavaVersion.VERSION_1_7
 group = 'org.scm4j'
 version = new File('version').text
 
+configurations.all {
+    resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+}
+
 repositories {
 	maven { url "https://jitpack.io" }
 	mavenCentral()
