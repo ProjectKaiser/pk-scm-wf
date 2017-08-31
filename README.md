@@ -19,9 +19,9 @@ Tool to manage projects which are represented by a few components, each componen
 
 # Scenarious
 
-- View project status - if something has been changed in `develop` and `release` branches of any component?
-- Create `release` branches out of changed `develop` branches
-- Build `release` branches
+- view project status - if something has been changed in `develop` and `release` branches of any component?
+- fork: create `release` branches out of changed `develop` branches
+- build: apply `build` command to `release` branches
 
 E.g. we have a `product3` which depends on `component39`:0.9.5 and `component50`:0.5.0, all components and `product3` sit in their own repositories. Now we add some commits to the `develop` branch of `component50` and run the tool using `status` command. Tool analyzes repositories and suggests that new versions of `component50` and `product3` should be built. Then we can run tool using  `fork` and `build` commands. `fork` command creates new `release branches` and increase minor versions in `develop branches`, `build` does whatever configured plus increases patch version in `release branch`.
 
