@@ -12,8 +12,9 @@ Tool to manage projects which are represented by a few components, each componen
 
 # Terms
 
-- `Managable dependency`: component which has its own repository and is under control, i.e. can be built, branched and uploaded to a maven repository
-- `Project`: "root" component which glues all other components together
+- `component`: component has its own repository and can be built
+- `project`: "root" component which glues all other components together
+- `managable dependency`: component which is dependency of the project and is under control, i.e. can be built, branched and uploaded to a maven repository
 - `mdeps`: file which lists managable dependencies, is located at the root of every repository
 
 # Scenarious
