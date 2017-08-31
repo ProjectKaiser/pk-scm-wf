@@ -8,17 +8,25 @@ IN DEVELOPMENT
 
 # Overview
 
-Tool to manage multi-repositiry configuration. It  detectes changes in repositories, build new components versions and actualize dependency lists.
+Tool to manage projects which are represented by a few components, each component has its own repository (multi-repository configuration). It  detectes changes in repositories, build new components versions and actualize dependency lists.
+
+# Terms
+
+- `Managable dependency`: component which has its own repository and is under control, i.e. can be built, branched and uploaded to a maven repository
+- `Project`: "root" component which glues all other components together
+- `mdeps`: file which lists managable dependencies, is located at the root of every repository
+
+# Scenarious
+
+- View project status - if something has been changed in `develop` and `release` branches of any component?
+- Create `release` branches out of changed `develop` branches
+- Build `release` branches
 
 E.g. we have a `product3` which depends on `component39`:0.9.5 and `component50`:0.5.0, all components and `product3` sit in their own repositories. Now we add some commits to the `develop` branch of `component50` and run the tool using `status` command. Tool analyzes repositories and suggests that new versions of `component50` and `product3` should be built. Then we can run tool using  `fork` and `build` commands. `fork` command creates new `release branches` and increase minor versions in `develop branches`, `build` does whatever configured plus increases patch version in `release branch`.
 
 For version definitions ref. [semantic Versioning 2.0.0](http://semver.org/).
 
-# Scenarious
 
-- View project status - if something has been changed since last version in `develop` and `release` branches
-- Create `release` branches out of changed `develop` branches
-- Build `release` branches
 
 # See also
 
