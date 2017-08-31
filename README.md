@@ -19,7 +19,7 @@ Tool to manage projects which are represented by a few components, each componen
 
 # Scenarious
 
-- view project status - if something has been changed in `develop` and `release` branches of any component?
+- view project status: if something has been changed in `develop` and `release` branches of any component?
 - fork: create `release` branches out of changed `develop` branches
 - build: apply `build` command to `release` branches
 
