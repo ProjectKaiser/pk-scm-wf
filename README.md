@@ -14,6 +14,12 @@ E.g. we have a `product3` which depends on `component39`:0.9.5 and `component50`
 
 For version definitions ref. [semantic Versioning 2.0.0](http://semver.org/).
 
+# Scenarious
+
+- View project status - if something has been changed since last version in `develop` and `release` branches
+- Create `release` branches out of changed `develop` branches
+- Build `release` branches
+
 # See also
 
 [Historical version](https://github.com/scm4j/scm4j-wf/blob/d540cb00674d485846117dbd68df19bdad306e56/README.md)
