@@ -6,12 +6,12 @@ import org.scm4j.commons.progress.IProgress;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.vcs.api.VCSTag;
+import org.scm4j.vcs.api.WalkDirection;
 import org.scm4j.vcs.api.workingcopy.IVCSLockedWorkingCopy;
 import org.scm4j.wf.LogTag;
 import org.scm4j.wf.SCMWorkflow;
 import org.scm4j.wf.actions.ActionAbstract;
 import org.scm4j.wf.actions.IAction;
-import org.scm4j.wf.branch.DevelopBranch;
 import org.scm4j.wf.branch.ReleaseBranch;
 import org.scm4j.wf.branch.ReleaseBranchStatus;
 import org.scm4j.wf.conf.Component;
@@ -42,12 +42,26 @@ public class SCMActionBuild extends ActionAbstract {
 	public void execute(IProgress progress) {
 		try {
 			IVCS vcs = getVCS();
-			DevelopBranch db = new DevelopBranch(comp);
-			ReleaseBranch rb = db.getCurrentReleaseBranch(repos);
+			ReleaseBranch rb = new ReleaseBranch(comp, repos);
 			ReleaseBranchStatus rbs = rb.getStatus();
 			if (rbs == ReleaseBranchStatus.ACTUAL) {
 				progress.reportStatus("version " + rb.getVersion().toString() + " already built ");
 				return;
+			}
+			
+			VCSCommit headCommit = vcs.getHeadCommit(rb.getReleaseBranchName());
+			
+			// need to check if we are built already with delayed tag
+			CommitsFile cf = new CommitsFile();
+			String delayedTagRevision = cf.getRevisitonByComp(comp.getName());
+			if (delayedTagRevision != null) {
+				List<VCSCommit> commits = vcs.getCommitsRange(rb.getReleaseBranchName(), null, WalkDirection.DESC, 2);
+				if (commits.size() == 2) {
+					if (commits.get(1).getRevision().equals(delayedTagRevision)) {
+						progress.reportStatus(String.format("version %s already built with delayed tag on revision %s", rb.getVersion().toString(), delayedTagRevision));
+						return;
+					}
+				}
 			}
 			
 			progress.reportStatus("target version to build: " + targetVersion);
@@ -62,7 +76,7 @@ public class SCMActionBuild extends ActionAbstract {
 				throw new EBuilder("no builder defined");
 			} 
 			
-			VCSCommit headCommit = vcs.getHeadCommit(rb.getReleaseBranchName());
+			
 				
 			try (IVCSLockedWorkingCopy lwc = vcs.getWorkspace().getVCSRepositoryWorkspace(vcs.getRepoUrl()).getVCSLockedWorkingCopy()) {
 				lwc.setCorrupted(true); // use lwc only once

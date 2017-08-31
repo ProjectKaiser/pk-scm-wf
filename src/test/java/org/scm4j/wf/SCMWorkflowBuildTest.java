@@ -5,9 +5,14 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.util.List;
+
 import org.junit.Test;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.commons.progress.ProgressConsole;
+import org.scm4j.vcs.api.VCSCommit;
+import org.scm4j.vcs.api.VCSTag;
+import org.scm4j.vcs.api.WalkDirection;
 import org.scm4j.wf.actions.ActionNone;
 import org.scm4j.wf.actions.IAction;
 import org.scm4j.wf.conf.Version;
@@ -137,24 +142,14 @@ public class SCMWorkflowBuildTest extends SCMWorkflowTestBase {
 		// check versions
 		Version verRelease = rbUnTillDbFixedVer.getCurrentVersion();
 		assertEquals(env.getUnTillDbVer().toNextPatch().toReleaseString(), verRelease.toString());
-//		
-//		// fork unTill. Built unTillDb should be used. UBL and unTill must be forked due of new dependencies
-//		action = wf.getProductionReleaseAction(UNTILL);
-//		exp = new Expectations();
-//		exp.put(UNTILLDB, ActionNone.class);
-//		exp.put(UBL, SCMActionForkReleaseBranch.class);
-//		exp.put(UBL, "reason", ReleaseReason.NEW_DEPENDENCIES);
-//		exp.put(UNTILL, SCMActionForkReleaseBranch.class);
-//		exp.put(UNTILL, "reason", ReleaseReason.NEW_DEPENDENCIES);
-//		checkChildActionsTypes(action, exp);
-//		
-//		TestBuilder.setBuilders(new HashMap<String, TestBuilder>());
-//		try (IProgress progress = new ProgressConsole(action.toString(), ">>> ", "<<< ")) {
-//			action.execute(progress);
-//		}
-//		assertNotNull(TestBuilder.getBuilders());
-//		assertTrue(TestBuilder.getBuilders().size() == 0);
 		
+		// check tags
+		List<VCSTag> tags = env.getUnTillDbVCS().getTags();
+		assertTrue(tags.size() == 1);
+		VCSTag tag = tags.get(0);
+		assertEquals(env.getUnTillDbVer().toReleaseString(), tag.getTagName());
+		List<VCSCommit> commits = env.getUnTillDbVCS().getCommitsRange(rbUnTillDbFixedVer.getReleaseBranchName(), null, WalkDirection.DESC, 2);
+		assertEquals(commits.get(1), tag.getRelatedCommit());
 	}
 	
 	@Test

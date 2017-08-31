@@ -1,11 +1,13 @@
 package org.scm4j.wf;
 
+import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.nio.charset.StandardCharsets;
@@ -64,7 +66,7 @@ public class ConfigTest {
 			new SCMWorkflow();
 			fail();
 		} catch (EConfig e) {
-			assertTrue(e.getCause() instanceof MalformedURLException);
+			assertThat(e.getCause(), instanceOf(MalformedURLException.class));
 		}
 	}
 	
@@ -75,7 +77,7 @@ public class ConfigTest {
 			new SCMWorkflow();
 			fail();
 		} catch (EConfig e) {
-			assertTrue(e.getCause() instanceof IOException);
+			assertThat(e.getCause(), instanceOf(FileNotFoundException.class));
 		}
 	}
 	

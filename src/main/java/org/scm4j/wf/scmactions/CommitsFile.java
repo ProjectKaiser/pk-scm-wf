@@ -18,18 +18,29 @@ public class CommitsFile {
 		commitsFile = new File(SCMWorkflow.COMMITS_FILE_NAME);
 	}
 	
-	public String getRevisitonByComp(String compName) throws IOException {
+	public String getRevisitonByComp(String compName) {
 		if (!commitsFile.exists()) {
 			return null;
 		}
-		
-		Yaml yaml = new Yaml();
-		@SuppressWarnings("unchecked")
-		Map<String, String> commits = yaml.loadAs(FileUtils.readFileToString(commitsFile, StandardCharsets.UTF_8), Map.class);
-		if (commits == null) {
-			return null;
-		}
+		Map<String, String> commits = getContent();
 		return commits.get(compName);
+	}
+
+	public Map<String, String> getContent() {
+		if (!commitsFile.exists()) {
+			return new HashMap<>();
+		}
+		Yaml yaml = new Yaml();
+		try {
+			@SuppressWarnings("unchecked")
+			Map<String, String> commits = yaml.loadAs(FileUtils.readFileToString(commitsFile, StandardCharsets.UTF_8), Map.class);
+			if (commits == null) {
+				return new HashMap<>();
+			}
+			return commits;
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
 	}
 	
 	public void writeCompRevision(String compName, String revision) throws IOException {
@@ -37,13 +48,39 @@ public class CommitsFile {
 			commitsFile.createNewFile();
 		}
 		
-		Yaml yaml = new Yaml();
-		@SuppressWarnings("unchecked")
-		Map<String, String> commits = yaml.loadAs(FileUtils.readFileToString(commitsFile, StandardCharsets.UTF_8), Map.class);
-		if (commits == null) {
-			commits = new HashMap<>();
+		Map<String, String> content = getContent();
+		String previousRevision = content.put(compName, revision);
+		if (previousRevision != revision) {
+			writeContent(content);
 		}
-		commits.put(compName, revision);
-		FileUtils.writeStringToFile(commitsFile, yaml.dump(commits), StandardCharsets.UTF_8);
+	}
+	
+	public void delete() {
+		commitsFile.delete();
+	}
+	
+	@Override
+	public String toString() {
+		if (!commitsFile.exists()) {
+			return "<missing>";
+		}
+		return getContent().toString();
+	}
+
+	public void removeRevisionsByComp(String compName) {
+		Map<String, String> content = getContent();
+		String removedRevision = content.remove(compName);
+		if (removedRevision != null) {
+			writeContent(content);
+		}
+	}
+
+	private void writeContent(Map<String, String> content) {
+		Yaml yaml = new Yaml();
+		try {
+			FileUtils.writeStringToFile(commitsFile, yaml.dump(content), StandardCharsets.UTF_8);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
 	}
 }

@@ -68,8 +68,8 @@ public class Version {
 		}
 		return prefix + minor + (patch.isEmpty() ? "" : "." + patch) + snapshot;
 	}
-
-	public String toPreviousPatch() {
+	
+	public Version toPreviousPatch() {
 		int i = 0;
 		while (i < patch.length() && !Character.isDigit(patch.charAt(i)))
 			i++;
@@ -77,12 +77,12 @@ public class Version {
 		while (i < patch.length() && Character.isDigit(patch.charAt(i)))
 			i++;
 		if (i == firstDigitStart) {
-			return prefix + minor + "." + patch + "0" + snapshot;
+			return new Version(prefix + minor + "." + patch + "0" + snapshot);
 		}
 		int patchInt = Integer.parseInt(patch.substring(firstDigitStart, i)) - 1;
 		String newPatch = patch.substring(0, firstDigitStart) + Integer.toString(patchInt)
 				+ patch.substring(i, patch.length());
-		return prefix + minor + "." + newPatch + snapshot;
+		return new Version(prefix + minor + "." + newPatch + snapshot);
 	}
 
 	public Version toNextPatch() {

@@ -24,7 +24,7 @@ public class DevelopBranch {
 	
 	public Version getVersion() {
 		if (vcs.fileExists(comp.getVcsRepository().getDevBranch(), SCMWorkflow.VER_FILE_NAME)) {
-			String verFileContent = vcs.getFileContent(comp.getVcsRepository().getDevBranch(), SCMWorkflow.VER_FILE_NAME);
+			String verFileContent = vcs.getFileContent(comp.getVcsRepository().getDevBranch(), SCMWorkflow.VER_FILE_NAME, null);
 			return new Version(verFileContent.trim());
 		}
 		return null;
@@ -57,7 +57,7 @@ public class DevelopBranch {
 		if (!comp.getVCS().fileExists(getName(), SCMWorkflow.MDEPS_FILE_NAME)) {
 			return new ArrayList<>();
 		}
-		String mDepsFileContent = vcs.getFileContent(getName(), SCMWorkflow.MDEPS_FILE_NAME);
+		String mDepsFileContent = vcs.getFileContent(getName(), SCMWorkflow.MDEPS_FILE_NAME, null);
 		MDepsFile mDeps = new MDepsFile(mDepsFileContent, VCSRepositories.loadVCSRepositories());
 		return mDeps.getMDeps();
 	}
@@ -65,44 +65,5 @@ public class DevelopBranch {
 	@Override
 	public String toString() {
 		return "DevelopBranch [comp=" + comp + ", status=" + getStatus() + "]";
-	}
-	
-	public ReleaseBranch getCurrentReleaseBranch(VCSRepositories repos) {
-		Version ver = getVersion();
-		
-		ReleaseBranch rb = new ReleaseBranch(comp, ver, repos);
-		/**
-		 * just built the compoennt. db is BRANCHED, and we want to see the just built release.
-		 */
-		
-		if (getStatus() == DevelopBranchStatus.BRANCHED) {
-			ReleaseBranch justBuiltRB = new ReleaseBranch(comp, ver.toPreviousMinor(), repos);
-			if (justBuiltRB.getStatus() != ReleaseBranchStatus.MISSING) {
-				return justBuiltRB;
-			}
-		}
-
-		ReleaseBranchStatus rbs;
-		ReleaseBranchStatus prevRBS = null;
-		ReleaseBranch prevRB = rb;
-		while (true) {
-			rbs = rb.getStatus();
-			if (rbs == ReleaseBranchStatus.MISSING && prevRBS == ReleaseBranchStatus.MISSING) {
-				return new ReleaseBranch(comp, getVersion(), repos);
-			}
-			if (rbs == ReleaseBranchStatus.ACTUAL) {
-				return prevRB;
-			}
-			if (rbs != ReleaseBranchStatus.MISSING) {
-				return rb;
-			}
-			ver = ver.toPreviousMinor();
-			if (ver.getMinor().equals("0")) {
-				return rb;
-			}
-			prevRB = rb;
-			prevRBS = rbs;
-			rb = new ReleaseBranch(comp,  ver, repos);
-		}
 	}
 }

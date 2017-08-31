@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
 
+import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSTag;
 import org.scm4j.wf.actions.ActionKind;
 import org.scm4j.wf.actions.ActionNone;
@@ -18,9 +19,11 @@ import org.scm4j.wf.conf.Option;
 import org.scm4j.wf.conf.VCSRepositories;
 import org.scm4j.wf.conf.Version;
 import org.scm4j.wf.exceptions.EComponentConfig;
+import org.scm4j.wf.scmactions.CommitsFile;
 import org.scm4j.wf.scmactions.ReleaseReason;
 import org.scm4j.wf.scmactions.SCMActionBuild;
 import org.scm4j.wf.scmactions.SCMActionForkReleaseBranch;
+import org.scm4j.wf.scmactions.SCMActionTagRelease;
 
 public class SCMWorkflow {
 
@@ -95,7 +98,7 @@ public class SCMWorkflow {
 			return new ActionNone(comp, childActions, "develop branch is IGNORED");
 		}
 
-		ReleaseBranch rb = db.getCurrentReleaseBranch(repos);
+		ReleaseBranch rb = new ReleaseBranch(comp, repos);
 		ReleaseBranchStatus rbs = rb.getStatus();
 
 		if (rbs == ReleaseBranchStatus.MISSING) {
@@ -159,25 +162,15 @@ public class SCMWorkflow {
 
 	private boolean needToActualizeMDeps(List<IAction> childActions, ReleaseBranch currentCompRB) {
 		List<Component> mDeps = currentCompRB.getMDeps();
-		Boolean goingToBuild;
+		ReleaseBranch mDepRB;
 		for (Component mDep : mDeps) {
-			goingToBuild = false;
-			for (IAction action : childActions) {
-				if (action.getName().equals(mDep.getName())) {
-					if (action instanceof SCMActionBuild) {
-						SCMActionBuild ab = (SCMActionBuild) action;
-						if (ab.getTargetVersion().equals(mDep.getVersion())) {
-							// this means we are going to build the desired mDep version. If the middle-stage one is met then can not build
-							goingToBuild = true;
-							break;
-						}
-					}
+			mDepRB = new ReleaseBranch(mDep, repos);
+			if (mDepRB.getStatus() == ReleaseBranchStatus.MDEPS_ACTUAL) {
+				if (!mDepRB.getCurrentVersion().equals(mDep.getVersion())) {
+					return true;
 				}
-			}
-			if (!goingToBuild) {
-				// check if old version of the mDep is used in root component's release branch
-				VCSTag lastTag = mDep.getVCS().getLastTag();
-				if (!lastTag.getTagName().equals(mDep.getVersion().toReleaseString())) {
+			} else {
+				if (needToActualizeMDeps(childActions, mDepRB)) {
 					return true;
 				}
 			}
@@ -215,32 +208,43 @@ public class SCMWorkflow {
 			}
 		}
 	}
-
-	public IAction getTagReleaseAction(String depName) {
-		Component comp = new Component(depName, repos);
+	
+	public IAction getTagReleaseAction(Component comp) {
 		List<IAction> childActions = new ArrayList<>();
 		DevelopBranch db = new DevelopBranch(comp);
 		List<Component> mDeps = db.getMDeps();
 
 		for (Component mDep : mDeps) {
-			childActions.add(getTagReleaseAction(mDep.getName()));
+			childActions.add(getTagReleaseAction(mDep));
 		}
 		return getTagReleaseActionRoot(comp, childActions);
 	}
 
+	public IAction getTagReleaseAction(String compName) {
+		return getTagReleaseAction(new Component(compName, repos));
+	}
+
 	private IAction getTagReleaseActionRoot(Component comp, List<IAction> childActions) {
-		DevelopBranch db = new DevelopBranch(comp);
-		ReleaseBranch rb = db.getCurrentReleaseBranch(repos);
-		switch (rb.getStatus()) {
-//		case TAGGED: {
-//			return new SCMActionUseExistingTag(comp, childActions, rb.getReleaseTag(), options);
-//		}
-//		case BUILT: {
-//			return new SCMActionTagRelease(comp, childActions, "tag message", options);
-//		}
-		default: {
-			return new ActionNone(comp, childActions, "no builds to tag");
+		ReleaseBranch rb = new ReleaseBranch(comp, repos);
+		CommitsFile cf = new CommitsFile();
+		IVCS vcs = comp.getVCS();
+		
+		String delayedRevisionToTag = cf.getRevisitonByComp(comp.getName());
+		
+		if (delayedRevisionToTag == null) {
+			return new ActionNone(comp, childActions, "no delayed tags");
 		}
+		
+		List<VCSTag> tagsOnRevision = vcs.getTagsOnRevision(delayedRevisionToTag);
+		if (tagsOnRevision.isEmpty()) {
+			return new SCMActionTagRelease(comp, childActions, "tag message", options);
 		}
+		Version delayedTagVersion = new Version(vcs.getFileContent(rb.getReleaseBranchName(), SCMWorkflow.VER_FILE_NAME, delayedRevisionToTag));
+		for (VCSTag tag : tagsOnRevision) {
+			if (tag.getTagName().equals(delayedTagVersion.toReleaseString())) {
+				return new ActionNone(comp, childActions, "tag " + tag.getTagName() + " already exists");
+			}
+		}
+		return new SCMActionTagRelease(comp, childActions, "tag message", options);
 	}
 }

@@ -1,6 +1,8 @@
 package org.scm4j.wf.branch;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 
@@ -13,6 +15,7 @@ import org.scm4j.wf.conf.Component;
 import org.scm4j.wf.conf.MDepsFile;
 import org.scm4j.wf.conf.VCSRepositories;
 import org.scm4j.wf.conf.Version;
+import org.scm4j.wf.scmactions.CommitsFile;
 
 public class ReleaseBranch {
 
@@ -21,17 +24,91 @@ public class ReleaseBranch {
 	private final IVCS vcs;
 	private final VCSRepositories repos;
 
-	public ReleaseBranch(Component comp, VCSRepositories repos) {
-		this(comp, new Version(comp.getVCS().getFileContent(comp.getVcsRepository().getDevBranch(), SCMWorkflow.VER_FILE_NAME).trim()), repos);
-	}
-
 	public ReleaseBranch(Component comp, Version version, VCSRepositories repos) {
 		this.version = version.toRelease();
 		this.comp = comp;
 		this.repos = repos;
 		vcs = comp.getVCS();
 	}
+	
+	/*
+	 * Last release we need to work with.
+	 * Develop branch								Release Branch          Meaning
+	 * 2.52-SNAPSHOT								2.52 MISSING            We just build the 2.51 release, no new features in Develop branch. We want to see the 2.51 release to continue building or to show it is built, i.e. result is Release Branch 2.51 
+	 * BRANCHED, i.e. last commit is #scm-ver       2.51 not MISSING        
+	 * 
+	 * 2.52-SNAPSHOT                                2.52 MISSING            We do not have releases at all. We need to work with next possible release, i.e. result is ReleaseBranch 2.52 
+	 * any state                                    2.51 MISSING            
+	 * 
+	 * 2.52-SNAPSHOT                                2.52 ACTUAL             We just built 2.52. We need to show 2.52 is built. Result is Release Branch 2.52.
+	 * MODIFIED, IGNORED                            2.51 any state
+	 * 
+	 * 2.52-SNAPSHOT                                2.52 uncompleted        We need to finish 2.52. Result is Release Branch 2.52.
+	 * MODIFIED, IGNORED                            2.51 any state
+	 * 
+	 * 2.52-SNAPSHOT                                2.52 MISSING            We built 2.51 and have modifications for 2.52. Need to fork 2.52, i.e. result is Relese Branch 2.52
+	 * MODIFIED                                     2.51 ACTUAL
+	 * 
+	 * 2.52-SNAPSHOT                                2.52 MISSING            We need to finish version X. Release Branch X is result
+	 * any state                                    2.51 MISSING
+	 *                                              ...
+	 *                                              (X+1) MISSING
+	 *                                              X uncompleted 
+	 * 
+	 * uncompleted means any of MDEPS_FROZEN, MDEPS_ACTUAL, BRANCHED
+	 */
+	public ReleaseBranch(Component comp, VCSRepositories repos) {
+		this.comp = comp;
+		this.repos = repos;
+		vcs = comp.getVCS();
+		DevelopBranch db = new DevelopBranch(comp);
+		Version ver = db.getVersion().toRelease();
 
+		List<String> releaseBranches = new ArrayList<>(vcs.getBranches(comp.getVcsRepository().getReleaseBranchPrefix()));
+		if (releaseBranches.isEmpty()) {
+			this.version = ver;
+			return;
+		}
+		Collections.sort(releaseBranches, new Comparator<String>() {
+
+			@Override
+			public int compare(String o1, String o2) {
+				Version ver1 = new Version(o1);
+				Version ver2 = new Version(o2);
+				if (ver1.equals(ver2)) {
+					return 0;
+				}
+				if (ver1.isGreaterThan(ver2)) {
+					return 1;
+				}
+				return -1;
+			}
+		});
+		
+		ver = new Version(vcs.getFileContent(releaseBranches.get(0), SCMWorkflow.VER_FILE_NAME, null));
+		List<VCSCommit> commits = vcs.getCommitsRange(releaseBranches.get(0), null, WalkDirection.DESC, 2);
+		if (commits.size() == 2) {
+			List<VCSTag> tags = vcs.getTagsOnRevision(commits.get(1).getRevision());
+			if (!tags.isEmpty()) {
+				for (VCSTag tag : tags) {
+					if (tag.getTagName().equals(ver.toPreviousPatch().toReleaseString())) {
+						// if db MODIFIED and head-1 commit of last release branch tagged then all is built and we need new release. Use DB version.
+						// if db BRANCHED and head-1 commit of last release branch tagged then all is built and we need the buil release. Use patch-- 
+						// otherwise we must return last built RB version.
+						DevelopBranchStatus dbs = new DevelopBranch(comp).getStatus();
+						if (dbs == DevelopBranchStatus.BRANCHED) {
+							ver = ver.toPreviousPatch();
+						} else if(dbs == DevelopBranchStatus.MODIFIED) {
+							ver = db.getVersion(); 
+						}
+						break;
+					}
+				}
+			}
+		}
+		this.version = ver;
+	}
+	
 	public ReleaseBranchStatus getStatus() {
 		if (!exists()) {
 			return ReleaseBranchStatus.MISSING;
@@ -39,7 +116,7 @@ public class ReleaseBranch {
 
 		if (mDepsFrozen()) {
 			if (mDepsActual()) {
-				if (isPreHeadCommitTaggedWithVersion()) {
+				if (isPreHeadCommitTaggedWithVersion() || isPreHeadCommitTagDelayed()) {
 					return ReleaseBranchStatus.ACTUAL;
 				}
 				return ReleaseBranchStatus.MDEPS_ACTUAL;
@@ -61,25 +138,49 @@ public class ReleaseBranch {
 				return false;
 			}
 			mDepRB = new ReleaseBranch(mDep, mDep.getVersion(), repos);
-			if (!mDepRB.isPreHeadCommitTaggedWithVersion()) {
+			if (!mDepRB.isPreHeadCommitTaggedWithVersion() && !mDepRB.isPreHeadCommitTagDelayed()) {
+				return false;
+			}
+			if (!mDep.getVersion().equals(mDepRB.getCurrentVersion().toPreviousPatch())) {
 				return false;
 			}
 		}
 		return true;
 	}
 
-	private VCSTag getVersionTag() {
-		return vcs.getTagByName(version.toReleaseString());
+	public boolean isPreHeadCommitTagDelayed() {
+		CommitsFile cf = new CommitsFile();
+		String delayedTagRevision = cf.getRevisitonByComp(comp.getName());
+		if (delayedTagRevision == null) {
+			return false;
+		}
+		
+		List<VCSCommit> commits = vcs.getCommitsRange(getReleaseBranchName(), null, WalkDirection.DESC, 2);
+		if (commits.size() < 2) {
+			return false;
+		}
+		
+		return commits.get(1).getRevision().equals(delayedTagRevision);
 	}
 
 	public boolean isPreHeadCommitTaggedWithVersion() {
-		VCSTag tag = getVersionTag();
-		if (tag == null) {
+		if (!vcs.getBranches(null).contains(getReleaseBranchName())) {
 			return false;
 		}
-		// check is tagged commit is head-1
 		List<VCSCommit> commits = vcs.getCommitsRange(getReleaseBranchName(), null, WalkDirection.DESC, 2);
-		return commits.size() >= 2 && commits.get(1).equals(tag.getRelatedCommit());
+		if (commits.size() < 2) {
+			return false;
+		}
+		List<VCSTag> tags = vcs.getTagsOnRevision(commits.get(1).getRevision());
+		if (tags.isEmpty()) {
+			return false;
+		}
+		for (VCSTag tag : tags) {
+			if (tag.getTagName().equals(getCurrentVersion().toPreviousPatch().toReleaseString())) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public boolean exists() {
@@ -106,29 +207,12 @@ public class ReleaseBranch {
 		return "ReleaseBranch [comp=" + comp + ", version=" + version.toReleaseString() + ", status=" + getStatus() + ", name=" + getReleaseBranchName() + "]";
 	}
 
-	public VCSTag getReleaseTag() {
-		if (!exists() || getVersionTag() == null) {
-			return null;
-		}
-
-		VCSCommit releaseHeadCommit = vcs.getHeadCommit(getReleaseBranchName());
-		List<VCSTag> tags = vcs.getTags();
-		DevelopBranch db = new DevelopBranch(comp);
-		// need last tag on release branch 
-		for (VCSTag tag : tags) {
-			if (tag.getRelatedCommit().equals(releaseHeadCommit) && tag.getTagName().equals(db.getVersion().toPreviousMinor().toReleaseString())) {
-				return tag;
-			}
-		}
-		throw new IllegalStateException("No tag on release branch " + getReleaseBranchName() + " head commit for component:" + comp);
-	}
-
 	public List<Component> getMDeps() {
 		if (!vcs.getBranches(comp.getVcsRepository().getReleaseBranchPrefix()).contains(getReleaseBranchName()) || !vcs.fileExists(getReleaseBranchName(), SCMWorkflow.MDEPS_FILE_NAME)) {
 			return new ArrayList<>();
 		}
 
-		String mDepsFileContent = comp.getVCS().getFileContent(getReleaseBranchName(), SCMWorkflow.MDEPS_FILE_NAME);
+		String mDepsFileContent = comp.getVCS().getFileContent(getReleaseBranchName(), SCMWorkflow.MDEPS_FILE_NAME, null);
 		MDepsFile mDeps = new MDepsFile(mDepsFileContent, repos);
 		return mDeps.getMDeps();
 	}
@@ -138,7 +222,7 @@ public class ReleaseBranch {
 	}
 
 	public Version getCurrentVersion() {
-		return new Version(comp.getVCS().getFileContent(getReleaseBranchName(), SCMWorkflow.VER_FILE_NAME).trim());
+		return new Version(comp.getVCS().getFileContent(getReleaseBranchName(), SCMWorkflow.VER_FILE_NAME, null).trim());
 	}
 
 	public Version getVersion() {

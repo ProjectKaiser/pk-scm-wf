@@ -4,12 +4,14 @@ import java.util.List;
 
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.vcs.api.IVCS;
+import org.scm4j.vcs.api.VCSTag;
+import org.scm4j.wf.SCMWorkflow;
 import org.scm4j.wf.actions.ActionAbstract;
 import org.scm4j.wf.actions.IAction;
-import org.scm4j.wf.branch.DevelopBranch;
 import org.scm4j.wf.branch.ReleaseBranch;
 import org.scm4j.wf.conf.Component;
 import org.scm4j.wf.conf.Option;
+import org.scm4j.wf.conf.Version;
 
 public class SCMActionTagRelease extends ActionAbstract {
 
@@ -32,21 +34,25 @@ public class SCMActionTagRelease extends ActionAbstract {
 			CommitsFile cf = new CommitsFile();
 			IVCS vcs = getVCS();
 			String revisionToTag = cf.getRevisitonByComp(comp.getName());
-			DevelopBranch db = new DevelopBranch(comp);
-			ReleaseBranch rb = db.getCurrentReleaseBranch(repos);
 			if (revisionToTag == null) {
-				revisionToTag = vcs.getHeadCommit(rb.getReleaseBranchName()).getRevision();
-			}
-			
-			if (vcs.isRevisionTagged(revisionToTag)) {
-				progress.reportStatus(String.format("revision %s is already tagged", revisionToTag));
+				progress.reportStatus("no revisions to dalayed tag");
 				return;
 			}
 			
-			String releaseBranchName = rb.getReleaseBranchName();
-			String tagName = rb.getVersion().toReleaseString();
-			vcs.createTag(releaseBranchName, tagName, tagMessage, revisionToTag);
-			progress.reportStatus(String.format("%s of %s tagged: %s", revisionToTag == null ? "head " : "commit " + revisionToTag, rb.getReleaseBranchName(), tagName));
+			List<VCSTag> tagsOnRevision = vcs.getTagsOnRevision(revisionToTag);
+			ReleaseBranch rb = new ReleaseBranch(comp, repos);
+			Version delayedTagVersion = new Version(vcs.getFileContent(rb.getReleaseBranchName(), SCMWorkflow.VER_FILE_NAME, revisionToTag));
+			for (VCSTag tag : tagsOnRevision) {
+				if (tag.getTagName().equals(delayedTagVersion.toReleaseString())) {
+					progress.reportStatus(String.format("revision %s is already tagged with %s tag", revisionToTag, tag.getTagName()));
+					return;
+				}
+			}
+			
+			vcs.createTag(rb.getReleaseBranchName(), delayedTagVersion.toReleaseString(), tagMessage, revisionToTag);
+			
+			cf.removeRevisionsByComp(comp.getName());
+			progress.reportStatus(String.format("%s of %s tagged: %s", revisionToTag == null ? "head " : "commit " + revisionToTag, rb.getReleaseBranchName(), delayedTagVersion.toReleaseString()));
 		} catch (Throwable t) {
 			progress.error(t.getMessage());
 			throw new RuntimeException(t);

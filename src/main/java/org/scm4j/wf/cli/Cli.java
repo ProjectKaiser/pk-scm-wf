@@ -20,7 +20,6 @@ public class Cli {
 			System.out.println(CommandLine.getUsage());
 			System.exit(1);
 			return;
-			
 		}
 		
 		try {
@@ -43,6 +42,12 @@ public class Cli {
 				action = wf.getProductionReleaseAction(cmd.getProductCoords());
 				PrintAction pa = new PrintAction();
 				pa.print(System.out, action);
+				break;
+			case TAG:
+				action = wf.getTagReleaseAction(cmd.getProductCoords());
+				try (IProgress progress = new ProgressConsole(action.toString(), ">>> ", "<<< ")) {
+					action.execute(progress);
+				}
 				break;
 			}
 		} catch (Exception e) {

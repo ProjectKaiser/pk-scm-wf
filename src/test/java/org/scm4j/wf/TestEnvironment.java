@@ -156,7 +156,7 @@ public class TestEnvironment implements AutoCloseable {
 	}
 
 	public VCSCommit generateFeatureCommit(IVCS vcs, String branchName, String commitMessage) {
-		return generateContent(vcs, branchName, TEST_FEATURE_FILE_NAME, "feature content", commitMessage);
+		return generateContent(vcs, branchName, TEST_FEATURE_FILE_NAME, "feature content " + UUID.randomUUID().toString(), commitMessage);
 	}
 	
 	public VCSCommit generateContent(IVCS vcs, String branchName, String fileName, String content, String logMessage) {
