@@ -12,6 +12,8 @@ import org.scm4j.wf.actions.IAction;
 import org.scm4j.wf.branch.DevelopBranch;
 import org.scm4j.wf.branch.ReleaseBranch;
 import org.scm4j.wf.conf.Component;
+import org.scm4j.wf.conf.EnvVarsConfigSource;
+import org.scm4j.wf.conf.IConfigSource;
 import org.scm4j.wf.conf.VCSRepositories;
 import org.scm4j.wf.scmactions.CommitsFile;
 
