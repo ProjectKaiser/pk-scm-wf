@@ -8,12 +8,12 @@ IN DEVELOPMENT
 
 # Overview
 
-Tool to manage projects which are represented by a few components, each component has its own repository (multi-repository configuration). It  detectes changes in repositories, build new components versions and actualize dependency lists.
+Tool to manage projects which are represented by many components, each component has its own repository (multi-repository configuration). It  detectes changes in repositories, build new components versions and actualize dependency lists.
 
 # Terms
 
 - `component`: component has its own repository and can be built and uploaded to some repository
-- `project`: component which can be installed (together with all dependencies) as "a whole", from end-user POV.
+- `project`: has a component and  can be installed (together with all dependencies) as "a whole", from end-user POV
 - `managable dependency`: dependency of any component which is "under control", i.e. can be branched, built and uploaded to a maven repository
 - `mdeps`: file which lists managable dependencies, is located at the root of every repository
 
