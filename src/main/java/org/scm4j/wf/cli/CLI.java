@@ -9,7 +9,7 @@ import org.scm4j.wf.actions.PrintAction;
 import org.scm4j.wf.exceptions.EConfig;
 import org.scm4j.wf.cli.CommandLine;
 
-public class Cli {
+public class CLI {
 
 	public static void main(String[] args) throws Exception {
 		CommandLine cmd;

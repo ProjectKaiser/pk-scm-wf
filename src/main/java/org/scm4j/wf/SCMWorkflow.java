@@ -104,7 +104,7 @@ public class SCMWorkflow {
 		if (rbs == ReleaseBranchStatus.MISSING) {
 			skipAllBuilds(childActions);
 			if (actionKind == ActionKind.BUILD) {
-				return new ActionNone(comp, childActions, "nothing to build ");
+				return new ActionNone(comp, childActions, "nothing to build");
 			}
 			if (dbs == DevelopBranchStatus.MODIFIED) {
 				return new SCMActionForkReleaseBranch(comp, childActions, ReleaseReason.NEW_FEATURES, options);
@@ -130,7 +130,7 @@ public class SCMWorkflow {
 				if (actionKind == ActionKind.BUILD) {
 					return new ActionNone(comp, childActions, "nothing to build");
 				}
-				return new SCMActionForkReleaseBranch(comp, childActions, ReleaseReason.NEW_DEPENDENCIES, options);
+				return new SCMActionForkReleaseBranch(comp, childActions, ReleaseReason.ACTUALIZE_MDEPS, options);
 			} else {
 				// need to build
 				skipAllForks(childActions);
@@ -229,7 +229,7 @@ public class SCMWorkflow {
 		CommitsFile cf = new CommitsFile();
 		IVCS vcs = comp.getVCS();
 		
-		String delayedRevisionToTag = cf.getRevisitonByComp(comp.getName());
+		String delayedRevisionToTag = cf.getRevisitonByUrl(comp.getVcsRepository().getUrl());
 		
 		if (delayedRevisionToTag == null) {
 			return new ActionNone(comp, childActions, "no delayed tags");

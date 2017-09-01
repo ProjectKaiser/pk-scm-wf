@@ -18,12 +18,12 @@ public class CommitsFile {
 		commitsFile = new File(SCMWorkflow.COMMITS_FILE_NAME);
 	}
 	
-	public String getRevisitonByComp(String compName) {
+	public String getRevisitonByUrl(String url) {
 		if (!commitsFile.exists()) {
 			return null;
 		}
 		Map<String, String> commits = getContent();
-		return commits.get(compName);
+		return commits.get(url);
 	}
 
 	public Map<String, String> getContent() {
@@ -43,13 +43,13 @@ public class CommitsFile {
 		}
 	}
 	
-	public void writeCompRevision(String compName, String revision) throws IOException {
+	public void writeUrlRevision(String url, String revision) throws IOException {
 		if (!commitsFile.exists()) {
 			commitsFile.createNewFile();
 		}
 		
 		Map<String, String> content = getContent();
-		String previousRevision = content.put(compName, revision);
+		String previousRevision = content.put(url, revision);
 		if (previousRevision != revision) {
 			writeContent(content);
 		}
@@ -67,7 +67,7 @@ public class CommitsFile {
 		return getContent().toString();
 	}
 
-	public void removeRevisionsByComp(String compName) {
+	public void removeRevisionByUrl(String compName) {
 		Map<String, String> content = getContent();
 		String removedRevision = content.remove(compName);
 		if (removedRevision != null) {
@@ -78,7 +78,7 @@ public class CommitsFile {
 	private void writeContent(Map<String, String> content) {
 		Yaml yaml = new Yaml();
 		try {
-			FileUtils.writeStringToFile(commitsFile, yaml.dump(content), StandardCharsets.UTF_8);
+			FileUtils.writeStringToFile(commitsFile, yaml.dumpAsMap(content), StandardCharsets.UTF_8);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}

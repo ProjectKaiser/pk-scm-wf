@@ -53,7 +53,7 @@ public class SCMActionBuild extends ActionAbstract {
 			
 			// need to check if we are built already with delayed tag
 			CommitsFile cf = new CommitsFile();
-			String delayedTagRevision = cf.getRevisitonByComp(comp.getName());
+			String delayedTagRevision = cf.getRevisitonByUrl(comp.getVcsRepository().getUrl());
 			if (delayedTagRevision != null) {
 				List<VCSCommit> commits = vcs.getCommitsRange(rb.getReleaseBranchName(), null, WalkDirection.DESC, 2);
 				if (commits.size() == 2) {
@@ -87,7 +87,7 @@ public class SCMActionBuild extends ActionAbstract {
 			
 			if (options.contains(Option.DELAYED_TAG)) {
 				CommitsFile commitsFile = new CommitsFile();
-				commitsFile.writeCompRevision(comp.getName(), headCommit.getRevision());
+				commitsFile.writeUrlRevision(comp.getVcsRepository().getUrl(), headCommit.getRevision());
 				progress.reportStatus("build commit " + headCommit.getRevision() + " is saved for delayed tagging");
 			} else {
 				String releaseBranchName = rb.getReleaseBranchName();

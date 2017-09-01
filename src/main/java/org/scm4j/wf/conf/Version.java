@@ -149,6 +149,10 @@ public class Version {
 	public boolean isExactVersion() {
 		return !minor.isEmpty();
 	}
+	
+	public String toSnapshotString() {
+		return prefix + minor + (patch.isEmpty() ? "" : "." + patch) + SNAPSHOT;
+	}
 
 	public String toReleaseString() {
 		if (!StringUtils.isNumeric(minor)) {
@@ -189,7 +193,9 @@ public class Version {
 	}
 
 	public Version toRelease() {
+		if (!StringUtils.isNumeric(minor)) {
+			return this;
+		}
 		return new Version(prefix + minor + (patch.isEmpty() ? "" : "." + patch));
 	}
-
 }

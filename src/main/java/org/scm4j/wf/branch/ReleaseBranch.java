@@ -57,7 +57,7 @@ public class ReleaseBranch {
 	 * 
 	 * uncompleted means any of MDEPS_FROZEN, MDEPS_ACTUAL, BRANCHED
 	 */
-	public ReleaseBranch(Component comp, VCSRepositories repos) {
+	public ReleaseBranch(final Component comp, VCSRepositories repos) {
 		this.comp = comp;
 		this.repos = repos;
 		vcs = comp.getVCS();
@@ -73,8 +73,8 @@ public class ReleaseBranch {
 
 			@Override
 			public int compare(String o1, String o2) {
-				Version ver1 = new Version(o1);
-				Version ver2 = new Version(o2);
+				Version ver1 = new Version(o1.replace(comp.getVcsRepository().getReleaseBranchPrefix(), ""));
+				Version ver2 = new Version(o2.replace(comp.getVcsRepository().getReleaseBranchPrefix(), ""));
 				if (ver1.equals(ver2)) {
 					return 0;
 				}
@@ -150,7 +150,7 @@ public class ReleaseBranch {
 
 	public boolean isPreHeadCommitTagDelayed() {
 		CommitsFile cf = new CommitsFile();
-		String delayedTagRevision = cf.getRevisitonByComp(comp.getName());
+		String delayedTagRevision = cf.getRevisitonByUrl(comp.getVcsRepository().getUrl());
 		if (delayedTagRevision == null) {
 			return false;
 		}
@@ -164,7 +164,7 @@ public class ReleaseBranch {
 	}
 
 	public boolean isPreHeadCommitTaggedWithVersion() {
-		if (!vcs.getBranches(null).contains(getReleaseBranchName())) {
+		if (!vcs.getBranches(comp.getVcsRepository().getReleaseBranchPrefix()).contains(getReleaseBranchName())) {
 			return false;
 		}
 		List<VCSCommit> commits = vcs.getCommitsRange(getReleaseBranchName(), null, WalkDirection.DESC, 2);

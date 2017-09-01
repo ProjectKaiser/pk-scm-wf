@@ -43,6 +43,7 @@ public class VersionTest {
 		assertEquals(new Version("11.21").toReleaseString(), "11.21");
 		assertEquals(new Version("11-SNAPSHOT").toReleaseString(), "0.11.0");
 		assertEquals(new Version("-SNAPSHOT").toReleaseString(), "-SNAPSHOT");
+		
 	}
 	
 	@Test
@@ -139,6 +140,16 @@ public class VersionTest {
 		assertEquals("0.13.1", new Version("13").toNextPatch().toString());
 		assertEquals("13.14.fgdfgd1", new Version("13.14.fgdfgd").toNextPatch().toString());
 	}
+	
+	@Test
+	public void testToPreviousPatch() {
+		assertEquals("11.12.12-SNAPSHOT", new Version("11.12.13-SNAPSHOT").toPreviousPatch().toString());
+		assertEquals("12", new Version("11.12.13-SNAPSHOT").toPreviousPatch().getPatch());
+		assertEquals("11.12.12fgdfg-SNAPSHOT", new Version("11.12.13fgdfg-SNAPSHOT").toPreviousPatch().toString());
+		assertEquals("11.12.12fgdfg15-SNAPSHOT", new Version("11.12.13fgdfg15-SNAPSHOT").toPreviousPatch().toString());
+		assertEquals("0.13.-1", new Version("13").toPreviousPatch().toString());
+		assertEquals("13.14.fgdfgd0", new Version("13.14.fgdfgd").toPreviousPatch().toString());
+	}
 
 	@Test
 	public void testIsGreaterThan() {
@@ -157,5 +168,23 @@ public class VersionTest {
 		assertFalse(new Version("11.12.13-SNAPSHOT").isGreaterThan(new Version("11.12.14-SNAPSHOT")));
 		assertFalse(new Version("11.12-SNAPSHOT").isGreaterThan(new Version("11.13-SNAPSHOT")));
 		assertFalse(new Version("11-SNAPSHOT").isGreaterThan(new Version("12-SNAPSHOT")));
+	}
+	
+	@Test
+	public void testGetReleaseNoPatchString() {
+		assertEquals("11.12.13", new Version("11.12.13.14-SNAPSHOT").getReleaseNoPatchString());
+		assertEquals("11.12", new Version("11.12.13-SNAPSHOT").getReleaseNoPatchString());
+		assertEquals("11", new Version("11.12-SNAPSHOT").getReleaseNoPatchString());
+		assertEquals("0.11", new Version("11-SNAPSHOT").getReleaseNoPatchString());
+	}
+	
+	@Test
+	public void testToRelease() {
+		assertEquals(new Version("11.21.31.41"), new Version("11.21.31.41-SNAPSHOT").toRelease());
+		assertEquals(new Version("11.21.31.41"), new Version("11.21.31.41").toRelease());
+		assertEquals(new Version("11.21.31"),  new Version("11.21.31").toRelease());
+		assertEquals(new Version("11.21"), new Version("11.21").toRelease());
+		assertEquals(new Version("0.11.0"), new Version("11-SNAPSHOT").toRelease());
+		assertEquals(new Version("-SNAPSHOT"), new Version("-SNAPSHOT").toRelease());
 	}
 }

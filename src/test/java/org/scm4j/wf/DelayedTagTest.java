@@ -40,9 +40,9 @@ public class DelayedTagTest extends SCMWorkflowTestBase {
 		
 		// check commits file
 		CommitsFile cf = new CommitsFile();
-		assertNotNull(cf.getRevisitonByComp(compUnTillDb.toString()));
-		assertNotNull(cf.getRevisitonByComp(compUnTill.toString()));
-		assertNotNull(cf.getRevisitonByComp(compUBL.toString()));
+		assertNotNull(cf.getRevisitonByUrl(compUnTillDb.getVcsRepository().getUrl()));
+		assertNotNull(cf.getRevisitonByUrl(compUnTill.getVcsRepository().getUrl()));
+		assertNotNull(cf.getRevisitonByUrl(compUBL.getVcsRepository().getUrl()));
 		assertEquals(ReleaseBranchStatus.ACTUAL, rbUnTillDbFixedVer.getStatus());
 		assertEquals(ReleaseBranchStatus.ACTUAL, rbUBLFixedVer.getStatus());
 		assertEquals(ReleaseBranchStatus.ACTUAL, rbUnTillFixedVer.getStatus());

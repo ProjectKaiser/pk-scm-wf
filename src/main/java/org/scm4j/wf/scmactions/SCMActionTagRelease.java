@@ -33,7 +33,7 @@ public class SCMActionTagRelease extends ActionAbstract {
 			
 			CommitsFile cf = new CommitsFile();
 			IVCS vcs = getVCS();
-			String revisionToTag = cf.getRevisitonByComp(comp.getName());
+			String revisionToTag = cf.getRevisitonByUrl(comp.getVcsRepository().getUrl());
 			if (revisionToTag == null) {
 				progress.reportStatus("no revisions to dalayed tag");
 				return;
@@ -51,7 +51,7 @@ public class SCMActionTagRelease extends ActionAbstract {
 			
 			vcs.createTag(rb.getReleaseBranchName(), delayedTagVersion.toReleaseString(), tagMessage, revisionToTag);
 			
-			cf.removeRevisionsByComp(comp.getName());
+			cf.removeRevisionByUrl(comp.getVcsRepository().getUrl());
 			progress.reportStatus(String.format("%s of %s tagged: %s", revisionToTag == null ? "head " : "commit " + revisionToTag, rb.getReleaseBranchName(), delayedTagVersion.toReleaseString()));
 		} catch (Throwable t) {
 			progress.error(t.getMessage());

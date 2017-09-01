@@ -38,30 +38,38 @@ public class SCMActionForkReleaseBranch extends ActionAbstract {
 	}
 	
 	private void createBranch(IProgress progress) {
+		if (rb.exists()) {
+			progress.reportStatus("release branch already forked: " + rb.getReleaseBranchName());
+			return;
+		}
 		vcs.createBranch(db.getName(), rb.getReleaseBranchName(), "release branch created");
 		progress.reportStatus("branch " + rb.getReleaseBranchName() + " created");
 	}
 	
-	private void freezeMDeps(IProgress progress) {
-		// let's fix mdep versions
-		List<Component> actualMDeps = db.getMDeps();
-		if (actualMDeps.isEmpty()) {
+	private void actualizeMDeps(IProgress progress) {
+		List<Component> currentMDeps = rb.getMDeps();
+		if (currentMDeps.isEmpty()) {
 			progress.reportStatus("no mdeps");
-		} else {
-			if (mDepsFrozen()) {
-				progress.reportStatus("mdeps are frozen already");
+			return;
+		}
+		List<Component> actualizedMDeps = new ArrayList<>();
+		Boolean hasNewMDeps = false;
+		for (Component currentMDep : currentMDeps) {
+			ReleaseBranch rbCurrentMDep = new ReleaseBranch(currentMDep, repos);
+			String futureReleaseVersionStr = rbCurrentMDep.getVersion().toReleaseString();
+			if (new Version(futureReleaseVersionStr).isGreaterThan(currentMDep.getVersion())) {
+				actualizedMDeps.add(currentMDep.cloneWithDifferentVersion(futureReleaseVersionStr));
+				hasNewMDeps = true;
 			} else {
-				List<Component> frozenMDeps = new ArrayList<>();
-				for (Component actualMDep : actualMDeps) {
-					ReleaseBranch rbActualMDep = new ReleaseBranch(actualMDep, repos);
-					String futureRelaseVersionStr = rbActualMDep.getVersion().toReleaseString();
-					Component frozenMDep = actualMDep.cloneWithDifferentVersion(futureRelaseVersionStr);
-					frozenMDeps.add(frozenMDep);
-				}
-				MDepsFile frozenMDepsFile = new MDepsFile(frozenMDeps);
-				vcs.setFileContent(rb.getReleaseBranchName(), SCMWorkflow.MDEPS_FILE_NAME, frozenMDepsFile.toFileContent(), LogTag.SCM_MDEPS);
-				progress.reportStatus("mdeps frozen");
+				actualizedMDeps.add(currentMDep);
 			}
+		}
+		if (hasNewMDeps) {
+			MDepsFile frozenMDepsFile = new MDepsFile(actualizedMDeps);
+			vcs.setFileContent(rb.getReleaseBranchName(), SCMWorkflow.MDEPS_FILE_NAME, frozenMDepsFile.toFileContent(), LogTag.SCM_MDEPS);
+			progress.reportStatus("mdeps actualized");
+		} else {
+			progress.reportStatus("no mdeps to actualize");
 		}
 	}
 	
@@ -74,18 +82,16 @@ public class SCMActionForkReleaseBranch extends ActionAbstract {
 				}
 			}
 			
-			if (rb.exists()) {
-				progress.reportStatus("release branch already forked: " + rb.getReleaseBranchName());
-				return;
-			}
-			
 			createBranch(progress);
 			
-			freezeMDeps(progress);
+			actualizeMDeps(progress);
 			
-			raiseTrunkVersion(progress);
-			
-			raiseReleaseVersion(progress);
+			if (reason == ReleaseReason.ACTUALIZE_MDEPS) {
+				raiseReleasePatch(progress);
+			} else {
+				raiseTrunkVersion(progress);
+				raiseReleaseVersion(progress);
+			}
 
 		} catch (Throwable t) {
 			progress.reportStatus("execution error: " + t.toString() + ": " + t.getMessage());
@@ -93,14 +99,33 @@ public class SCMActionForkReleaseBranch extends ActionAbstract {
 		}  
 	}
 	
+	private void raiseReleasePatch(IProgress progress) {
+		String newReleasePatchVersion = rb.getVersion().toNextPatch().toString();
+		if (rb.getCurrentVersion().toString().equals(newReleasePatchVersion)) {
+			progress.reportStatus("release branch version patch is changed already: " + newReleasePatchVersion);
+			return;
+		}
+		getVCS().setFileContent(rb.getReleaseBranchName(), SCMWorkflow.VER_FILE_NAME, newReleasePatchVersion, LogTag.SCM_VER + " " + newReleasePatchVersion);
+		progress.reportStatus("change to patch version " + newReleasePatchVersion + " in branch " + rb.getReleaseBranchName());
+		
+	}
+
 	private void raiseReleaseVersion(IProgress progress) {
 		String newReleaseVersion = currentVer.toReleaseString();
-		getVCS().setFileContent(rb.getReleaseBranchName(), /*newBranchName*/ SCMWorkflow.VER_FILE_NAME, newReleaseVersion, LogTag.SCM_VER + " " + newReleaseVersion);
+		if (rb.getCurrentVersion().toString().equals(newReleaseVersion)) {
+			progress.reportStatus("release branch version is changed already: " + newReleaseVersion);
+			return;
+		}
+		getVCS().setFileContent(rb.getReleaseBranchName(), SCMWorkflow.VER_FILE_NAME, newReleaseVersion, LogTag.SCM_VER + " " + newReleaseVersion);
 		progress.reportStatus("change to version " + newReleaseVersion + " in branch " + rb.getReleaseBranchName());
 	}
 
 	private void raiseTrunkVersion(IProgress progress) {
-		String newTrunkVersion = db.getVersion().toNextMinor().toString();
+		String newTrunkVersion = rb.getVersion().toNextMinor().toSnapshotString();
+		if (db.getVersion().toString().equals(newTrunkVersion)) {
+			progress.reportStatus("trunk version is raised already: " + newTrunkVersion);
+			return;
+		}
 		getVCS().setFileContent(db.getName(), SCMWorkflow.VER_FILE_NAME, newTrunkVersion, LogTag.SCM_VER + " " + newTrunkVersion);
 		progress.reportStatus("change to version " + newTrunkVersion + " in trunk");
 	}
