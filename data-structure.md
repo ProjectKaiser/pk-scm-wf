@@ -49,8 +49,11 @@ http://localhost.*:
   password: guest
 ```
 
-# VCS repositories workspaces
-- located at user home folder by default or defined by SCMWorkfow(\<product name\>, \<workspace home dir\>) constructor
+# Working Files
+
+Working files are located at ${user.home}/.scm4j
+
+- vcs-repositories: repositories working copies
 
 # ver file
 - Single line, no comments. Exmaple:
@@ -62,5 +65,4 @@ http://localhost.*:
 - multiline, #-commented. Example:
 ```
 eu.untill:unTillDb:1.11.2#sddfgdfgdfg
-eu.untill:UBL:1.99.2
-```
+eu.untill:UBL:1.99.2```
