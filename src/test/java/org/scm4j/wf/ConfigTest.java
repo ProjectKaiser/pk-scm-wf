@@ -1,18 +1,22 @@
 package org.scm4j.wf;
 
+import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.nio.charset.StandardCharsets;
 
 import org.apache.commons.io.FileUtils;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.scm4j.wf.conf.EnvVarsConfigSource;
 import org.scm4j.wf.conf.IConfigSource;
 import org.scm4j.wf.conf.VCSRepositories;
 import org.scm4j.wf.exceptions.EConfig;
@@ -38,6 +42,11 @@ public class ConfigTest {
 		});
 	}
 	
+	@After
+	public void tearDown() {
+		VCSRepositories.setConfigSource(new EnvVarsConfigSource());
+	}
+	
 	@Test
 	public void testNoReposEnvVar() {
 		creds = "";
@@ -57,7 +66,7 @@ public class ConfigTest {
 			new SCMWorkflow();
 			fail();
 		} catch (EConfig e) {
-			assertTrue(e.getCause() instanceof MalformedURLException);
+			assertThat(e.getCause(), instanceOf(MalformedURLException.class));
 		}
 	}
 	
@@ -68,7 +77,7 @@ public class ConfigTest {
 			new SCMWorkflow();
 			fail();
 		} catch (EConfig e) {
-			assertTrue(e.getCause() instanceof IOException);
+			assertThat(e.getCause(), instanceOf(FileNotFoundException.class));
 		}
 	}
 	

@@ -4,17 +4,19 @@ import java.util.List;
 
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.vcs.api.IVCS;
+import org.scm4j.vcs.api.VCSCommit;
+import org.scm4j.vcs.api.VCSTag;
+import org.scm4j.vcs.api.WalkDirection;
 import org.scm4j.vcs.api.workingcopy.IVCSLockedWorkingCopy;
 import org.scm4j.wf.LogTag;
 import org.scm4j.wf.SCMWorkflow;
 import org.scm4j.wf.actions.ActionAbstract;
 import org.scm4j.wf.actions.IAction;
-import org.scm4j.wf.actions.results.ActionResultVersion;
-import org.scm4j.wf.branch.DevelopBranch;
 import org.scm4j.wf.branch.ReleaseBranch;
 import org.scm4j.wf.branch.ReleaseBranchStatus;
+import org.scm4j.wf.conf.CommitsFile;
 import org.scm4j.wf.conf.Component;
-import org.scm4j.wf.conf.VCSRepositories;
+import org.scm4j.wf.conf.Option;
 import org.scm4j.wf.conf.Version;
 import org.scm4j.wf.exceptions.EBuilder;
 
@@ -23,8 +25,8 @@ public class SCMActionBuild extends ActionAbstract {
 	private final ReleaseReason reason;
 	private final Version targetVersion;
 
-	public SCMActionBuild(Component comp, List<IAction> childActions, ReleaseReason reason, Version targetVersion) {
-		super(comp, childActions);
+	public SCMActionBuild(Component comp, List<IAction> childActions, ReleaseReason reason, Version targetVersion, List<Option> options) {
+		super(comp, childActions, options);
 		this.reason = reason;
 		this.targetVersion = targetVersion;
 	}
@@ -38,54 +40,71 @@ public class SCMActionBuild extends ActionAbstract {
 	}
 
 	@Override
-	public Object execute(IProgress progress) {
+	public void execute(IProgress progress) {
 		try {
-			
 			IVCS vcs = getVCS();
-			VCSRepositories repos = VCSRepositories.loadVCSRepositories();
-			DevelopBranch db = new DevelopBranch(comp);
-			ReleaseBranch rb = db.getCurrentReleaseBranch(repos);
+			ReleaseBranch rb = new ReleaseBranch(comp, repos);
 			ReleaseBranchStatus rbs = rb.getStatus();
-			if (rbs == ReleaseBranchStatus.BUILT || rbs == ReleaseBranchStatus.TAGGED) {
-				progress.reportStatus("version " + rb.getTargetVersion().toString() + " already built");
-				return new ActionResultVersion(comp.getName(), rb.getTargetVersion().toString(), true, rb.getReleaseBranchName());
+			if (rbs == ReleaseBranchStatus.ACTUAL) {
+				progress.reportStatus("version " + rb.getVersion().toString() + " already built ");
+				return;
+			}
+			
+			VCSCommit headCommit = vcs.getHeadCommit(rb.getName());
+			
+			// need to check if we are built already with delayed tag
+			CommitsFile cf = new CommitsFile();
+			String delayedTagRevision = cf.getRevisitonByUrl(comp.getVcsRepository().getUrl());
+			if (delayedTagRevision != null) {
+				List<VCSCommit> commits = vcs.getCommitsRange(rb.getName(), null, WalkDirection.DESC, 2);
+				if (commits.size() == 2) {
+					if (commits.get(1).getRevision().equals(delayedTagRevision)) {
+						progress.reportStatus(String.format("version %s already built with delayed tag on revision %s", rb.getVersion().toString(), delayedTagRevision));
+						return;
+					}
+				}
 			}
 			
 			progress.reportStatus("target version to build: " + targetVersion);
 			
-			Object nestedResult;
 			for (IAction action : childActions) {
 				try (IProgress nestedProgress = progress.createNestedProgress(action.toString())) {
-					nestedResult = action.execute(nestedProgress);
-					if (nestedResult instanceof Throwable) {
-						return nestedResult;
-					}
+					action.execute(nestedProgress);
 				}
-				addResult(action.getName(), nestedResult);
 			}
-			
 			
 			if (comp.getVcsRepository().getBuilder() == null) {
 				throw new EBuilder("no builder defined");
-			} else {
-				try (IVCSLockedWorkingCopy lwc = vcs.getWorkspace().getVCSRepositoryWorkspace(vcs.getRepoUrl()).getVCSLockedWorkingCopy()) {
-					lwc.setCorrupted(true); // use lwc only once
-					progress.reportStatus(String.format("checking out %s into %s", getName(), lwc.getFolder().getPath()));
-					vcs.checkout(rb.getReleaseBranchName(), lwc.getFolder().getPath());
-					comp.getVcsRepository().getBuilder().build(comp, lwc.getFolder(), progress);
-				}
+			} 
+			
+			
+				
+			try (IVCSLockedWorkingCopy lwc = vcs.getWorkspace().getVCSRepositoryWorkspace(vcs.getRepoUrl()).getVCSLockedWorkingCopy()) {
+				lwc.setCorrupted(true); // use lwc only once
+				progress.reportStatus(String.format("checking out %s on revision %s into %s", getName(), headCommit.getRevision(), lwc.getFolder().getPath()));
+				vcs.checkout(rb.getName(), lwc.getFolder().getPath(), headCommit.getRevision());
+				comp.getVcsRepository().getBuilder().build(comp, lwc.getFolder(), progress);
 			}
 			
-			vcs.setFileContent(rb.getReleaseBranchName(), SCMWorkflow.VER_FILE_NAME, targetVersion.toString(), LogTag.SCM_BUILT + " " + targetVersion.toString());
+			if (options.contains(Option.DELAYED_TAG)) {
+				CommitsFile commitsFile = new CommitsFile();
+				commitsFile.writeUrlRevision(comp.getVcsRepository().getUrl(), headCommit.getRevision());
+				progress.reportStatus("build commit " + headCommit.getRevision() + " is saved for delayed tagging");
+			} else {
+				String releaseBranchName = rb.getName();
+				String tagName = rb.getVersion().toString();
+				String tagMessage = tagName + " release"; 
+				VCSTag tag = vcs.createTag(releaseBranchName, tagName, tagMessage, headCommit.getRevision());
+				progress.reportStatus("head of \"" + releaseBranchName + "\" tagged: " + tag.toString());
+			}
+
+			vcs.setFileContent(rb.getName(), SCMWorkflow.VER_FILE_NAME, targetVersion.toNextPatch().toReleaseString(), 
+					LogTag.SCM_VER + " " + targetVersion.toNextPatch().toReleaseString());
 			
-			ActionResultVersion res = new ActionResultVersion(comp.getName(), targetVersion.toString(), true,
-					rb.getReleaseBranchName());
-			progress.reportStatus(comp.getName() + " " + res.getVersion() + " is built in " + rb.getReleaseBranchName());
-			addResult(getName(), res); 
-			return res;
+			progress.reportStatus(comp.getName() + " " + targetVersion.toString() + " is built in " + rb.getName());
 		} catch (Throwable t) {
 			progress.error("execution error: " + t.toString() + ": " + t.getMessage());
-			return t;
+			throw new RuntimeException(t);
 		} 
 	}
 
@@ -93,5 +112,4 @@ public class SCMActionBuild extends ActionAbstract {
 	public String toString() {
 		return "build " + comp.getCoords().toString() + ", targetVersion=" + targetVersion.toString() + ", " + reason.toString();
 	}
-
 }

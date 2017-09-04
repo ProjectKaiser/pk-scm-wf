@@ -10,12 +10,14 @@ public class Coords {
 	private final String groupId;
 	private final String classifier;
 	private final Version version;
+	private final String coordsString;
 
 	public String getComment() {
 		return commentStr;
 	}
 	
 	public Coords(String coordsString) {
+		this.coordsString = coordsString;
 		String str = coordsString;
 
 		// Comment
@@ -53,6 +55,31 @@ public class Coords {
 		classifier = strs.length > 3 ? ":" + strs[3].trim() : "";
 
 		version = new Version(strs.length > 2 ? strs[2] : "");
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((coordsString == null) ? 0 : coordsString.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Coords other = (Coords) obj;
+		if (coordsString == null) {
+			if (other.coordsString != null)
+				return false;
+		} else if (!coordsString.equals(other.coordsString))
+			return false;
+		return true;
 	}
 
 	public Version getVersion() {

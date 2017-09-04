@@ -18,7 +18,7 @@ public class MDepsFile {
 			String str = br.readLine();
 			while (str != null) {
 				if (isLineValueable(str)) {
-					Component dep = new Component(str, repos);
+					Component dep = new Component(str, repos.getByCoords(str));
 					mDeps.add(dep);
 
 				}

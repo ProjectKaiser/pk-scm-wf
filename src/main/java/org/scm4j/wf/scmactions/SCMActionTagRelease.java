@@ -1,59 +1,62 @@
 package org.scm4j.wf.scmactions;
 
+import java.util.List;
+
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSTag;
+import org.scm4j.wf.SCMWorkflow;
 import org.scm4j.wf.actions.ActionAbstract;
 import org.scm4j.wf.actions.IAction;
-import org.scm4j.wf.actions.results.ActionResultTag;
-import org.scm4j.wf.branch.DevelopBranch;
+import org.scm4j.wf.branch.ReleaseBranch;
+import org.scm4j.wf.conf.CommitsFile;
 import org.scm4j.wf.conf.Component;
-
-import java.util.List;
+import org.scm4j.wf.conf.Option;
+import org.scm4j.wf.conf.Version;
 
 public class SCMActionTagRelease extends ActionAbstract {
 
 	private final String tagMessage;
 
-	public SCMActionTagRelease(Component dep, List<IAction> childActions, String tagMessage) {
-		super(dep, childActions);
+	public SCMActionTagRelease(Component dep, List<IAction> childActions, String tagMessage, List<Option> options) {
+		super(dep, childActions, options);
 		this.tagMessage = tagMessage;
 	}
-
+	
 	@Override
-	public Object execute(IProgress progress) {
+	public void execute(IProgress progress) {
 		try {
-			
-			ActionResultTag actionTag = (ActionResultTag) getResult(getName(), ActionResultTag.class);
-			if (actionTag != null) {
-				progress.reportStatus("already tagged: " + actionTag.toString());
-				return actionTag;
-			}
-			
-			Object nestedResult;
 			for (IAction action : childActions) {
 				try (IProgress nestedProgress = progress.createNestedProgress(action.toString())) {
-					nestedResult = action.execute(nestedProgress);
-					if (nestedResult instanceof Throwable) {
-						return nestedResult;
-					}
-					addResult(action.getName(), nestedResult);
-				} catch (Exception e) {
-					throw new RuntimeException(e);
+					action.execute(nestedProgress);
 				}
 			}
 			
+			CommitsFile cf = new CommitsFile();
 			IVCS vcs = getVCS();
-			DevelopBranch db = new DevelopBranch(comp);
+			String revisionToTag = cf.getRevisitonByUrl(comp.getVcsRepository().getUrl());
+			if (revisionToTag == null) {
+				progress.reportStatus("no revisions to dalayed tag");
+				return;
+			}
 			
-			String releaseBranchName = db.getPreviousMinorReleaseBranchName();
-			String tagName = db.getVersion().toPreviousMinor().toReleaseString();
-			VCSTag tag = vcs.createTag(releaseBranchName, tagName, tagMessage);
-			progress.reportStatus("head of \"" + releaseBranchName + "\" tagged: " + tag.toString());
-			return new ActionResultTag(getName(), tag);
+			List<VCSTag> tagsOnRevision = vcs.getTagsOnRevision(revisionToTag);
+			ReleaseBranch rb = new ReleaseBranch(comp, repos);
+			Version delayedTagVersion = new Version(vcs.getFileContent(rb.getName(), SCMWorkflow.VER_FILE_NAME, revisionToTag));
+			for (VCSTag tag : tagsOnRevision) {
+				if (tag.getTagName().equals(delayedTagVersion.toReleaseString())) {
+					progress.reportStatus(String.format("revision %s is already tagged with %s tag", revisionToTag, tag.getTagName()));
+					return;
+				}
+			}
+			
+			vcs.createTag(rb.getName(), delayedTagVersion.toReleaseString(), tagMessage, revisionToTag);
+			
+			cf.removeRevisionByUrl(comp.getVcsRepository().getUrl());
+			progress.reportStatus(String.format("%s of %s tagged: %s", revisionToTag == null ? "head " : "commit " + revisionToTag, rb.getName(), delayedTagVersion.toReleaseString()));
 		} catch (Throwable t) {
 			progress.error(t.getMessage());
-			return t;
+			throw new RuntimeException(t);
 		}
 	}
 	

@@ -1,7 +1,6 @@
 package org.scm4j.wf.conf;
 
 import org.scm4j.vcs.api.IVCS;
-import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
 import org.scm4j.wf.IBuilder;
 
 public class VCSRepository {
@@ -18,6 +17,31 @@ public class VCSRepository {
 	private final IVCS vcs;
 	private final IBuilder builder;
 	
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((url == null) ? 0 : url.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		VCSRepository other = (VCSRepository) obj;
+		if (url == null) {
+			if (other.url != null)
+				return false;
+		} else if (!url.equals(other.url))
+			return false;
+		return true;
+	}
+
 	public String getReleaseBranchPrefix() {
 		return releaseBanchPrefix;
 	}
@@ -53,11 +77,6 @@ public class VCSRepository {
 		this.vcs = vcs;
 		this.releaseBanchPrefix = releaseBranchPrefix;
 		this.builder = builder;
-	}
-
-	public VCSRepository(String name, String url, Credentials credentials, VCSType type, String devBranch,
-						 IVCSWorkspace ws, IVCS vcs, IBuilder builder) {
-		this(name, url, credentials, type, devBranch, DEFAULT_RELEASE_BRANCH_PREFIX, vcs, builder);
 	}
 
 	@Override

@@ -9,6 +9,9 @@ import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.vcs.api.workingcopy.IVCSRepositoryWorkspace;
 import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
 import org.scm4j.vcs.api.workingcopy.VCSWorkspace;
+import org.scm4j.wf.branch.DevelopBranch;
+import org.scm4j.wf.branch.ReleaseBranch;
+import org.scm4j.wf.conf.Component;
 import org.scm4j.wf.conf.EnvVarsConfigSource;
 import org.scm4j.wf.conf.IConfigSource;
 import org.scm4j.wf.conf.VCSRepositories;
@@ -23,7 +26,6 @@ public class TestEnvironment implements AutoCloseable {
 	public static final String TEST_REPOS_FILE_NAME = "repos";
 	public static final String TEST_CREDENTIALS_FILE_NAME = "credentials";
 	public static final String TEST_ENVIRONMENT_DIR = new File(System.getProperty("java.io.tmpdir"), "scm4j-wf-test").getPath();
-	public static final String TEST_ENVIRONMENT_URL = "file://localhost/" + TEST_ENVIRONMENT_DIR.replace("\\", "/");
 	public static final String TEST_REMOTE_REPO_DIR = new File(TEST_ENVIRONMENT_DIR, "remote-repos").getPath();
 	public static final String TEST_FEATURE_FILE_NAME = "feature.txt";
 	public static final String TEST_DUMMY_FILE_NAME = "dummy.txt";
@@ -43,6 +45,7 @@ public class TestEnvironment implements AutoCloseable {
 	private final Version ublVer = new Version("1.18.5-SNAPSHOT");
 	private final Version unTillDbVer = new Version("2.59.1-SNAPSHOT");
 	private File envDir;
+	private VCSRepositories repos;
 	
 	public TestEnvironment() {
 		RANDOM_VCS_NAME_SUFFIX = UUID.randomUUID().toString();
@@ -72,6 +75,7 @@ public class TestEnvironment implements AutoCloseable {
 			}
 		});
 
+		repos = VCSRepositories.loadVCSRepositories();
 	}
 
 	private void createReposFile() throws IOException {
@@ -153,7 +157,7 @@ public class TestEnvironment implements AutoCloseable {
 	}
 
 	public VCSCommit generateFeatureCommit(IVCS vcs, String branchName, String commitMessage) {
-		return generateContent(vcs, branchName, TEST_FEATURE_FILE_NAME, "feature content", commitMessage);
+		return generateContent(vcs, branchName, TEST_FEATURE_FILE_NAME, "feature content " + UUID.randomUUID().toString(), commitMessage);
 	}
 	
 	public VCSCommit generateContent(IVCS vcs, String branchName, String fileName, String content, String logMessage) {
@@ -182,5 +186,16 @@ public class TestEnvironment implements AutoCloseable {
 			FileUtils.deleteDirectory(envDir);
 		}
 		VCSRepositories.setConfigSource(new EnvVarsConfigSource());
+	}
+
+	public void generateRelease(Component comp) {
+		IVCS vcs = comp.getVCS();
+		DevelopBranch db = new DevelopBranch(comp);
+		ReleaseBranch rb = new ReleaseBranch(comp, comp.getVersion(), repos);
+		vcs.createBranch(db.getName(), rb.getName(), null);
+		VCSCommit commit = vcs.setFileContent(rb.getName(), SCMWorkflow.VER_FILE_NAME, comp.getVersion().toReleaseString(), LogTag.SCM_VER);
+		vcs.createTag(rb.getName(), comp.getVersion().toReleaseString(), "tag created", commit.getRevision());
+		vcs.setFileContent(rb.getName(), SCMWorkflow.VER_FILE_NAME, comp.getVersion().toNextPatch().toReleaseString(), LogTag.SCM_VER);
+		vcs.setFileContent(db.getName(), SCMWorkflow.VER_FILE_NAME, comp.getVersion().toNextMinor().toString(), LogTag.SCM_VER);
 	}
 }

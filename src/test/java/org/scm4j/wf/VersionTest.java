@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.junit.Assert.assertThat;
 
 import org.junit.Test;
 import org.scm4j.wf.conf.Version;
@@ -42,6 +43,7 @@ public class VersionTest {
 		assertEquals(new Version("11.21").toReleaseString(), "11.21");
 		assertEquals(new Version("11-SNAPSHOT").toReleaseString(), "0.11.0");
 		assertEquals(new Version("-SNAPSHOT").toReleaseString(), "-SNAPSHOT");
+		
 	}
 	
 	@Test
@@ -86,7 +88,7 @@ public class VersionTest {
 		} catch (IllegalArgumentException e) {
 		}
 		try {
-			version.toPreviousMinor();
+			assertThat(version.toPreviousMinor(), null);
 			fail();
 		} catch (IllegalArgumentException e) {
 		}
@@ -107,7 +109,7 @@ public class VersionTest {
 	public void testEqualsAndHashcode() {
 		EqualsVerifier
 				.forClass(Version.class)
-				.withOnlyTheseFields("minor", "prefix", "patch", "usePatch", "useSnapshot")
+				.withOnlyTheseFields("verStr")
 				.usingGetClass()
 				.verify();
 	}
@@ -120,6 +122,69 @@ public class VersionTest {
 		assertTrue(new Version("11").isExactVersion());
 		assertFalse(new Version("").isExactVersion());
 		assertFalse(new Version("-SNAPSHOT").isExactVersion());
+	}
+
+	@Test
+	public void testPatch() {
+		assertEquals("13", new Version("11.12.13-SNAPSHOT").getPatch());
+		assertEquals("dfgdfg", new Version("11.12.dfgdfg-SNAPSHOT").getPatch());
+		assertEquals("14", new Version("11.12.13.14-SNAPSHOT").getPatch());
+	}
+
+	@Test
+	public void testToNextPatch() {
+		assertEquals("11.12.14-SNAPSHOT", new Version("11.12.13-SNAPSHOT").toNextPatch().toString());
+		assertEquals("14", new Version("11.12.13-SNAPSHOT").toNextPatch().getPatch());
+		assertEquals("11.12.14fgdfg-SNAPSHOT", new Version("11.12.13fgdfg-SNAPSHOT").toNextPatch().toString());
+		assertEquals("11.12.14fgdfg15-SNAPSHOT", new Version("11.12.13fgdfg15-SNAPSHOT").toNextPatch().toString());
+		assertEquals("0.13.1", new Version("13").toNextPatch().toString());
+		assertEquals("13.14.fgdfgd1", new Version("13.14.fgdfgd").toNextPatch().toString());
+	}
+	
+	@Test
+	public void testToPreviousPatch() {
+		assertEquals("11.12.12-SNAPSHOT", new Version("11.12.13-SNAPSHOT").toPreviousPatch().toString());
+		assertEquals("12", new Version("11.12.13-SNAPSHOT").toPreviousPatch().getPatch());
+		assertEquals("11.12.12fgdfg-SNAPSHOT", new Version("11.12.13fgdfg-SNAPSHOT").toPreviousPatch().toString());
+		assertEquals("11.12.12fgdfg15-SNAPSHOT", new Version("11.12.13fgdfg15-SNAPSHOT").toPreviousPatch().toString());
+		assertEquals("0.13.-1", new Version("13").toPreviousPatch().toString());
+		assertEquals("13.14.fgdfgd0", new Version("13.14.fgdfgd").toPreviousPatch().toString());
+	}
+
+	@Test
+	public void testIsGreaterThan() {
+		assertTrue(new Version("11.12.13.14-SNAPSHOT").isGreaterThan(new Version("11.12.13.13-SNAPSHOT")));
+		assertFalse(new Version("11.12.13.14df-SNAPSHOT").isGreaterThan(new Version("11.12.13.13gh-SNAPSHOT")));
+		assertFalse(new Version("11.12.13.14-SNAPSHOT").isGreaterThan(new Version("11.12.13.13gh-SNAPSHOT")));
+		assertFalse(new Version("11.12.13.14dfg-SNAPSHOT").isGreaterThan(new Version("11.12.13.13-SNAPSHOT")));
+		assertTrue(new Version("11.12.14-SNAPSHOT").isGreaterThan(new Version("11.12.13-SNAPSHOT")));
+		assertTrue(new Version("11.12-SNAPSHOT").isGreaterThan(new Version("11.11-SNAPSHOT")));
+		assertTrue(new Version("11-SNAPSHOT").isGreaterThan(new Version("10-SNAPSHOT")));
 		
+		assertFalse(new Version("").isGreaterThan(new Version("")));
+		assertFalse(new Version("").isGreaterThan(new Version("11.12.13")));
+		assertTrue(new Version("11.12.13").isGreaterThan(new Version("")));
+		
+		assertFalse(new Version("11.12.13-SNAPSHOT").isGreaterThan(new Version("11.12.14-SNAPSHOT")));
+		assertFalse(new Version("11.12-SNAPSHOT").isGreaterThan(new Version("11.13-SNAPSHOT")));
+		assertFalse(new Version("11-SNAPSHOT").isGreaterThan(new Version("12-SNAPSHOT")));
+	}
+	
+	@Test
+	public void testGetReleaseNoPatchString() {
+		assertEquals("11.12.13", new Version("11.12.13.14-SNAPSHOT").getReleaseNoPatchString());
+		assertEquals("11.12", new Version("11.12.13-SNAPSHOT").getReleaseNoPatchString());
+		assertEquals("11", new Version("11.12-SNAPSHOT").getReleaseNoPatchString());
+		assertEquals("0.11", new Version("11-SNAPSHOT").getReleaseNoPatchString());
+	}
+	
+	@Test
+	public void testToRelease() {
+		assertEquals(new Version("11.21.31.41"), new Version("11.21.31.41-SNAPSHOT").toRelease());
+		assertEquals(new Version("11.21.31.41"), new Version("11.21.31.41").toRelease());
+		assertEquals(new Version("11.21.31"),  new Version("11.21.31").toRelease());
+		assertEquals(new Version("11.21"), new Version("11.21").toRelease());
+		assertEquals(new Version("0.11.0"), new Version("11-SNAPSHOT").toRelease());
+		assertEquals(new Version("-SNAPSHOT"), new Version("-SNAPSHOT").toRelease());
 	}
 }

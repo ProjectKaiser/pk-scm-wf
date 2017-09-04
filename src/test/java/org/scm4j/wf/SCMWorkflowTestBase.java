@@ -11,6 +11,7 @@ import org.junit.Before;
 import org.scm4j.wf.actions.IAction;
 import org.scm4j.wf.branch.DevelopBranch;
 import org.scm4j.wf.branch.ReleaseBranch;
+import org.scm4j.wf.conf.CommitsFile;
 import org.scm4j.wf.conf.Component;
 import org.scm4j.wf.conf.VCSRepositories;
 
@@ -35,9 +36,9 @@ public class SCMWorkflowTestBase {
 		env = new TestEnvironment();
 		env.generateTestEnvironment();
 		repos = VCSRepositories.loadVCSRepositories();
-		compUnTill = new Component(UNTILL, repos);
-		compUnTillDb = new Component(UNTILLDB, repos);
-		compUBL = new Component(UBL, repos);
+		compUnTill = new Component(UNTILL, repos.getByCoords(UNTILL));
+		compUnTillDb = new Component(UNTILLDB, repos.getByCoords(UNTILLDB));
+		compUBL = new Component(UBL, repos.getByCoords(UBL));
 		dbUnTill = new DevelopBranch(compUnTill);
 		dbUnTillDb = new DevelopBranch(compUnTillDb);
 		dbUBL = new DevelopBranch(compUBL);
@@ -45,6 +46,7 @@ public class SCMWorkflowTestBase {
 		rbUnTillDbFixedVer = new ReleaseBranch(compUnTillDb, env.getUnTillDbVer(), repos);
 		rbUBLFixedVer = new ReleaseBranch(compUBL, env.getUblVer(), repos);
 		TestBuilder.setBuilders(new HashMap<String, TestBuilder>());
+		new CommitsFile().delete();
 	}
 
 	@After

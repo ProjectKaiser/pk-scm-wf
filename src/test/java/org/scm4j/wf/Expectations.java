@@ -5,7 +5,7 @@ import java.util.Map;
 
 public class Expectations {
 	
-	private Map<String, Map<String, Object>> props = new HashMap<>();
+	private final Map<String, Map<String, Object>> props = new HashMap<>();
 	
 	public Map<String, Map<String, Object>> getProps() {
 		return props;

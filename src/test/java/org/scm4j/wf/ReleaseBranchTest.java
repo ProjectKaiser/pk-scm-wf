@@ -1,126 +1,201 @@
 package org.scm4j.wf;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 
 import java.util.Arrays;
 
 import org.junit.Test;
-import org.scm4j.wf.LogTag;
-import org.scm4j.wf.SCMWorkflow;
-import org.scm4j.wf.branch.DevelopBranch;
+import org.scm4j.commons.progress.IProgress;
+import org.scm4j.commons.progress.ProgressConsole;
+import org.scm4j.wf.actions.IAction;
+import org.scm4j.wf.branch.ReleaseBranch;
 import org.scm4j.wf.branch.ReleaseBranchStatus;
-import org.scm4j.wf.conf.Component;
 import org.scm4j.wf.conf.MDepsFile;
+import org.scm4j.wf.conf.Version;
+
+import nl.jqno.equalsverifier.EqualsVerifier;
 
 public class ReleaseBranchTest extends SCMWorkflowTestBase {
 	
-	@Test
-	public void testMissing() {
-		ReleaseBranchStatus rbs = rbUnTillDbFixedVer.getStatus();
-		assertNotNull(rbs);
-		assertEquals(rbs, ReleaseBranchStatus.MISSING);
+	private IProgress nullProgress = new NullProgress();
+	private SCMWorkflow wf = new SCMWorkflow();
+	
+	@Override
+	public void setUp() throws Exception {
+		super.setUp();
+		env.generateFeatureCommit(env.getUnTillDbVCS(), dbUnTillDb.getName(), "feature added");
+		env.generateFeatureCommit(env.getUnTillVCS(), dbUnTill.getName(), "feature added");
+		env.generateFeatureCommit(env.getUblVCS(), dbUBL.getName(), "feature added");
 	}
 	
 	@Test
-	public void testBranchedIfNoMDeps() throws Exception {
-		env.getUnTillDbVCS().createBranch(null, rbUnTillDbFixedVer.getReleaseBranchName(), null);
-		
-		ReleaseBranchStatus rbs = rbUnTillDbFixedVer.getStatus();
-		assertNotNull(rbs);
-		assertEquals(rbs, ReleaseBranchStatus.BRANCHED);
+	public void testMissing() {
+		assertEquals(ReleaseBranchStatus.MISSING, rbUnTillDbFixedVer.getStatus());
+	}
+	
+	@Test
+	public void testMDEPS_ACTUALIfNoMDeps() throws Exception {
+		IAction action = wf.getProductionReleaseAction(compUnTillDb);
+		action.execute(nullProgress);
+		assertEquals(ReleaseBranchStatus.MDEPS_ACTUAL, rbUnTillDbFixedVer.getStatus());
 	}
 	
 	@Test
 	public void testBranched() throws Exception {
-		env.getUblVCS().createBranch(null, rbUBLFixedVer.getReleaseBranchName(), null);
-		// ubl: freeze unTillDb mdep 
-		MDepsFile ublMDepsFile = new MDepsFile(Arrays.asList(compUnTillDb));
-		env.getUblVCS().setFileContent(rbUBLFixedVer.getReleaseBranchName(), SCMWorkflow.MDEPS_FILE_NAME, ublMDepsFile.toFileContent(), "mdeps versions frozen");
+		IAction action = wf.getProductionReleaseAction(compUnTill);
+		action.execute(new ProgressConsole(action.getName(), ">>> ", "<<< "));
 		
-		ReleaseBranchStatus rbs = rbUBLFixedVer.getStatus();
-		assertNotNull(rbs);
-		assertEquals(rbs, ReleaseBranchStatus.BRANCHED);
-	}
-	
-	@Test
-	public void testBuilt() {
-		env.getUnTillDbVCS().createBranch(null, rbUnTillDbFixedVer.getReleaseBranchName(), null);
-		env.generateLogTag(env.getUnTillDbVCS(), rbUnTillDbFixedVer.getReleaseBranchName(), LogTag.SCM_BUILT);
-		
-		ReleaseBranchStatus rbs = rbUnTillDbFixedVer.getStatus();
-		assertNotNull(rbs);
-		assertEquals(rbs, ReleaseBranchStatus.BUILT);
-	}
-	
-	@Test
-	public void testTagged() {
-		env.getUnTillDbVCS().createBranch(null, rbUnTillDbFixedVer.getReleaseBranchName(), null);
-		env.generateLogTag(env.getUnTillDbVCS(), rbUnTillDbFixedVer.getReleaseBranchName(), LogTag.SCM_VER);
-		String tagName = dbUnTillDb.getVersion().toPreviousMinor().toReleaseString();
-		env.getUnTillDbVCS().createTag(rbUnTillDbFixedVer.getReleaseBranchName(), tagName, "release " + tagName);
-		
-		ReleaseBranchStatus rbs = rbUnTillDbFixedVer.getStatus();
-		assertNotNull(rbs);
-		assertEquals(rbs, ReleaseBranchStatus.TAGGED);
-	}
-	
-	@Test
-	public void testMDepsTagged () {
-//		ReleaseBranch rbUnTill = new ReleaseBranch(compUnTill, repos);
-//		ReleaseBranch rbUnTillDb = new ReleaseBranch(compUnTillDb, repos);
-//		ReleaseBranch rbUBL = new ReleaseBranch(compUBL, repos);
-		
-		env.getUnTillVCS().createBranch(null, rbUnTillFixedVer.getReleaseBranchName(), null);
-		env.getUnTillDbVCS().createBranch(null, rbUnTillDbFixedVer.getReleaseBranchName(), null);
-		env.getUblVCS().createBranch(null, rbUBLFixedVer.getReleaseBranchName(), null);
-		
-		String unTillDbTagName = new DevelopBranch(compUnTillDb).getVersion().toPreviousMinor().toReleaseString();
-		env.generateLogTag(env.getUnTillDbVCS(), rbUnTillDbFixedVer.getReleaseBranchName(), LogTag.SCM_BUILT);
-		env.getUnTillDbVCS().createTag(rbUnTillDbFixedVer.getReleaseBranchName(), unTillDbTagName, "release " + unTillDbTagName);
-		
-		ReleaseBranchStatus rbs = rbUnTillFixedVer.getStatus();
-		assertEquals(ReleaseBranchStatus.BRANCHED, rbs);
-		
-		String ublTagName = new DevelopBranch(compUBL).getVersion().toPreviousMinor().toReleaseString();
-		env.generateLogTag(env.getUblVCS(), rbUBLFixedVer.getReleaseBranchName(), LogTag.SCM_BUILT);
-		env.getUblVCS().createTag(rbUBLFixedVer.getReleaseBranchName(), ublTagName, "release " + ublTagName);
-		
-		rbs =  rbUnTillFixedVer.getStatus();
-		assertEquals(ReleaseBranchStatus.MDEPS_TAGGED, rbs);
+		// simulate mdeps are not frozen
+		MDepsFile mDepsFile = new MDepsFile(Arrays.asList(compUBL, compUnTillDb));
+		env.getUnTillVCS().setFileContent(rbUnTillFixedVer.getName(), SCMWorkflow.MDEPS_FILE_NAME, mDepsFile.toFileContent(), "mdeps unversioned");
+		assertEquals(ReleaseBranchStatus.BRANCHED, rbUnTillFixedVer.getStatus());
 	}
 	
 	@Test
 	public void testMDepsFrozen() {
-//		ReleaseBranch rbUnTill = new ReleaseBranch(compUnTill, repos);
-//		ReleaseBranch rbUnTillDb = new ReleaseBranch(compUnTillDb, repos);
-//		ReleaseBranch rbUBL = new ReleaseBranch(compUBL, repos);
+		// fork all. All release branches must became MDEPS_FROZEN except unTillDb sicne it has no mDeps
+		IAction action = wf.getProductionReleaseAction(compUnTill);
+		action.execute(nullProgress);
+		assertEquals(ReleaseBranchStatus.MDEPS_FROZEN, rbUnTillFixedVer.getStatus());
+		assertEquals(ReleaseBranchStatus.MDEPS_FROZEN, rbUBLFixedVer.getStatus());
+		assertEquals(ReleaseBranchStatus.MDEPS_ACTUAL, rbUnTillDbFixedVer.getStatus());
 		
-		env.getUnTillVCS().createBranch(null, rbUnTillFixedVer.getReleaseBranchName(), null);
-		env.getUnTillDbVCS().createBranch(null, rbUnTillDbFixedVer.getReleaseBranchName(), null);
-		env.getUblVCS().createBranch(null, rbUBLFixedVer.getReleaseBranchName(), null);
-		 
-		// ubl: freeze unTillDb mdep 
-		Component compUntillDbVersioned = new Component(TestEnvironment.PRODUCT_UNTILLDB + ":" + env.getUnTillDbVer().toString(), repos);
-		MDepsFile ublMDepsFile = new MDepsFile(Arrays.asList(compUntillDbVersioned));
-		env.getUblVCS().setFileContent(rbUBLFixedVer.getReleaseBranchName(), SCMWorkflow.MDEPS_FILE_NAME, ublMDepsFile.toFileContent(), "mdeps versions frozen");
+		// Build unTillDb and UBL releases. unTill release should became MDEPS_ACTUAL 
+		action = wf.getProductionReleaseAction(compUBL);
+		action.execute(nullProgress);
+		assertEquals(ReleaseBranchStatus.MDEPS_ACTUAL, rbUnTillFixedVer.getStatus());
 		
-		ReleaseBranchStatus rbs = rbUnTillFixedVer.getStatus();
-		assertEquals(ReleaseBranchStatus.BRANCHED, rbs);
+		// add a fix to ACTUAL unTillDb release branch. MDeps of root component should not be MDEPS_ACTUAL anymore because not all dependencies are built.
+		env.getUnTillDbVCS().setFileContent(rbUnTillDbFixedVer.getName(), "feature file", "feature line", "feature added");
+		assertEquals(ReleaseBranchStatus.MDEPS_FROZEN, rbUnTillFixedVer.getStatus());
+		assertEquals(ReleaseBranchStatus.MDEPS_ACTUAL, rbUnTillDbFixedVer.getStatus());
 		
-		// unTill: freeze UBL mdep
-		Component compUBLVersioned = new Component(TestEnvironment.PRODUCT_UBL+ ":" + env.getUblVer().toString(), repos);
-		MDepsFile unTillMDepsFile = new MDepsFile(Arrays.asList(compUBLVersioned, compUnTillDb));
-		env.getUnTillVCS().setFileContent(rbUnTillFixedVer.getReleaseBranchName(), SCMWorkflow.MDEPS_FILE_NAME, unTillMDepsFile.toFileContent(), "UBL mdep version frozen");
+		// build new unTillDb patch. MDeps of root component should still not be actual because we have new unTillDb patch which is not used by upper-level components 
+		wf.getProductionReleaseAction(compUnTillDb).execute(nullProgress);
+		assertEquals(ReleaseBranchStatus.MDEPS_FROZEN, rbUnTillFixedVer.getStatus());
+		assertEquals(ReleaseBranchStatus.ACTUAL, rbUnTillDbFixedVer.getStatus());
+	}
+	
+	@Test
+	public void testMDepsActual() {
+		// fork all
+		IAction action = wf.getProductionReleaseAction(compUnTill);
+		action.execute(nullProgress);
 		
-		rbs = rbUnTillFixedVer.getStatus();
-		assertEquals(ReleaseBranchStatus.BRANCHED, rbs); // unTill: unTillDb still not frozen
+		// unTillDb release must be MDEPS_ACTUAL since it has no mDeps
+		assertEquals(ReleaseBranchStatus.MDEPS_ACTUAL, rbUnTillDbFixedVer.getStatus());
 		
-		// unTill: freeze unTillDb mdep
-		unTillMDepsFile = new MDepsFile(Arrays.asList(compUBLVersioned, compUntillDbVersioned));
-		env.getUnTillVCS().setFileContent(rbUnTillFixedVer.getReleaseBranchName(), SCMWorkflow.MDEPS_FILE_NAME, unTillMDepsFile.toFileContent(), "unTillDb mdep version frozen");
+		// Build unTillDb and UBL. unTill release should became MDEPS_ACTUAL 
+		action = wf.getProductionReleaseAction(compUBL);
+		action.execute(nullProgress);
+		assertEquals(ReleaseBranchStatus.MDEPS_ACTUAL, rbUnTillFixedVer.getStatus());
+		assertEquals(ReleaseBranchStatus.ACTUAL, rbUBLFixedVer.getStatus());
+		assertEquals(ReleaseBranchStatus.ACTUAL, rbUnTillDbFixedVer.getStatus());
+	}
+
+	@Test
+	public void testActual() {
+		// fork all
+		IAction action = wf.getProductionReleaseAction(compUnTill);
+		action.execute(nullProgress);
 		
-		rbs = rbUnTillFixedVer.getStatus();
-		assertEquals(ReleaseBranchStatus.MDEPS_FROZEN, rbs); // unTill: unTillDb still not frozen
+		// build all
+		action = wf.getProductionReleaseAction(compUnTill);
+		action.execute(nullProgress);
+		assertEquals(ReleaseBranchStatus.ACTUAL, rbUnTillFixedVer.getStatus());
+		assertEquals(ReleaseBranchStatus.ACTUAL, rbUBLFixedVer.getStatus());
+		assertEquals(ReleaseBranchStatus.ACTUAL, rbUnTillDbFixedVer.getStatus());
+	}
+	
+	@Test
+	public void testLastBuiltSelect() {
+		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), "feature added");
+		SCMWorkflow wf = new SCMWorkflow();
+		
+		ReleaseBranch ethalon = new ReleaseBranch(compUnTillDb, repos);
+		
+		assertEquals(ethalon, new ReleaseBranch(compUnTillDb, repos));
+		
+		//fork all 
+		IAction action = wf.getProductionReleaseAction(compUnTill);
+		action.execute(new NullProgress());
+		
+		// check branch for current release is used
+		assertEquals(ethalon, new ReleaseBranch(compUnTillDb, repos));
+		
+		// build unTillDb
+		action = wf.getProductionReleaseAction(compUnTillDb);
+		action.execute(new NullProgress());
+		
+		// check built release version is selected
+		assertEquals(ethalon, new ReleaseBranch(compUnTillDb, repos));
+	}
+	
+	@Test
+	public void testNextMinorSelect() {
+		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), "feature added");
+		SCMWorkflow wf = new SCMWorkflow();
+		
+		ReleaseBranch ethalon = new ReleaseBranch(compUnTillDb, repos);
+		
+		assertEquals(ethalon, new ReleaseBranch(compUnTillDb, repos));
+		
+		//fork all 
+		IAction action = wf.getProductionReleaseAction(compUnTill);
+		action.execute(new NullProgress());
+		
+		// check branch for current release is used
+		assertEquals(ethalon, new ReleaseBranch(compUnTillDb, repos));
+		
+		// add feature to Develop branch. Unbuild release branch should still be used
+		env.generateFeatureCommit(env.getUnTillDbVCS(), dbUnTillDb.getName(), "feature added");
+		assertEquals(ethalon, new ReleaseBranch(compUnTillDb, repos));
+		
+		// build unTillDb
+		action = wf.getProductionReleaseAction(compUnTillDb);
+		action.execute(new NullProgress());
+		
+		// check next minor release version is used since we have new commits in Develop Branch
+		assertEquals(ethalon.getVersion().toNextMinor(), new ReleaseBranch(compUnTillDb, repos).getVersion());
+	}
+	
+	@Test
+	public void testNextPatchSelect() {
+		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), "feature added");
+		SCMWorkflow wf = new SCMWorkflow();
+		
+		ReleaseBranch ethalon = new ReleaseBranch(compUnTillDb, repos);
+		
+		assertEquals(ethalon, new ReleaseBranch(compUnTillDb, repos));
+		
+		//fork all 
+		IAction action = wf.getProductionReleaseAction(compUnTill);
+		action.execute(new NullProgress());
+		
+		// check branch for current release is used
+		assertEquals(ethalon, new ReleaseBranch(compUnTillDb, repos));
+		
+		// build unTillDb
+		action = wf.getProductionReleaseAction(compUnTillDb);
+		action.execute(new NullProgress());
+		
+		// add feature to Release Branch. Next patch should be selected
+		env.generateFeatureCommit(env.getUnTillDbVCS(), rbUnTillDbFixedVer.getName(), "feature merged");
+		assertEquals(ethalon.getVersion().toNextPatch(), new ReleaseBranch(compUnTillDb, repos).getVersion());
+	}
+	
+	@Test
+	public void testCertainVersionUsage() {
+		Version theVersion = new Version("1.2.3-SNAPSHOT");
+		assertEquals(theVersion.toRelease(), new ReleaseBranch(compUBL, theVersion, repos).getVersion());
+	}
+	
+	@Test
+	public void testEqualsAndHashCode() {
+		EqualsVerifier
+				.forClass(ReleaseBranch.class)
+				.usingGetClass()
+				.withOnlyTheseFields("comp", "name", "version")
+				.verify();
 	}
 }
