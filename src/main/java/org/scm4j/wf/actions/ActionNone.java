@@ -20,6 +20,7 @@ public class ActionNone extends ActionAbstract {
 			try (IProgress nestedProgress = progress.createNestedProgress(action.toString())) {
 				action.execute(nestedProgress);
 			} catch (Exception e) {
+				progress.error("execution error: " + e.toString() + ": " + e.getMessage());
 				throw new RuntimeException(e);
 			} 
 		}

@@ -192,10 +192,10 @@ public class TestEnvironment implements AutoCloseable {
 		IVCS vcs = comp.getVCS();
 		DevelopBranch db = new DevelopBranch(comp);
 		ReleaseBranch rb = new ReleaseBranch(comp, comp.getVersion(), repos);
-		vcs.createBranch(db.getName(), rb.getReleaseBranchName(), null);
-		VCSCommit commit = vcs.setFileContent(rb.getReleaseBranchName(), SCMWorkflow.VER_FILE_NAME, comp.getVersion().toReleaseString(), LogTag.SCM_VER);
-		vcs.createTag(rb.getReleaseBranchName(), comp.getVersion().toReleaseString(), "tag created", commit.getRevision());
-		vcs.setFileContent(rb.getReleaseBranchName(), SCMWorkflow.VER_FILE_NAME, comp.getVersion().toNextPatch().toReleaseString(), LogTag.SCM_VER);
+		vcs.createBranch(db.getName(), rb.getName(), null);
+		VCSCommit commit = vcs.setFileContent(rb.getName(), SCMWorkflow.VER_FILE_NAME, comp.getVersion().toReleaseString(), LogTag.SCM_VER);
+		vcs.createTag(rb.getName(), comp.getVersion().toReleaseString(), "tag created", commit.getRevision());
+		vcs.setFileContent(rb.getName(), SCMWorkflow.VER_FILE_NAME, comp.getVersion().toNextPatch().toReleaseString(), LogTag.SCM_VER);
 		vcs.setFileContent(db.getName(), SCMWorkflow.VER_FILE_NAME, comp.getVersion().toNextMinor().toString(), LogTag.SCM_VER);
 	}
 }

@@ -14,6 +14,7 @@ import org.scm4j.wf.actions.ActionAbstract;
 import org.scm4j.wf.actions.IAction;
 import org.scm4j.wf.branch.ReleaseBranch;
 import org.scm4j.wf.branch.ReleaseBranchStatus;
+import org.scm4j.wf.conf.CommitsFile;
 import org.scm4j.wf.conf.Component;
 import org.scm4j.wf.conf.Option;
 import org.scm4j.wf.conf.Version;
@@ -49,13 +50,13 @@ public class SCMActionBuild extends ActionAbstract {
 				return;
 			}
 			
-			VCSCommit headCommit = vcs.getHeadCommit(rb.getReleaseBranchName());
+			VCSCommit headCommit = vcs.getHeadCommit(rb.getName());
 			
 			// need to check if we are built already with delayed tag
 			CommitsFile cf = new CommitsFile();
 			String delayedTagRevision = cf.getRevisitonByUrl(comp.getVcsRepository().getUrl());
 			if (delayedTagRevision != null) {
-				List<VCSCommit> commits = vcs.getCommitsRange(rb.getReleaseBranchName(), null, WalkDirection.DESC, 2);
+				List<VCSCommit> commits = vcs.getCommitsRange(rb.getName(), null, WalkDirection.DESC, 2);
 				if (commits.size() == 2) {
 					if (commits.get(1).getRevision().equals(delayedTagRevision)) {
 						progress.reportStatus(String.format("version %s already built with delayed tag on revision %s", rb.getVersion().toString(), delayedTagRevision));
@@ -81,7 +82,7 @@ public class SCMActionBuild extends ActionAbstract {
 			try (IVCSLockedWorkingCopy lwc = vcs.getWorkspace().getVCSRepositoryWorkspace(vcs.getRepoUrl()).getVCSLockedWorkingCopy()) {
 				lwc.setCorrupted(true); // use lwc only once
 				progress.reportStatus(String.format("checking out %s on revision %s into %s", getName(), headCommit.getRevision(), lwc.getFolder().getPath()));
-				vcs.checkout(rb.getReleaseBranchName(), lwc.getFolder().getPath(), headCommit.getRevision());
+				vcs.checkout(rb.getName(), lwc.getFolder().getPath(), headCommit.getRevision());
 				comp.getVcsRepository().getBuilder().build(comp, lwc.getFolder(), progress);
 			}
 			
@@ -90,17 +91,17 @@ public class SCMActionBuild extends ActionAbstract {
 				commitsFile.writeUrlRevision(comp.getVcsRepository().getUrl(), headCommit.getRevision());
 				progress.reportStatus("build commit " + headCommit.getRevision() + " is saved for delayed tagging");
 			} else {
-				String releaseBranchName = rb.getReleaseBranchName();
+				String releaseBranchName = rb.getName();
 				String tagName = rb.getVersion().toString();
 				String tagMessage = tagName + " release"; 
 				VCSTag tag = vcs.createTag(releaseBranchName, tagName, tagMessage, headCommit.getRevision());
 				progress.reportStatus("head of \"" + releaseBranchName + "\" tagged: " + tag.toString());
 			}
 
-			vcs.setFileContent(rb.getReleaseBranchName(), SCMWorkflow.VER_FILE_NAME, targetVersion.toNextPatch().toReleaseString(), 
+			vcs.setFileContent(rb.getName(), SCMWorkflow.VER_FILE_NAME, targetVersion.toNextPatch().toReleaseString(), 
 					LogTag.SCM_VER + " " + targetVersion.toNextPatch().toReleaseString());
 			
-			progress.reportStatus(comp.getName() + " " + targetVersion.toString() + " is built in " + rb.getReleaseBranchName());
+			progress.reportStatus(comp.getName() + " " + targetVersion.toString() + " is built in " + rb.getName());
 		} catch (Throwable t) {
 			progress.error("execution error: " + t.toString() + ": " + t.getMessage());
 			throw new RuntimeException(t);

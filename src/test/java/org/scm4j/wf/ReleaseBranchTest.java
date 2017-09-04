@@ -8,13 +8,17 @@ import org.junit.Test;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.commons.progress.ProgressConsole;
 import org.scm4j.wf.actions.IAction;
+import org.scm4j.wf.branch.ReleaseBranch;
 import org.scm4j.wf.branch.ReleaseBranchStatus;
 import org.scm4j.wf.conf.MDepsFile;
+import org.scm4j.wf.conf.Version;
+
+import nl.jqno.equalsverifier.EqualsVerifier;
 
 public class ReleaseBranchTest extends SCMWorkflowTestBase {
 	
 	private IProgress nullProgress = new NullProgress();
-	private SCMWorkflow wf;
+	private SCMWorkflow wf = new SCMWorkflow();
 	
 	@Override
 	public void setUp() throws Exception {
@@ -22,7 +26,6 @@ public class ReleaseBranchTest extends SCMWorkflowTestBase {
 		env.generateFeatureCommit(env.getUnTillDbVCS(), dbUnTillDb.getName(), "feature added");
 		env.generateFeatureCommit(env.getUnTillVCS(), dbUnTill.getName(), "feature added");
 		env.generateFeatureCommit(env.getUblVCS(), dbUBL.getName(), "feature added");
-		wf = new SCMWorkflow();
 	}
 	
 	@Test
@@ -44,7 +47,7 @@ public class ReleaseBranchTest extends SCMWorkflowTestBase {
 		
 		// simulate mdeps are not frozen
 		MDepsFile mDepsFile = new MDepsFile(Arrays.asList(compUBL, compUnTillDb));
-		env.getUnTillVCS().setFileContent(rbUnTillFixedVer.getReleaseBranchName(), SCMWorkflow.MDEPS_FILE_NAME, mDepsFile.toFileContent(), "mdeps unversioned");
+		env.getUnTillVCS().setFileContent(rbUnTillFixedVer.getName(), SCMWorkflow.MDEPS_FILE_NAME, mDepsFile.toFileContent(), "mdeps unversioned");
 		assertEquals(ReleaseBranchStatus.BRANCHED, rbUnTillFixedVer.getStatus());
 	}
 	
@@ -63,7 +66,7 @@ public class ReleaseBranchTest extends SCMWorkflowTestBase {
 		assertEquals(ReleaseBranchStatus.MDEPS_ACTUAL, rbUnTillFixedVer.getStatus());
 		
 		// add a fix to ACTUAL unTillDb release branch. MDeps of root component should not be MDEPS_ACTUAL anymore because not all dependencies are built.
-		env.getUnTillDbVCS().setFileContent(rbUnTillDbFixedVer.getReleaseBranchName(), "feature file", "feature line", "feature added");
+		env.getUnTillDbVCS().setFileContent(rbUnTillDbFixedVer.getName(), "feature file", "feature line", "feature added");
 		assertEquals(ReleaseBranchStatus.MDEPS_FROZEN, rbUnTillFixedVer.getStatus());
 		assertEquals(ReleaseBranchStatus.MDEPS_ACTUAL, rbUnTillDbFixedVer.getStatus());
 		
@@ -102,5 +105,97 @@ public class ReleaseBranchTest extends SCMWorkflowTestBase {
 		assertEquals(ReleaseBranchStatus.ACTUAL, rbUnTillFixedVer.getStatus());
 		assertEquals(ReleaseBranchStatus.ACTUAL, rbUBLFixedVer.getStatus());
 		assertEquals(ReleaseBranchStatus.ACTUAL, rbUnTillDbFixedVer.getStatus());
+	}
+	
+	@Test
+	public void testLastBuiltSelect() {
+		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), "feature added");
+		SCMWorkflow wf = new SCMWorkflow();
+		
+		ReleaseBranch ethalon = new ReleaseBranch(compUnTillDb, repos);
+		
+		assertEquals(ethalon, new ReleaseBranch(compUnTillDb, repos));
+		
+		//fork all 
+		IAction action = wf.getProductionReleaseAction(compUnTill);
+		action.execute(new NullProgress());
+		
+		// check branch for current release is used
+		assertEquals(ethalon, new ReleaseBranch(compUnTillDb, repos));
+		
+		// build unTillDb
+		action = wf.getProductionReleaseAction(compUnTillDb);
+		action.execute(new NullProgress());
+		
+		// check built release version is selected
+		assertEquals(ethalon, new ReleaseBranch(compUnTillDb, repos));
+	}
+	
+	@Test
+	public void testNextMinorSelect() {
+		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), "feature added");
+		SCMWorkflow wf = new SCMWorkflow();
+		
+		ReleaseBranch ethalon = new ReleaseBranch(compUnTillDb, repos);
+		
+		assertEquals(ethalon, new ReleaseBranch(compUnTillDb, repos));
+		
+		//fork all 
+		IAction action = wf.getProductionReleaseAction(compUnTill);
+		action.execute(new NullProgress());
+		
+		// check branch for current release is used
+		assertEquals(ethalon, new ReleaseBranch(compUnTillDb, repos));
+		
+		// add feature to Develop branch. Unbuild release branch should still be used
+		env.generateFeatureCommit(env.getUnTillDbVCS(), dbUnTillDb.getName(), "feature added");
+		assertEquals(ethalon, new ReleaseBranch(compUnTillDb, repos));
+		
+		// build unTillDb
+		action = wf.getProductionReleaseAction(compUnTillDb);
+		action.execute(new NullProgress());
+		
+		// check next minor release version is used since we have new commits in Develop Branch
+		assertEquals(ethalon.getVersion().toNextMinor(), new ReleaseBranch(compUnTillDb, repos).getVersion());
+	}
+	
+	@Test
+	public void testNextPatchSelect() {
+		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), "feature added");
+		SCMWorkflow wf = new SCMWorkflow();
+		
+		ReleaseBranch ethalon = new ReleaseBranch(compUnTillDb, repos);
+		
+		assertEquals(ethalon, new ReleaseBranch(compUnTillDb, repos));
+		
+		//fork all 
+		IAction action = wf.getProductionReleaseAction(compUnTill);
+		action.execute(new NullProgress());
+		
+		// check branch for current release is used
+		assertEquals(ethalon, new ReleaseBranch(compUnTillDb, repos));
+		
+		// build unTillDb
+		action = wf.getProductionReleaseAction(compUnTillDb);
+		action.execute(new NullProgress());
+		
+		// add feature to Release Branch. Next patch should be selected
+		env.generateFeatureCommit(env.getUnTillDbVCS(), rbUnTillDbFixedVer.getName(), "feature merged");
+		assertEquals(ethalon.getVersion().toNextPatch(), new ReleaseBranch(compUnTillDb, repos).getVersion());
+	}
+	
+	@Test
+	public void testCertainVersionUsage() {
+		Version theVersion = new Version("1.2.3-SNAPSHOT");
+		assertEquals(theVersion.toRelease(), new ReleaseBranch(compUBL, theVersion, repos).getVersion());
+	}
+	
+	@Test
+	public void testEqualsAndHashCode() {
+		EqualsVerifier
+				.forClass(ReleaseBranch.class)
+				.usingGetClass()
+				.withOnlyTheseFields("comp", "name", "version")
+				.verify();
 	}
 }

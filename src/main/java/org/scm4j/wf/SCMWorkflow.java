@@ -14,12 +14,12 @@ import org.scm4j.wf.branch.DevelopBranch;
 import org.scm4j.wf.branch.DevelopBranchStatus;
 import org.scm4j.wf.branch.ReleaseBranch;
 import org.scm4j.wf.branch.ReleaseBranchStatus;
+import org.scm4j.wf.conf.CommitsFile;
 import org.scm4j.wf.conf.Component;
 import org.scm4j.wf.conf.Option;
 import org.scm4j.wf.conf.VCSRepositories;
 import org.scm4j.wf.conf.Version;
 import org.scm4j.wf.exceptions.EComponentConfig;
-import org.scm4j.wf.scmactions.CommitsFile;
 import org.scm4j.wf.scmactions.ReleaseReason;
 import org.scm4j.wf.scmactions.SCMActionBuild;
 import org.scm4j.wf.scmactions.SCMActionForkReleaseBranch;
@@ -64,11 +64,11 @@ public class SCMWorkflow {
 	}
 	
 	public IAction getProductionReleaseAction(String componentName) {
-		return getProductionReleaseAction(new Component(componentName, repos), ActionKind.AUTO);
+		return getProductionReleaseAction(new Component(componentName, repos.getByCoords(componentName)), ActionKind.AUTO);
 	}
 	
-	public IAction getProductionReleaseAction(String componentName, ActionKind actionKind) {
-		return getProductionReleaseAction(new Component(componentName, repos), actionKind);
+	public IAction getProductionReleaseAction(String componentCoords, ActionKind actionKind) {
+		return getProductionReleaseAction(new Component(componentCoords, repos.getByCoords(componentCoords)), actionKind);
 	}
 	
 	public IAction getProductionReleaseAction(Component comp) {
@@ -104,7 +104,7 @@ public class SCMWorkflow {
 		if (rbs == ReleaseBranchStatus.MISSING) {
 			skipAllBuilds(childActions);
 			if (actionKind == ActionKind.BUILD) {
-				return new ActionNone(comp, childActions, "nothing to build");
+				return new ActionNone(comp, childActions, "nothing to build ");
 			}
 			if (dbs == DevelopBranchStatus.MODIFIED) {
 				return new SCMActionForkReleaseBranch(comp, childActions, ReleaseReason.NEW_FEATURES, options);
@@ -221,7 +221,7 @@ public class SCMWorkflow {
 	}
 
 	public IAction getTagReleaseAction(String compName) {
-		return getTagReleaseAction(new Component(compName, repos));
+		return getTagReleaseAction(new Component(compName, repos.getByCoords(compName)));
 	}
 
 	private IAction getTagReleaseActionRoot(Component comp, List<IAction> childActions) {
@@ -239,7 +239,7 @@ public class SCMWorkflow {
 		if (tagsOnRevision.isEmpty()) {
 			return new SCMActionTagRelease(comp, childActions, "tag message", options);
 		}
-		Version delayedTagVersion = new Version(vcs.getFileContent(rb.getReleaseBranchName(), SCMWorkflow.VER_FILE_NAME, delayedRevisionToTag));
+		Version delayedTagVersion = new Version(vcs.getFileContent(rb.getName(), SCMWorkflow.VER_FILE_NAME, delayedRevisionToTag));
 		for (VCSTag tag : tagsOnRevision) {
 			if (tag.getTagName().equals(delayedTagVersion.toReleaseString())) {
 				return new ActionNone(comp, childActions, "tag " + tag.getTagName() + " already exists");

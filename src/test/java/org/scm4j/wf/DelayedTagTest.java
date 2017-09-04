@@ -9,14 +9,27 @@ import java.util.Arrays;
 
 import org.junit.Test;
 import org.scm4j.commons.progress.IProgress;
+import org.scm4j.wf.actions.ActionNone;
 import org.scm4j.wf.actions.IAction;
 import org.scm4j.wf.branch.ReleaseBranchStatus;
+import org.scm4j.wf.conf.CommitsFile;
 import org.scm4j.wf.conf.Option;
-import org.scm4j.wf.scmactions.CommitsFile;
 
 public class DelayedTagTest extends SCMWorkflowTestBase {
 	
 	private IProgress nullProgress = new NullProgress();
+	
+	@Test
+	public void testNoDelayedTags() {
+		SCMWorkflow wf = new SCMWorkflow();
+		IAction action = wf.getTagReleaseAction(UNTILL);
+		Expectations exp = new Expectations();
+		exp.put(UBL, ActionNone.class);
+		exp.put(UNTILL, ActionNone.class);
+		exp.put(UNTILLDB, ActionNone.class);
+		checkChildActionsTypes(action, exp);
+		action.execute(nullProgress);
+	}
 
 	@Test
 	public void testBuildWithDelayedTag() throws IOException {

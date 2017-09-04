@@ -1,4 +1,4 @@
-package org.scm4j.wf.scmactions;
+package org.scm4j.wf.conf;
 
 import java.io.File;
 import java.io.IOException;

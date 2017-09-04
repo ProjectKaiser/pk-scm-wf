@@ -15,6 +15,8 @@ import org.scm4j.vcs.api.VCSTag;
 import org.scm4j.vcs.api.WalkDirection;
 import org.scm4j.wf.actions.ActionNone;
 import org.scm4j.wf.actions.IAction;
+import org.scm4j.wf.branch.ReleaseBranch;
+import org.scm4j.wf.conf.Component;
 import org.scm4j.wf.conf.Version;
 import org.scm4j.wf.scmactions.ReleaseReason;
 import org.scm4j.wf.scmactions.SCMActionBuild;
@@ -148,7 +150,7 @@ public class SCMWorkflowBuildTest extends SCMWorkflowTestBase {
 		assertTrue(tags.size() == 1);
 		VCSTag tag = tags.get(0);
 		assertEquals(env.getUnTillDbVer().toReleaseString(), tag.getTagName());
-		List<VCSCommit> commits = env.getUnTillDbVCS().getCommitsRange(rbUnTillDbFixedVer.getReleaseBranchName(), null, WalkDirection.DESC, 2);
+		List<VCSCommit> commits = env.getUnTillDbVCS().getCommitsRange(rbUnTillDbFixedVer.getName(), null, WalkDirection.DESC, 2);
 		assertEquals(commits.get(1), tag.getRelatedCommit());
 	}
 	
@@ -166,9 +168,9 @@ public class SCMWorkflowBuildTest extends SCMWorkflowTestBase {
 			action.execute(progress);
 		}
 
-		assertFalse(env.getUnTillVCS().getBranches("").contains(rbUnTillFixedVer.getReleaseBranchName()));
-		assertTrue(env.getUnTillDbVCS().getBranches("").contains(rbUnTillDbFixedVer.getReleaseBranchName()));
-		assertFalse(env.getUblVCS().getBranches("").contains(rbUBLFixedVer.getReleaseBranchName()));
+		assertFalse(env.getUnTillVCS().getBranches("").contains(rbUnTillFixedVer.getName()));
+		assertTrue(env.getUnTillDbVCS().getBranches("").contains(rbUnTillDbFixedVer.getName()));
+		assertFalse(env.getUblVCS().getBranches("").contains(rbUBLFixedVer.getName()));
 		
 		// fork unTill. unTillDb build must be skipped
 		// simulate UBL and unTill BRANCHED dev branch status
@@ -187,8 +189,46 @@ public class SCMWorkflowBuildTest extends SCMWorkflowTestBase {
 			action.execute(progress);
 		}
 		
-		assertTrue(env.getUnTillVCS().getBranches("").contains(rbUnTillFixedVer.getReleaseBranchName()));
-		assertTrue(env.getUnTillDbVCS().getBranches("").contains(rbUnTillDbFixedVer.getReleaseBranchName()));
-		assertTrue(env.getUblVCS().getBranches("").contains(rbUBLFixedVer.getReleaseBranchName()));
+		assertTrue(env.getUnTillVCS().getBranches("").contains(rbUnTillFixedVer.getName()));
+		assertTrue(env.getUnTillDbVCS().getBranches("").contains(rbUnTillDbFixedVer.getName()));
+		assertTrue(env.getUblVCS().getBranches("").contains(rbUBLFixedVer.getName()));
+	}
+	
+	@Test
+	public void testBuildPatchOnPreviousMinor() throws Exception {
+		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), "feature added");
+		SCMWorkflow wf = new SCMWorkflow();
+		
+		// fork unTillDb 2.59
+		IAction action = wf.getProductionReleaseAction(UNTILLDB);
+		action.execute(new NullProgress());
+		
+		// build unTillDb 2.59.1
+		action = wf.getProductionReleaseAction(UNTILLDB);
+		action.execute(new NullProgress());
+		
+		// fork new unTillDb Release 2.60
+		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), "feature added");
+		action = wf.getProductionReleaseAction(UNTILLDB);
+		action.execute(new NullProgress());
+		
+		// build new unTillDbRelease 2.60.1
+		action = wf.getProductionReleaseAction(UNTILLDB);
+		action.execute(new NullProgress());
+		
+		assertEquals(env.getUnTillDbVer().toNextMinor().toRelease(), new ReleaseBranch(compUnTillDb, repos).getVersion());
+		
+		//check desired version is selected
+		Component comp = new Component(UNTILLDB + ":2.59.1", repos.getByName(UNTILLDB));
+		ReleaseBranch rb = new ReleaseBranch(comp, repos);
+		assertEquals(dbUnTillDb.getVersion().toPreviousMinor().toPreviousMinor().toRelease(), rb.getVersion());
+		
+		// add feature for 2.59.2
+		env.generateFeatureCommit(env.getUnTillDbVCS(), rb.getName(), "2.59.2 feature added");
+		
+		// build new unTIllDb patch
+		action = wf.getProductionReleaseAction(comp);
+		action.execute(new NullProgress());
+		assertEquals(dbUnTillDb.getVersion().toPreviousMinor().toPreviousMinor().toNextPatch().toRelease(), new ReleaseBranch(comp, repos).getVersion());
 	}
 }

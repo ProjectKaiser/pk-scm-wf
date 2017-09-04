@@ -43,8 +43,8 @@ public class VCSRepositories {
 			creds = new HashMap<>();
 		}
 	}
-
-	public VCSRepository getByComponent(String componentName) {
+	
+	public VCSRepository getByName(String componentName) {
 		String url = getPropByNameAsStringWithReplace(urls, componentName, "url", null);
 		if (url == null) {
 			throw new EConfig("no repo url for: " + componentName);
@@ -66,6 +66,10 @@ public class VCSRepositories {
 		String builder = (String) getPropByName(urls, componentName, "builder", null);
 		return new VCSRepository(componentName, url, credentials, type, devBranch, releaseBranchPrefix,
 				VCSFactory.getVCS(type, credentials, url, ws), BuilderFactory.getBuilder(builder));
+	}
+
+	public VCSRepository getByCoords(String coords) {
+		return getByName(new Coords(coords).getName());
 	}
 
 	private VCSType getVCSType(String type, String url) {
@@ -110,10 +114,10 @@ public class VCSRepositories {
 		return result;
 	}
 
-	public VCSRepository getByCoords(String coordsStr) {
-		Coords coords = new Coords(coordsStr);
-		return getByComponent(coords.getName());
-	}
+//	public VCSRepository getByCoords(String coordsStr) {
+//		Coords coords = new Coords(coordsStr);
+//		return getByComponent(coords.getName());
+//	}
 
 	public static VCSRepositories loadVCSRepositories() throws EConfig {
 		try {

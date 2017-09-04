@@ -38,7 +38,7 @@ public class SCMWorkflowForkReleaseTest extends SCMWorkflowTestBase {
 		}
 		
 		// check branches
-		assertTrue(env.getUnTillDbVCS().getBranches("").contains(rbUnTillDbFixedVer.getReleaseBranchName()));
+		assertTrue(env.getUnTillDbVCS().getBranches("").contains(rbUnTillDbFixedVer.getName()));
 		
 		// check versions
 		Version verTrunk = dbUnTillDb.getVersion();
@@ -65,9 +65,9 @@ public class SCMWorkflowForkReleaseTest extends SCMWorkflowTestBase {
 		}
 		
 		// check branches
-		assertTrue(env.getUnTillVCS().getBranches("").contains(rbUnTillFixedVer.getReleaseBranchName()));
-		assertFalse(env.getUnTillDbVCS().getBranches("").contains(rbUnTillDbFixedVer.getReleaseBranchName()));
-		assertFalse(env.getUblVCS().getBranches("").contains(rbUBLFixedVer.getReleaseBranchName()));
+		assertTrue(env.getUnTillVCS().getBranches("").contains(rbUnTillFixedVer.getName()));
+		assertFalse(env.getUnTillDbVCS().getBranches("").contains(rbUnTillDbFixedVer.getName()));
+		assertFalse(env.getUblVCS().getBranches("").contains(rbUBLFixedVer.getName()));
 		
 		// check versions
 		Version verTrunk = dbUnTill.getVersion();
@@ -121,9 +121,9 @@ public class SCMWorkflowForkReleaseTest extends SCMWorkflowTestBase {
 		}
 		
 		// check branches
-		assertFalse(env.getUnTillVCS().getBranches("").contains(rbUnTillFixedVer.getReleaseBranchName()));
-		assertTrue(env.getUnTillDbVCS().getBranches("").contains(rbUnTillDbFixedVer.getReleaseBranchName()));
-		assertTrue(env.getUblVCS().getBranches("").contains(rbUBLFixedVer.getReleaseBranchName()));
+		assertFalse(env.getUnTillVCS().getBranches("").contains(rbUnTillFixedVer.getName()));
+		assertTrue(env.getUnTillDbVCS().getBranches("").contains(rbUnTillDbFixedVer.getName()));
+		assertTrue(env.getUblVCS().getBranches("").contains(rbUBLFixedVer.getName()));
 		
 		// check UBL versions
 		assertEquals(env.getUblVer().toNextMinor(), dbUBL.getVersion());
@@ -160,9 +160,9 @@ public class SCMWorkflowForkReleaseTest extends SCMWorkflowTestBase {
 			action.execute(progress);
 		}
 		
-		assertTrue(env.getUnTillVCS().getBranches("").contains(rbUnTillFixedVer.getReleaseBranchName()));
-		assertFalse(env.getUnTillDbVCS().getBranches("").contains(rbUnTillDbFixedVer.getReleaseBranchName()));
-		assertTrue(env.getUblVCS().getBranches("").contains(rbUBLFixedVer.getReleaseBranchName()));
+		assertTrue(env.getUnTillVCS().getBranches("").contains(rbUnTillFixedVer.getName()));
+		assertFalse(env.getUnTillDbVCS().getBranches("").contains(rbUnTillDbFixedVer.getName()));
+		assertTrue(env.getUblVCS().getBranches("").contains(rbUBLFixedVer.getName()));
 		
 		// check UBL versions
 		assertEquals(env.getUblVer().toNextMinor(), dbUBL.getVersion());
@@ -217,9 +217,9 @@ public class SCMWorkflowForkReleaseTest extends SCMWorkflowTestBase {
 			action.execute(progress);
 		}
 		
-		assertTrue(env.getUnTillVCS().getBranches("").contains(rbUnTillFixedVer.getReleaseBranchName()));
-		assertTrue(env.getUnTillDbVCS().getBranches("").contains(rbUnTillDbFixedVer.getReleaseBranchName()));
-		assertTrue(env.getUblVCS().getBranches("").contains(rbUBLFixedVer.getReleaseBranchName()));
+		assertTrue(env.getUnTillVCS().getBranches("").contains(rbUnTillFixedVer.getName()));
+		assertTrue(env.getUnTillDbVCS().getBranches("").contains(rbUnTillDbFixedVer.getName()));
+		assertTrue(env.getUblVCS().getBranches("").contains(rbUBLFixedVer.getName()));
 		
 		// check UBL versions
 		assertEquals(env.getUblVer().toNextMinor(), dbUBL.getVersion());
@@ -254,9 +254,19 @@ public class SCMWorkflowForkReleaseTest extends SCMWorkflowTestBase {
 				fail();
 			}
 		}
-		
-	
 	}
 	
-	
+	@Test
+	public void testActualizeMDeps() {
+		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), "feature added");
+		SCMWorkflow wf = new SCMWorkflow();
+		
+		//fork all 
+		IAction action = wf.getProductionReleaseAction(compUnTill);
+		action.execute(new NullProgress());
+		
+		// add feature to Release Branch. 
+		
+		
+	}
 }

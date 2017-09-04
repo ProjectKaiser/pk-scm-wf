@@ -44,8 +44,10 @@ public class CommandLine {
 				+ "\r\n"
 				+ "status: show actions will be made with product specified by productCoords\r\n"
 				+ "fork:   cerate all necessary release branches for product specified by productCoords\r\n"
-				+ "build:  execute production release action on product specified by productCoords. if --delayed-tag option is provided then "
+				+ "build:  execute production release action on product specified by productCoords. If --delayed-tag option is provided then "
 				+ "tag will not be applied to a new relase commit. Use tag command to apply delayed tags\r\n"
-				+ "tag:    apply delayed tags on product specified by productCoords";
+				+ "tag:    apply delayed tags on product specified by productCoords"
+				+ "\r\n"
+				+ "If productCoords contains an exact version then this version will be used. Otherwise VCS versions will be used.";
 	}
 }
