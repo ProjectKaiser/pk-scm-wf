@@ -34,3 +34,7 @@ Install groovy, download [run.grovy](https://raw.githubusercontent.com/scm4j/scm
 # See also
 
 [Historical version](https://github.com/scm4j/scm4j-wf/blob/d540cb00674d485846117dbd68df19bdad306e56/README.md)
+
+# Functions
+
+-#2
