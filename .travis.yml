@@ -10,3 +10,4 @@ cache:
     - $HOME/.gradle/wrapper/
 after_success:
   - ./gradlew jacocoTestReport coveralls
+script: ./gradlew build --info
