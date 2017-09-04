@@ -31,7 +31,8 @@ repositories {
 }
 
 test {
-    testLogging.showStandardStreams = true
+	testLogging.showStandardStreams = true
+	jvmArgs '-XX:MaxPermSize=256m -Xms128m'
 }
 
 dependencies {
