@@ -18,11 +18,12 @@ import nl.jqno.equalsverifier.EqualsVerifier;
 public class ReleaseBranchTest extends SCMWorkflowTestBase {
 	
 	private IProgress nullProgress = new NullProgress();
-	private SCMWorkflow wf = new SCMWorkflow();
+	private SCMWorkflow wf;
 	
 	@Override
 	public void setUp() throws Exception {
 		super.setUp();
+		wf = new SCMWorkflow();
 		env.generateFeatureCommit(env.getUnTillDbVCS(), dbUnTillDb.getName(), "feature added");
 		env.generateFeatureCommit(env.getUnTillVCS(), dbUnTill.getName(), "feature added");
 		env.generateFeatureCommit(env.getUblVCS(), dbUBL.getName(), "feature added");
@@ -110,7 +111,6 @@ public class ReleaseBranchTest extends SCMWorkflowTestBase {
 	@Test
 	public void testLastBuiltSelect() {
 		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), "feature added");
-		SCMWorkflow wf = new SCMWorkflow();
 		
 		ReleaseBranch ethalon = new ReleaseBranch(compUnTillDb, repos);
 		
@@ -134,7 +134,6 @@ public class ReleaseBranchTest extends SCMWorkflowTestBase {
 	@Test
 	public void testNextMinorSelect() {
 		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), "feature added");
-		SCMWorkflow wf = new SCMWorkflow();
 		
 		ReleaseBranch ethalon = new ReleaseBranch(compUnTillDb, repos);
 		
@@ -162,7 +161,6 @@ public class ReleaseBranchTest extends SCMWorkflowTestBase {
 	@Test
 	public void testNextPatchSelect() {
 		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), "feature added");
-		SCMWorkflow wf = new SCMWorkflow();
 		
 		ReleaseBranch ethalon = new ReleaseBranch(compUnTillDb, repos);
 		
