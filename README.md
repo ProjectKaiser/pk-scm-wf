@@ -27,7 +27,9 @@ E.g. we have a `product3` which depends on `component39`:0.9.5 and `component50`
 
 For version definitions ref. [semantic Versioning 2.0.0](http://semver.org/).
 
+# Usage
 
+Download `run.grovy` and execute `groovy run.groovy`, it will list available commands
 
 # See also
 
