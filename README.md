@@ -37,4 +37,4 @@ Install groovy, download [run.grovy](https://raw.githubusercontent.com/scm4j/scm
 
 # Functions
 
-see also [Delayed Tagging](/../../issues/2)
+- [Delayed Tagging](/../../issues/2)
