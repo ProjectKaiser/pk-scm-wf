@@ -10,14 +10,19 @@
 - Must be referenced by `SCM4J_VCS_REPOS environment var
 - Represented as YAML which describes repository parameters for dependencies by its coords. Coords could contain regular expressions. Described Repository will be assigned to all matching dependencies.
 ```yaml
+
+#Two artifacts in the same repository
 artA1|artA2:
   url: http://url.com/svn/prjA
+  
+#Artifacts which are prefixed with my.*, repository name is constructed with no prefix using regexps
 my(.*):
   url: http://localhost/git/myProj$1
   # git and svn types are supported. If ommited then:
   #   if url ends with ".git" then type is git
   #   otherwise - svn
   type: git
+  
   # default "release/"
   releaseBanchPrefix: B
   # Branch name which is considered as development branch, i.e. to create release branches from. Null means "master" branch for Git, "trunk/" branch for SVN. Default is null.
