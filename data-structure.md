@@ -1,8 +1,8 @@
 # Environment vars
 
-- `SCM4J_VCS_REPOS` list of coord=>URL maps
+- `SCM4J_VCS_REPOS`: list of coord=>URL maps
 	- Example: `SCM4J_VCS_REPOS=file:///c:/workspace/vcs-repos.yaml;http://host/git/untillProtocols.git`
-- `SCM4J_CREDENTIALS` list of url=>credentials maps
+- `SCM4J_CREDENTIALS`: list of url=>credentials maps
 	- `SCM4J_CREDENTIALS=file:///c:/workspace/credentials.yml;http://company.com/repos/credentials.yml` 
 	
 # `coord => URL` map
