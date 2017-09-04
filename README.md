@@ -29,7 +29,7 @@ For version definitions ref. [semantic Versioning 2.0.0](http://semver.org/).
 
 # Usage
 
-Download `run.grovy` and execute `groovy run.groovy`, it will list available commands
+Install groovy, download [run.grovy](https://raw.githubusercontent.com/scm4j/scm4j-wf/master/run.groovy) and execute `groovy run.groovy`, it will list available commands
 
 # See also
 
