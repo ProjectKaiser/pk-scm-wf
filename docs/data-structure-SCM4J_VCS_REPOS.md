@@ -31,16 +31,16 @@ Yaml file consists of number of rules which are applied in order of appearance, 
   
 # `svn` type repository (`git` is default)
 
-- mycompany:component2:
-   url: http://mycompany.com/repos/component1
+- mycompany:component3:
+   url: http://mycompany.com/repos/component3
    type: svn
   
 # Repository where 
 # a) `release` branches are prefixed with `B` (default is `release/`) 
 # b) `develop` branch is named `branches/develop` (by default it is `trunk` or `master` according to the repository type).
 
-- mycompany:component3:
-   url: http://mycompany.com/repos/component3
+- mycompany:component4:
+   url: http://mycompany.com/repos/component4
    type: svn
    releaseBanchPrefix: B
    devBranch: branches/develop
