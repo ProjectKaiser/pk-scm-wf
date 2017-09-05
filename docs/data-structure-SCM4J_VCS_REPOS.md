@@ -10,34 +10,36 @@ Example of yaml file:
 
 ```yaml
 
+!!omap
+
 # Just a component
 
-mycompany:component1:
-  url: http://mycompany.com/repos/component1
+- mycompany:component1: 
+   url: http://mycompany.com/repos/component1
 
 # Two components in the same repository
 
-component1|component2:
-  url: http://mycompany.com/repos/components
+- component1|component2:
+   url: http://mycompany.com/repos/components
   
 # Coordinates which matches `my.*`, repository name is constructed from repository name using regular expression
 
-my(.*):
-  url: http://mycompany.com/git/myProj$1
+- my(.*):
+   url: http://mycompany.com/git/myProj$1
   
 # Subversion type repository
 
-mycompany:component2:
-  url: http://mycompany.com/repos/component1
-  type: svn
+- mycompany:component2:
+   url: http://mycompany.com/repos/component1
+   type: svn
   
 # Repository where 
 # a) `release` branches are prefixed with `B` (default is `release/`) 
 # b) `develop` branch is named `branches/develop` (by default it is `trunk` or `master` according to the repository type).
 
-mycompany:component3:
-  url: http://mycompany.com/repos/component3
-  type: svn
-  releaseBanchPrefix: B
-  devBranch: branches/develop
+- mycompany:component3:
+   url: http://mycompany.com/repos/component3
+   type: svn
+   releaseBanchPrefix: B
+   devBranch: branches/develop
 ```
