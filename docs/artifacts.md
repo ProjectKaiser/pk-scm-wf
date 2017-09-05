@@ -1,7 +1,7 @@
 # Artifacts
 
-- [Configuration files](#Configuration-files)
-- [Version file](#`version`-file)
+- [Configuration files](#configuration-files)
+- [Version file](#version-file)
 
 # Configuration files
 - `version`
