@@ -32,7 +32,7 @@ mycompany:component2:
   type: svn
   
 #Repository where 
-# a) `release` branches are prefixed with `B` (default is `release/`, note that `/` is important) 
+# a) `release` branches are prefixed with `B` (default is `release/`) 
 # b) `develop` branch is named `branches/develop` (by default it is `trunk` or `master` according to the repository type).
 
 mycompany:component3:
