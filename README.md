@@ -27,9 +27,13 @@ E.g. we have a `product3` which depends on `component39`:0.9.5 and `component50`
 
 For version definitions ref. [semantic Versioning 2.0.0](http://semver.org/).
 
-# Usage
+# Installation
 
 Install groovy, download [run.grovy](https://raw.githubusercontent.com/scm4j/scm4j-wf/master/run.groovy) and execute `groovy run.groovy`, it will list available commands
+
+# Data Structure
+
+- ref [data-structue.md](data-structue.md)
 
 # Features
 
