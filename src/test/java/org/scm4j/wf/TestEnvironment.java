@@ -84,9 +84,9 @@ public class TestEnvironment implements AutoCloseable {
 		reposFile.createNewFile();
 		FileUtils.writeLines(reposFile,Arrays.asList(
 				"!!omap",
-				"eu.untill:(.*):",
-				"  url: " + new File(TEST_REMOTE_REPO_DIR).toURI().toURL().toString() + "$1-" + RANDOM_VCS_NAME_SUFFIX + ".git",
-				"  builder: " + BuilderFactory.SCM4J_BUILDER_CLASS_STRING + "org.scm4j.wf.TestBuilder"));
+				"- eu.untill:(.*):",
+				"    url: " + new File(TEST_REMOTE_REPO_DIR).toURI().toURL().toString() + "$1-" + RANDOM_VCS_NAME_SUFFIX + ".git",
+				"    builder: " + BuilderFactory.SCM4J_BUILDER_CLASS_STRING + "org.scm4j.wf.TestBuilder"));
 	}
 
 	private void createCredentialsFile() throws IOException {
