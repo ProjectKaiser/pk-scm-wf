@@ -1,7 +1,7 @@
 package org.scm4j.wf.conf;
 
 import org.scm4j.vcs.api.IVCS;
-import org.scm4j.wf.IBuilder;
+import org.scm4j.wf.builders.IBuilder;
 
 public class VCSRepository {
 	

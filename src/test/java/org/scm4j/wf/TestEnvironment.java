@@ -11,6 +11,7 @@ import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
 import org.scm4j.vcs.api.workingcopy.VCSWorkspace;
 import org.scm4j.wf.branch.DevelopBranch;
 import org.scm4j.wf.branch.ReleaseBranch;
+import org.scm4j.wf.builders.BuilderFactory;
 import org.scm4j.wf.conf.Component;
 import org.scm4j.wf.conf.EnvVarsConfigSource;
 import org.scm4j.wf.conf.IConfigSource;

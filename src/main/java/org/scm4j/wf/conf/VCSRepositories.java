@@ -7,9 +7,9 @@ import java.util.Map;
 
 import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
 import org.scm4j.vcs.api.workingcopy.VCSWorkspace;
-import org.scm4j.wf.BuilderFactory;
 import org.scm4j.wf.SCMWorkflow;
 import org.scm4j.wf.VCSFactory;
+import org.scm4j.wf.builders.BuilderFactory;
 import org.scm4j.wf.exceptions.EConfig;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.error.YAMLException;
@@ -51,8 +51,8 @@ public class VCSRepositories {
 		}
 
 		Credentials credentials;
-		if (getPropByName(creds, url, "name", null) != null) {
-			String user = (String) getPropByName(creds, url, "name", null);
+		String user = (String) getPropByName(creds, url, "name", null);		
+		if (user != null) {
 			String pass = (String) getPropByName(creds, url, "password", null);
 			Boolean isDefault = (Boolean) getPropByName(creds, url, "isDefault", false);
 			credentials = new Credentials(user, pass, isDefault);
@@ -113,11 +113,6 @@ public class VCSRepositories {
 		}
 		return result;
 	}
-
-//	public VCSRepository getByCoords(String coordsStr) {
-//		Coords coords = new Coords(coordsStr);
-//		return getByComponent(coords.getName());
-//	}
 
 	public static VCSRepositories loadVCSRepositories() throws EConfig {
 		try {
