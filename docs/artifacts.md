@@ -1,3 +1,8 @@
+# Artifacts
+
+- [Configuration files](#Configuration-files)
+- [Version file](#`version`-file)
+
 # Configuration files
 - `version`
   - Keeps development and release version numbers
