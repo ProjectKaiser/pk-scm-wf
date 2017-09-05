@@ -10,6 +10,8 @@ Example of yaml file:
 
 ```yaml
 
+# omap is a must since it defines order
+
 !!omap
 
 # Just a component
@@ -42,4 +44,9 @@ Example of yaml file:
    type: svn
    releaseBanchPrefix: B
    devBranch: branches/develop
+
+# All repos will have release/ as a release branch prefix by default, if not specified above
+- ~:
+   releaseBanchPrefix: release/
+
 ```
