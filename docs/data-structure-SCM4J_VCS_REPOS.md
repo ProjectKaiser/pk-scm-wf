@@ -1,10 +1,12 @@
+Variable lists files which maps artifact coordinates to repositories parameters.
+
 Example of variable (";" - separated): 
 
 ```
 SCM4J_VCS_REPOS=file:///c:/workspace/my-repos.yaml;http://mycompany.com/repos/project1-repos.yaml`
 ```
 
-Example of yaml file:
+Yaml file consists of number of rules which are applied in order of appearance, first one which matches is used.
 
 ```yaml
 
