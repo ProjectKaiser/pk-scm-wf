@@ -173,13 +173,9 @@ public class ReleaseBranch {
 		if (delayedTagRevision == null) {
 			return false;
 		}
-		
+
 		List<VCSCommit> commits = vcs.getCommitsRange(getName(), null, WalkDirection.DESC, 2);
-		if (commits.size() < 2) {
-			return false;
-		}
-		
-		return commits.get(1).getRevision().equals(delayedTagRevision);
+		return commits.size() >= 2 && commits.get(1).getRevision().equals(delayedTagRevision);
 	}
 
 	public boolean isPreHeadCommitTaggedWithVersion() {

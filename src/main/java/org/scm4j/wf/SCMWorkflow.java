@@ -124,7 +124,7 @@ public class SCMWorkflow {
 		}
 
 		if (rbs == ReleaseBranchStatus.MDEPS_FROZEN) {
-			if (needToActualizeMDeps(childActions, rb)) {
+			if (needToActualizeMDeps(rb)) {
 				// need to actualize
 				skipAllBuilds(childActions);
 				if (actionKind == ActionKind.BUILD) {
@@ -160,7 +160,7 @@ public class SCMWorkflow {
 		return new ActionNone(comp, childActions, rbs.toString());
 	}
 
-	private boolean needToActualizeMDeps(List<IAction> childActions, ReleaseBranch currentCompRB) {
+	private boolean needToActualizeMDeps(ReleaseBranch currentCompRB) {
 		List<Component> mDeps = currentCompRB.getMDeps();
 		ReleaseBranch mDepRB;
 		for (Component mDep : mDeps) {
@@ -170,7 +170,7 @@ public class SCMWorkflow {
 					return true;
 				}
 			} else {
-				if (needToActualizeMDeps(childActions, mDepRB)) {
+				if (needToActualizeMDeps(mDepRB)) {
 					return true;
 				}
 			}

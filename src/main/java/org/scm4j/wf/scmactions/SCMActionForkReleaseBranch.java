@@ -19,10 +19,10 @@ import org.scm4j.wf.conf.Version;
 public class SCMActionForkReleaseBranch extends ActionAbstract {
 	
 	private final ReleaseReason reason;
-	private ReleaseBranch rb;
-	private DevelopBranch db;
-	private Version currentVer;
-	private IVCS vcs;
+	private final ReleaseBranch rb;
+	private final DevelopBranch db;
+	private final Version currentVer;
+	private final IVCS vcs;
 
 	public SCMActionForkReleaseBranch(Component comp, List<IAction> childActions, ReleaseReason reason, List<Option> options) {
 		super(comp, childActions, options);
