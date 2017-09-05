@@ -24,7 +24,7 @@ Yaml file consists of number of rules which are applied in order of appearance, 
 - component1|component2:
    url: http://mycompany.com/repos/components
   
-# Coordinates which matches `my.*`, repository name is constructed from repository name using regular expression
+# Coordinates which matches `my.*`. Repository name is constructed from coorinates name using regular expression
 
 - my(.*):
    url: http://mycompany.com/git/myProj$1
