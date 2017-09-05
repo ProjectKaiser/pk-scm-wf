@@ -80,7 +80,7 @@ public class VCSRepositories {
 		if (url != null && url.contains(".git")) {
 			return VCSType.GIT;
 		}
-		return VCSType.SVN;
+		return VCSType.GIT;
 	}
 
 	private Object getPropByName(Map<?, ?> map, String name, Object propName, Object defaultValue) {
