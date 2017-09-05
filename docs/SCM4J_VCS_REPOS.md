@@ -31,7 +31,9 @@ mycompany:component2:
   url: http://mycompany.com/repos/component1
   type: svn
   
-#Repository where `release` branches are prefixed with `B` (default is `release`) and `develop` branch is named `branches/develop` (by default it is `trunk` or `master` according to the repository type).
+#Repository where 
+# a) `release` branches are prefixed with `B` (default is `release`) 
+# b) `develop` branch is named `branches/develop` (by default it is `trunk` or `master` according to the repository type).
 
 mycompany:component3:
   url: http://mycompany.com/repos/component3
