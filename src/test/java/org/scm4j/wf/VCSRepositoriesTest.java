@@ -23,7 +23,7 @@ public class VCSRepositoriesTest {
 	
 	@Before
 	public void setUp() throws IOException {
-		urlsStr = Resources.toString(Resources.getResource(this.getClass(), "urls.yml"), StandardCharsets.UTF_8);
+		urlsStr = Resources.toString(Resources.getResource(this.getClass(), "urls-omap.yml"), StandardCharsets.UTF_8);
 		credsStr = Resources.toString(Resources.getResource(this.getClass(), "creds.yml"), StandardCharsets.UTF_8); 
 	}
 

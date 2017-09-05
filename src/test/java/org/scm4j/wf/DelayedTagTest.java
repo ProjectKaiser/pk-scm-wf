@@ -11,8 +11,8 @@ import org.junit.Test;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.wf.actions.IAction;
 import org.scm4j.wf.branch.ReleaseBranchStatus;
+import org.scm4j.wf.conf.CommitsFile;
 import org.scm4j.wf.conf.Option;
-import org.scm4j.wf.scmactions.CommitsFile;
 
 public class DelayedTagTest extends SCMWorkflowTestBase {
 	

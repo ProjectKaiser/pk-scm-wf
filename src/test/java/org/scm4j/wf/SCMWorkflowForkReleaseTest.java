@@ -4,7 +4,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import java.awt.*;
 import java.util.List;
 
 import org.junit.Test;
@@ -12,7 +11,6 @@ import org.scm4j.commons.progress.IProgress;
 import org.scm4j.commons.progress.ProgressConsole;
 import org.scm4j.wf.actions.ActionNone;
 import org.scm4j.wf.actions.IAction;
-import org.scm4j.wf.actions.PrintAction;
 import org.scm4j.wf.branch.ReleaseBranch;
 import org.scm4j.wf.conf.Component;
 import org.scm4j.wf.conf.Version;
@@ -276,7 +274,7 @@ public class SCMWorkflowForkReleaseTest extends SCMWorkflowTestBase {
 		action.execute(new NullProgress());
 
 		// add feature to existing unTIllDb release. Next unTillDb patch should be released then
-		env.generateFeatureCommit(env.getUnTillDbVCS(), rbUnTillDbFixedVer.getReleaseBranchName(), "patch feature added");
+		env.generateFeatureCommit(env.getUnTillDbVCS(), rbUnTillDbFixedVer.getName(), "patch feature added");
 
 		// Existing unTill and UBL release branches should actualize its mdeps first
 		action = wf.getProductionReleaseAction(compUnTill);
@@ -308,14 +306,15 @@ public class SCMWorkflowForkReleaseTest extends SCMWorkflowTestBase {
 		// now new unTillDb patch should be built
 		action = wf.getProductionReleaseAction(compUnTill);
 		exp = new Expectations();
-		exp.put(UNTILL, ActionNone.class);
-		exp.put(UBL, ActionNone.class);
+		exp.put(UNTILL, SCMActionBuild.class);
+		exp.put(UNTILL, "reason", ReleaseReason.NEW_DEPENDENCIES);
+		exp.put(UBL, SCMActionBuild.class);
+		exp.put(UBL, "reason", ReleaseReason.NEW_DEPENDENCIES);
 		exp.put(UNTILLDB, SCMActionBuild.class);
 		exp.put(UNTILLDB, "reason", ReleaseReason.NEW_FEATURES);
 		checkChildActionsTypes(action, exp);
 		try (IProgress progress = new ProgressConsole(action.getName(), ">>> ", "<<< ")) {
 			action.execute(progress);
 		}
-
 	}
 }
