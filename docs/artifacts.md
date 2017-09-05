@@ -1,9 +1,9 @@
 # Artifacts
 
 - [Component configuration files](#configuration-files)
+  - [`version` file](#version-file)
+  - [`mdeps` file](#mdeps-file)
 - [Comment Tags](#comment-tags)
-- [`version` file](#version-file)
-- [`mdeps` file](#mdeps-file)
 
 # Component Configuration Files
 
