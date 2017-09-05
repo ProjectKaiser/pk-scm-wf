@@ -51,4 +51,16 @@ Comment tags are placed inside commit comments
   - Commit in `release` branch which truncates `-SNAPSHOT`
 - `#scm-ignore`
   - Commit in `develop` branch which shows that all previous feature commits are ignored
+  
+# Environment Vars
 
+- SCM4J_VCS_REPOS: list of yaml files which map artifact coordinates to repositories URLs
+- SCM4J_CREDENTIALS: list of yaml files which keeps credentials
+
+## SCM4J_VCS_REPOS
+
+---
+
+## SCM4J_CREDENTIALS
+
+---
