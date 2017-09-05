@@ -10,17 +10,17 @@ Example of yaml file:
 
 ```yaml
 
-#Just a component
+# Just a component
 
 mycompany:component1:
   url: http://mycompany.com/repos/component1
 
-#Two components in the same repository
+# Two components in the same repository
 
 component1|component2:
   url: http://mycompany.com/repos/components
   
-#Coordinates which matches `my.*`, repository name is constructed from repository name using regular expression
+# Coordinates which matches `my.*`, repository name is constructed from repository name using regular expression
 
 my(.*):
   url: http://mycompany.com/git/myProj$1
@@ -31,7 +31,7 @@ mycompany:component2:
   url: http://mycompany.com/repos/component1
   type: svn
   
-#Repository where 
+# Repository where 
 # a) `release` branches are prefixed with `B` (default is `release/`) 
 # b) `develop` branch is named `branches/develop` (by default it is `trunk` or `master` according to the repository type).
 
