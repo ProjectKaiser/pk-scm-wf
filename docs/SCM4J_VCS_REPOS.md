@@ -1,6 +1,10 @@
 Maps artifact coordinates to repositories
 
-Example of variable (";" - separated): `SCM4J_VCS_REPOS=file:///c:/workspace/my-repos.yaml;http://mycompany.com/repos/project1-repos.yaml`
+Example of variable (";" - separated): 
+
+```
+SCM4J_VCS_REPOS=file:///c:/workspace/my-repos.yaml;http://mycompany.com/repos/project1-repos.yaml`
+```
 
 Example of yaml file:
 
@@ -34,3 +38,4 @@ mycompany:component3:
   type: svn
   releaseBanchPrefix: B
   devBranch: branches/develop
+```
