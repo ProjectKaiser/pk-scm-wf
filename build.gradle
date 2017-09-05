@@ -32,7 +32,7 @@ repositories {
 
 test {
 	testLogging.showStandardStreams = true
-	jvmArgs '-XX:MaxPermSize=256m -Xms128m'
+	jvmArgs '-Xms2048m'
 }
 
 dependencies {
