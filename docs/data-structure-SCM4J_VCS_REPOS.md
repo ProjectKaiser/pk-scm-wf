@@ -45,7 +45,7 @@ Yaml file consists of number of rules which are applied in order of appearance, 
    releaseBanchPrefix: B
    devBranch: branches/develop
 
-# All repos will have "rel/" as a release branch prefix by default, if not specified above
+# All repos will have `rel` as a `release` branch prefix by default, if not specified above
 - ~:
    releaseBanchPrefix: rel/
 
