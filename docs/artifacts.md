@@ -55,5 +55,5 @@ Comment tags are placed inside commit comments
   
 # Environment Vars
 
-- SCM4J_VCS_REPOS: list of yaml files which map artifact coordinates to repositories URLs
+- [SCM4J_VCS_REPOS](data-structure-SCM4J_VCS_REPOS.md): list of yaml files which map artifact coordinates to repositories URLs
 - SCM4J_CREDENTIALS: list of yaml files which keeps credentials
