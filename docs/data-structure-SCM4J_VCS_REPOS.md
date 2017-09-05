@@ -45,8 +45,8 @@ Example of yaml file:
    releaseBanchPrefix: B
    devBranch: branches/develop
 
-# All repos will have release/ as a release branch prefix by default, if not specified above
+# All repos will have "rel/" as a release branch prefix by default, if not specified above
 - ~:
-   releaseBanchPrefix: release/
+   releaseBanchPrefix: rel/
 
 ```
