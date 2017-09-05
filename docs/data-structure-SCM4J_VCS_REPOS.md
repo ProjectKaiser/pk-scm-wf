@@ -10,7 +10,7 @@ Yaml file consists of number of rules which are applied in order of appearance, 
 
 ```yaml
 
-# omap is a must since it defines order
+# omap is a must since it defines the order
 
 !!omap
 
@@ -24,23 +24,23 @@ Yaml file consists of number of rules which are applied in order of appearance, 
 - component1|component2:
    url: http://mycompany.com/repos/components
   
-# Coordinates which matches `my.*`, repository name is constructed from repository name using regular expression
+# Coordinates which matches `my.*`. Repository name is constructed from coorinates name using regular expression
 
 - my(.*):
    url: http://mycompany.com/git/myProj$1
   
-# Subversion type repository
+# `svn` type repository (`git` is default)
 
-- mycompany:component2:
-   url: http://mycompany.com/repos/component1
+- mycompany:component3:
+   url: http://mycompany.com/repos/component3
    type: svn
   
 # Repository where 
 # a) `release` branches are prefixed with `B` (default is `release/`) 
 # b) `develop` branch is named `branches/develop` (by default it is `trunk` or `master` according to the repository type).
 
-- mycompany:component3:
-   url: http://mycompany.com/repos/component3
+- mycompany:component4:
+   url: http://mycompany.com/repos/component4
    type: svn
    releaseBanchPrefix: B
    devBranch: branches/develop
