@@ -10,7 +10,7 @@ Yaml file consists of number of rules which are applied in order of appearance, 
 
 ```yaml
 
-# omap is a must since it defines order
+# omap is a must since it defines the order
 
 !!omap
 
