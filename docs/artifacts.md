@@ -1,11 +1,14 @@
 # Artifacts
 
-- [Configuration files](#configuration-files)
-- [Tags](#tags)
+- [Component configuration files](#configuration-files)
+- [Comment Tags](#comment-tags)
 - [`version` file](#version-file)
 - [`mdeps` file](#mdeps-file)
 
-# Configuration files
+# Component Configuration Files
+
+Component configuration files should be  located in the root of repository
+
 - `version`
   - Keeps development and release version numbers
 - `mdeps`
@@ -13,7 +16,10 @@
 - `mdeps-changed`
   - Actual for `release` branch only. List of managed dependenciens which has been changed since last minor version
 
-# Tags
+# Comment Tags
+
+Comment tags are used inside commit comments
+
 - `#scm-mdeps`
   - Commit in `develop` branch which actualizes mdeps.conf dependencies
 - `#scm-ver 1.5.0`
