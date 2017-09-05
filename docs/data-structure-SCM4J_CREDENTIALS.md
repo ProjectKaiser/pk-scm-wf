@@ -16,7 +16,7 @@ Yaml file consists of number of rules which are applied in order of appearance, 
 
 - https?://mycompany.com.*:
     name: user
-    password: password
+    password: password1
 - https?://github.com.*:
     name: user2
     password: password2
