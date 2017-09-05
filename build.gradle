@@ -32,7 +32,7 @@ repositories {
 
 test {
 	testLogging.showStandardStreams = true
-	jvmArgs '-Xms2048m'
+	jvmArgs '-Xmx2048m'
 }
 
 dependencies {
