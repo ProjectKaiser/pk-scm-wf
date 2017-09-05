@@ -25,7 +25,7 @@ component1|component2:
 my(.*):
   url: http://mycompany.com/git/myProj$1
   
-#Subversion type repository
+# Subversion type repository
 
 mycompany:component2:
   url: http://mycompany.com/repos/component1
