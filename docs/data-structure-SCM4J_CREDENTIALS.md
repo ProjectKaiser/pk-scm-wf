@@ -23,7 +23,7 @@ Yaml file consists of number of rules which are applied in order of appearance, 
 - https?://strangesite.org.*:
     name: null
     password: null
-- .*:
+- ~:
     name: guest
     password: guest
 ```
