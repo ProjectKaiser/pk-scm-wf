@@ -14,13 +14,13 @@ Yaml file consists of number of rules which are applied in order of appearance, 
 
 # Note that attribute ident must be at least three spaces
 
-- https?://mycompany.com.*:
+- https?://mycompany\.com/.*:
     name: user
     password: password1
-- https?://github.com.*:
+- https?://github\.com/.*:
     name: user2
     password: password2
-- https?://strangesite.org.*:
+- https?://strangesite\.org/.*:
     name: null
     password: null
 - ~:
