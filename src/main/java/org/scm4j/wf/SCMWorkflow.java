@@ -14,7 +14,7 @@ import org.scm4j.wf.branch.DevelopBranch;
 import org.scm4j.wf.branch.DevelopBranchStatus;
 import org.scm4j.wf.branch.ReleaseBranch;
 import org.scm4j.wf.branch.ReleaseBranchStatus;
-import org.scm4j.wf.conf.CommitsFile;
+import org.scm4j.wf.conf.DelayedTagsFile;
 import org.scm4j.wf.conf.Component;
 import org.scm4j.wf.conf.Option;
 import org.scm4j.wf.conf.VCSRepositories;
@@ -30,7 +30,7 @@ public class SCMWorkflow {
 	public static final String MDEPS_FILE_NAME = "mdeps";
 	public static final String VER_FILE_NAME = "version";
 	public static final String MDEPS_CHANGED_FILE_NAME = "mdeps-changed"; //FIXME: how to use?
-	public static final String COMMITS_FILE_NAME = "commits.yml"; 
+	public static final String DELAYED_TAGS_FILE_NAME = "delayed-tags.yml"; 
 	public static final File BASE_WORKING_DIR = new File(System.getProperty("user.home"), ".scm4j");
 
 	private final VCSRepositories repos;
@@ -59,8 +59,8 @@ public class SCMWorkflow {
 		return options;
 	}
 	
-	public static File getCommitsFile() {
-		return new File(SCMWorkflow.COMMITS_FILE_NAME);
+	public static File getDelayedTagsFile() {
+		return new File(SCMWorkflow.DELAYED_TAGS_FILE_NAME);
 	}
 	
 	public IAction getProductionReleaseAction(String componentName) {
@@ -225,7 +225,7 @@ public class SCMWorkflow {
 
 	private IAction getTagReleaseActionRoot(Component comp, List<IAction> childActions) {
 		ReleaseBranch rb = new ReleaseBranch(comp, repos);
-		CommitsFile cf = new CommitsFile();
+		DelayedTagsFile cf = new DelayedTagsFile();
 		IVCS vcs = comp.getVCS();
 		
 		String delayedRevisionToTag = cf.getRevisitonByUrl(comp.getVcsRepository().getUrl());

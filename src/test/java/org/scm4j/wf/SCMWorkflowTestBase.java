@@ -11,7 +11,7 @@ import org.junit.Before;
 import org.scm4j.wf.actions.IAction;
 import org.scm4j.wf.branch.DevelopBranch;
 import org.scm4j.wf.branch.ReleaseBranch;
-import org.scm4j.wf.conf.CommitsFile;
+import org.scm4j.wf.conf.DelayedTagsFile;
 import org.scm4j.wf.conf.Component;
 import org.scm4j.wf.conf.VCSRepositories;
 
@@ -46,7 +46,7 @@ public class SCMWorkflowTestBase {
 		rbUnTillDbFixedVer = new ReleaseBranch(compUnTillDb, env.getUnTillDbVer(), repos);
 		rbUBLFixedVer = new ReleaseBranch(compUBL, env.getUblVer(), repos);
 		TestBuilder.setBuilders(new HashMap<String, TestBuilder>());
-		new CommitsFile().delete();
+		new DelayedTagsFile().delete();
 	}
 
 	@After

@@ -14,7 +14,7 @@ import org.scm4j.wf.actions.ActionAbstract;
 import org.scm4j.wf.actions.IAction;
 import org.scm4j.wf.branch.ReleaseBranch;
 import org.scm4j.wf.branch.ReleaseBranchStatus;
-import org.scm4j.wf.conf.CommitsFile;
+import org.scm4j.wf.conf.DelayedTagsFile;
 import org.scm4j.wf.conf.Component;
 import org.scm4j.wf.conf.Option;
 import org.scm4j.wf.conf.Version;
@@ -53,7 +53,7 @@ public class SCMActionBuild extends ActionAbstract {
 			VCSCommit headCommit = vcs.getHeadCommit(rb.getName());
 			
 			// need to check if we are built already with delayed tag
-			CommitsFile cf = new CommitsFile();
+			DelayedTagsFile cf = new DelayedTagsFile();
 			String delayedTagRevision = cf.getRevisitonByUrl(comp.getVcsRepository().getUrl());
 			if (delayedTagRevision != null) {
 				List<VCSCommit> commits = vcs.getCommitsRange(rb.getName(), null, WalkDirection.DESC, 2);
@@ -87,8 +87,8 @@ public class SCMActionBuild extends ActionAbstract {
 			}
 			
 			if (options.contains(Option.DELAYED_TAG)) {
-				CommitsFile commitsFile = new CommitsFile();
-				commitsFile.writeUrlRevision(comp.getVcsRepository().getUrl(), headCommit.getRevision());
+				DelayedTagsFile delayedTagsFile = new DelayedTagsFile();
+				delayedTagsFile.writeUrlRevision(comp.getVcsRepository().getUrl(), headCommit.getRevision());
 				progress.reportStatus("build commit " + headCommit.getRevision() + " is saved for delayed tagging");
 			} else {
 				String releaseBranchName = rb.getName();

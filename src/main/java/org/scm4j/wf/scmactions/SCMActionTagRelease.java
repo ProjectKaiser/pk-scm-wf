@@ -9,7 +9,7 @@ import org.scm4j.wf.SCMWorkflow;
 import org.scm4j.wf.actions.ActionAbstract;
 import org.scm4j.wf.actions.IAction;
 import org.scm4j.wf.branch.ReleaseBranch;
-import org.scm4j.wf.conf.CommitsFile;
+import org.scm4j.wf.conf.DelayedTagsFile;
 import org.scm4j.wf.conf.Component;
 import org.scm4j.wf.conf.Option;
 import org.scm4j.wf.conf.Version;
@@ -32,7 +32,7 @@ public class SCMActionTagRelease extends ActionAbstract {
 				}
 			}
 			
-			CommitsFile cf = new CommitsFile();
+			DelayedTagsFile cf = new DelayedTagsFile();
 			IVCS vcs = getVCS();
 			String revisionToTag = cf.getRevisitonByUrl(comp.getVcsRepository().getUrl());
 			if (revisionToTag == null) {

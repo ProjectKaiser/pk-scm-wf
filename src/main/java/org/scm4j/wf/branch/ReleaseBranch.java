@@ -11,7 +11,7 @@ import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.vcs.api.VCSTag;
 import org.scm4j.vcs.api.WalkDirection;
 import org.scm4j.wf.SCMWorkflow;
-import org.scm4j.wf.conf.CommitsFile;
+import org.scm4j.wf.conf.DelayedTagsFile;
 import org.scm4j.wf.conf.Component;
 import org.scm4j.wf.conf.MDepsFile;
 import org.scm4j.wf.conf.VCSRepositories;
@@ -168,7 +168,7 @@ public class ReleaseBranch {
 	}
 
 	public boolean isPreHeadCommitTagDelayed() {
-		CommitsFile cf = new CommitsFile();
+		DelayedTagsFile cf = new DelayedTagsFile();
 		String delayedTagRevision = cf.getRevisitonByUrl(comp.getVcsRepository().getUrl());
 		if (delayedTagRevision == null) {
 			return false;

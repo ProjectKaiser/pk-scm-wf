@@ -10,42 +10,42 @@ import org.apache.commons.io.FileUtils;
 import org.scm4j.wf.SCMWorkflow;
 import org.yaml.snakeyaml.Yaml;
 
-public class CommitsFile {
+public class DelayedTagsFile {
 	
-	private final File commitsFile;
+	private final File delayedTagsFile;
 	
-	public CommitsFile() {
-		commitsFile = new File(SCMWorkflow.COMMITS_FILE_NAME);
+	public DelayedTagsFile() {
+		delayedTagsFile = new File(SCMWorkflow.DELAYED_TAGS_FILE_NAME);
 	}
 	
 	public String getRevisitonByUrl(String url) {
-		if (!commitsFile.exists()) {
+		if (!delayedTagsFile.exists()) {
 			return null;
 		}
-		Map<String, String> commits = getContent();
-		return commits.get(url);
+		Map<String, String> delayedTags = getContent();
+		return delayedTags.get(url);
 	}
 
 	public Map<String, String> getContent() {
-		if (!commitsFile.exists()) {
+		if (!delayedTagsFile.exists()) {
 			return new HashMap<>();
 		}
 		Yaml yaml = new Yaml();
 		try {
 			@SuppressWarnings("unchecked")
-			Map<String, String> commits = yaml.loadAs(FileUtils.readFileToString(commitsFile, StandardCharsets.UTF_8), Map.class);
-			if (commits == null) {
+			Map<String, String> delayedTags = yaml.loadAs(FileUtils.readFileToString(delayedTagsFile, StandardCharsets.UTF_8), Map.class);
+			if (delayedTags == null) {
 				return new HashMap<>();
 			}
-			return commits;
+			return delayedTags;
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
 	}
 	
 	public void writeUrlRevision(String url, String revision) throws IOException {
-		if (!commitsFile.exists()) {
-			commitsFile.createNewFile();
+		if (!delayedTagsFile.exists()) {
+			delayedTagsFile.createNewFile();
 		}
 		
 		Map<String, String> content = getContent();
@@ -56,12 +56,12 @@ public class CommitsFile {
 	}
 	
 	public void delete() {
-		commitsFile.delete();
+		delayedTagsFile.delete();
 	}
 	
 	@Override
 	public String toString() {
-		if (!commitsFile.exists()) {
+		if (!delayedTagsFile.exists()) {
 			return "<missing>";
 		}
 		return getContent().toString();
@@ -78,7 +78,7 @@ public class CommitsFile {
 	private void writeContent(Map<String, String> content) {
 		Yaml yaml = new Yaml();
 		try {
-			FileUtils.writeStringToFile(commitsFile, yaml.dumpAsMap(content), StandardCharsets.UTF_8);
+			FileUtils.writeStringToFile(delayedTagsFile, yaml.dumpAsMap(content), StandardCharsets.UTF_8);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}

@@ -11,7 +11,7 @@ import org.junit.Test;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.wf.actions.IAction;
 import org.scm4j.wf.branch.ReleaseBranchStatus;
-import org.scm4j.wf.conf.CommitsFile;
+import org.scm4j.wf.conf.DelayedTagsFile;
 import org.scm4j.wf.conf.Option;
 
 public class DelayedTagTest extends SCMWorkflowTestBase {
@@ -38,8 +38,8 @@ public class DelayedTagTest extends SCMWorkflowTestBase {
 		assertTrue(env.getUnTillDbVCS().getTags().isEmpty());
 		assertTrue(env.getUnTillVCS().getTags().isEmpty());
 		
-		// check commits file
-		CommitsFile cf = new CommitsFile();
+		// check Delayed Tags file
+		DelayedTagsFile cf = new DelayedTagsFile();
 		assertNotNull(cf.getRevisitonByUrl(compUnTillDb.getVcsRepository().getUrl()));
 		assertNotNull(cf.getRevisitonByUrl(compUnTill.getVcsRepository().getUrl()));
 		assertNotNull(cf.getRevisitonByUrl(compUBL.getVcsRepository().getUrl()));
@@ -72,8 +72,8 @@ public class DelayedTagTest extends SCMWorkflowTestBase {
 		assertTrue(rbUnTillDbFixedVer.isPreHeadCommitTaggedWithVersion());
 		assertTrue(rbUnTillFixedVer.isPreHeadCommitTaggedWithVersion());
 		
-		// check commits file
-		CommitsFile cf = new CommitsFile();
+		// check Dealyed Tags file
+		DelayedTagsFile cf = new DelayedTagsFile();
 		assertTrue(cf.getContent().isEmpty());
 	}
 }
