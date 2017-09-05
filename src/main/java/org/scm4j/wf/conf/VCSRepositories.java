@@ -34,11 +34,11 @@ public class VCSRepositories {
 	public VCSRepositories(String urlsStr, String credsStr, IVCSWorkspace ws) throws YAMLException {
 		this.ws = ws;
 		Yaml yaml = new Yaml();
-		urls = yaml.loadAs(urlsStr, Map.class);
+		urls = (Map<?, ?>) yaml.load(urlsStr);
 		if (urls == null) {
 			urls = new HashMap<>();
 		}
-		creds = yaml.loadAs(credsStr, Map.class);
+		creds = (Map<?, ?>) yaml.load(credsStr);
 		if (creds == null) {
 			creds = new HashMap<>();
 		}
@@ -86,7 +86,7 @@ public class VCSRepositories {
 	private Object getPropByName(Map<?, ?> map, String name, Object propName, Object defaultValue) {
 		if (map != null) {
 			for (Object key : map.keySet()) {
-				if (name.matches((String) key)) {
+				if (key == null || name.matches((String) key)) {
 					Map<?, ?> props = (Map<?, ?>) map.get(key);
 					if (props.containsKey(propName))
 						return props.get(propName);
@@ -100,12 +100,12 @@ public class VCSRepositories {
 		String result = defaultValue;
 		if (map != null) {
 			for (Object key : map.keySet()) {
-				if (name.matches((String) key)) {
+				if (key == null || name.matches((String) key)) {
 					Map<?, ?> props = (Map<?, ?>) map.get(key);
 					if (props.containsKey(propName)) {
 						result = (String) props.get(propName);
 						if (result != null)
-							result = name.replaceFirst((String) key, result);
+							result = name.replaceFirst(key == null ? ".*" : (String) key, result);
 						break;
 					}
 				}
