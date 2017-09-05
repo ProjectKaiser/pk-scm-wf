@@ -1,4 +1,4 @@
-Maps artifact coordinates to repositories
+Environment variable which maps artifact coordinates to repositories.
 
 Example of variable (";" - separated): 
 
