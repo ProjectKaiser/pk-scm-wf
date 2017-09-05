@@ -1,33 +1,36 @@
-Maps coordinates to reposirtories
+Maps artifact coordinates to repositories
 
-Example of variable: `SCM4J_VCS_REPOS=file:///c:/workspace/my-repos.yaml;http://mycompany.com/repos/project1-repos.yaml`
+Example of variable (`;` - separated): `SCM4J_VCS_REPOS=file:///c:/workspace/my-repos.yaml;http://mycompany.com/repos/project1-repos.yaml`
 
 Example of yaml file:
 
 ```yaml
 
-#Just conponent
+#Just a component
+
 mycompany:component1:
-  url: http://url.com/svn/myProject
+  url: http://mycompany.com/repos/component1
 
 #Two components in the same repository
+
 component1|component2:
-  url: http://url.com/svn/myProject
+  url: http://mycompany.com/repos/components
   
-#Artifacts which are prefixed with my.*, repository name is constructed with no prefix using regexps
+#Coordinates which matches `my.*`, repository name is constructed from repository name using regular expression
+
 my(.*):
-  url: http://localhost/git/myProj$1
-  # git and svn types are supported. If ommited then:
-  #   if url ends with ".git" then type is git
-  #   otherwise - svn
-  type: git
+  url: http://mycompany.com/git/myProj$1
   
-  # default "release/"
-  releaseBanchPrefix: B
-  # Branch name which is considered as development branch, i.e. to create release branches from. Null means "master" branch for Git, "trunk/" branch for SVN. Default is null.
-  devBranch: null
-.*:
-  url: https://github.com/qwerty/$0
+#Subversion type repository
+
+mycompany:component2:
+  url: http://mycompany.com/repos/component1
   type: svn
-  devBranch: branches/
-```
+  
+#Repository where `release` branches are prefixed with `B` (default is `release`) and `develop` branch is named `branches/develop` (by default it is `trunk` or `master` according to the repository type).
+
+mycompany:component3:
+  url: http://mycompany.com/repos/component3
+  type: svn
+  releaseBanchPrefix: B
+  devBranch: branches/develop
