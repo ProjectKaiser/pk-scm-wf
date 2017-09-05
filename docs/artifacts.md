@@ -1,6 +1,7 @@
 # Artifacts
 
 - [Configuration files](#configuration-files)
+- [Tags](#tags)
 - [Version file](#version-file)
 
 # Configuration files
