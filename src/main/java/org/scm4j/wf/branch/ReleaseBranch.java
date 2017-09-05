@@ -37,41 +37,7 @@ public class ReleaseBranch {
 		return comp.getVcsRepository().getReleaseBranchPrefix() + version.getReleaseNoPatchString();
 	}
 	
-	/*
-	 * Last release we need to work with.
-	 * Develop branch								Release Branch          Meaning
-	 * 2.52-SNAPSHOT								2.52 MISSING            We just build the 2.51 release, no new features in Develop branch. We want to see the 2.51 release to continue building or to show it is built, i.e. result is Release Branch 2.51 
-	 * BRANCHED, i.e. last commit is #scm-ver       2.51 not MISSING        
-	 * 
-	 * 2.52-SNAPSHOT                                2.52 MISSING            We do not have releases at all. We need to work with next possible release, i.e. result is ReleaseBranch 2.52 
-	 * any state                                    2.51 MISSING            
-	 * 
-	 * 2.52-SNAPSHOT                                2.52 ACTUAL             We just built 2.52. We need to show 2.52 is built. Result is Release Branch 2.52.
-	 * MODIFIED, IGNORED                            2.51 any state
-	 * 
-	 * 2.52-SNAPSHOT                                2.52 uncompleted        We need to finish 2.52. Result is Release Branch 2.52.
-	 * MODIFIED, IGNORED                            2.51 any state
-	 * 
-	 * 2.52-SNAPSHOT                                2.52 MISSING            We built 2.51 and have modifications for 2.52. Need to fork 2.52, i.e. result is Relese Branch 2.52
-	 * MODIFIED                                     2.51 ACTUAL
-	 * 
-	 * 2.52-SNAPSHOT                                2.52 MISSING            We need to finish version X. Release Branch X is result
-	 * any state                                    2.51 MISSING
-	 *                                              ...
-	 *                                              (X+1) MISSING
-	 *                                              X uncompleted 
-	 * 
-	 * uncompleted means any of MDEPS_FROZEN, MDEPS_ACTUAL, BRANCHED
-	 */
 	public ReleaseBranch(final Component comp, VCSRepositories repos) {
-//		if (comp.getVersion().isExactVersion()) {
-//			this.version = comp.getVersion().toRelease();
-//			this.comp = comp;
-//			this.repos = repos;
-//			name = computeName();
-//			vcs = comp.getVCS();
-//			return;
-//		}
 		this.comp = comp;
 		this.repos = repos;
 		vcs = comp.getVCS();
@@ -207,13 +173,9 @@ public class ReleaseBranch {
 		if (delayedTagRevision == null) {
 			return false;
 		}
-		
+
 		List<VCSCommit> commits = vcs.getCommitsRange(getName(), null, WalkDirection.DESC, 2);
-		if (commits.size() < 2) {
-			return false;
-		}
-		
-		return commits.get(1).getRevision().equals(delayedTagRevision);
+		return commits.size() >= 2 && commits.get(1).getRevision().equals(delayedTagRevision);
 	}
 
 	public boolean isPreHeadCommitTaggedWithVersion() {

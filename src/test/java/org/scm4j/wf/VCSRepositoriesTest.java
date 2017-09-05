@@ -1,6 +1,6 @@
 package org.scm4j.wf;
 
-import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
@@ -23,7 +23,7 @@ public class VCSRepositoriesTest {
 	
 	@Before
 	public void setUp() throws IOException {
-		urlsStr = Resources.toString(Resources.getResource(this.getClass(), "urls.yml"), StandardCharsets.UTF_8);
+		urlsStr = Resources.toString(Resources.getResource(this.getClass(), "urls-omap.yml"), StandardCharsets.UTF_8);
 		credsStr = Resources.toString(Resources.getResource(this.getClass(), "creds.yml"), StandardCharsets.UTF_8); 
 	}
 

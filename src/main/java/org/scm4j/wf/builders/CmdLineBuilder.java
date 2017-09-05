@@ -1,4 +1,4 @@
-package org.scm4j.wf;
+package org.scm4j.wf.builders;
 
 import java.io.BufferedReader;
 import java.io.File;

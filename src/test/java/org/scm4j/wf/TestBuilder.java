@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.Map;
 
 import org.scm4j.commons.progress.IProgress;
+import org.scm4j.wf.builders.IBuilder;
 import org.scm4j.wf.conf.Component;
 import org.scm4j.wf.exceptions.EBuilder;
 

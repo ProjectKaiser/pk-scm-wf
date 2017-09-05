@@ -7,9 +7,9 @@ import java.util.Map;
 
 import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
 import org.scm4j.vcs.api.workingcopy.VCSWorkspace;
-import org.scm4j.wf.BuilderFactory;
 import org.scm4j.wf.SCMWorkflow;
 import org.scm4j.wf.VCSFactory;
+import org.scm4j.wf.builders.BuilderFactory;
 import org.scm4j.wf.exceptions.EConfig;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.error.YAMLException;
@@ -34,11 +34,11 @@ public class VCSRepositories {
 	public VCSRepositories(String urlsStr, String credsStr, IVCSWorkspace ws) throws YAMLException {
 		this.ws = ws;
 		Yaml yaml = new Yaml();
-		urls = yaml.loadAs(urlsStr, Map.class);
+		urls = (Map<?, ?>) yaml.load(urlsStr);
 		if (urls == null) {
 			urls = new HashMap<>();
 		}
-		creds = yaml.loadAs(credsStr, Map.class);
+		creds = (Map<?, ?>) yaml.load(credsStr);
 		if (creds == null) {
 			creds = new HashMap<>();
 		}
@@ -51,8 +51,8 @@ public class VCSRepositories {
 		}
 
 		Credentials credentials;
-		if (getPropByName(creds, url, "name", null) != null) {
-			String user = (String) getPropByName(creds, url, "name", null);
+		String user = (String) getPropByName(creds, url, "name", null);		
+		if (user != null) {
 			String pass = (String) getPropByName(creds, url, "password", null);
 			Boolean isDefault = (Boolean) getPropByName(creds, url, "isDefault", false);
 			credentials = new Credentials(user, pass, isDefault);
@@ -86,7 +86,7 @@ public class VCSRepositories {
 	private Object getPropByName(Map<?, ?> map, String name, Object propName, Object defaultValue) {
 		if (map != null) {
 			for (Object key : map.keySet()) {
-				if (name.matches((String) key)) {
+				if (key == null || name.matches((String) key)) {
 					Map<?, ?> props = (Map<?, ?>) map.get(key);
 					if (props.containsKey(propName))
 						return props.get(propName);
@@ -100,12 +100,12 @@ public class VCSRepositories {
 		String result = defaultValue;
 		if (map != null) {
 			for (Object key : map.keySet()) {
-				if (name.matches((String) key)) {
+				if (key == null || name.matches((String) key)) {
 					Map<?, ?> props = (Map<?, ?>) map.get(key);
 					if (props.containsKey(propName)) {
 						result = (String) props.get(propName);
 						if (result != null)
-							result = name.replaceFirst((String) key, result);
+							result = name.replaceFirst(key == null ? ".*" : (String) key, result);
 						break;
 					}
 				}
@@ -113,11 +113,6 @@ public class VCSRepositories {
 		}
 		return result;
 	}
-
-//	public VCSRepository getByCoords(String coordsStr) {
-//		Coords coords = new Coords(coordsStr);
-//		return getByComponent(coords.getName());
-//	}
 
 	public static VCSRepositories loadVCSRepositories() throws EConfig {
 		try {

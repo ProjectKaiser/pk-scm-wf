@@ -11,6 +11,7 @@ import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
 import org.scm4j.vcs.api.workingcopy.VCSWorkspace;
 import org.scm4j.wf.branch.DevelopBranch;
 import org.scm4j.wf.branch.ReleaseBranch;
+import org.scm4j.wf.builders.BuilderFactory;
 import org.scm4j.wf.conf.Component;
 import org.scm4j.wf.conf.EnvVarsConfigSource;
 import org.scm4j.wf.conf.IConfigSource;
@@ -82,9 +83,10 @@ public class TestEnvironment implements AutoCloseable {
 		reposFile = new File(TEST_ENVIRONMENT_DIR, TEST_REPOS_FILE_NAME);
 		reposFile.createNewFile();
 		FileUtils.writeLines(reposFile,Arrays.asList(
-				"eu.untill:(.*):",
-				"  url: " + new File(TEST_REMOTE_REPO_DIR).toURI().toURL().toString() + "$1-" + RANDOM_VCS_NAME_SUFFIX + ".git",
-				"  builder: " + BuilderFactory.SCM4J_BUILDER_CLASS_STRING + "org.scm4j.wf.TestBuilder"));
+				"!!omap",
+				"- eu.untill:(.*):",
+				"    url: " + new File(TEST_REMOTE_REPO_DIR).toURI().toURL().toString() + "$1-" + RANDOM_VCS_NAME_SUFFIX + ".git",
+				"    builder: " + BuilderFactory.SCM4J_BUILDER_CLASS_STRING + "org.scm4j.wf.TestBuilder"));
 	}
 
 	private void createCredentialsFile() throws IOException {
