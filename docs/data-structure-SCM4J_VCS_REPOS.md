@@ -29,7 +29,7 @@ Yaml file consists of number of rules which are applied in order of appearance, 
 - my(.*):
    url: http://mycompany.com/git/myProj$1
   
-# Subversion type repository
+# `svn` type repository (`git` is default)
 
 - mycompany:component2:
    url: http://mycompany.com/repos/component1
