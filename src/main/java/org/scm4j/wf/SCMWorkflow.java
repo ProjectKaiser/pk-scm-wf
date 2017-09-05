@@ -114,8 +114,7 @@ public class SCMWorkflow {
 		}
 
 		if (rbs == ReleaseBranchStatus.BRANCHED) {
-			// BRANCHED - need to freeze mdeps
-			// MDEPS_FROZEN - need to actualize mdeps
+			// need to freeze mdeps
 			skipAllBuilds(childActions);
 			if (actionKind == ActionKind.BUILD) {
 				return new ActionNone(comp, childActions, "nothing to build");
@@ -132,7 +131,7 @@ public class SCMWorkflow {
 				}
 				return new SCMActionForkReleaseBranch(comp, childActions, ReleaseReason.ACTUALIZE_MDEPS, options);
 			} else {
-				// need to build
+				// All necessary version will be build by Child Actions. Need to build
 				skipAllForks(childActions);
 				if (actionKind == ActionKind.FORK) {
 					return new ActionNone(comp, childActions, "nothing to fork");
