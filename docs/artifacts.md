@@ -3,7 +3,7 @@
 - [Configuration files](#configuration-files)
 - [Tags](#tags)
 - [`version` file](#version-file)
-- [`mdeos` file](#mdeps-file)
+- [`mdeps` file](#mdeps-file)
 
 # Configuration files
 - `version`
