@@ -13,6 +13,8 @@ import org.scm4j.commons.progress.ProgressConsole;
 import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.vcs.api.VCSTag;
 import org.scm4j.vcs.api.WalkDirection;
+import org.scm4j.wf.LogTag;
+import org.scm4j.wf.SCMWorkflow;
 import org.scm4j.wf.actions.ActionNone;
 import org.scm4j.wf.actions.IAction;
 import org.scm4j.wf.branch.ReleaseBranch;
@@ -20,9 +22,9 @@ import org.scm4j.wf.conf.Component;
 import org.scm4j.wf.conf.Version;
 import org.scm4j.wf.scmactions.ReleaseReason;
 import org.scm4j.wf.scmactions.SCMActionBuild;
-import org.scm4j.wf.scmactions.SCMActionForkReleaseBranch;
+import org.scm4j.wf.scmactions.SCMActionFork;
 
-public class SCMWorkflowBuildTest extends SCMWorkflowTestBase {
+public class WorkflowBuildTest extends WorkflowTestBase {
 	
 	@Test
 	public void testBuildRootIfNestedIsBuiltAlready() throws Exception {
@@ -43,7 +45,7 @@ public class SCMWorkflowBuildTest extends SCMWorkflowTestBase {
 		TestBuilder.getBuilders().clear();
 		action = wf.getProductionReleaseAction(UBL);
 		Expectations exp = new Expectations();
-		exp.put(UBL, SCMActionForkReleaseBranch.class);
+		exp.put(UBL, SCMActionFork.class);
 		exp.put(UBL, "reason", ReleaseReason.NEW_DEPENDENCIES);
 		exp.put(UNTILLDB, ActionNone.class);
 		checkChildActionsTypes(action, exp);
@@ -75,7 +77,7 @@ public class SCMWorkflowBuildTest extends SCMWorkflowTestBase {
 		// fork unTillDb
 		IAction action = wf.getProductionReleaseAction(UNTILLDB);
 		Expectations exp = new Expectations();
-		exp.put(UNTILLDB, SCMActionForkReleaseBranch.class);
+		exp.put(UNTILLDB, SCMActionFork.class);
 		exp.put(UNTILLDB, "reason", ReleaseReason.NEW_FEATURES);
 		checkChildActionsTypes(action, exp);
 		try (IProgress progress = new ProgressConsole(action.toString(), ">>> ", "<<< ")) {
@@ -87,7 +89,7 @@ public class SCMWorkflowBuildTest extends SCMWorkflowTestBase {
 		env.generateContent(env.getUblVCS(), compUBL.getVcsRepository().getDevBranch(), "test file", "test content", LogTag.SCM_VER);
 		action = wf.getProductionReleaseAction(UBL);
 		exp = new Expectations();
-		exp.put(UBL, SCMActionForkReleaseBranch.class);
+		exp.put(UBL, SCMActionFork.class);
 		exp.put(UBL, "reason", ReleaseReason.NEW_DEPENDENCIES);
 		exp.put(UNTILLDB, ActionNone.class);
 		checkChildActionsTypes(action, exp);
@@ -162,7 +164,7 @@ public class SCMWorkflowBuildTest extends SCMWorkflowTestBase {
 		// fork unTillDb
 		IAction action = wf.getProductionReleaseAction(UNTILLDB);
 		Expectations exp = new Expectations();
-		exp.put(UNTILLDB, SCMActionForkReleaseBranch.class);
+		exp.put(UNTILLDB, SCMActionFork.class);
 		checkChildActionsTypes(action, exp);
 		try (IProgress progress = new ProgressConsole(action.toString(), ">>> ", "<<< ")) {
 			action.execute(progress);
@@ -179,9 +181,9 @@ public class SCMWorkflowBuildTest extends SCMWorkflowTestBase {
 		action = wf.getProductionReleaseAction(UNTILL);
 		exp = new Expectations();
 		exp.put(UNTILLDB, ActionNone.class);
-		exp.put(UNTILL, SCMActionForkReleaseBranch.class);
+		exp.put(UNTILL, SCMActionFork.class);
 		exp.put(UNTILL, "reason", ReleaseReason.NEW_DEPENDENCIES);
-		exp.put(UBL, SCMActionForkReleaseBranch.class);
+		exp.put(UBL, SCMActionFork.class);
 		exp.put(UBL, "reason", ReleaseReason.NEW_DEPENDENCIES);
 		checkChildActionsTypes(action, exp);
 		
@@ -195,7 +197,7 @@ public class SCMWorkflowBuildTest extends SCMWorkflowTestBase {
 	}
 	
 	@Test
-	public void testBuildPatchOnPreviousMinor() throws Exception {
+	public void testBuildPatchOnPreviousRelease() throws Exception {
 		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), "feature added");
 		SCMWorkflow wf = new SCMWorkflow();
 		
@@ -231,4 +233,6 @@ public class SCMWorkflowBuildTest extends SCMWorkflowTestBase {
 		action.execute(new NullProgress());
 		assertEquals(dbUnTillDb.getVersion().toPreviousMinor().toPreviousMinor().toNextPatch().toRelease(), new ReleaseBranch(comp, repos).getVersion());
 	}
+	
+	// TODO: add actualize mdeps test if mdep dev version is not -SNAPSHOT, e.g. 123.3 or master-SNAPSHOT 
 }

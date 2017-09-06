@@ -10,4 +10,5 @@ cache:
     - $HOME/.gradle/wrapper/
 after_success:
   - ./gradlew jacocoTestReport coveralls
-script: ./gradlew build --stacktrace
+#after_failure:
+#  - cat build/test-results/test/*.xml

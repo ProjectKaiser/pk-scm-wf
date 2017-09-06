@@ -1,12 +1,16 @@
-package org.scm4j.wf;
+package org.scm4j.wf.branches;
 
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
+import org.scm4j.wf.LogTag;
+import org.scm4j.wf.NullProgress;
+import org.scm4j.wf.SCMWorkflow;
+import org.scm4j.wf.WorkflowTestBase;
 import org.scm4j.wf.actions.IAction;
 import org.scm4j.wf.branch.DevelopBranchStatus;
 
-public class DevelopBranchTest extends SCMWorkflowTestBase {
+public class DevelopBranchTest extends WorkflowTestBase {
 
 	@Test
 	public void testBranchedIfNothingIsMade() {

@@ -1,4 +1,4 @@
-package org.scm4j.wf;
+package org.scm4j.wf.conf;
 
 import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.assertNotNull;
@@ -16,6 +16,8 @@ import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.scm4j.wf.SCMWorkflow;
+import org.scm4j.wf.TestEnvironment;
 import org.scm4j.wf.conf.EnvVarsConfigSource;
 import org.scm4j.wf.conf.IConfigSource;
 import org.scm4j.wf.conf.VCSRepositories;

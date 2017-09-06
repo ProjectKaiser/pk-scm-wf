@@ -14,7 +14,7 @@ import org.scm4j.wf.branch.ReleaseBranchStatus;
 import org.scm4j.wf.conf.DelayedTagsFile;
 import org.scm4j.wf.conf.Option;
 
-public class DelayedTagTest extends SCMWorkflowTestBase {
+public class WorkflowDelayedTagTest extends WorkflowTestBase {
 	
 	private IProgress nullProgress = new NullProgress();
 

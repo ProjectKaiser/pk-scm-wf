@@ -9,6 +9,8 @@ import java.util.List;
 import org.junit.Test;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.commons.progress.ProgressConsole;
+import org.scm4j.wf.LogTag;
+import org.scm4j.wf.SCMWorkflow;
 import org.scm4j.wf.actions.ActionNone;
 import org.scm4j.wf.actions.IAction;
 import org.scm4j.wf.branch.ReleaseBranch;
@@ -16,9 +18,9 @@ import org.scm4j.wf.conf.Component;
 import org.scm4j.wf.conf.Version;
 import org.scm4j.wf.scmactions.ReleaseReason;
 import org.scm4j.wf.scmactions.SCMActionBuild;
-import org.scm4j.wf.scmactions.SCMActionForkReleaseBranch;
+import org.scm4j.wf.scmactions.SCMActionFork;
 
-public class SCMWorkflowForkReleaseTest extends SCMWorkflowTestBase {
+public class WorkflowReleaseTest extends WorkflowTestBase {
 	
 	@Test
 	public void testForkSingleComponent() throws Exception {
@@ -30,7 +32,7 @@ public class SCMWorkflowForkReleaseTest extends SCMWorkflowTestBase {
 		
 		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), "feature added");
 		exp = new Expectations();
-		exp.put(UNTILLDB, SCMActionForkReleaseBranch.class);
+		exp.put(UNTILLDB, SCMActionFork.class);
 		exp.put(UNTILLDB, "reason", ReleaseReason.NEW_FEATURES);
 		action = wf.getProductionReleaseAction(UNTILLDB);
 		checkChildActionsTypes(action, exp);
@@ -55,7 +57,7 @@ public class SCMWorkflowForkReleaseTest extends SCMWorkflowTestBase {
 		SCMWorkflow wf = new SCMWorkflow();
 		IAction action = wf.getProductionReleaseAction(UNTILL);
 		Expectations exp = new Expectations();
-		exp.put(UNTILL, SCMActionForkReleaseBranch.class);
+		exp.put(UNTILL, SCMActionFork.class);
 		exp.put(UNTILL, "reason", ReleaseReason.NEW_FEATURES);
 		exp.put(UBL, ActionNone.class);
 		exp.put(UNTILLDB, ActionNone.class);
@@ -112,7 +114,7 @@ public class SCMWorkflowForkReleaseTest extends SCMWorkflowTestBase {
 		action.execute(new NullProgress());
 		Expectations exp = new Expectations();
 		exp.put(UNTILLDB, ActionNone.class);
-		exp.put(UBL, SCMActionForkReleaseBranch.class);
+		exp.put(UBL, SCMActionFork.class);
 		exp.put(UBL,  "reason", ReleaseReason.NEW_DEPENDENCIES);
 		checkChildActionsTypes(action, exp);
 		
@@ -151,9 +153,9 @@ public class SCMWorkflowForkReleaseTest extends SCMWorkflowTestBase {
 		SCMWorkflow wf = new SCMWorkflow();
 		IAction action = wf.getProductionReleaseAction(UNTILL);
 		Expectations exp = new Expectations();
-		exp.put(UNTILL, SCMActionForkReleaseBranch.class);
+		exp.put(UNTILL, SCMActionFork.class);
 		exp.put(UNTILL, "reason", ReleaseReason.NEW_FEATURES);
-		exp.put(UBL, SCMActionForkReleaseBranch.class);
+		exp.put(UBL, SCMActionFork.class);
 		exp.put(UBL, "reason", ReleaseReason.NEW_FEATURES);
 		exp.put(UNTILLDB, ActionNone.class);
 		checkChildActionsTypes(action, exp);
@@ -207,11 +209,11 @@ public class SCMWorkflowForkReleaseTest extends SCMWorkflowTestBase {
 		SCMWorkflow wf = new SCMWorkflow();
 		IAction action = wf.getProductionReleaseAction(UNTILL);
 		Expectations exp = new Expectations();
-		exp.put(UNTILL, SCMActionForkReleaseBranch.class);
+		exp.put(UNTILL, SCMActionFork.class);
 		exp.put(UNTILL, "reason", ReleaseReason.NEW_FEATURES);
-		exp.put(UBL, SCMActionForkReleaseBranch.class);
+		exp.put(UBL, SCMActionFork.class);
 		exp.put(UBL, "reason", ReleaseReason.NEW_FEATURES);
-		exp.put(UNTILLDB, SCMActionForkReleaseBranch.class);
+		exp.put(UNTILLDB, SCMActionFork.class);
 		exp.put(UNTILLDB, "reason", ReleaseReason.NEW_FEATURES);
 		checkChildActionsTypes(action, exp);
 		
@@ -280,9 +282,9 @@ public class SCMWorkflowForkReleaseTest extends SCMWorkflowTestBase {
 		action = wf.getProductionReleaseAction(compUnTill);
 		Expectations exp = new Expectations();
 		exp.put(UNTILLDB, ActionNone.class);
-		exp.put(UNTILL, SCMActionForkReleaseBranch.class);
+		exp.put(UNTILL, SCMActionFork.class);
 		exp.put(UNTILL, "reason", ReleaseReason.ACTUALIZE_MDEPS);
-		exp.put(UBL, SCMActionForkReleaseBranch.class);
+		exp.put(UBL, SCMActionFork.class);
 		exp.put(UBL, "reason", ReleaseReason.ACTUALIZE_MDEPS);
 		checkChildActionsTypes(action, exp);
 		// actualize unTill and UBL mdeps

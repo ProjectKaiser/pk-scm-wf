@@ -1,4 +1,4 @@
-package org.scm4j.wf;
+package org.scm4j.wf.branches;
 
 import static org.junit.Assert.assertEquals;
 
@@ -7,6 +7,9 @@ import java.util.Arrays;
 import org.junit.Test;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.commons.progress.ProgressConsole;
+import org.scm4j.wf.NullProgress;
+import org.scm4j.wf.SCMWorkflow;
+import org.scm4j.wf.WorkflowTestBase;
 import org.scm4j.wf.actions.IAction;
 import org.scm4j.wf.branch.ReleaseBranch;
 import org.scm4j.wf.branch.ReleaseBranchStatus;
@@ -15,7 +18,7 @@ import org.scm4j.wf.conf.Version;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class ReleaseBranchTest extends SCMWorkflowTestBase {
+public class ReleaseBranchTest extends WorkflowTestBase {
 	
 	private IProgress nullProgress = new NullProgress();
 	private SCMWorkflow wf;

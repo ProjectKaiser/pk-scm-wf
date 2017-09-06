@@ -105,7 +105,7 @@ public class SCMActionBuild extends ActionAbstract {
 		} catch (Throwable t) {
 			progress.error("execution error: " + t.toString() + ": " + t.getMessage());
 			throw new RuntimeException(t);
-		} 
+		}
 	}
 
 	@Override

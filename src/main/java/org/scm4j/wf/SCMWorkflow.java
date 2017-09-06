@@ -22,14 +22,13 @@ import org.scm4j.wf.conf.Version;
 import org.scm4j.wf.exceptions.EComponentConfig;
 import org.scm4j.wf.scmactions.ReleaseReason;
 import org.scm4j.wf.scmactions.SCMActionBuild;
-import org.scm4j.wf.scmactions.SCMActionForkReleaseBranch;
+import org.scm4j.wf.scmactions.SCMActionFork;
 import org.scm4j.wf.scmactions.SCMActionTagRelease;
 
 public class SCMWorkflow {
 
 	public static final String MDEPS_FILE_NAME = "mdeps";
 	public static final String VER_FILE_NAME = "version";
-	public static final String MDEPS_CHANGED_FILE_NAME = "mdeps-changed"; //FIXME: how to use?
 	public static final String DELAYED_TAGS_FILE_NAME = "delayed-tags.yml"; 
 	public static final File BASE_WORKING_DIR = new File(System.getProperty("user.home"), ".scm4j");
 
@@ -107,9 +106,9 @@ public class SCMWorkflow {
 				return new ActionNone(comp, childActions, "nothing to build ");
 			}
 			if (dbs == DevelopBranchStatus.MODIFIED) {
-				return new SCMActionForkReleaseBranch(comp, childActions, ReleaseReason.NEW_FEATURES, options);
+				return new SCMActionFork(comp, childActions, ReleaseReason.NEW_FEATURES, options);
 			} else {
-				return new SCMActionForkReleaseBranch(comp, childActions, ReleaseReason.NEW_DEPENDENCIES, options);
+				return new SCMActionFork(comp, childActions, ReleaseReason.NEW_DEPENDENCIES, options);
 			}
 		}
 
@@ -119,7 +118,7 @@ public class SCMWorkflow {
 			if (actionKind == ActionKind.BUILD) {
 				return new ActionNone(comp, childActions, "nothing to build");
 			}
-			return new SCMActionForkReleaseBranch(comp, childActions, ReleaseReason.NEW_FEATURES, options);
+			return new SCMActionFork(comp, childActions, ReleaseReason.NEW_FEATURES, options);
 		}
 
 		if (rbs == ReleaseBranchStatus.MDEPS_FROZEN) {
@@ -129,7 +128,7 @@ public class SCMWorkflow {
 				if (actionKind == ActionKind.BUILD) {
 					return new ActionNone(comp, childActions, "nothing to build");
 				}
-				return new SCMActionForkReleaseBranch(comp, childActions, ReleaseReason.ACTUALIZE_MDEPS, options);
+				return new SCMActionFork(comp, childActions, ReleaseReason.ACTUALIZE_MDEPS, options);
 			} else {
 				// All necessary version will be build by Child Actions. Need to build
 				skipAllForks(childActions);
@@ -153,7 +152,7 @@ public class SCMWorkflow {
 			if (actionKind == ActionKind.FORK) {
 				return new ActionNone(comp, childActions, "nothing to build");
 			}
-			return new SCMActionForkReleaseBranch(comp, childActions, ReleaseReason.NEW_DEPENDENCIES, options);
+			return new SCMActionFork(comp, childActions, ReleaseReason.NEW_DEPENDENCIES, options);
 		}
 
 		return new ActionNone(comp, childActions, rbs.toString());
@@ -179,7 +178,7 @@ public class SCMWorkflow {
 
 	private boolean hasForkChildActions(List<IAction> childActions) {
 		for (IAction action : childActions) {
-			if (action instanceof SCMActionForkReleaseBranch) {
+			if (action instanceof SCMActionFork) {
 				return true;
 			}
 		}
@@ -191,8 +190,9 @@ public class SCMWorkflow {
 		IAction action;
 		while (li.hasNext()) {
 			action = li.next();
-			if (action instanceof SCMActionForkReleaseBranch) {
-				li.set(new ActionNone(((SCMActionForkReleaseBranch) action).getComponent(), action.getChildActions(), "fork skipped because not all parent components built"));
+			skipAllForks(action.getChildActions());
+			if (action instanceof SCMActionFork) {
+				li.set(new ActionNone(((SCMActionFork) action).getComponent(), action.getChildActions(), "fork skipped because not all parent components built"));
 			}
 		}
 	}
@@ -202,6 +202,7 @@ public class SCMWorkflow {
 		IAction action;
 		while (li.hasNext()) {
 			action = li.next();
+			skipAllBuilds(action.getChildActions());
 			if (action instanceof SCMActionBuild) {
 				li.set(new ActionNone(((SCMActionBuild) action).getComponent(), action.getChildActions(), "build skipped because not all parent components forked"));
 			}
@@ -236,7 +237,7 @@ public class SCMWorkflow {
 		
 		List<VCSTag> tagsOnRevision = vcs.getTagsOnRevision(delayedRevisionToTag);
 		if (tagsOnRevision.isEmpty()) {
-			return new SCMActionTagRelease(comp, childActions, "tag message", options);
+			return new SCMActionTagRelease(comp, childActions, "tag message", options); // TODO: Design tag message
 		}
 		Version delayedTagVersion = new Version(vcs.getFileContent(rb.getName(), SCMWorkflow.VER_FILE_NAME, delayedRevisionToTag));
 		for (VCSTag tag : tagsOnRevision) {

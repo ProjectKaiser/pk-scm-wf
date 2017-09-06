@@ -15,7 +15,7 @@ import org.scm4j.wf.conf.DelayedTagsFile;
 import org.scm4j.wf.conf.Component;
 import org.scm4j.wf.conf.VCSRepositories;
 
-public class SCMWorkflowTestBase {
+public class WorkflowTestBase {
 	protected TestEnvironment env;
 	protected static final String UNTILL = TestEnvironment.PRODUCT_UNTILL;
 	protected static final String UNTILLDB = TestEnvironment.PRODUCT_UNTILLDB;

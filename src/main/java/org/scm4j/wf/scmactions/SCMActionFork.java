@@ -16,7 +16,7 @@ import org.scm4j.wf.conf.MDepsFile;
 import org.scm4j.wf.conf.Option;
 import org.scm4j.wf.conf.Version;
 
-public class SCMActionForkReleaseBranch extends ActionAbstract {
+public class SCMActionFork extends ActionAbstract {
 	
 	private final ReleaseReason reason;
 	private final ReleaseBranch rb;
@@ -24,7 +24,7 @@ public class SCMActionForkReleaseBranch extends ActionAbstract {
 	private final Version currentVer;
 	private final IVCS vcs;
 
-	public SCMActionForkReleaseBranch(Component comp, List<IAction> childActions, ReleaseReason reason, List<Option> options) {
+	public SCMActionFork(Component comp, List<IAction> childActions, ReleaseReason reason, List<Option> options) {
 		super(comp, childActions, options);
 		this.reason = reason;
 		rb = new ReleaseBranch(comp, repos);
@@ -66,8 +66,12 @@ public class SCMActionForkReleaseBranch extends ActionAbstract {
 		}
 		if (hasNewMDeps) {
 			MDepsFile frozenMDepsFile = new MDepsFile(actualizedMDeps);
-			vcs.setFileContent(rb.getName(), SCMWorkflow.MDEPS_FILE_NAME, frozenMDepsFile.toFileContent(), LogTag.SCM_MDEPS);
-			progress.reportStatus("mdeps actualized");
+			vcs.setFileContent(rb.getName(), SCMWorkflow.MDEPS_FILE_NAME, frozenMDepsFile.toFileContent(), LogTag.SCM_MDEPS); // TODO: add mdeps are actual already check
+//			if (commit.isEmpty()) {
+//				progress.reportStatus("mdeps are actual already");
+//			} else {
+				progress.reportStatus("mdeps actualized");
+//			}
 		} else {
 			progress.reportStatus("no mdeps to actualize");
 		}

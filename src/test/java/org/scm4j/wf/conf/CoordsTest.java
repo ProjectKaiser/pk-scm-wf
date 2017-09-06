@@ -1,4 +1,4 @@
-package org.scm4j.wf;
+package org.scm4j.wf.conf;
 
 import org.scm4j.wf.conf.Coords;
 import org.scm4j.wf.conf.Version;
