@@ -1,13 +1,13 @@
 # TOC
 
-- [Component configuration files](#component-configuration-files)
+- [component configuration files](#component-configuration-files)
   - [`version` file](#version-file)
   - [`mdeps` file](#mdeps-file)
-- [Comment Tags](#comment-tags)
-- [Environment Vars](#environment-vars)
-- [Working Files](#working-files)
+- [comment tags](#comment-tags)
+- [environment vars](#environment-vars)
+- [working files](#working-files)
 
-# Component Configuration Files
+# component configuration files
 
 Component configuration files should be  located in the root of repository
 
@@ -51,7 +51,7 @@ com.mycompany:component-three:2.1.0
 
 versions in `release` branch are relaced automatically during `fork` operation.
 
-# Comment Tags
+# comment tags
 
 Comment tags are placed inside commit comments
 
