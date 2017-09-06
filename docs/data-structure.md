@@ -1,4 +1,4 @@
-# Artifacts
+# TOC
 
 - [Component configuration files](#component-configuration-files)
   - [`version` file](#version-file)
