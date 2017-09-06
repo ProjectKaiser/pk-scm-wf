@@ -76,7 +76,7 @@ public class TestEnvironment implements AutoCloseable {
 			}
 		});
 
-		repos = VCSRepositories.loadVCSRepositories();
+		repos = VCSRepositories.getDefault();
 	}
 
 	private void createReposFile() throws IOException {
@@ -193,7 +193,7 @@ public class TestEnvironment implements AutoCloseable {
 	public void generateRelease(Component comp) {
 		IVCS vcs = comp.getVCS();
 		DevelopBranch db = new DevelopBranch(comp);
-		ReleaseBranch rb = new ReleaseBranch(comp, comp.getVersion(), repos);
+		ReleaseBranch rb = new ReleaseBranch(comp, comp.getVersion());
 		vcs.createBranch(db.getName(), rb.getName(), null);
 		VCSCommit commit = vcs.setFileContent(rb.getName(), SCMWorkflow.VER_FILE_NAME, comp.getVersion().toReleaseString(), LogTag.SCM_VER);
 		vcs.createTag(rb.getName(), comp.getVersion().toReleaseString(), "tag created", commit.getRevision());

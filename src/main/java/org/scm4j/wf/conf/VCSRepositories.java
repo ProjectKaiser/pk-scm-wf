@@ -1,10 +1,5 @@
 package org.scm4j.wf.conf;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-
 import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
 import org.scm4j.vcs.api.workingcopy.VCSWorkspace;
 import org.scm4j.wf.SCMWorkflow;
@@ -13,6 +8,11 @@ import org.scm4j.wf.builders.BuilderFactory;
 import org.scm4j.wf.exceptions.EConfig;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.error.YAMLException;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 public class VCSRepositories {
 	public static final String DEFAULT_VCS_WORKSPACE_DIR = new File(SCMWorkflow.BASE_WORKING_DIR, "wf-vcs-workspaces").getPath();
@@ -43,7 +43,7 @@ public class VCSRepositories {
 			creds = new HashMap<>();
 		}
 	}
-	
+
 	public VCSRepository getByName(String componentName) {
 		String url = getPropByNameAsStringWithReplace(urls, componentName, "url", null);
 		if (url == null) {
@@ -51,7 +51,7 @@ public class VCSRepositories {
 		}
 
 		Credentials credentials;
-		String user = (String) getPropByName(creds, url, "name", null);		
+		String user = (String) getPropByName(creds, url, "name", null);
 		if (user != null) {
 			String pass = (String) getPropByName(creds, url, "password", null);
 			Boolean isDefault = (Boolean) getPropByName(creds, url, "isDefault", false);
@@ -114,7 +114,7 @@ public class VCSRepositories {
 		return result;
 	}
 
-	public static VCSRepositories loadVCSRepositories() throws EConfig {
+	private static VCSRepositories loadVCSRepositories() throws EConfig {
 		try {
 			URLContentLoader reposLoader = new URLContentLoader();
 
@@ -139,4 +139,24 @@ public class VCSRepositories {
 			throw new EConfig("Failed to read config", e);
 		}
 	}
+
+	private static volatile VCSRepositories instance;
+
+	public static VCSRepositories getDefault() {
+		VCSRepositories localInstance = instance;
+		if (localInstance == null) {
+			synchronized (VCSRepositories.class) {
+				localInstance = instance;
+				if (localInstance == null) {
+					instance = localInstance = VCSRepositories.loadVCSRepositories();
+				}
+			}
+		}
+		return localInstance;
+	}
+
+	public static void resetDefault() {
+		instance = null;
+	}
+
 }

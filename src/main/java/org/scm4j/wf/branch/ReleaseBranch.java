@@ -1,11 +1,5 @@
 package org.scm4j.wf.branch;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Set;
-
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.vcs.api.VCSTag;
@@ -14,21 +8,20 @@ import org.scm4j.wf.SCMWorkflow;
 import org.scm4j.wf.conf.Component;
 import org.scm4j.wf.conf.DelayedTagsFile;
 import org.scm4j.wf.conf.MDepsFile;
-import org.scm4j.wf.conf.VCSRepositories;
 import org.scm4j.wf.conf.Version;
+
+import java.util.*;
 
 public class ReleaseBranch {
 
 	private final Component comp;
 	private final Version version;
 	private final IVCS vcs;
-	private final VCSRepositories repos;
 	private final String name;
 
-	public ReleaseBranch(Component comp, Version version, VCSRepositories repos) {
+	public ReleaseBranch(Component comp, Version version) {
 		this.version = version.toRelease();
 		this.comp = comp;
-		this.repos = repos;
 		name = computeName();
 		vcs = comp.getVCS();
 	}
@@ -37,9 +30,8 @@ public class ReleaseBranch {
 		return comp.getVcsRepository().getReleaseBranchPrefix() + version.getReleaseNoPatchString();
 	}
 	
-	public ReleaseBranch(final Component comp, VCSRepositories repos) {
+	public ReleaseBranch(final Component comp) {
 		this.comp = comp;
-		this.repos = repos;
 		vcs = comp.getVCS();
 		DevelopBranch db = new DevelopBranch(comp);
 		Version ver = db.getVersion().toRelease();
@@ -157,7 +149,7 @@ public class ReleaseBranch {
 		}
 		ReleaseBranch mDepRB;
 		for (Component mDep : mDeps) {
-			mDepRB = new ReleaseBranch(mDep, mDep.getVersion(), repos);
+			mDepRB = new ReleaseBranch(mDep, mDep.getVersion());
 			if (!mDepRB.isPreHeadCommitTaggedWithVersion() && !mDepRB.isPreHeadCommitTagDelayed()) {
 				return false;
 			}
@@ -229,7 +221,7 @@ public class ReleaseBranch {
 		}
 
 		String mDepsFileContent = comp.getVCS().getFileContent(name, SCMWorkflow.MDEPS_FILE_NAME, null);
-		MDepsFile mDeps = new MDepsFile(mDepsFileContent, repos);
+		MDepsFile mDeps = new MDepsFile(mDepsFileContent);
 		return mDeps.getMDeps();
 	}
 

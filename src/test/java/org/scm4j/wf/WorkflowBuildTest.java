@@ -1,20 +1,11 @@
 package org.scm4j.wf;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
-import java.util.List;
-
 import org.junit.Test;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.commons.progress.ProgressConsole;
 import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.vcs.api.VCSTag;
 import org.scm4j.vcs.api.WalkDirection;
-import org.scm4j.wf.LogTag;
-import org.scm4j.wf.SCMWorkflow;
 import org.scm4j.wf.actions.ActionNone;
 import org.scm4j.wf.actions.IAction;
 import org.scm4j.wf.branch.ReleaseBranch;
@@ -24,7 +15,24 @@ import org.scm4j.wf.scmactions.ReleaseReason;
 import org.scm4j.wf.scmactions.SCMActionBuild;
 import org.scm4j.wf.scmactions.SCMActionFork;
 
+import java.util.List;
+
+import static org.junit.Assert.*;
+
 public class WorkflowBuildTest extends WorkflowTestBase {
+
+	private void checkUnTillDbForked() {
+		ReleaseBranch newUnTillDbRB = new ReleaseBranch(compUnTillDb);
+		// check branches
+		assertTrue(env.getUnTillDbVCS().getBranches("").contains(newUnTillDbRB.getName()));
+
+		// check versions. Trunk is minor+1, Release is without -SNAPSHOT
+		Version verTrunk = dbUnTillDb.getVersion();
+
+		Version verRelease = newUnTillDbRB.getCurrentVersion();
+		assertEquals(env.getUnTillDbVer().toNextMinor(), verTrunk);
+		assertEquals(env.getUnTillDbVer().toRelease(), verRelease);
+	}
 	
 	@Test
 	public void testBuildRootIfNestedIsBuiltAlready() throws Exception {
@@ -34,6 +42,7 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		// fork unTillDb 
 		IAction action = wf.getProductionReleaseAction(UNTILLDB);
 		action.execute(new NullProgress());
+		checkUnTillDbForked();
 		
 		// build unTillDb
 		action = wf.getProductionReleaseAction(UNTILLDB);
@@ -68,7 +77,9 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		assertTrue(TestBuilder.getBuilders().size() == 1);
 		
 	}
-	
+
+
+
 	@Test
 	public void testBuildUBLAndUnTillDb() throws Exception {
 		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), "feature added");
@@ -144,7 +155,8 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		assertNotNull(TestBuilder.getBuilders().get(UNTILLDB));
 		
 		// check versions
-		Version verRelease = rbUnTillDbFixedVer.getCurrentVersion();
+		ReleaseBranch rbUnTillDb = new ReleaseBranch(compUnTillDb);
+		Version verRelease = rbUnTillDb.getCurrentVersion();
 		assertEquals(env.getUnTillDbVer().toNextPatch().toReleaseString(), verRelease.toString());
 		
 		// check tags
@@ -152,7 +164,7 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		assertTrue(tags.size() == 1);
 		VCSTag tag = tags.get(0);
 		assertEquals(env.getUnTillDbVer().toReleaseString(), tag.getTagName());
-		List<VCSCommit> commits = env.getUnTillDbVCS().getCommitsRange(rbUnTillDbFixedVer.getName(), null, WalkDirection.DESC, 2);
+		List<VCSCommit> commits = env.getUnTillDbVCS().getCommitsRange(rbUnTillDb.getName(), null, WalkDirection.DESC, 2);
 		assertEquals(commits.get(1), tag.getRelatedCommit());
 	}
 	
@@ -170,9 +182,13 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 			action.execute(progress);
 		}
 
-		assertFalse(env.getUnTillVCS().getBranches("").contains(rbUnTillFixedVer.getName()));
-		assertTrue(env.getUnTillDbVCS().getBranches("").contains(rbUnTillDbFixedVer.getName()));
-		assertFalse(env.getUblVCS().getBranches("").contains(rbUBLFixedVer.getName()));
+		ReleaseBranch rbUBL = new ReleaseBranch(compUBL);
+		ReleaseBranch rbUnTillDb = new ReleaseBranch(compUnTillDb);
+		ReleaseBranch rbUnTill = new ReleaseBranch(compUnTill);
+
+		assertFalse(env.getUnTillVCS().getBranches("").contains(rbUnTill.getName()));
+		assertTrue(env.getUnTillDbVCS().getBranches("").contains(rbUnTillDb.getName()));
+		assertFalse(env.getUblVCS().getBranches("").contains(rbUBL.getName()));
 		
 		// fork unTill. unTillDb build must be skipped
 		// simulate UBL and unTill BRANCHED dev branch status
@@ -191,9 +207,9 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 			action.execute(progress);
 		}
 		
-		assertTrue(env.getUnTillVCS().getBranches("").contains(rbUnTillFixedVer.getName()));
-		assertTrue(env.getUnTillDbVCS().getBranches("").contains(rbUnTillDbFixedVer.getName()));
-		assertTrue(env.getUblVCS().getBranches("").contains(rbUBLFixedVer.getName()));
+		assertTrue(env.getUnTillVCS().getBranches("").contains(rbUnTill.getName()));
+		assertTrue(env.getUnTillDbVCS().getBranches("").contains(rbUnTillDb.getName()));
+		assertTrue(env.getUblVCS().getBranches("").contains(rbUBL.getName()));
 	}
 	
 	@Test
@@ -218,11 +234,11 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		action = wf.getProductionReleaseAction(UNTILLDB);
 		action.execute(new NullProgress());
 		
-		assertEquals(env.getUnTillDbVer().toNextMinor().toRelease(), new ReleaseBranch(compUnTillDb, repos).getVersion());
+		assertEquals(env.getUnTillDbVer().toNextMinor().toRelease(), new ReleaseBranch(compUnTillDb).getVersion());
 		
 		//check desired version is selected
-		Component comp = new Component(UNTILLDB + ":2.59.1", repos.getByName(UNTILLDB));
-		ReleaseBranch rb = new ReleaseBranch(comp, repos);
+		Component comp = new Component(UNTILLDB + ":2.59.1");
+		ReleaseBranch rb = new ReleaseBranch(comp);
 		assertEquals(dbUnTillDb.getVersion().toPreviousMinor().toPreviousMinor().toRelease(), rb.getVersion());
 		
 		// add feature for 2.59.2
@@ -231,7 +247,7 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		// build new unTIllDb patch
 		action = wf.getProductionReleaseAction(comp);
 		action.execute(new NullProgress());
-		assertEquals(dbUnTillDb.getVersion().toPreviousMinor().toPreviousMinor().toNextPatch().toRelease(), new ReleaseBranch(comp, repos).getVersion());
+		assertEquals(dbUnTillDb.getVersion().toPreviousMinor().toPreviousMinor().toNextPatch().toRelease(), new ReleaseBranch(comp).getVersion());
 	}
 	
 	// TODO: add actualize mdeps test if mdep dev version is not -SNAPSHOT, e.g. 123.3 or master-SNAPSHOT 

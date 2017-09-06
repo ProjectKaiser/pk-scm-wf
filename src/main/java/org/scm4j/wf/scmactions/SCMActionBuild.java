@@ -1,7 +1,5 @@
 package org.scm4j.wf.scmactions;
 
-import java.util.List;
-
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSCommit;
@@ -14,12 +12,10 @@ import org.scm4j.wf.actions.ActionAbstract;
 import org.scm4j.wf.actions.IAction;
 import org.scm4j.wf.branch.ReleaseBranch;
 import org.scm4j.wf.branch.ReleaseBranchStatus;
-import org.scm4j.wf.conf.Component;
-import org.scm4j.wf.conf.DelayedTagsFile;
-import org.scm4j.wf.conf.Option;
-import org.scm4j.wf.conf.TagDesc;
-import org.scm4j.wf.conf.Version;
+import org.scm4j.wf.conf.*;
 import org.scm4j.wf.exceptions.EBuilder;
+
+import java.util.List;
 
 	
 public class SCMActionBuild extends ActionAbstract {
@@ -44,7 +40,7 @@ public class SCMActionBuild extends ActionAbstract {
 	public void execute(IProgress progress) {
 		try {
 			IVCS vcs = getVCS();
-			ReleaseBranch rb = new ReleaseBranch(comp, repos);
+			ReleaseBranch rb = new ReleaseBranch(comp);
 			ReleaseBranchStatus rbs = rb.getStatus();
 			if (rbs == ReleaseBranchStatus.ACTUAL) {
 				progress.reportStatus("version " + rb.getVersion().toString() + " already built ");

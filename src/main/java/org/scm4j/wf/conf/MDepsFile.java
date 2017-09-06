@@ -12,15 +12,14 @@ public class MDepsFile {
 	
 	private List<Component> mDeps = new ArrayList<>();
 	
-	public MDepsFile(String content, VCSRepositories repos) {
+	public MDepsFile(String content) {
 		BufferedReader br = new BufferedReader(new StringReader(content));
 		try {
 			String str = br.readLine();
 			while (str != null) {
 				if (isLineValueable(str)) {
-					Component dep = new Component(str, repos.getByCoords(str));
+					Component dep = new Component(str);
 					mDeps.add(dep);
-
 				}
 				str = br.readLine();
 			}
@@ -37,20 +36,6 @@ public class MDepsFile {
 		return !str.trim().isEmpty();
 	}
 
-	public MDepsFile(String content, VCSRepository vcsRepo) {
-		BufferedReader br = new BufferedReader(new StringReader(content));
-		try {
-			String str = br.readLine();
-			while (str != null) {
-				Component dep = new Component(str, vcsRepo);
-				mDeps.add(dep);
-				str = br.readLine();
-			}
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
-	}
-	
 	public MDepsFile(List<Component> mDeps) {
 		this.mDeps = mDeps;
 	}

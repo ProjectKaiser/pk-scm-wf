@@ -3,20 +3,18 @@ package org.scm4j.wf.conf;
 import org.scm4j.vcs.api.IVCS;
 
 public class Component {
-	private final VCSRepository vcsRepository;
 	private final Coords coords;
 
 	public VCSRepository getVcsRepository() {
-		return vcsRepository;
+		return VCSRepositories.getDefault().getByName(coords.getName());
 	}
 
-	public Component(String coordsStr, VCSRepository repo) {
+	public Component(String coordsStr) {
 		coords = new Coords(coordsStr);
-		vcsRepository = repo;
 	}
 	
 	public IVCS getVCS() {
-		return vcsRepository.getVcs();
+		return getVcsRepository().getVcs();
 	}
 	
 	public Coords getCoords() {
@@ -37,38 +35,22 @@ public class Component {
 	}
 
 	public Component cloneWithDifferentVersion(String versionStr) {
-		return new Component(coords.toString(versionStr), vcsRepository);
+		return new Component(coords.toString(versionStr));
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+
+		Component component = (Component) o;
+
+		return coords.equals(component.coords);
+
 	}
 
 	@Override
 	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((coords == null) ? 0 : coords.hashCode());
-		result = prime * result + ((vcsRepository == null) ? 0 : vcsRepository.hashCode());
-		return result;
+		return coords.hashCode();
 	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		Component other = (Component) obj;
-		if (coords == null) {
-			if (other.coords != null)
-				return false;
-		} else if (!coords.equals(other.coords))
-			return false;
-		if (vcsRepository == null) {
-			if (other.vcsRepository != null)
-				return false;
-		} else if (!vcsRepository.equals(other.vcsRepository))
-			return false;
-		return true;
-	}
-	
 }

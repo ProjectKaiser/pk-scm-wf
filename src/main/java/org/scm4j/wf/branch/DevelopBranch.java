@@ -6,7 +6,6 @@ import org.scm4j.wf.LogTag;
 import org.scm4j.wf.SCMWorkflow;
 import org.scm4j.wf.conf.Component;
 import org.scm4j.wf.conf.MDepsFile;
-import org.scm4j.wf.conf.VCSRepositories;
 import org.scm4j.wf.conf.Version;
 
 import java.util.ArrayList;
@@ -58,7 +57,7 @@ public class DevelopBranch {
 			return new ArrayList<>();
 		}
 		String mDepsFileContent = vcs.getFileContent(getName(), SCMWorkflow.MDEPS_FILE_NAME, null);
-		MDepsFile mDeps = new MDepsFile(mDepsFileContent, VCSRepositories.loadVCSRepositories());
+		MDepsFile mDeps = new MDepsFile(mDepsFileContent);
 		return mDeps.getMDeps();
 	}
 

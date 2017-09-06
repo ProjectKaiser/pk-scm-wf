@@ -1,14 +1,14 @@
 package org.scm4j.wf.conf;
 
+import org.apache.commons.io.FileUtils;
+import org.scm4j.wf.SCMWorkflow;
+import org.yaml.snakeyaml.Yaml;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
-
-import org.apache.commons.io.FileUtils;
-import org.scm4j.wf.SCMWorkflow;
-import org.yaml.snakeyaml.Yaml;
 
 public class DelayedTagsFile {
 	
@@ -50,7 +50,7 @@ public class DelayedTagsFile {
 		
 		Map<String, String> content = getContent();
 		String previousRevision = content.put(url, revision);
-		if (previousRevision != revision) {
+		if (previousRevision == null || !previousRevision.equals(revision)) {
 			writeContent(content);
 		}
 	}

@@ -1,50 +1,41 @@
 package org.scm4j.wf;
 
-import static org.junit.Assert.fail;
+import org.junit.After;
+import org.junit.Before;
+import org.scm4j.wf.actions.IAction;
+import org.scm4j.wf.branch.DevelopBranch;
+import org.scm4j.wf.conf.Component;
+import org.scm4j.wf.conf.DelayedTagsFile;
+import org.scm4j.wf.conf.VCSRepositories;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.junit.After;
-import org.junit.Before;
-import org.scm4j.wf.actions.IAction;
-import org.scm4j.wf.branch.DevelopBranch;
-import org.scm4j.wf.branch.ReleaseBranch;
-import org.scm4j.wf.conf.DelayedTagsFile;
-import org.scm4j.wf.conf.Component;
-import org.scm4j.wf.conf.VCSRepositories;
+import static org.junit.Assert.fail;
 
 public class WorkflowTestBase {
 	protected TestEnvironment env;
 	protected static final String UNTILL = TestEnvironment.PRODUCT_UNTILL;
 	protected static final String UNTILLDB = TestEnvironment.PRODUCT_UNTILLDB;
 	protected static final String UBL = TestEnvironment.PRODUCT_UBL;
-	protected VCSRepositories repos;
 	protected Component compUnTill;
 	protected Component compUnTillDb;
 	protected Component compUBL;
 	protected DevelopBranch dbUnTill;
 	protected DevelopBranch dbUnTillDb;
 	protected DevelopBranch dbUBL;
-	protected ReleaseBranch rbUnTillFixedVer;
-	protected ReleaseBranch rbUnTillDbFixedVer;
-	protected ReleaseBranch rbUBLFixedVer;
 
 	@Before
 	public void setUp() throws Exception {
 		env = new TestEnvironment();
 		env.generateTestEnvironment();
-		repos = VCSRepositories.loadVCSRepositories();
-		compUnTill = new Component(UNTILL, repos.getByCoords(UNTILL));
-		compUnTillDb = new Component(UNTILLDB, repos.getByCoords(UNTILLDB));
-		compUBL = new Component(UBL, repos.getByCoords(UBL));
+		compUnTill = new Component(UNTILL);
+		compUnTillDb = new Component(UNTILLDB);
+		compUBL = new Component(UBL);
 		dbUnTill = new DevelopBranch(compUnTill);
 		dbUnTillDb = new DevelopBranch(compUnTillDb);
 		dbUBL = new DevelopBranch(compUBL);
-		rbUnTillFixedVer = new ReleaseBranch(compUnTill, env.getUnTillVer(), repos);
-		rbUnTillDbFixedVer = new ReleaseBranch(compUnTillDb, env.getUnTillDbVer(), repos);
-		rbUBLFixedVer = new ReleaseBranch(compUBL, env.getUblVer(), repos);
 		TestBuilder.setBuilders(new HashMap<String, TestBuilder>());
 		new DelayedTagsFile().delete();
 	}
@@ -55,6 +46,7 @@ public class WorkflowTestBase {
 			env.close();
 		}
 		TestBuilder.setBuilders(null);
+		VCSRepositories.resetDefault();
 	}
 	
 	protected void checkChildActionsTypes(IAction action, Expectations exp) {

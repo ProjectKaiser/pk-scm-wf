@@ -1,8 +1,5 @@
 package org.scm4j.wf.scmactions;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.wf.LogTag;
@@ -16,6 +13,9 @@ import org.scm4j.wf.conf.MDepsFile;
 import org.scm4j.wf.conf.Option;
 import org.scm4j.wf.conf.Version;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class SCMActionFork extends ActionAbstract {
 	
 	private final ReleaseReason reason;
@@ -27,7 +27,7 @@ public class SCMActionFork extends ActionAbstract {
 	public SCMActionFork(Component comp, List<IAction> childActions, ReleaseReason reason, List<Option> options) {
 		super(comp, childActions, options);
 		this.reason = reason;
-		rb = new ReleaseBranch(comp, repos);
+		rb = new ReleaseBranch(comp);
 		db = new DevelopBranch(comp);
 		currentVer = db.getVersion();
 		vcs = getVCS();
@@ -55,7 +55,7 @@ public class SCMActionFork extends ActionAbstract {
 		List<Component> actualizedMDeps = new ArrayList<>();
 		Boolean hasNewMDeps = false;
 		for (Component currentMDep : currentMDeps) {
-			ReleaseBranch rbCurrentMDep = new ReleaseBranch(currentMDep, repos);
+			ReleaseBranch rbCurrentMDep = new ReleaseBranch(currentMDep);
 			String futureReleaseVersionStr = rbCurrentMDep.getVersion().toReleaseString();
 			if (new Version(futureReleaseVersionStr).isGreaterThan(currentMDep.getVersion())) {
 				actualizedMDeps.add(currentMDep.cloneWithDifferentVersion(futureReleaseVersionStr));

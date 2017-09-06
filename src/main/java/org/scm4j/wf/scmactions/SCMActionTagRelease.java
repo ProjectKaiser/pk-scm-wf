@@ -1,7 +1,5 @@
 package org.scm4j.wf.scmactions;
 
-import java.util.List;
-
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSTag;
@@ -9,11 +7,9 @@ import org.scm4j.wf.SCMWorkflow;
 import org.scm4j.wf.actions.ActionAbstract;
 import org.scm4j.wf.actions.IAction;
 import org.scm4j.wf.branch.ReleaseBranch;
-import org.scm4j.wf.conf.Component;
-import org.scm4j.wf.conf.DelayedTagsFile;
-import org.scm4j.wf.conf.Option;
-import org.scm4j.wf.conf.TagDesc;
-import org.scm4j.wf.conf.Version;
+import org.scm4j.wf.conf.*;
+
+import java.util.List;
 
 public class SCMActionTagRelease extends ActionAbstract {
 
@@ -39,7 +35,7 @@ public class SCMActionTagRelease extends ActionAbstract {
 			}
 			
 			List<VCSTag> tagsOnRevision = vcs.getTagsOnRevision(revisionToTag);
-			ReleaseBranch rb = new ReleaseBranch(comp, repos);
+			ReleaseBranch rb = new ReleaseBranch(comp);
 			Version delayedTagVersion = new Version(vcs.getFileContent(rb.getName(), SCMWorkflow.VER_FILE_NAME, revisionToTag));
 			TagDesc tagDesc = SCMWorkflow.getTagDesc(delayedTagVersion.toString());
 			for (VCSTag tag : tagsOnRevision) {

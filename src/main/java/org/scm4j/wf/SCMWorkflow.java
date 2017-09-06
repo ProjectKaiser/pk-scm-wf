@@ -1,10 +1,5 @@
 package org.scm4j.wf;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.ListIterator;
-
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSTag;
 import org.scm4j.wf.actions.ActionKind;
@@ -14,17 +9,17 @@ import org.scm4j.wf.branch.DevelopBranch;
 import org.scm4j.wf.branch.DevelopBranchStatus;
 import org.scm4j.wf.branch.ReleaseBranch;
 import org.scm4j.wf.branch.ReleaseBranchStatus;
-import org.scm4j.wf.conf.DelayedTagsFile;
-import org.scm4j.wf.conf.Component;
-import org.scm4j.wf.conf.Option;
-import org.scm4j.wf.conf.TagDesc;
-import org.scm4j.wf.conf.VCSRepositories;
-import org.scm4j.wf.conf.Version;
+import org.scm4j.wf.conf.*;
 import org.scm4j.wf.exceptions.EComponentConfig;
 import org.scm4j.wf.scmactions.ReleaseReason;
 import org.scm4j.wf.scmactions.SCMActionBuild;
 import org.scm4j.wf.scmactions.SCMActionFork;
 import org.scm4j.wf.scmactions.SCMActionTagRelease;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.ListIterator;
 
 public class SCMWorkflow {
 
@@ -33,20 +28,15 @@ public class SCMWorkflow {
 	public static final String DELAYED_TAGS_FILE_NAME = "delayed-tags.yml"; 
 	public static final File BASE_WORKING_DIR = new File(System.getProperty("user.home"), ".scm4j");
 
-	private final VCSRepositories repos;
+	private final VCSRepositories repos = VCSRepositories.getDefault();
 	private final List<Option> options;
 	
-	public SCMWorkflow(VCSRepositories repos, List<Option> options) {
-		this.repos = repos;
+	public SCMWorkflow(List<Option> options) {
 		this.options = options;
 	}
 	
 	public SCMWorkflow() {
 		this(new ArrayList<Option>());
-	}
-	
-	public SCMWorkflow(List<Option> options) {
-		this(VCSRepositories.loadVCSRepositories(), options);
 	}
 	
 	public static List<Option> parseOptions(String[] args) {
@@ -64,11 +54,11 @@ public class SCMWorkflow {
 	}
 	
 	public IAction getProductionReleaseAction(String componentName) {
-		return getProductionReleaseAction(new Component(componentName, repos.getByCoords(componentName)), ActionKind.AUTO);
+		return getProductionReleaseAction(new Component(componentName), ActionKind.AUTO);
 	}
 	
 	public IAction getProductionReleaseAction(String componentCoords, ActionKind actionKind) {
-		return getProductionReleaseAction(new Component(componentCoords, repos.getByCoords(componentCoords)), actionKind);
+		return getProductionReleaseAction(new Component(componentCoords), actionKind);
 	}
 	
 	public IAction getProductionReleaseAction(Component comp) {
@@ -98,7 +88,7 @@ public class SCMWorkflow {
 			return new ActionNone(comp, childActions, "develop branch is IGNORED");
 		}
 
-		ReleaseBranch rb = new ReleaseBranch(comp, repos);
+		ReleaseBranch rb = new ReleaseBranch(comp);
 		ReleaseBranchStatus rbs = rb.getStatus();
 
 		if (rbs == ReleaseBranchStatus.MISSING) {
@@ -163,7 +153,7 @@ public class SCMWorkflow {
 		List<Component> mDeps = currentCompRB.getMDeps();
 		ReleaseBranch mDepRB;
 		for (Component mDep : mDeps) {
-			mDepRB = new ReleaseBranch(mDep, repos);
+			mDepRB = new ReleaseBranch(mDep);
 			if (mDepRB.getStatus() == ReleaseBranchStatus.MDEPS_ACTUAL) {
 				if (!mDepRB.getCurrentVersion().equals(mDep.getVersion())) {
 					return true;
@@ -222,11 +212,11 @@ public class SCMWorkflow {
 	}
 
 	public IAction getTagReleaseAction(String compName) {
-		return getTagReleaseAction(new Component(compName, repos.getByCoords(compName)));
+		return getTagReleaseAction(new Component(compName));
 	}
 
 	private IAction getTagReleaseActionRoot(Component comp, List<IAction> childActions) {
-		ReleaseBranch rb = new ReleaseBranch(comp, repos);
+		ReleaseBranch rb = new ReleaseBranch(comp);
 		DelayedTagsFile cf = new DelayedTagsFile();
 		IVCS vcs = comp.getVCS();
 		

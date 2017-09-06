@@ -1,18 +1,17 @@
 package org.scm4j.wf;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import org.junit.Test;
+import org.scm4j.commons.progress.IProgress;
+import org.scm4j.wf.actions.IAction;
+import org.scm4j.wf.branch.ReleaseBranch;
+import org.scm4j.wf.branch.ReleaseBranchStatus;
+import org.scm4j.wf.conf.DelayedTagsFile;
+import org.scm4j.wf.conf.Option;
 
 import java.io.IOException;
 import java.util.Arrays;
 
-import org.junit.Test;
-import org.scm4j.commons.progress.IProgress;
-import org.scm4j.wf.actions.IAction;
-import org.scm4j.wf.branch.ReleaseBranchStatus;
-import org.scm4j.wf.conf.DelayedTagsFile;
-import org.scm4j.wf.conf.Option;
+import static org.junit.Assert.*;
 
 public class WorkflowDelayedTagTest extends WorkflowTestBase {
 	
@@ -43,9 +42,9 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 		assertNotNull(cf.getRevisitonByUrl(compUnTillDb.getVcsRepository().getUrl()));
 		assertNotNull(cf.getRevisitonByUrl(compUnTill.getVcsRepository().getUrl()));
 		assertNotNull(cf.getRevisitonByUrl(compUBL.getVcsRepository().getUrl()));
-		assertEquals(ReleaseBranchStatus.ACTUAL, rbUnTillDbFixedVer.getStatus());
-		assertEquals(ReleaseBranchStatus.ACTUAL, rbUBLFixedVer.getStatus());
-		assertEquals(ReleaseBranchStatus.ACTUAL, rbUnTillFixedVer.getStatus());
+		assertEquals(ReleaseBranchStatus.ACTUAL, new ReleaseBranch(compUnTillDb).getStatus());
+		assertEquals(ReleaseBranchStatus.ACTUAL, new ReleaseBranch(compUBL).getStatus());
+		assertEquals(ReleaseBranchStatus.ACTUAL, new ReleaseBranch(compUnTill).getStatus());
 	}
 	
 	@Test
@@ -68,9 +67,9 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 		action.execute(nullProgress);
 		
 		// check tags
-		assertTrue(rbUBLFixedVer.isPreHeadCommitTaggedWithVersion());
-		assertTrue(rbUnTillDbFixedVer.isPreHeadCommitTaggedWithVersion());
-		assertTrue(rbUnTillFixedVer.isPreHeadCommitTaggedWithVersion());
+		assertTrue(new ReleaseBranch(compUBL).isPreHeadCommitTaggedWithVersion());
+		assertTrue( new ReleaseBranch(compUnTillDb).isPreHeadCommitTaggedWithVersion());
+		assertTrue(new ReleaseBranch(compUnTill).isPreHeadCommitTaggedWithVersion());
 		
 		// check Dealyed Tags file
 		DelayedTagsFile cf = new DelayedTagsFile();
