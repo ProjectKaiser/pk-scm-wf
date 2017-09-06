@@ -63,4 +63,4 @@ Comment tags are placed inside commit comments
 
 Working files are located at ${user.home}/.scm4j
 
-- vcs-repositories: repositories working copies
+- `vcs-repositories`: repositories working copies
