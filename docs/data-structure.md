@@ -64,12 +64,12 @@ Comment tags are placed inside commit comments
 - `#scm-ignore`
   - Commit in `develop` branch which shows that all previous feature commits are ignored
   
-# Environment Vars
+# environment vars
 
 - [SCM4J_VCS_REPOS](data-structure-SCM4J_VCS_REPOS.md): list of yaml files which map artifact coordinates to repositories URLs
 - [SCM4J_CREDENTIALS](data-structure-SCM4J_CREDENTIALS.md): list of yaml files which defines credentials
 
-# Working Files
+# working files
 
 Working files are located at ${user.home}/.scm4j
 
