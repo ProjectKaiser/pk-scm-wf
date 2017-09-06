@@ -5,6 +5,7 @@
   - [`mdeps` file](#mdeps-file)
 - [Comment Tags](#comment-tags)
 - [Environment Vars](#environment-vars)
+- [Working Files](#working-files)
 
 # Component Configuration Files
 
@@ -32,13 +33,23 @@ Contains a single line.
 
 ## `mdeps` file
 
-Contains few lines, :
+`develop` branch:
+
+```
+com.mycompany:component-one:-SNAPSHOT
+com.mycompany:component-two:-SNAPSHOT
+com.mycompany:component-three:-SNAPSHOT
+```
+
+`release` branch:
 
 ```
 com.mycompany:component-one:4.2.0
 com.mycompany:component-two:1.56.0
 com.mycompany:component-three:2.1.0
 ```
+
+versions in `release` branch are relaced automatically during `fork` operation.
 
 # Comment Tags
 
@@ -57,3 +68,9 @@ Comment tags are placed inside commit comments
 
 - [SCM4J_VCS_REPOS](data-structure-SCM4J_VCS_REPOS.md): list of yaml files which map artifact coordinates to repositories URLs
 - [SCM4J_CREDENTIALS](data-structure-SCM4J_CREDENTIALS.md): list of yaml files which defines credentials
+
+# Working Files
+
+Working files are located at ${user.home}/.scm4j
+
+- `vcs-repositories`: repositories working copies

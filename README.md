@@ -8,7 +8,7 @@ IN DEVELOPMENT
 
 # Overview
 
-Tool to manage projects which are represented by many components, each component has its own repository (multi-repository configuration). It  detectes changes in repositories, build new components versions and actualize dependency lists.
+Tool to manage projects which are represented by many components, each component has its own repository (multi-repository configuration). It  detectes changes in repositories, builds new components versions and actualizes dependency lists.
 
 # Terms
 
