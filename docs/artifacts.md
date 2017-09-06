@@ -5,6 +5,7 @@
   - [`mdeps` file](#mdeps-file)
 - [Comment Tags](#comment-tags)
 - [Environment Vars](#environment-vars)
+- [Working Files](#working-files)
 
 # Component Configuration Files
 
@@ -57,3 +58,9 @@ Comment tags are placed inside commit comments
 
 - [SCM4J_VCS_REPOS](data-structure-SCM4J_VCS_REPOS.md): list of yaml files which map artifact coordinates to repositories URLs
 - [SCM4J_CREDENTIALS](data-structure-SCM4J_CREDENTIALS.md): list of yaml files which defines credentials
+
+# Working Files
+
+Working files are located at ${user.home}/.scm4j
+
+- vcs-repositories: repositories working copies
