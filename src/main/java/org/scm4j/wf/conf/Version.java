@@ -4,14 +4,15 @@ import org.apache.commons.lang3.StringUtils;
 
 public class Version {
 
-	private static final String SNAPSHOT = "-SNAPSHOT";
+	public static final String SNAPSHOT = "-SNAPSHOT";
 
 	private final String minor;
 	private final String prefix;
 	private final String snapshot;
 	private final String patch;
 	private final String verStr;
-	private final Boolean isEmpty;
+	private final boolean isEmpty;
+	private final boolean isSemantic;
 
 	public Version(String verStr) {
 		this.verStr = verStr;
@@ -21,6 +22,7 @@ public class Version {
 			minor = "";
 			patch = "";
 			isEmpty = true;
+			isSemantic = false;
 		} else {
 			isEmpty = false;
 			if (verStr.contains(SNAPSHOT)) {
@@ -39,13 +41,11 @@ public class Version {
 				}
 				prefix = verStr.substring(0, verStr.lastIndexOf(".") + 1);
 			} else {
-				prefix = "0.";
+				prefix = "";
 				minor = verStr;
-				patch = "0";
+				patch = "";
 			}
-			if (!minor.isEmpty() && !StringUtils.isNumeric(minor)) {
-				throw new IllegalArgumentException("wrong version: " + verStr);
-			}
+			isSemantic = StringUtils.isNumeric(minor);
 		}
 	}
 
@@ -63,56 +63,46 @@ public class Version {
 
 	@Override
 	public String toString() {
-		if (!StringUtils.isNumeric(minor)) {
+		if (!isSemantic) {
 			return verStr;
 		}
 		return prefix + minor + (patch.isEmpty() ? "" : "." + patch) + snapshot;
 	}
 	
 	public Version toPreviousPatch() {
-		int i = 0;
-		while (i < patch.length() && !Character.isDigit(patch.charAt(i)))
-			i++;
-		int firstDigitStart = i;
-		while (i < patch.length() && Character.isDigit(patch.charAt(i)))
-			i++;
-		if (i == firstDigitStart) {
-			return new Version(prefix + minor + "." + patch + "0" + snapshot);
+		if (patch.isEmpty()) {
+			return new Version(prefix + minor + ".0" + snapshot);
 		}
-		int patchInt = Integer.parseInt(patch.substring(firstDigitStart, i)) - 1;
-		String newPatch = patch.substring(0, firstDigitStart) + Integer.toString(patchInt)
-				+ patch.substring(i, patch.length());
-		return new Version(prefix + minor + "." + newPatch + snapshot);
+		if (!StringUtils.isNumeric(patch)) {
+			return this;
+		}
+		int patchInt = Integer.parseInt(patch) - 1;
+		return new Version(prefix + minor + "." + Integer.toString(patchInt) + snapshot);
 	}
 
 	public Version toNextPatch() {
-		int i = 0;
-		while (i < patch.length() && !Character.isDigit(patch.charAt(i)))
-			i++;
-		int firstDigitStart = i;
-		while (i < patch.length() && Character.isDigit(patch.charAt(i)))
-			i++;
-		if (i == firstDigitStart) {
-			return new Version(prefix + minor + "." + patch + "1" + snapshot);
+		if (patch.isEmpty()) {
+			return new Version(prefix + minor + ".1" + snapshot);
 		}
-		int patchInt = Integer.parseInt(patch.substring(firstDigitStart, i)) + 1;
-		String newPatch = patch.substring(0, firstDigitStart) + Integer.toString(patchInt)
-				+ patch.substring(i, patch.length());
-		return new Version(prefix + minor + "." + newPatch + snapshot);
+		if (!StringUtils.isNumeric(patch)) {
+			return this;
+		}
+		int patchInt = Integer.parseInt(patch) + 1;
+		return new Version(prefix + minor + "." + Integer.toString(patchInt) + snapshot);
 	}
 
 	public Version toPreviousMinor() {
-		checkMinor();
+		checkSemantic();
 		return new Version(prefix + Integer.toString(Integer.parseInt(minor) - 1) + "." + patch + snapshot);
 	}
 
 	public Version toNextMinor() {
-		checkMinor();
+		checkSemantic();
 		return new Version(prefix + Integer.toString(Integer.parseInt(minor) + 1) + "." + patch + snapshot);
 	}
 
-	private void checkMinor() {
-		if (!StringUtils.isNumeric(minor)) {
+	private void checkSemantic() {
+		if (!isSemantic) {
 			throw new IllegalArgumentException("wrong version" + verStr);
 		}
 	}
@@ -146,8 +136,8 @@ public class Version {
 		return isEmpty;
 	}
 
-	public boolean isExactVersion() {
-		return !minor.isEmpty();
+	public boolean isSnapshot() {
+		return !snapshot.isEmpty();
 	}
 	
 	public String toSnapshotString() {
@@ -162,12 +152,16 @@ public class Version {
 	}
 
 	public Boolean isGreaterThan(Version other) {
-		if (other.isEmpty() || !other.isExactVersion()) {
-			return !isEmpty() && isExactVersion();
+		if (other.isEmpty()) {
+			return !isEmpty();
 		}
-		if (!StringUtils.isNumeric(getMinor()) || !StringUtils.isNumeric(other.getMinor())) {
+		if (!isSemantic || !StringUtils.isNumeric(getMinor())) {
 			return false;
 		}
+		if (!other.isSemantic()) {
+			return true;
+		}
+		
 		int minor = Integer.parseInt(getMinor());
 		int otherMinor = Integer.parseInt(other.getMinor());
 		if (minor > otherMinor) {
@@ -188,12 +182,16 @@ public class Version {
 
 	}
 
+	private boolean isSemantic() {
+		return isSemantic;
+	}
+
 	public String getReleaseNoPatchString() {
 		return prefix + minor;
 	}
 
 	public Version toRelease() {
-		if (!StringUtils.isNumeric(minor)) {
+		if (!isSemantic) {
 			return this;
 		}
 		return new Version(prefix + minor + (patch.isEmpty() ? "" : "." + patch));

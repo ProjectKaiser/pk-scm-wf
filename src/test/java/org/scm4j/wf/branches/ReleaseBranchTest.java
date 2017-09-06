@@ -50,7 +50,7 @@ public class ReleaseBranchTest extends WorkflowTestBase {
 		action.execute(new ProgressConsole(action.getName(), ">>> ", "<<< "));
 		
 		// simulate mdeps are not frozen
-		MDepsFile mDepsFile = new MDepsFile(Arrays.asList(compUBL, compUnTillDb));
+		MDepsFile mDepsFile = new MDepsFile(Arrays.asList(compUBL.cloneWithDifferentVersion(Version.SNAPSHOT), compUnTillDb.cloneWithDifferentVersion(Version.SNAPSHOT)));
 		env.getUnTillVCS().setFileContent(rbUnTillFixedVer.getName(), SCMWorkflow.MDEPS_FILE_NAME, mDepsFile.toFileContent(), "mdeps unversioned");
 		assertEquals(ReleaseBranchStatus.BRANCHED, rbUnTillFixedVer.getStatus());
 	}

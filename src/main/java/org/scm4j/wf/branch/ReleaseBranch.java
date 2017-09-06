@@ -11,8 +11,8 @@ import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.vcs.api.VCSTag;
 import org.scm4j.vcs.api.WalkDirection;
 import org.scm4j.wf.SCMWorkflow;
-import org.scm4j.wf.conf.DelayedTagsFile;
 import org.scm4j.wf.conf.Component;
+import org.scm4j.wf.conf.DelayedTagsFile;
 import org.scm4j.wf.conf.MDepsFile;
 import org.scm4j.wf.conf.VCSRepositories;
 import org.scm4j.wf.conf.Version;
@@ -44,7 +44,8 @@ public class ReleaseBranch {
 		DevelopBranch db = new DevelopBranch(comp);
 		Version ver = db.getVersion().toRelease();
 
-		List<String> releaseBranches = new ArrayList<>(vcs.getBranches(comp.getVcsRepository().getReleaseBranchPrefix() + (comp.getVersion().isExactVersion() ? comp.getVersion().getReleaseNoPatchString() : "")));
+		List<String> releaseBranches = new ArrayList<>(vcs.getBranches(
+				comp.getVcsRepository().getReleaseBranchPrefix() + (comp.getVersion().isSnapshot() ? "" : comp.getVersion().getReleaseNoPatchString())));
 		if (releaseBranches.isEmpty()) {
 			this.version = ver;
 			name = computeName();
@@ -210,7 +211,7 @@ public class ReleaseBranch {
 			return true;
 		}
 		for (Component mDep : mDeps) {
-			if (!mDep.getVersion().isExactVersion()) {
+			if (mDep.getVersion().isSnapshot()) {
 				return false;
 			}
 		}
