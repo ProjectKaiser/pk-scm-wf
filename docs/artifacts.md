@@ -33,13 +33,23 @@ Contains a single line.
 
 ## `mdeps` file
 
-Contains few lines, :
+`develop` branch:
+
+```
+com.mycompany:component-one:-SNAPSHOT
+com.mycompany:component-two:-SNAPSHOT
+com.mycompany:component-three:-SNAPSHOT
+```
+
+`release` branch:
 
 ```
 com.mycompany:component-one:4.2.0
 com.mycompany:component-two:1.56.0
 com.mycompany:component-three:2.1.0
 ```
+
+versions in `release` branch are relaced automatically during `fork` operation.
 
 # Comment Tags
 
