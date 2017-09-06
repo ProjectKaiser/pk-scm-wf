@@ -38,7 +38,7 @@ Install groovy, download [run.grovy](https://raw.githubusercontent.com/scm4j/scm
 # Features
 
 - [delayed tagging](/../../issues/2)
-- [release versions in mdeps trunk ](/../../issues/4)
+- [exact versions in `develop`/`mdeps`](/../../issues/4)
 
 
 # See also
