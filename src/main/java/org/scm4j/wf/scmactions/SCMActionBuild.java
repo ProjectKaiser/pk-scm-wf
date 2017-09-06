@@ -14,9 +14,10 @@ import org.scm4j.wf.actions.ActionAbstract;
 import org.scm4j.wf.actions.IAction;
 import org.scm4j.wf.branch.ReleaseBranch;
 import org.scm4j.wf.branch.ReleaseBranchStatus;
-import org.scm4j.wf.conf.DelayedTagsFile;
 import org.scm4j.wf.conf.Component;
+import org.scm4j.wf.conf.DelayedTagsFile;
 import org.scm4j.wf.conf.Option;
+import org.scm4j.wf.conf.TagDesc;
 import org.scm4j.wf.conf.Version;
 import org.scm4j.wf.exceptions.EBuilder;
 
@@ -92,9 +93,8 @@ public class SCMActionBuild extends ActionAbstract {
 				progress.reportStatus("build commit " + headCommit.getRevision() + " is saved for delayed tagging");
 			} else {
 				String releaseBranchName = rb.getName();
-				String tagName = rb.getVersion().toString();
-				String tagMessage = tagName + " release"; 
-				VCSTag tag = vcs.createTag(releaseBranchName, tagName, tagMessage, headCommit.getRevision());
+				TagDesc tagDesc = SCMWorkflow.getTagDesc(rb.getVersion().toString());
+				VCSTag tag = vcs.createTag(releaseBranchName, tagDesc.getName(), tagDesc.getMessage(), headCommit.getRevision());
 				progress.reportStatus("head of \"" + releaseBranchName + "\" tagged: " + tag.toString());
 			}
 

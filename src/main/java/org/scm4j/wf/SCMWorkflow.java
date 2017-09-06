@@ -17,6 +17,7 @@ import org.scm4j.wf.branch.ReleaseBranchStatus;
 import org.scm4j.wf.conf.DelayedTagsFile;
 import org.scm4j.wf.conf.Component;
 import org.scm4j.wf.conf.Option;
+import org.scm4j.wf.conf.TagDesc;
 import org.scm4j.wf.conf.VCSRepositories;
 import org.scm4j.wf.conf.Version;
 import org.scm4j.wf.exceptions.EComponentConfig;
@@ -237,7 +238,7 @@ public class SCMWorkflow {
 		
 		List<VCSTag> tagsOnRevision = vcs.getTagsOnRevision(delayedRevisionToTag);
 		if (tagsOnRevision.isEmpty()) {
-			return new SCMActionTagRelease(comp, childActions, "tag message", options); // TODO: Design tag message
+			return new SCMActionTagRelease(comp, childActions, options);
 		}
 		Version delayedTagVersion = new Version(vcs.getFileContent(rb.getName(), SCMWorkflow.VER_FILE_NAME, delayedRevisionToTag));
 		for (VCSTag tag : tagsOnRevision) {
@@ -245,6 +246,12 @@ public class SCMWorkflow {
 				return new ActionNone(comp, childActions, "tag " + tag.getTagName() + " already exists");
 			}
 		}
-		return new SCMActionTagRelease(comp, childActions, "tag message", options);
+		return new SCMActionTagRelease(comp, childActions, options);
+	}
+	
+	public static TagDesc getTagDesc(String verStr) {
+		String tagName = verStr;
+		String tagMessage = tagName + " release";
+		return new TagDesc(tagName, tagMessage);
 	}
 }

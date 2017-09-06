@@ -9,18 +9,16 @@ import org.scm4j.wf.SCMWorkflow;
 import org.scm4j.wf.actions.ActionAbstract;
 import org.scm4j.wf.actions.IAction;
 import org.scm4j.wf.branch.ReleaseBranch;
-import org.scm4j.wf.conf.DelayedTagsFile;
 import org.scm4j.wf.conf.Component;
+import org.scm4j.wf.conf.DelayedTagsFile;
 import org.scm4j.wf.conf.Option;
+import org.scm4j.wf.conf.TagDesc;
 import org.scm4j.wf.conf.Version;
 
 public class SCMActionTagRelease extends ActionAbstract {
 
-	private final String tagMessage;
-
-	public SCMActionTagRelease(Component dep, List<IAction> childActions, String tagMessage, List<Option> options) {
+	public SCMActionTagRelease(Component dep, List<IAction> childActions, List<Option> options) {
 		super(dep, childActions, options);
-		this.tagMessage = tagMessage;
 	}
 	
 	@Override
@@ -43,14 +41,15 @@ public class SCMActionTagRelease extends ActionAbstract {
 			List<VCSTag> tagsOnRevision = vcs.getTagsOnRevision(revisionToTag);
 			ReleaseBranch rb = new ReleaseBranch(comp, repos);
 			Version delayedTagVersion = new Version(vcs.getFileContent(rb.getName(), SCMWorkflow.VER_FILE_NAME, revisionToTag));
+			TagDesc tagDesc = SCMWorkflow.getTagDesc(delayedTagVersion.toString());
 			for (VCSTag tag : tagsOnRevision) {
-				if (tag.getTagName().equals(delayedTagVersion.toReleaseString())) {
+				if (tag.getTagName().equals(tagDesc.getName())) {
 					progress.reportStatus(String.format("revision %s is already tagged with %s tag", revisionToTag, tag.getTagName()));
 					return;
 				}
 			}
 			
-			vcs.createTag(rb.getName(), delayedTagVersion.toReleaseString(), tagMessage, revisionToTag);
+			vcs.createTag(rb.getName(), tagDesc.getName(), tagDesc.getMessage(), revisionToTag);
 			
 			cf.removeRevisionByUrl(comp.getVcsRepository().getUrl());
 			progress.reportStatus(String.format("%s of %s tagged: %s", revisionToTag == null ? "head " : "commit " + revisionToTag, rb.getName(), delayedTagVersion.toReleaseString()));
