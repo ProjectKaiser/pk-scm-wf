@@ -140,6 +140,7 @@ public class VersionTest {
 		assertFalse(new Version("").isGreaterThan(new Version("")));
 		assertFalse(new Version("").isGreaterThan(new Version("11.12.13")));
 		assertTrue(new Version("11.12.13").isGreaterThan(new Version("")));
+		assertTrue(new Version("11.12.13").isGreaterThan(new Version("not semantic")));
 		
 		assertFalse(new Version("11.12.13-SNAPSHOT").isGreaterThan(new Version("11.12.14-SNAPSHOT")));
 		assertFalse(new Version("11.12-SNAPSHOT").isGreaterThan(new Version("11.13-SNAPSHOT")));
