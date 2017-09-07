@@ -19,14 +19,19 @@ public class CmdLineBuilder implements IBuilder {
 	public CmdLineBuilder(String cmdLine) {
 		this.cmdLine = cmdLine;
 	}
+	
+	protected ProcessBuilder getProcessBuilder(String[] cmds) {
+		return new ProcessBuilder(cmds);
+	}
 
 	@Override
 	public void build(Component comp, File workingFolder, IProgress progress) throws Exception {
 		progress.reportStatus(String.format("executing \"%s\" in folder %s", cmdLine, workingFolder.getPath()));
 
 		String[] cmds = cmdLine.split(" ");
-
-		ProcessBuilder pb = new ProcessBuilder(cmds);
+		
+		ProcessBuilder pb = getProcessBuilder(cmds);
+		
 		pb.redirectErrorStream(true);
 		pb.redirectOutput(Redirect.INHERIT);
 		pb.redirectError(Redirect.INHERIT);
