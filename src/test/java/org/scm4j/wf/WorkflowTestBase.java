@@ -2,17 +2,25 @@ package org.scm4j.wf;
 
 import org.junit.After;
 import org.junit.Before;
+import org.scm4j.vcs.api.VCSCommit;
+import org.scm4j.vcs.api.VCSTag;
+import org.scm4j.vcs.api.WalkDirection;
 import org.scm4j.wf.actions.IAction;
 import org.scm4j.wf.branch.DevelopBranch;
+import org.scm4j.wf.branch.ReleaseBranch;
 import org.scm4j.wf.conf.Component;
 import org.scm4j.wf.conf.DelayedTagsFile;
 import org.scm4j.wf.conf.VCSRepositories;
+import org.scm4j.wf.conf.Version;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class WorkflowTestBase {
 	protected TestEnvironment env;
@@ -84,5 +92,120 @@ public class WorkflowTestBase {
 			fail(String.format("%s: property %s is not declared", action.getName(), propName));
 		}
 	}
+
+	public void checkUnTillDbBuilt() {
+		assertNotNull(TestBuilder.getBuilders());
+		assertNotNull(TestBuilder.getBuilders().get(UNTILLDB));
+
+		// check versions
+		ReleaseBranch rbUnTillDb = new ReleaseBranch(compUnTillDb);
+		Version verRelease = rbUnTillDb.getCurrentVersion();
+		assertEquals(env.getUnTillDbVer().toNextPatch().toReleaseString(), verRelease.toString());
+
+		// check tags
+		List<VCSTag> tags = env.getUnTillDbVCS().getTags();
+		assertTrue(tags.size() == 1);
+		VCSTag tag = tags.get(0);
+		assertEquals(env.getUnTillDbVer().toReleaseString(), tag.getTagName());
+		List<VCSCommit> commits = env.getUnTillDbVCS().getCommitsRange(rbUnTillDb.getName(), null, WalkDirection.DESC, 2);
+		assertEquals(commits.get(1), tag.getRelatedCommit());
+	}
+
+	public void checkUBLBuilt() {
+		checkUnTillDbBuilt();
+		ReleaseBranch rbUBL = new ReleaseBranch(compUBL);
+		ReleaseBranch rbUnTillDb = new ReleaseBranch(compUnTillDb);
+		// check UBL versions
+		assertEquals(env.getUblVer().toNextMinor(), dbUBL.getVersion());
+		assertEquals(env.getUblVer().toNextPatch().toRelease(), rbUBL.getCurrentVersion());
+
+		// check unTillDb versions
+		assertEquals(env.getUnTillDbVer().toNextMinor(), dbUnTillDb.getVersion());
+		assertEquals(env.getUnTillDbVer().toNextPatch().toRelease(), rbUnTillDb.getCurrentVersion());
+
+		// check UBL mDeps. Should contain unTillDb version minor-1 relative to current dev branch version
+		List<Component> ublReleaseMDeps = rbUBL.getMDeps();
+		assertTrue(ublReleaseMDeps.size() == 1);
+		assertEquals(compUnTillDb.getName(), ublReleaseMDeps.get(0).getName());
+		assertEquals(dbUnTillDb.getVersion().toPreviousMinor().toRelease(), ublReleaseMDeps.get(0).getVersion());
+
+		// check tags
+		List<VCSTag> tags = env.getUblVCS().getTags();
+		assertTrue(tags.size() == 1);
+		VCSTag tag = tags.get(0);
+		assertEquals(dbUBL.getVersion().toPreviousMinor().toReleaseString(), tag.getTagName());
+		List<VCSCommit> commits = env.getUblVCS().getCommitsRange(rbUBL.getName(), null, WalkDirection.DESC, 2);
+		assertEquals(commits.get(1), tag.getRelatedCommit());
+	}
+
+
+	public void checkUBLForked() {
+		ReleaseBranch rbUBL = new ReleaseBranch(compUBL);
+		// check branches
+		assertTrue(env.getUblVCS().getBranches("").contains(rbUBL.getName()));
+
+		// check versions
+		Version verTrunk = dbUBL.getVersion();
+		Version verRelease = rbUBL.getCurrentVersion();
+		assertEquals(env.getUblVer().toNextMinor(),verTrunk);
+		assertEquals(env.getUblVer().toRelease(), verRelease);
+
+		// check mDeps
+		List<Component> ublReleaseMDeps = rbUBL.getMDeps();
+		assertTrue(ublReleaseMDeps.size() == 1);
+		assertEquals(compUnTillDb.getName(), ublReleaseMDeps.get(0).getName());
+		assertEquals(dbUnTillDb.getVersion().toPreviousMinor().toRelease(), ublReleaseMDeps.get(0).getVersion());
+	}
+
+	public void checkUnTillDbForked() {
+		ReleaseBranch newUnTillDbRB = new ReleaseBranch(compUnTillDb);
+
+		// check branches
+		assertTrue(env.getUnTillDbVCS().getBranches("").contains(newUnTillDbRB.getName()));
+
+		// check versions.
+		Version verTrunk = dbUnTillDb.getVersion();
+		Version verRelease = newUnTillDbRB.getCurrentVersion();
+		assertEquals(env.getUnTillDbVer().toNextMinor(), verTrunk);
+		assertEquals(env.getUnTillDbVer().toRelease(), verRelease);
+	}
+
+	public void checkUnTillForked() {
+		checkUnTillDbForked();
+		checkUBLForked();
+
+		ReleaseBranch rbUnTill = new ReleaseBranch(compUnTill);
+
+		// check branches
+		assertTrue(env.getUnTillVCS().getBranches("").contains(rbUnTill.getName()));
+
+		// check versions
+		Version verTrunk = dbUnTill.getVersion();
+		Version verRelease = rbUnTill.getCurrentVersion();
+		assertEquals(env.getUnTillVer().toNextMinor(), verTrunk);
+		assertEquals(env.getUnTillVer().toRelease(), verRelease);
+
+		// check mDeps
+		List<Component> unTillReleaseMDeps = rbUnTill.getMDeps();
+		assertTrue(unTillReleaseMDeps.size() == 2);
+		for (Component unTillReleaseMDep : unTillReleaseMDeps) {
+			if (unTillReleaseMDep.getName().equals(UBL)) {
+				assertEquals(dbUBL.getVersion().toPreviousMinor().toRelease(), unTillReleaseMDep.getVersion());
+			} else if (unTillReleaseMDep.getName().equals(UNTILLDB)) {
+				assertEquals(dbUnTillDb.getVersion().toPreviousMinor().toRelease(), unTillReleaseMDep.getVersion());
+			} else {
+				fail();
+			}
+		}
+
+	}
+
+	public void checkUnTillBuilt() {
+		checkUBLBuilt();
+
+
+	}
+
+
 
 }
