@@ -70,7 +70,7 @@ public class CoordsTest extends TestCase {
 	
 	public void testEqualsAndHashCode() {
 		EqualsVerifier
-				.forClass(Version.class)
+				.forClass(Coords.class)
 				.withOnlyTheseFields("coordsString")
 				.usingGetClass()
 				.verify();
