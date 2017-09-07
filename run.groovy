@@ -1,5 +1,5 @@
 @GrabResolver(name='jitpack', root='https://jitpack.io')
-@Grab('com.github.scm4j:scm4j-wf:master-SNAPSHOT')
+@Grab('com.github.scm4j:scm4j-wf:2.0')
 
 import  org.scm4j.wf.cli.CLI;
 
