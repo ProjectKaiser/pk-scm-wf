@@ -1,5 +1,10 @@
 package org.scm4j.wf;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.UUID;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.scm4j.vcs.GitVCS;
@@ -9,19 +14,11 @@ import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.vcs.api.workingcopy.IVCSRepositoryWorkspace;
 import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
 import org.scm4j.vcs.api.workingcopy.VCSWorkspace;
-import org.scm4j.wf.branch.DevelopBranch;
-import org.scm4j.wf.branch.ReleaseBranch;
 import org.scm4j.wf.builders.BuilderFactory;
-import org.scm4j.wf.conf.Component;
 import org.scm4j.wf.conf.EnvVarsConfigSource;
 import org.scm4j.wf.conf.IConfigSource;
 import org.scm4j.wf.conf.VCSRepositories;
 import org.scm4j.wf.conf.Version;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.UUID;
 
 public class TestEnvironment implements AutoCloseable {
 	public static final String TEST_REPOS_FILE_NAME = "repos";
@@ -94,12 +91,12 @@ public class TestEnvironment implements AutoCloseable {
 	private void uploadVCSConfigFiles() {
 		unTillVCS.setFileContent(null, SCMWorkflow.VER_FILE_NAME, unTillVer.toString(), LogTag.SCM_IGNORE+ " ver file added");
 		unTillVCS.setFileContent(null, SCMWorkflow.MDEPS_FILE_NAME,
-				PRODUCT_UBL + ":" + ublVer.getSnapshot() + "\r\n" +
-				PRODUCT_UNTILLDB + ":" + unTillDbVer.getSnapshot() + "\r\n", LogTag.SCM_IGNORE + " mdeps file added");
+				PRODUCT_UBL + ":" + ublVer.getSnapshot() + " # comment 1\r\n" +
+				PRODUCT_UNTILLDB + ":" + unTillDbVer.getSnapshot() + "# comment 2\r\n", LogTag.SCM_IGNORE + " mdeps file added");
 
 		ublVCS.setFileContent(null, SCMWorkflow.VER_FILE_NAME, ublVer.toString(), LogTag.SCM_IGNORE + " ver file added");
 		ublVCS.setFileContent(null, SCMWorkflow.MDEPS_FILE_NAME,
-				PRODUCT_UNTILLDB + ":" + unTillDbVer.getSnapshot() + "\r\n", LogTag.SCM_IGNORE + " mdeps file added");
+				PRODUCT_UNTILLDB + ":" + unTillDbVer.getSnapshot() + "#comment 3\r\n", LogTag.SCM_IGNORE + " mdeps file added");
 
 		unTillDbVCS.setFileContent(null, SCMWorkflow.VER_FILE_NAME, unTillDbVer.toString(), LogTag.SCM_IGNORE + " ver file added");
 	}
@@ -185,16 +182,5 @@ public class TestEnvironment implements AutoCloseable {
 			FileUtils.deleteDirectory(envDir);
 		}
 		VCSRepositories.setConfigSource(new EnvVarsConfigSource());
-	}
-
-	public void generateRelease(Component comp) {
-		IVCS vcs = comp.getVCS();
-		DevelopBranch db = new DevelopBranch(comp);
-		ReleaseBranch rb = new ReleaseBranch(comp, comp.getVersion());
-		vcs.createBranch(db.getName(), rb.getName(), null);
-		VCSCommit commit = vcs.setFileContent(rb.getName(), SCMWorkflow.VER_FILE_NAME, comp.getVersion().toReleaseString(), LogTag.SCM_VER);
-		vcs.createTag(rb.getName(), comp.getVersion().toReleaseString(), "tag created", commit.getRevision());
-		vcs.setFileContent(rb.getName(), SCMWorkflow.VER_FILE_NAME, comp.getVersion().toNextPatch().toReleaseString(), LogTag.SCM_VER);
-		vcs.setFileContent(db.getName(), SCMWorkflow.VER_FILE_NAME, comp.getVersion().toNextMinor().toString(), LogTag.SCM_VER);
 	}
 }

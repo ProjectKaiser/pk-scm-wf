@@ -4,6 +4,7 @@ import org.scm4j.wf.conf.Coords;
 import org.scm4j.wf.conf.Version;
 
 import junit.framework.TestCase;
+import nl.jqno.equalsverifier.EqualsVerifier;
 
 public class CoordsTest extends TestCase {
 
@@ -65,5 +66,13 @@ public class CoordsTest extends TestCase {
 		assertEquals(new Version("1.0.0"), dc("com.myproject:c1:1.0.0@ext #comment").getVersion());
 		assertEquals(new Version(""), dc("com.myproject:c1::dfgd@ext #comment").getVersion());
 		assertEquals(new Version("-SNAPSHOT"), dc("com.myproject:c1:-SNAPSHOT:dfgd@ext #comment").getVersion());
+	}
+	
+	public void testEqualsAndHashCode() {
+		EqualsVerifier
+				.forClass(Version.class)
+				.withOnlyTheseFields("coordsString")
+				.usingGetClass()
+				.verify();
 	}
 }

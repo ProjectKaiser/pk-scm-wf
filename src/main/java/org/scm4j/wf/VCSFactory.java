@@ -10,7 +10,7 @@ import org.scm4j.wf.conf.VCSType;
 public class VCSFactory {
 
 	public static IVCS getVCS(VCSType type, Credentials creds, String url, IVCSWorkspace ws) {
-		IVCS vcs;
+		IVCS vcs = null;
 		switch (type) {
 		case GIT: {
 			vcs = new GitVCS(ws.getVCSRepositoryWorkspace(url));
@@ -26,9 +26,6 @@ public class VCSFactory {
 					creds == null ? null : creds.getName(),
 					creds == null ? null : creds.getPassword());
 			break;
-		}
-		default: {
-			throw new RuntimeException("Unsupported VCSTtype for repository: " + url);
 		}
 		}
 		return vcs;

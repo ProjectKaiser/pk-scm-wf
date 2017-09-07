@@ -28,10 +28,6 @@ public class SCMActionBuild extends ActionAbstract {
 		this.targetVersion = targetVersion;
 	}
 
-	public Version getTargetVersion() {
-		return targetVersion;
-	}
-
 	public ReleaseReason getReason() {
 		return reason;
 	}
