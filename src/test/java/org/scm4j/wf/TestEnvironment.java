@@ -46,7 +46,6 @@ public class TestEnvironment implements AutoCloseable {
 	private final Version ublVer = new Version("1.18.5-SNAPSHOT");
 	private final Version unTillDbVer = new Version("2.59.1-SNAPSHOT");
 	private File envDir;
-	private VCSRepositories repos;
 	
 	public TestEnvironment() {
 		RANDOM_VCS_NAME_SUFFIX = UUID.randomUUID().toString();
@@ -75,8 +74,6 @@ public class TestEnvironment implements AutoCloseable {
 				return "file://localhost/" + getCredsFile().getPath().replace("\\", "/");
 			}
 		});
-
-		repos = VCSRepositories.getDefault();
 	}
 
 	private void createReposFile() throws IOException {

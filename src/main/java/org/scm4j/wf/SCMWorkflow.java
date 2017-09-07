@@ -28,7 +28,6 @@ public class SCMWorkflow {
 	public static final String DELAYED_TAGS_FILE_NAME = "delayed-tags.yml"; 
 	public static final File BASE_WORKING_DIR = new File(System.getProperty("user.home"), ".scm4j");
 
-	private final VCSRepositories repos = VCSRepositories.getDefault();
 	private final List<Option> options;
 	
 	public SCMWorkflow(List<Option> options) {
