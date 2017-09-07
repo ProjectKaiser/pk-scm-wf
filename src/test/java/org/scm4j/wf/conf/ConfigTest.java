@@ -16,11 +16,7 @@ import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.scm4j.wf.SCMWorkflow;
 import org.scm4j.wf.TestEnvironment;
-import org.scm4j.wf.conf.EnvVarsConfigSource;
-import org.scm4j.wf.conf.IConfigSource;
-import org.scm4j.wf.conf.VCSRepositories;
 import org.scm4j.wf.exceptions.EConfig;
 
 public class ConfigTest {
@@ -46,6 +42,7 @@ public class ConfigTest {
 	
 	@After
 	public void tearDown() {
+		VCSRepositories.resetDefault();
 		VCSRepositories.setConfigSource(new EnvVarsConfigSource());
 	}
 	
@@ -53,7 +50,7 @@ public class ConfigTest {
 	public void testNoReposEnvVar() {
 		creds = "";
 		try {
-			new SCMWorkflow();
+			VCSRepositories.getDefault();
 			fail();
 		} catch (EConfig e) {
 			assertNull(e.getCause());
@@ -65,7 +62,7 @@ public class ConfigTest {
 		repos = "malformed url";
 		
 		try {
-			new SCMWorkflow();
+			VCSRepositories.getDefault();
 			fail();
 		} catch (EConfig e) {
 			assertThat(e.getCause(), instanceOf(MalformedURLException.class));
@@ -76,7 +73,7 @@ public class ConfigTest {
 	public void testWrongReposLocation() {
 		repos = "file:///c:/wrong/Location";
 		try {
-			new SCMWorkflow();
+			VCSRepositories.getDefault();
 			fail();
 		} catch (EConfig e) {
 			assertThat(e.getCause(), instanceOf(FileNotFoundException.class));
@@ -92,7 +89,7 @@ public class ConfigTest {
 		repos = "file:///" + vcsRepos.getAbsolutePath().replace("\\", "/");
 		creds = "file:///" + vcsRepos.getAbsolutePath().replace("\\", "/");
 		try { 
-			new SCMWorkflow();
+			VCSRepositories.getDefault();
 			fail();
 		} catch (EConfig e) {
 			assertNotNull(e.getCause());
