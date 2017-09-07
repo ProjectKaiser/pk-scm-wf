@@ -31,8 +31,11 @@ repositories {
 }
 
 test {
-	testLogging.showStandardStreams = true
 	jvmArgs '-Xmx128m'
+ 	testLogging {
+		events "failed"
+		exceptionFormat "short"
+	}
 }
 
 dependencies {
