@@ -5,6 +5,7 @@ import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.vcs.api.VCSTag;
 import org.scm4j.vcs.api.WalkDirection;
+import org.scm4j.vcs.api.exceptions.EVCSFileNotFound;
 import org.scm4j.wf.SCMWorkflow;
 import org.scm4j.wf.conf.Component;
 import org.scm4j.wf.conf.DelayedTagsFile;
@@ -18,6 +19,7 @@ public class ReleaseBranch {
 	private final Version version;
 	private final IVCS vcs;
 	private final String name;
+	private Map<String, Object> cache = new HashMap<>();
 
 	public ReleaseBranch(Component comp, Version version) {
 		this.version = version.toRelease();
@@ -44,7 +46,6 @@ public class ReleaseBranch {
 			return;
 		}
 		
-		// first is last release. If not, then 2.59 will be selected because it is completed, but 2.60 exists and Develop is BRANCHED. 2.60 is expected. 
 		Collections.sort(releaseBranches, new Comparator<String>() {
 
 			@Override
@@ -71,7 +72,7 @@ public class ReleaseBranch {
 						// if db MODIFIED and head-1 commit of last release branch tagged then all is built and we need new release. Use DB version.
 						// if db BRANCHED and head-1 commit of last release branch tagged then all is built and we need the built release. Use patch-- 
 						// otherwise we must return last built RB version.
-						DevelopBranchStatus dbs = new DevelopBranch(comp).getStatus();
+						DevelopBranchStatus dbs = db.getStatus();
 						if (dbs == DevelopBranchStatus.BRANCHED) {
 							ver = ver.toPreviousPatch();
 						} else if(dbs == DevelopBranchStatus.MODIFIED) {
@@ -124,21 +125,25 @@ public class ReleaseBranch {
 	}
 
 	public ReleaseBranchStatus getStatus() {
-		if (!exists()) {
-			return ReleaseBranchStatus.MISSING;
-		}
-
-		if (mDepsFrozen()) {
-			if (mDepsActual()) {
-				if (isPreHeadCommitTaggedWithVersion() || isPreHeadCommitTagDelayed()) {
-					return ReleaseBranchStatus.ACTUAL;
-				}
-				return ReleaseBranchStatus.MDEPS_ACTUAL;
+		try {
+			if (!exists()) {
+				return ReleaseBranchStatus.MISSING;
 			}
-			return ReleaseBranchStatus.MDEPS_FROZEN;
+	
+			if (mDepsFrozen()) {
+				if (mDepsActual()) {
+					if (isPreHeadCommitTaggedWithVersion() || isPreHeadCommitTagDelayed()) {
+						return ReleaseBranchStatus.ACTUAL;
+					}
+					return ReleaseBranchStatus.MDEPS_ACTUAL;
+				}
+				return ReleaseBranchStatus.MDEPS_FROZEN;
+			}
+	
+			return ReleaseBranchStatus.BRANCHED;
+		} finally {
+			cache.clear();
 		}
-
-		return ReleaseBranchStatus.BRANCHED;
 	}
 
 	private boolean mDepsActual() {
@@ -166,15 +171,15 @@ public class ReleaseBranch {
 			return false;
 		}
 
-		List<VCSCommit> commits = vcs.getCommitsRange(getName(), null, WalkDirection.DESC, 2);
+		List<VCSCommit> commits = getLast2Commits();
 		return commits.size() >= 2 && commits.get(1).getRevision().equals(delayedTagRevision);
 	}
 
 	public boolean isPreHeadCommitTaggedWithVersion() {
-		if (!vcs.getBranches(comp.getVcsRepository().getReleaseBranchPrefix()).contains(getName())) {
+		if (!getBranches().contains(getName())) {
 			return false;
 		}
-		List<VCSCommit> commits = vcs.getCommitsRange(getName(), null, WalkDirection.DESC, 2);
+		List<VCSCommit> commits = getLast2Commits();
 		if (commits.size() < 2) {
 			return false;
 		}
@@ -190,10 +195,28 @@ public class ReleaseBranch {
 		return false;
 	}
 
+	private List<VCSCommit> getLast2Commits() {
+		@SuppressWarnings("unchecked")
+		List<VCSCommit> last2Commits = (List<VCSCommit>) cache.get("last2Commits");
+		if (last2Commits == null) {
+			last2Commits = vcs.getCommitsRange(getName(), null, WalkDirection.DESC, 2);
+			cache.put("last2Commits", last2Commits);
+		}
+		return last2Commits;
+	}
+
 	public boolean exists() {
-		String releaseBranchName = getName();
-		Set<String> branches = vcs.getBranches(comp.getVcsRepository().getReleaseBranchPrefix());
-		return branches.contains(releaseBranchName);
+		return getBranches().contains(getName());
+	}
+
+	private Set<String> getBranches() {
+		@SuppressWarnings("unchecked")
+		Set<String> branches = (Set<String>) cache.get("branches");
+		if (branches == null) {
+			branches = vcs.getBranches(comp.getVcsRepository().getReleaseBranchPrefix());
+			cache.put("branches", branches);
+		}
+		return branches;
 	}
 
 	private Boolean mDepsFrozen() {
@@ -215,13 +238,13 @@ public class ReleaseBranch {
 	}
 
 	public List<Component> getMDeps() {
-		if (!vcs.getBranches(comp.getVcsRepository().getReleaseBranchPrefix()).contains(name) || !vcs.fileExists(name, SCMWorkflow.MDEPS_FILE_NAME)) {
+		try {
+			String mDepsFileContent = comp.getVCS().getFileContent(name, SCMWorkflow.MDEPS_FILE_NAME, null);
+			MDepsFile mDeps = new MDepsFile(mDepsFileContent);
+			return mDeps.getMDeps();
+		} catch (EVCSFileNotFound e) {
 			return new ArrayList<>();
 		}
-
-		String mDepsFileContent = comp.getVCS().getFileContent(name, SCMWorkflow.MDEPS_FILE_NAME, null);
-		MDepsFile mDeps = new MDepsFile(mDepsFileContent);
-		return mDeps.getMDeps();
 	}
 
 	public String getName() {
