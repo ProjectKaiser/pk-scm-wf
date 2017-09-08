@@ -2,6 +2,7 @@ package org.scm4j.wf.branches;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 import org.junit.Test;
+import org.scm4j.commons.Version;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.commons.progress.ProgressConsole;
 import org.scm4j.wf.NullProgress;
@@ -11,7 +12,6 @@ import org.scm4j.wf.actions.IAction;
 import org.scm4j.wf.branch.ReleaseBranch;
 import org.scm4j.wf.branch.ReleaseBranchStatus;
 import org.scm4j.wf.conf.MDepsFile;
-import org.scm4j.wf.conf.Version;
 
 import java.util.Arrays;
 

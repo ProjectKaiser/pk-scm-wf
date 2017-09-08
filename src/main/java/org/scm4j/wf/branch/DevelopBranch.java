@@ -1,12 +1,12 @@
 package org.scm4j.wf.branch;
 
+import org.scm4j.commons.Version;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.wf.LogTag;
 import org.scm4j.wf.SCMWorkflow;
 import org.scm4j.wf.conf.Component;
 import org.scm4j.wf.conf.MDepsFile;
-import org.scm4j.wf.conf.Version;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -1,5 +1,7 @@
 package org.scm4j.wf.conf;
 
+import org.scm4j.commons.Version;
+import org.scm4j.commons.progress.Coords;
 import org.scm4j.vcs.api.IVCS;
 
 public class Component {

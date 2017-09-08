@@ -1,5 +1,6 @@
 package org.scm4j.wf;
 
+import org.scm4j.commons.Version;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSTag;
 import org.scm4j.wf.actions.ActionKind;

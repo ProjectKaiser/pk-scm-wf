@@ -1,5 +1,6 @@
 package org.scm4j.wf.scmactions;
 
+import org.scm4j.commons.Version;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSTag;

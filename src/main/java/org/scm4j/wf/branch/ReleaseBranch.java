@@ -1,5 +1,6 @@
 package org.scm4j.wf.branch;
 
+import org.scm4j.commons.Version;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.vcs.api.VCSTag;
@@ -8,7 +9,6 @@ import org.scm4j.wf.SCMWorkflow;
 import org.scm4j.wf.conf.Component;
 import org.scm4j.wf.conf.DelayedTagsFile;
 import org.scm4j.wf.conf.MDepsFile;
-import org.scm4j.wf.conf.Version;
 
 import java.util.*;
 
@@ -34,12 +34,12 @@ public class ReleaseBranch {
 		this.comp = comp;
 		vcs = comp.getVCS();
 		DevelopBranch db = new DevelopBranch(comp);
-		Version ver = db.getVersion().toRelease();
 
 		List<String> releaseBranches = new ArrayList<>(vcs.getBranches(
 				comp.getVcsRepository().getReleaseBranchPrefix() + (comp.getVersion().isSnapshot() ? "" : comp.getVersion().getReleaseNoPatchString())));
+		
 		if (releaseBranches.isEmpty()) {
-			this.version = ver;
+			this.version = db.getVersion().toRelease();
 			name = computeName();
 			return;
 		}
@@ -61,8 +61,7 @@ public class ReleaseBranch {
 			}
 		});
 		
-		
-		ver = new Version(vcs.getFileContent(releaseBranches.get(0), SCMWorkflow.VER_FILE_NAME, null));
+		Version ver = new Version(vcs.getFileContent(releaseBranches.get(0), SCMWorkflow.VER_FILE_NAME, null));
 		List<VCSCommit> commits = vcs.getCommitsRange(releaseBranches.get(0), null, WalkDirection.DESC, 2);
 		if (commits.size() == 2) {
 			List<VCSTag> tags = vcs.getTagsOnRevision(commits.get(1).getRevision());

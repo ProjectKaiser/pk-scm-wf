@@ -1,5 +1,6 @@
 package org.scm4j.wf.scmactions;
 
+import org.scm4j.commons.Version;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.wf.LogTag;
@@ -11,7 +12,6 @@ import org.scm4j.wf.branch.ReleaseBranch;
 import org.scm4j.wf.conf.Component;
 import org.scm4j.wf.conf.MDepsFile;
 import org.scm4j.wf.conf.Option;
-import org.scm4j.wf.conf.Version;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -61,7 +61,7 @@ public class SCMActionFork extends ActionAbstract {
 				actualizedMDeps.add(currentMDep.cloneWithDifferentVersion(futureReleaseVersionStr));
 				hasNewMDeps = true;
 			} else {
-				actualizedMDeps.add(currentMDep);
+				actualizedMDeps.add(currentMDep); // TODO: what if we specified unTillDb:123.3-SNAPSHOT in Dev mDeps despite just 120.0 is going to release now? Which version to write in Release Branch?
 			}
 		}
 		if (hasNewMDeps) {
