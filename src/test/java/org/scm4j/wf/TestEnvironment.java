@@ -2,6 +2,7 @@ package org.scm4j.wf;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.util.Arrays;
 import java.util.UUID;
 
@@ -63,12 +64,12 @@ public class TestEnvironment implements AutoCloseable {
 		VCSRepositories.setConfigSource(new IConfigSource() {
 			@Override
 			public String getReposLocations() {
-				return "file://localhost/" + getReposFile().getPath().replace("\\", "/");
+				return getReposFile().toURI().toString();
 			}
 
 			@Override
 			public String getCredentialsLocations() {
-				return "file://localhost/" + getCredsFile().getPath().replace("\\", "/");
+				return getCredsFile().toURI().toString();
 			}
 		});
 	}
