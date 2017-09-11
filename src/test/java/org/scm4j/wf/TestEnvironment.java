@@ -2,7 +2,6 @@ package org.scm4j.wf;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.util.Arrays;
 import java.util.UUID;
 
