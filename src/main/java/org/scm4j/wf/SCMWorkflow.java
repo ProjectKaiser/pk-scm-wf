@@ -244,4 +244,8 @@ public class SCMWorkflow {
 		String tagMessage = tagName + " release";
 		return new TagDesc(tagName, tagMessage);
 	}
+
+	public List<Option> getOptions() {
+		return options;
+	}
 }

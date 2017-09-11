@@ -280,7 +280,6 @@ public class WorkflowForkTest extends WorkflowTestBase {
 			action.execute(progress);
 		}
 
-
 		// check unTill uses new untillDb and UBL versions in existing unTill release branch.
 		ReleaseBranch rbUnTill = new ReleaseBranch(compUnTill);
 		List<Component> mdeps = rbUnTill.getMDeps();
@@ -387,6 +386,5 @@ public class WorkflowForkTest extends WorkflowTestBase {
 				fail();
 			}
 		}
-		
 	}
 }

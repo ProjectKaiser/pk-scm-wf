@@ -66,7 +66,7 @@ public class SCMActionFork extends ActionAbstract {
 		}
 		if (hasNewMDeps) {
 			MDepsFile frozenMDepsFile = new MDepsFile(actualizedMDeps);
-			vcs.setFileContent(rb.getName(), SCMWorkflow.MDEPS_FILE_NAME, frozenMDepsFile.toFileContent(), LogTag.SCM_MDEPS); // TODO: add mdeps are actual already check
+			vcs.setFileContent(rb.getName(), SCMWorkflow.MDEPS_FILE_NAME, frozenMDepsFile.toFileContent(), LogTag.SCM_MDEPS); 
 			progress.reportStatus("mdeps actualized");
 		} else {
 			progress.reportStatus("no mdeps to actualize");
