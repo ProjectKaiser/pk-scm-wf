@@ -1,6 +1,11 @@
 package org.scm4j.wf.conf;
 
-import org.scm4j.commons.progress.Coords;
+import java.io.File;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.scm4j.commons.Coords;
 import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
 import org.scm4j.vcs.api.workingcopy.VCSWorkspace;
 import org.scm4j.wf.SCMWorkflow;
@@ -9,11 +14,6 @@ import org.scm4j.wf.builders.BuilderFactory;
 import org.scm4j.wf.exceptions.EConfig;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.error.YAMLException;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 public class VCSRepositories {
 	public static final String DEFAULT_VCS_WORKSPACE_DIR = new File(SCMWorkflow.BASE_WORKING_DIR, "wf-vcs-workspaces").getPath();
