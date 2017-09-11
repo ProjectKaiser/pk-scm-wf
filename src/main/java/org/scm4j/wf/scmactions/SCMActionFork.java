@@ -55,13 +55,13 @@ public class SCMActionFork extends ActionAbstract {
 		List<Component> actualizedMDeps = new ArrayList<>();
 		Boolean hasNewMDeps = false;
 		for (Component currentMDep : currentMDeps) {
-			ReleaseBranch rbCurrentMDep = new ReleaseBranch(currentMDep);
-			String futureReleaseVersionStr = rbCurrentMDep.getVersion().toReleaseString();
-			if (new Version(futureReleaseVersionStr).isGreaterThan(currentMDep.getVersion())) {
+			if (currentMDep.getVersion().isSnapshot() || reason == ReleaseReason.ACTUALIZE_MDEPS) {
+				ReleaseBranch rbCurrentMDep = new ReleaseBranch(currentMDep);
+				String futureReleaseVersionStr = rbCurrentMDep.getVersion().toReleaseString();
 				actualizedMDeps.add(currentMDep.cloneWithDifferentVersion(futureReleaseVersionStr));
 				hasNewMDeps = true;
 			} else {
-				actualizedMDeps.add(currentMDep); // TODO: what if we specified unTillDb:123.3-SNAPSHOT in Dev mDeps despite just 120.0 is going to release now? Which version to write in Release Branch?
+				actualizedMDeps.add(currentMDep);
 			}
 		}
 		if (hasNewMDeps) {

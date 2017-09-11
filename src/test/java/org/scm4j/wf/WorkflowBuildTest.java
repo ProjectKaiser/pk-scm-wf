@@ -20,19 +20,6 @@ import java.util.List;
 import static org.junit.Assert.*;
 
 public class WorkflowBuildTest extends WorkflowTestBase {
-
-	private void checkUnTillDbForked() {
-		ReleaseBranch newUnTillDbRB = new ReleaseBranch(compUnTillDb);
-		// check branches
-		assertTrue(env.getUnTillDbVCS().getBranches("").contains(newUnTillDbRB.getName()));
-
-		// check versions. Trunk is minor+1, Release is without -SNAPSHOT
-		Version verTrunk = dbUnTillDb.getVersion();
-
-		Version verRelease = newUnTillDbRB.getCurrentVersion();
-		assertEquals(env.getUnTillDbVer().toNextMinor(), verTrunk);
-		assertEquals(env.getUnTillDbVer().toRelease(), verRelease);
-	}
 	
 	@Test
 	public void testBuildRootIfNestedIsBuiltAlready() throws Exception {
@@ -249,6 +236,4 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		action.execute(new NullProgress());
 		assertEquals(dbUnTillDb.getVersion().toPreviousMinor().toPreviousMinor().toNextPatch().toRelease(), new ReleaseBranch(comp).getVersion());
 	}
-	
-	// TODO: add actualize mdeps test if mdep dev version is not -SNAPSHOT, e.g. 123.3 or master-SNAPSHOT 
 }

@@ -7,28 +7,19 @@ import org.scm4j.wf.actions.ActionNone;
 import org.scm4j.wf.actions.IAction;
 import org.scm4j.wf.branch.ReleaseBranch;
 import org.scm4j.wf.conf.Component;
+import org.scm4j.wf.conf.MDepsFile;
 import org.scm4j.wf.scmactions.ReleaseReason;
 import org.scm4j.wf.scmactions.SCMActionBuild;
 import org.scm4j.wf.scmactions.SCMActionFork;
 
+import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.Assert.*;
 
 public class WorkflowForkTest extends WorkflowTestBase {
 
-	private void checkUnTillDbForked() {
-		ReleaseBranch newUnTillDbRB = new ReleaseBranch(compUnTillDb);
-		// check branches
-		assertTrue(env.getUnTillDbVCS().getBranches("").contains(newUnTillDbRB.getName()));
-
-		// check versions. Trunk is minor+1, Release is without -SNAPSHOT
-		Version verTrunk = dbUnTillDb.getVersion();
-
-		Version verRelease = newUnTillDbRB.getCurrentVersion();
-		assertEquals(env.getUnTillDbVer().toNextMinor(), verTrunk);
-		assertEquals(env.getUnTillDbVer().toRelease(), verRelease);
-	}
+	
 	
 	@Test
 	public void testForkSingleComponent() throws Exception {
@@ -263,7 +254,7 @@ public class WorkflowForkTest extends WorkflowTestBase {
 		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), "feature added");
 		SCMWorkflow wf = new SCMWorkflow();
 
-		// for all
+		// fork all
 		IAction action = wf.getProductionReleaseAction(compUnTill);
 		action.execute(new NullProgress());
 
@@ -316,5 +307,86 @@ public class WorkflowForkTest extends WorkflowTestBase {
 		try (IProgress progress = new ProgressConsole(action.getName(), ">>> ", "<<< ")) {
 			action.execute(progress);
 		}
+	}
+	
+	@Test
+	public void testExactDevVersionsAsIs() {
+		env.generateFeatureCommit(env.getUnTillVCS(), compUnTill.getVcsRepository().getDevBranch(), "feature added");
+		env.generateFeatureCommit(env.getUblVCS(), compUBL.getVcsRepository().getDevBranch(), "feature added");
+		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), "feature added");
+		Component compUnTillVersioned = new Component(UNTILL + ":" + env.getUnTillVer().toRelease());
+		Component compUnTillDbVersioned = new Component(UNTILLDB + ":" + env.getUnTillDbVer().toRelease());
+		Component compUblVersioned = new Component(UBL + ":" + env.getUblVer().toRelease());
+		MDepsFile mDepsFile = new MDepsFile(Arrays.asList(compUnTillDbVersioned, compUblVersioned));
+		env.getUnTillVCS().setFileContent(compUnTillVersioned.getVcsRepository().getDevBranch(), SCMWorkflow.MDEPS_FILE_NAME, mDepsFile.toFileContent(), "-SNAPSHOT added to mDeps versions");
+		SCMWorkflow wf = new SCMWorkflow();
+
+		// fork all
+		IAction action = wf.getProductionReleaseAction(compUnTill);
+		action.execute(new NullProgress());
+		
+		// check mDeps versions. All of them should be kept unchanged
+		// UBL mDeps
+		ReleaseBranch rbUBL = new ReleaseBranch(compUBL);
+		List<Component> ublReleaseMDeps = rbUBL.getMDeps();
+		assertTrue(ublReleaseMDeps.size() == 1);
+		assertEquals(compUnTillDb.getName(), ublReleaseMDeps.get(0).getName());
+		assertEquals(env.getUnTillDbVer().toRelease(), ublReleaseMDeps.get(0).getVersion());
+				
+		
+		// unTill mDeps
+		ReleaseBranch rbUnTill = new ReleaseBranch(compUnTill);
+		List<Component> unTillReleaseMDeps = rbUnTill.getMDeps();
+		assertTrue(unTillReleaseMDeps.size() == 2);
+		for (Component mDep : unTillReleaseMDeps) {
+			if (mDep.getName().equals(UBL)) {
+				assertEquals(env.getUblVer().toRelease(), mDep.getVersion());
+			} else if (mDep.getName().equals(UNTILLDB)) {
+				assertEquals(env.getUnTillDbVer().toRelease(), mDep.getVersion());
+			} else {
+				fail();
+			}
+		}
+	}
+	
+	@Test
+	public void testExactSnapshotDevVersionsReplacement() {
+		env.generateFeatureCommit(env.getUnTillVCS(), compUnTill.getVcsRepository().getDevBranch(), "feature added");
+		env.generateFeatureCommit(env.getUblVCS(), compUBL.getVcsRepository().getDevBranch(), "feature added");
+		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), "feature added");
+		Component compUnTillVersioned = new Component(UNTILL + ":" + env.getUnTillVer().toSnapshot());
+		Component compUnTillDbVersioned = new Component(UNTILLDB + ":" + env.getUnTillDbVer().toSnapshot());
+		Component compUblVersioned = new Component(UBL + ":" + env.getUblVer().toSnapshot());
+		MDepsFile mDepsFile = new MDepsFile(Arrays.asList(compUnTillDbVersioned, compUblVersioned));
+		env.getUnTillVCS().setFileContent(compUnTillVersioned.getVcsRepository().getDevBranch(), SCMWorkflow.MDEPS_FILE_NAME, mDepsFile.toFileContent(), "-SNAPSHOT added to mDeps versions");
+		SCMWorkflow wf = new SCMWorkflow();
+
+		// fork all
+		IAction action = wf.getProductionReleaseAction(compUnTill);
+		action.execute(new NullProgress());
+		
+		// check mDeps versions. All of them should be replaced with new ones with no snapshot
+		// UBL mDeps
+		ReleaseBranch rbUBL = new ReleaseBranch(compUBL);
+		List<Component> ublReleaseMDeps = rbUBL.getMDeps();
+		assertTrue(ublReleaseMDeps.size() == 1);
+		assertEquals(compUnTillDb.getName(), ublReleaseMDeps.get(0).getName());
+		assertEquals(dbUnTillDb.getVersion().toPreviousMinor().toRelease(), ublReleaseMDeps.get(0).getVersion());
+				
+		
+		// unTill mDeps
+		ReleaseBranch rbUnTill = new ReleaseBranch(compUnTill);
+		List<Component> unTillReleaseMDeps = rbUnTill.getMDeps();
+		assertTrue(unTillReleaseMDeps.size() == 2);
+		for (Component mDep : unTillReleaseMDeps) {
+			if (mDep.getName().equals(UBL)) {
+				assertEquals(dbUBL.getVersion().toPreviousMinor().toRelease(), mDep.getVersion());
+			} else if (mDep.getName().equals(UNTILLDB)) {
+				assertEquals(dbUnTillDb.getVersion().toPreviousMinor().toRelease(), mDep.getVersion());
+			} else {
+				fail();
+			}
+		}
+		
 	}
 }

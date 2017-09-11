@@ -2,8 +2,10 @@ package org.scm4j.wf;
 
 import org.junit.After;
 import org.junit.Before;
+import org.scm4j.commons.Version;
 import org.scm4j.wf.actions.IAction;
 import org.scm4j.wf.branch.DevelopBranch;
+import org.scm4j.wf.branch.ReleaseBranch;
 import org.scm4j.wf.conf.Component;
 import org.scm4j.wf.conf.DelayedTagsFile;
 import org.scm4j.wf.conf.VCSRepositories;
@@ -12,6 +14,8 @@ import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 public class WorkflowTestBase {
@@ -83,6 +87,19 @@ public class WorkflowTestBase {
 			}
 			fail(String.format("%s: property %s is not declared", action.getName(), propName));
 		}
+	}
+	
+	protected void checkUnTillDbForked() {
+		ReleaseBranch newUnTillDbRB = new ReleaseBranch(compUnTillDb);
+		// check branches
+		assertTrue(env.getUnTillDbVCS().getBranches("").contains(newUnTillDbRB.getName()));
+
+		// check versions. Trunk is minor+1, Release is without -SNAPSHOT
+		Version verTrunk = dbUnTillDb.getVersion();
+
+		Version verRelease = newUnTillDbRB.getCurrentVersion();
+		assertEquals(env.getUnTillDbVer().toNextMinor(), verTrunk);
+		assertEquals(env.getUnTillDbVer().toRelease(), verRelease);
 	}
 
 }
