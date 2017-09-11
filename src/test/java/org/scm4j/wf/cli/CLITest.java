@@ -15,6 +15,7 @@ import org.scm4j.wf.WorkflowTestBase;
 import org.scm4j.wf.actions.ActionKind;
 import org.scm4j.wf.actions.IAction;
 import org.scm4j.wf.conf.Option;
+import org.scm4j.wf.exceptions.EConfig;
 
 public class CLITest extends WorkflowTestBase {
 	
@@ -117,7 +118,7 @@ public class CLITest extends WorkflowTestBase {
 		try {
 			new CLI(new String[] {"wrong command", UNTILL, Option.DELAYED_TAG.getStrValue()});
 			fail();
-		} catch (IllegalArgumentException e) {
+		} catch (EConfig e) {
 		}
 	}
 	
