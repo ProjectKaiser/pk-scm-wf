@@ -55,7 +55,7 @@ public class CLI {
 		} catch (EConfig e) {
 			System.out.println(e.getMessage());
 			System.out.println(CommandLine.getUsage());
-			throw new IllegalArgumentException("wrong command line: " + args);
+			throw e;
 		}
 		wf = new SCMWorkflow(cmd.getOptions());
 		ps = System.out;
