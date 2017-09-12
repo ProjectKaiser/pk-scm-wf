@@ -87,7 +87,6 @@ public class SCMWorkflow {
 		if (dbs == DevelopBranchStatus.IGNORED) {
 			return new ActionNone(comp, childActions, "develop branch is IGNORED");
 		}
-
 		ReleaseBranch rb = new ReleaseBranch(comp);
 		ReleaseBranchStatus rbs = rb.getStatus();
 

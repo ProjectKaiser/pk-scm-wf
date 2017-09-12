@@ -13,6 +13,7 @@ public class MDepsFile {
 	private List<Component> mDeps = new ArrayList<>();
 	
 	public MDepsFile(String content) {
+		//StringUtils.spli
 		BufferedReader br = new BufferedReader(new StringReader(content));
 		try {
 			String str = br.readLine();

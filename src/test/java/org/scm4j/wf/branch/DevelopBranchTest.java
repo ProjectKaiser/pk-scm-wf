@@ -1,7 +1,8 @@
-package org.scm4j.wf.branches;
+package org.scm4j.wf.branch;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 import java.util.ArrayList;
 
@@ -57,5 +58,11 @@ public class DevelopBranchTest extends WorkflowTestBase {
 		Mockito.doReturn(mockedVCS).when(compFromEmptyRepo).getVCS();
 		Mockito.doReturn(new ArrayList<VCSCommit>()).when(mockedVCS).log(Mockito.anyString(), Mockito.anyInt());
 		assertEquals(DevelopBranchStatus.IGNORED, new DevelopBranch(compFromEmptyRepo).getStatus());
+	}
+	
+	@Test
+	public void testNullVersionIfNoVersionFile() {
+		env.getUnTillVCS().removeFile(compUnTill.getVcsRepository().getDevBranch(), SCMWorkflow.VER_FILE_NAME, "version file deleted");
+		assertNull(new DevelopBranch(compUnTill).getVersion());
 	}
 }

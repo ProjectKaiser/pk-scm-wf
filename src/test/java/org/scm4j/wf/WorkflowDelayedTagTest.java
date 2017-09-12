@@ -2,14 +2,18 @@ package org.scm4j.wf;
 
 import org.junit.Test;
 import org.scm4j.commons.progress.IProgress;
+import org.scm4j.vcs.api.VCSTag;
+import org.scm4j.vcs.api.WalkDirection;
 import org.scm4j.wf.actions.IAction;
 import org.scm4j.wf.branch.ReleaseBranch;
 import org.scm4j.wf.branch.ReleaseBranchStatus;
+import org.scm4j.wf.conf.Component;
 import org.scm4j.wf.conf.DelayedTagsFile;
 import org.scm4j.wf.conf.Option;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
 
 import static org.junit.Assert.*;
 
@@ -67,12 +71,24 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 		action.execute(nullProgress);
 		
 		// check tags
-		assertTrue(new ReleaseBranch(compUBL).isPreHeadCommitTaggedWithVersion());
-		assertTrue( new ReleaseBranch(compUnTillDb).isPreHeadCommitTaggedWithVersion());
-		assertTrue(new ReleaseBranch(compUnTill).isPreHeadCommitTaggedWithVersion());
+		assertTrue(isPreHeadCommitTaggedWithVersion(compUBL));
+		assertTrue(isPreHeadCommitTaggedWithVersion(compUnTillDb));
+		assertTrue(isPreHeadCommitTaggedWithVersion(compUnTill));
 		
 		// check Dealyed Tags file
 		DelayedTagsFile cf = new DelayedTagsFile();
 		assertTrue(cf.getContent().isEmpty());
+	}
+	
+	private boolean isPreHeadCommitTaggedWithVersion(Component comp) {
+		ReleaseBranch rb = new ReleaseBranch(comp);
+		List<VCSTag> tags = comp.getVCS().getTagsOnRevision(comp.getVCS().getCommitsRange(rb.getName(), null, WalkDirection.DESC, 2).get(1).getRevision());
+		for (VCSTag tag : tags) {
+			if (tag.getTagName().equals(rb.getCurrentVersion().toPreviousPatch().toReleaseString())) {
+				return true;
+			}
+		}
+		return false;
+
 	}
 }

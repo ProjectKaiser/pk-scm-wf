@@ -35,9 +35,4 @@ public abstract class ActionAbstract implements IAction {
 	public String getName() {
 		return comp.getName();
 	}
-
-	@Override
-	public String toString() {
-		return this.getClass().getSimpleName() + " [" + comp.getName() + "]";
-	}
 }

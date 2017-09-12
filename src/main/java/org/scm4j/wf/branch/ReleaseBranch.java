@@ -164,7 +164,7 @@ public class ReleaseBranch {
 		return true;
 	}
 
-	public boolean isPreHeadCommitTagDelayed() {
+	private boolean isPreHeadCommitTagDelayed() {
 		DelayedTagsFile cf = new DelayedTagsFile();
 		String delayedTagRevision = cf.getRevisitonByUrl(comp.getVcsRepository().getUrl());
 		if (delayedTagRevision == null) {
@@ -175,10 +175,7 @@ public class ReleaseBranch {
 		return commits.size() >= 2 && commits.get(1).getRevision().equals(delayedTagRevision);
 	}
 
-	public boolean isPreHeadCommitTaggedWithVersion() {
-		if (!getBranches().contains(getName())) {
-			return false;
-		}
+	protected boolean isPreHeadCommitTaggedWithVersion() {
 		List<VCSCommit> commits = getLast2Commits();
 		if (commits.size() < 2) {
 			return false;
@@ -195,7 +192,7 @@ public class ReleaseBranch {
 		return false;
 	}
 
-	private List<VCSCommit> getLast2Commits() {
+	protected List<VCSCommit> getLast2Commits() {
 		@SuppressWarnings("unchecked")
 		List<VCSCommit> last2Commits = (List<VCSCommit>) cache.get("last2Commits");
 		if (last2Commits == null) {

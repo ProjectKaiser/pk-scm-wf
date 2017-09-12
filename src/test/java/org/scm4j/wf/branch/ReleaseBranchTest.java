@@ -1,10 +1,12 @@
-package org.scm4j.wf.branches;
+package org.scm4j.wf.branch;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 import org.junit.Test;
 import org.scm4j.commons.Version;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.commons.progress.ProgressConsole;
+import org.scm4j.vcs.api.VCSCommit;
+import org.scm4j.vcs.api.VCSTag;
 import org.scm4j.wf.NullProgress;
 import org.scm4j.wf.SCMWorkflow;
 import org.scm4j.wf.WorkflowTestBase;
@@ -13,9 +15,11 @@ import org.scm4j.wf.branch.ReleaseBranch;
 import org.scm4j.wf.branch.ReleaseBranchStatus;
 import org.scm4j.wf.conf.MDepsFile;
 
-import java.util.Arrays;
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
-import static org.junit.Assert.assertEquals;
+import java.util.Arrays;
+import java.util.List;
 
 public class ReleaseBranchTest extends WorkflowTestBase {
 	
@@ -111,6 +115,7 @@ public class ReleaseBranchTest extends WorkflowTestBase {
 		// build all
 		action = wf.getProductionReleaseAction(compUnTill);
 		action.execute(nullProgress);
+		
 		assertEquals(ReleaseBranchStatus.ACTUAL, rbUnTill.getStatus());
 		assertEquals(ReleaseBranchStatus.ACTUAL, rbUBL.getStatus());
 		assertEquals(ReleaseBranchStatus.ACTUAL, rbUnTillDb.getStatus());
@@ -203,5 +208,51 @@ public class ReleaseBranchTest extends WorkflowTestBase {
 				.usingGetClass()
 				.withOnlyTheseFields("comp", "name", "version")
 				.verify();
+	}
+	
+	@Test
+	public void testToString() {
+		ReleaseBranch rb = new ReleaseBranch(compUnTillDb);
+		assertTrue(rb.toString().contains(compUnTillDb.getName()));
+	}
+	
+	@Test
+	public void testPreHeadIsNotTaggedIfPreHeadMissing() {
+		// fork unTillDb
+		IAction action = wf.getProductionReleaseAction(compUnTillDb);
+		action.execute(nullProgress);
+		
+		// build unTillDb
+		action = wf.getProductionReleaseAction(compUnTillDb);
+		action.execute(nullProgress);
+		
+		ReleaseBranch rb = spy(new ReleaseBranch(compUnTillDb));
+		assertEquals(ReleaseBranchStatus.ACTUAL, rb.getStatus());
+		VCSCommit commit = VCSCommit.EMPTY;
+		doReturn(Arrays.asList(commit)).when(rb).getLast2Commits();
+		assertEquals(ReleaseBranchStatus.MDEPS_ACTUAL, rb.getStatus());
+	}
+	
+	@Test
+	public void testMDEPS_ACTUALIfWrongTagOnPreHead() {
+		// fork unTillDb
+		IAction action = wf.getProductionReleaseAction(compUnTillDb);
+		action.execute(nullProgress);
+		
+		// build unTillDb
+		action = wf.getProductionReleaseAction(compUnTillDb);
+		action.execute(nullProgress);
+		
+		List<VCSTag> tags = env.getUnTillDbVCS().getTags();
+		assertTrue(tags.size() == 1);
+		VCSTag tag = tags.get(0);
+		String taggedRev = tag.getRelatedCommit().getRevision();
+		
+		env.getUnTillDbVCS().removeTag(tag.getTagName());
+		
+		ReleaseBranch rb = new ReleaseBranch(compUnTillDb);
+		env.getUnTillDbVCS().createTag(rb.getName(), "wrong_tag", "", taggedRev);
+		
+		assertEquals(ReleaseBranchStatus.MDEPS_ACTUAL, rb.getStatus());
 	}
 }
