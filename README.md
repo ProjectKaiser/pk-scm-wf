@@ -1,6 +1,6 @@
-[![Release](https://jitpack.io/v/scm4j/scm4j-wf.svg)](https://jitpack.io/#scm4j/scm4j-wf)
-[![Build Status](https://travis-ci.org/scm4j/scm4j-wf.svg?branch=release/2)](https://travis-ci.org/scm4j/scm4j-wf)
-[![Coverage Status](https://coveralls.io/repos/github/scm4j/scm4j-wf/badge.svg?branch=release/2)](https://coveralls.io/github/scm4j/scm4j-wf?branch=release/2)
+[![Release](https://jitpack.io/v/scm4j/scm4j-releaser.svg)](https://jitpack.io/#scm4j/scm4j-releaser)
+[![Build Status](https://travis-ci.org/scm4j/scm4j-releaser.svg?branch=master)](https://travis-ci.org/scm4j/scm4j-releaser)
+[![Coverage Status](https://coveralls.io/repos/github/scm4j/scm4j-releaser/badge.svg?branch=master)](https://coveralls.io/github/scm4j/scm4j-releaser?branch=master)
 
 # Status
 
@@ -29,7 +29,7 @@ For version definitions ref. [semantic Versioning 2.0.0](http://semver.org/).
 
 # Installation
 
-Install groovy, download [run.grovy](https://raw.githubusercontent.com/scm4j/scm4j-wf/master/run.groovy) and execute `groovy run.groovy`, it will list available commands
+Install groovy, download [run.grovy](https://raw.githubusercontent.com/scm4j/scm4j-releaser/release/2/run.groovy) and execute `groovy run.groovy`, it will list available commands
 
 # Data Structure
 
@@ -43,4 +43,4 @@ Install groovy, download [run.grovy](https://raw.githubusercontent.com/scm4j/scm
 
 # See also
 
-[Historical version](https://github.com/scm4j/scm4j-wf/blob/d540cb00674d485846117dbd68df19bdad306e56/README.md)
+[Historical version](https://github.com/scm4j/scm4j-releaser/blob/d540cb00674d485846117dbd68df19bdad306e56/README.md)
