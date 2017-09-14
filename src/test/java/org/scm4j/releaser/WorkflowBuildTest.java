@@ -18,12 +18,30 @@ import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.vcs.api.VCSTag;
 import org.scm4j.vcs.api.WalkDirection;
 
-import java.util.List;
-
 import static org.junit.Assert.*;
 
 public class WorkflowBuildTest extends WorkflowTestBase {
 	
+	@Test
+	public void testBuildAll() {
+		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), "feature added");
+		SCMWorkflow wf = new SCMWorkflow();
+
+		// simulate BRANCHED dev branches statuses
+		env.generateContent(env.getUblVCS(), compUBL.getVcsRepository().getDevBranch(), "test file", "test content", LogTag.SCM_VER);
+		env.generateContent(env.getUnTillVCS(), compUnTill.getVcsRepository().getDevBranch(), "test file", "test content", LogTag.SCM_VER);
+
+		// fork unTill
+		IAction action = wf.getProductionReleaseAction(UNTILL);
+		action.execute(new NullProgress());
+		checkUnTillForked();
+
+		// build unTill
+		action = wf.getProductionReleaseAction(UNTILL);
+		action.execute(new NullProgress());
+		checkUnTillBuilt();
+	}
+
 	@Test
 	public void testBuildRootIfNestedIsBuiltAlready() throws Exception {
 		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), "feature added");
@@ -32,7 +50,6 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		// fork unTillDb 
 		IAction action = releaser.getProductionReleaseAction(UNTILLDB);
 		action.execute(new NullProgress());
-		checkUnTillDbForked();
 		
 		// build unTillDb
 		action = releaser.getProductionReleaseAction(UNTILLDB);
@@ -41,7 +58,6 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		// fork UBL
 		// simulate BRANCHED dev branch status
 		env.generateContent(env.getUblVCS(), compUBL.getVcsRepository().getDevBranch(), "test file", "test content", LogTag.SCM_VER);
-		TestBuilder.getBuilders().clear();
 		action = releaser.getProductionReleaseAction(UBL);
 		Expectations exp = new Expectations();
 		exp.put(UBL, SCMActionFork.class);
@@ -52,7 +68,7 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		try (IProgress progress = new ProgressConsole(action.toString(), ">>> ", "<<< ")) {
 			action.execute(progress);
 		}
-		assertTrue(TestBuilder.getBuilders().isEmpty());
+		checkUBLForked();
 		
 		// build UBL
 		action = releaser.getProductionReleaseAction(UBL);
@@ -64,12 +80,8 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		try (IProgress progress = new ProgressConsole(action.toString(), ">>> ", "<<< ")) {
 			action.execute(progress);
 		} 
-		assertFalse(TestBuilder.getBuilders().isEmpty());
-		assertTrue(TestBuilder.getBuilders().size() == 1);
-		
+		checkUBLBuilt();
 	}
-
-
 
 	@Test
 	public void testBuildUBLAndUnTillDb() throws Exception {
@@ -168,12 +180,10 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		
 		// fork unTillDb
 		IAction action = releaser.getProductionReleaseAction(UNTILLDB);
-		Expectations exp = new Expectations();
-		exp.put(UNTILLDB, SCMActionFork.class);
-		checkChildActionsTypes(action, exp);
 		try (IProgress progress = new ProgressConsole(action.toString(), ">>> ", "<<< ")) {
 			action.execute(progress);
 		}
+		checkUnTillDbForked();
 
 		ReleaseBranch rbUBL = new ReleaseBranch(compUBL);
 		ReleaseBranch rbUnTillDb = new ReleaseBranch(compUnTillDb);
@@ -188,7 +198,7 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		env.generateContent(env.getUblVCS(), compUBL.getVcsRepository().getDevBranch(), "test file", "test content", LogTag.SCM_VER);
 		env.generateContent(env.getUnTillVCS(), compUnTill.getVcsRepository().getDevBranch(), "test file", "test content", LogTag.SCM_VER);
 		action = releaser.getProductionReleaseAction(UNTILL);
-		exp = new Expectations();
+		Expectations exp = new Expectations();
 		exp.put(UNTILLDB, ActionNone.class);
 		exp.put(UNTILL, SCMActionFork.class);
 		exp.put(UNTILL, "fromstatus", ReleaseBranchStatus.MISSING);
@@ -197,14 +207,10 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		exp.put(UBL, "fromstatus", ReleaseBranchStatus.MISSING);
 		exp.put(UBL, "tostatus", ReleaseBranchStatus.MDEPS_ACTUAL);
 		checkChildActionsTypes(action, exp);
-		
 		try (IProgress progress = new ProgressConsole(action.toString(), ">>> ", "<<< ")) {
 			action.execute(progress);
 		}
-		
-		assertTrue(env.getUnTillVCS().getBranches("").contains(rbUnTill.getName()));
-		assertTrue(env.getUnTillDbVCS().getBranches("").contains(rbUnTillDb.getName()));
-		assertTrue(env.getUblVCS().getBranches("").contains(rbUBL.getName()));
+		checkUnTillForked();
 	}
 	
 	@Test
@@ -231,7 +237,7 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		
 		assertEquals(env.getUnTillDbVer().toNextMinor().toRelease(), new ReleaseBranch(compUnTillDb).getVersion());
 		
-		//check desired version is selected
+		//check desired release version is selected
 		Component comp = new Component(UNTILLDB + ":2.59.1");
 		ReleaseBranch rb = new ReleaseBranch(comp);
 		assertEquals(dbUnTillDb.getVersion().toPreviousMinor().toPreviousMinor().toRelease(), rb.getVersion());
