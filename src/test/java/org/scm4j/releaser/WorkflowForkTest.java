@@ -263,8 +263,8 @@ public class WorkflowForkTest extends WorkflowTestBase {
 		}
 
 		// check unTill uses new untillDb and UBL patches in existing unTill release branch.
-		ReleaseBranch rbUnTill = new ReleaseBranch(compUnTill);
-		List<Component> mdeps = rbUnTill.getMDeps();
+		rbUnTill = new ReleaseBranch(compUnTill);
+		mdeps = rbUnTill.getMDeps();
 		for (Component mdep : mdeps) {
 			if (mdep.getName().equals(UBL)) {
 				assertEquals(dbUBL.getVersion().toPreviousMinor().toNextPatch().toRelease(), mdep.getVersion());
@@ -272,6 +272,8 @@ public class WorkflowForkTest extends WorkflowTestBase {
 				assertEquals(dbUnTillDb.getVersion().toPreviousMinor().toNextPatch().toRelease(), mdep.getVersion());
 			} else {
 				fail();
+			}
+		}
 	}
 	
 	@Test

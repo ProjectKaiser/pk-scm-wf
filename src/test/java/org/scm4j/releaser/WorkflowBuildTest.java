@@ -20,24 +20,26 @@ import org.scm4j.vcs.api.WalkDirection;
 
 import static org.junit.Assert.*;
 
+import java.util.List;
+
 public class WorkflowBuildTest extends WorkflowTestBase {
 	
 	@Test
 	public void testBuildAll() {
 		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), "feature added");
-		SCMWorkflow wf = new SCMWorkflow();
+		SCMReleaser releaser = new SCMReleaser();
 
 		// simulate BRANCHED dev branches statuses
 		env.generateContent(env.getUblVCS(), compUBL.getVcsRepository().getDevBranch(), "test file", "test content", LogTag.SCM_VER);
 		env.generateContent(env.getUnTillVCS(), compUnTill.getVcsRepository().getDevBranch(), "test file", "test content", LogTag.SCM_VER);
 
 		// fork unTill
-		IAction action = wf.getProductionReleaseAction(UNTILL);
+		IAction action = releaser.getProductionReleaseAction(UNTILL);
 		action.execute(new NullProgress());
 		checkUnTillForked();
 
 		// build unTill
-		action = wf.getProductionReleaseAction(UNTILL);
+		action = releaser.getProductionReleaseAction(UNTILL);
 		action.execute(new NullProgress());
 		checkUnTillBuilt();
 	}
