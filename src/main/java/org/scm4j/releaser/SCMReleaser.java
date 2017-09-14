@@ -69,11 +69,10 @@ public class SCMReleaser {
 		List<IAction> childActions = new ArrayList<>();
 		ReleaseBranch rb = new ReleaseBranch(comp);
 		List<Component> mDeps;
-		if (!rb.exists()) {
-			DevelopBranch db = new DevelopBranch(comp);
-			mDeps = db.getMDeps();
-		} else {
+		if (rb.exists()) {
 			mDeps = rb.getMDeps();
+		} else {
+			mDeps = new DevelopBranch(comp).getMDeps();
 		}
 
 		for (Component mDep : mDeps) {

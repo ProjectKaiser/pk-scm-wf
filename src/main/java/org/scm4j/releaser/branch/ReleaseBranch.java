@@ -250,7 +250,7 @@ public class ReleaseBranch {
 	public List<Component> getMDeps() {
 		try {
 			String mDepsFileContent = comp.getVCS().getFileContent(name, SCMReleaser.MDEPS_FILE_NAME, null);
-			MDepsFile mDeps = new MDepsFile(mDepsFileContent, false);
+			MDepsFile mDeps = new MDepsFile(mDepsFileContent);
 			return mDeps.getMDeps();
 		} catch (EVCSFileNotFound e) {
 			return new ArrayList<>();
