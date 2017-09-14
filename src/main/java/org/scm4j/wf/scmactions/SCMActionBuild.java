@@ -103,6 +103,10 @@ public class SCMActionBuild extends ActionAbstract {
 
 	@Override
 	public String toString() {
-		return "build " + comp.getCoords().toString() + ", targetVersion=" + targetVersion.toString() + ", " + reason.toString();
+		return "build " + comp.getCoords().toString() + ", targetVersion: " + targetVersion.toString() + ", " + reason.toString();
+	}
+	
+	public Version getTargetVersion() {
+		return targetVersion;
 	}
 }

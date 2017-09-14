@@ -1,31 +1,31 @@
 package org.scm4j.wf.conf;
 
-import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.PrintWriter;
-import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.apache.commons.lang3.StringUtils;
 
 public class MDepsFile {
 	
 	private List<Component> mDeps = new ArrayList<>();
 	
-	public MDepsFile(String content) {
-		//StringUtils.spli
-		BufferedReader br = new BufferedReader(new StringReader(content));
-		try {
-			String str = br.readLine();
-			while (str != null) {
-				if (isLineValueable(str)) {
-					Component dep = new Component(str);
-					mDeps.add(dep);
-				}
-				str = br.readLine();
+	public MDepsFile(String content, boolean isProduct) {
+		String[] strs = StringUtils.split(content, "\r\n");
+		for (String str: strs) {
+			if (isLineValueable(str)) {
+				mDeps.add(new Component(str, isProduct));
 			}
-		} catch (IOException e) {
-			throw new RuntimeException(e);
+		}
+	}
+	
+	public MDepsFile(String content) {
+		String[] strs = StringUtils.split(content, "\r\n");
+		for (String str: strs) {
+			if (isLineValueable(str)) {
+				mDeps.add(new Component(str));
+			}
 		}
 	}
 	

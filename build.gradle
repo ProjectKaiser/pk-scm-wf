@@ -34,7 +34,7 @@ test {
 	jvmArgs '-Xmx128m'
  	testLogging {
 		events "failed"
-		exceptionFormat "short"
+		exceptionFormat "full"
 	}
 }
 

@@ -54,11 +54,11 @@ public class SCMWorkflow {
 	}
 	
 	public IAction getProductionReleaseAction(String componentName) {
-		return getProductionReleaseAction(new Component(componentName), ActionKind.AUTO);
+		return getProductionReleaseAction(new Component(componentName, true), ActionKind.AUTO);
 	}
 	
 	public IAction getProductionReleaseAction(String componentCoords, ActionKind actionKind) {
-		return getProductionReleaseAction(new Component(componentCoords), actionKind);
+		return getProductionReleaseAction(new Component(componentCoords, true), actionKind);
 	}
 	
 	public IAction getProductionReleaseAction(Component comp) {
@@ -67,11 +67,17 @@ public class SCMWorkflow {
 
 	public IAction getProductionReleaseAction(Component comp, ActionKind actionKind) {
 		List<IAction> childActions = new ArrayList<>();
-		DevelopBranch db = new DevelopBranch(comp);
-		List<Component> devMDeps = db.getMDeps();
+		ReleaseBranch rb = new ReleaseBranch(comp);
+		List<Component> mDeps;
+		if (!rb.exists()) {
+			DevelopBranch db = new DevelopBranch(comp);
+			mDeps = db.getMDeps();
+		} else {
+			mDeps = rb.getMDeps();
+		}
 
-		for (Component mDep : devMDeps) {
-			childActions.add(getProductionReleaseAction(mDep, actionKind));
+		for (Component mDep : mDeps) {
+			childActions.add(getProductionReleaseAction(mDep, actionKind)); 
 		}
 
 		return getProductionReleaseActionRoot(comp, childActions, actionKind);
@@ -87,28 +93,26 @@ public class SCMWorkflow {
 		if (dbs == DevelopBranchStatus.IGNORED) {
 			return new ActionNone(comp, childActions, "develop branch is IGNORED");
 		}
+		
 		ReleaseBranch rb = new ReleaseBranch(comp);
 		ReleaseBranchStatus rbs = rb.getStatus();
 
 		if (rbs == ReleaseBranchStatus.MISSING) {
 			skipAllBuilds(childActions);
 			if (actionKind == ActionKind.BUILD) {
-				return new ActionNone(comp, childActions, "nothing to build ");
+				return new ActionNone(comp, childActions, "nothing to build. " + rb.getVersion() + " " + rb.getStatus());
 			}
-			if (dbs == DevelopBranchStatus.MODIFIED) {
-				return new SCMActionFork(comp, childActions, ReleaseReason.NEW_FEATURES, options);
-			} else {
-				return new SCMActionFork(comp, childActions, ReleaseReason.NEW_DEPENDENCIES, options);
-			}
+			
+			return new SCMActionFork(comp, childActions, ReleaseBranchStatus.MISSING, ReleaseBranchStatus.MDEPS_ACTUAL, options);
 		}
 
 		if (rbs == ReleaseBranchStatus.BRANCHED) {
 			// need to freeze mdeps
 			skipAllBuilds(childActions);
 			if (actionKind == ActionKind.BUILD) {
-				return new ActionNone(comp, childActions, "nothing to build");
+				return new ActionNone(comp, childActions, "nothing to build. " + rb.getVersion() + " " + rb.getStatus());
 			}
-			return new SCMActionFork(comp, childActions, ReleaseReason.NEW_FEATURES, options);
+			return new SCMActionFork(comp, childActions, ReleaseBranchStatus.BRANCHED,  ReleaseBranchStatus.MDEPS_ACTUAL, options);
 		}
 
 		if (rbs == ReleaseBranchStatus.MDEPS_FROZEN) {
@@ -116,14 +120,14 @@ public class SCMWorkflow {
 				// need to actualize
 				skipAllBuilds(childActions);
 				if (actionKind == ActionKind.BUILD) {
-					return new ActionNone(comp, childActions, "nothing to build");
+					return new ActionNone(comp, childActions, "nothing to build. " + rb.getVersion() + " " + rb.getStatus());
 				}
-				return new SCMActionFork(comp, childActions, ReleaseReason.ACTUALIZE_MDEPS, options);
+				return new SCMActionFork(comp, childActions, ReleaseBranchStatus.MDEPS_FROZEN, ReleaseBranchStatus.MDEPS_ACTUAL, options);
 			} else {
 				// All necessary version will be build by Child Actions. Need to build
 				skipAllForks(childActions);
 				if (actionKind == ActionKind.FORK) {
-					return new ActionNone(comp, childActions, "nothing to fork");
+					return new ActionNone(comp, childActions, "nothing to fork. " + rb.getVersion() + " " + rb.getStatus());
 				}
 				return new SCMActionBuild(comp, childActions, ReleaseReason.NEW_DEPENDENCIES, rb.getVersion(), options);
 			}
@@ -132,7 +136,7 @@ public class SCMWorkflow {
 		if (rbs == ReleaseBranchStatus.MDEPS_ACTUAL) {
 			// need to build
 			if (actionKind == ActionKind.FORK) {
-				return new ActionNone(comp, childActions, "nothing to fork");
+				return new ActionNone(comp, childActions, "nothing to fork. " + rb.getVersion() + " " + rb.getStatus());
 			}
 			return new SCMActionBuild(comp, childActions, ReleaseReason.NEW_FEATURES, rb.getVersion(), options);
 		}
@@ -140,12 +144,12 @@ public class SCMWorkflow {
 		if (hasForkChildActions(childActions)) {
 			skipAllBuilds(childActions);
 			if (actionKind == ActionKind.FORK) {
-				return new ActionNone(comp, childActions, "nothing to build");
+				return new ActionNone(comp, childActions, "nothing to build. " + rb.getVersion() + " " + rb.getStatus());
 			}
-			return new SCMActionFork(comp, childActions, ReleaseReason.NEW_DEPENDENCIES, options);
+			return new SCMActionFork(comp, childActions, rbs, rbs, options);
 		}
 
-		return new ActionNone(comp, childActions, rbs.toString());
+		return new ActionNone(comp, childActions, rb.getVersion().toString() + " " + rbs.toString());
 	}
 
 	private boolean needToActualizeMDeps(ReleaseBranch currentCompRB) {
@@ -153,8 +157,14 @@ public class SCMWorkflow {
 		ReleaseBranch mDepRB;
 		for (Component mDep : mDeps) {
 			mDepRB = new ReleaseBranch(mDep);
-			if (mDepRB.getStatus() == ReleaseBranchStatus.MDEPS_ACTUAL) {
+			ReleaseBranchStatus rbs = mDepRB.getStatus();
+			if (rbs == ReleaseBranchStatus.MDEPS_ACTUAL) {
 				if (!mDepRB.getCurrentVersion().equals(mDep.getVersion())) {
+					return true;
+				}
+			
+			} else if (rbs == ReleaseBranchStatus.ACTUAL) {
+				if (!mDepRB.getCurrentVersion().toPreviousPatch().equals(mDep.getVersion())) {
 					return true;
 				}
 			} else {
@@ -194,7 +204,8 @@ public class SCMWorkflow {
 			action = li.next();
 			skipAllBuilds(action.getChildActions());
 			if (action instanceof SCMActionBuild) {
-				li.set(new ActionNone(((SCMActionBuild) action).getComponent(), action.getChildActions(), "build skipped because not all parent components forked"));
+				li.set(new ActionNone(((SCMActionBuild) action).getComponent(), action.getChildActions(), ((SCMActionBuild) action).getTargetVersion() + 
+						" build skipped because not all parent components forked"));
 			}
 		}
 	}

@@ -33,10 +33,19 @@ public class ReleaseBranch {
 	}
 	
 	public ReleaseBranch(final Component comp) {
+		if (comp.isProduct() && comp.getVersion().isExact()) {
+			this.version = comp.getVersion().toRelease();
+			this.comp = comp;
+			name = computeName();
+			vcs = comp.getVCS();
+			return ;
+		}
 		this.comp = comp;
 		vcs = comp.getVCS();
 		DevelopBranch db = new DevelopBranch(comp);
 
+		// if not product and not snapshot then will work with just one Release Branch which is related to provided version. 
+		// e.g 4.x -> release/4, 4.x-SNAPSHTOT -> release/* 
 		List<String> releaseBranches = new ArrayList<>(vcs.getBranches(
 				comp.getVcsRepository().getReleaseBranchPrefix() + (comp.getVersion().isSnapshot() ? "" : comp.getVersion().getReleaseNoPatchString())));
 		
@@ -72,11 +81,15 @@ public class ReleaseBranch {
 						// if db MODIFIED and head-1 commit of last release branch tagged then all is built and we need new release. Use DB version.
 						// if db BRANCHED and head-1 commit of last release branch tagged then all is built and we need the built release. Use patch-- 
 						// otherwise we must return last built RB version.
-						DevelopBranchStatus dbs = db.getStatus();
-						if (dbs == DevelopBranchStatus.BRANCHED) {
+						if (comp.getVersion().isExact()) {
 							ver = ver.toPreviousPatch();
-						} else if(dbs == DevelopBranchStatus.MODIFIED) {
-							ver = db.getVersion().toRelease(); 
+						} else {
+							DevelopBranchStatus dbs = db.getStatus();
+							if (dbs == DevelopBranchStatus.BRANCHED) {
+								ver = ver.toPreviousPatch();
+							} else if(dbs == DevelopBranchStatus.MODIFIED) {
+								ver = db.getVersion().toRelease(); 
+							}
 						}
 						break;
 					}
@@ -237,7 +250,7 @@ public class ReleaseBranch {
 	public List<Component> getMDeps() {
 		try {
 			String mDepsFileContent = comp.getVCS().getFileContent(name, SCMWorkflow.MDEPS_FILE_NAME, null);
-			MDepsFile mDeps = new MDepsFile(mDepsFileContent);
+			MDepsFile mDeps = new MDepsFile(mDepsFileContent, false);
 			return mDeps.getMDeps();
 		} catch (EVCSFileNotFound e) {
 			return new ArrayList<>();

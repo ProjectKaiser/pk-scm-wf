@@ -6,6 +6,7 @@ import org.scm4j.commons.progress.ProgressConsole;
 import org.scm4j.wf.actions.ActionNone;
 import org.scm4j.wf.actions.IAction;
 import org.scm4j.wf.branch.ReleaseBranch;
+import org.scm4j.wf.branch.ReleaseBranchStatus;
 import org.scm4j.wf.conf.Component;
 import org.scm4j.wf.conf.MDepsFile;
 import org.scm4j.wf.scmactions.ReleaseReason;
@@ -99,7 +100,8 @@ public class WorkflowForkTest extends WorkflowTestBase {
 		Expectations exp = new Expectations();
 		exp.put(UNTILLDB, ActionNone.class);
 		exp.put(UBL, SCMActionFork.class);
-		exp.put(UBL,  "reason", ReleaseReason.NEW_DEPENDENCIES);
+		exp.put(UBL, "fromstatus", ReleaseBranchStatus.MISSING);
+		exp.put(UBL, "tostatus", ReleaseBranchStatus.MDEPS_ACTUAL);
 		checkChildActionsTypes(action, exp);
 		
 		// build UBL
@@ -138,9 +140,11 @@ public class WorkflowForkTest extends WorkflowTestBase {
 		IAction action = wf.getProductionReleaseAction(UNTILL);
 		Expectations exp = new Expectations();
 		exp.put(UNTILL, SCMActionFork.class);
-		exp.put(UNTILL, "reason", ReleaseReason.NEW_FEATURES);
+		exp.put(UNTILL, "fromstatus", ReleaseBranchStatus.MISSING);
+		exp.put(UNTILL, "tostatus", ReleaseBranchStatus.MDEPS_ACTUAL);
 		exp.put(UBL, SCMActionFork.class);
-		exp.put(UBL, "reason", ReleaseReason.NEW_FEATURES);
+		exp.put(UBL, "fromstatus", ReleaseBranchStatus.MISSING);
+		exp.put(UBL, "tostatus", ReleaseBranchStatus.MDEPS_ACTUAL);
 		exp.put(UNTILLDB, ActionNone.class);
 		checkChildActionsTypes(action, exp);
 		
@@ -196,11 +200,14 @@ public class WorkflowForkTest extends WorkflowTestBase {
 		IAction action = wf.getProductionReleaseAction(UNTILL);
 		Expectations exp = new Expectations();
 		exp.put(UNTILL, SCMActionFork.class);
-		exp.put(UNTILL, "reason", ReleaseReason.NEW_FEATURES);
+		exp.put(UNTILL, "fromstatus", ReleaseBranchStatus.MISSING);
+		exp.put(UNTILL, "tostatus", ReleaseBranchStatus.MDEPS_ACTUAL);
 		exp.put(UBL, SCMActionFork.class);
-		exp.put(UBL, "reason", ReleaseReason.NEW_FEATURES);
+		exp.put(UBL, "fromstatus", ReleaseBranchStatus.MISSING);
+		exp.put(UBL, "tostatus", ReleaseBranchStatus.MDEPS_ACTUAL);
 		exp.put(UNTILLDB, SCMActionFork.class);
-		exp.put(UNTILLDB, "reason", ReleaseReason.NEW_FEATURES);
+		exp.put(UNTILLDB, "fromstatus", ReleaseBranchStatus.MISSING);
+		exp.put(UNTILLDB, "tostatus", ReleaseBranchStatus.MDEPS_ACTUAL);
 		checkChildActionsTypes(action, exp);
 		
 		try (IProgress progress = new ProgressConsole(action.toString(), ">>> ", "<<< ")) {
@@ -271,9 +278,11 @@ public class WorkflowForkTest extends WorkflowTestBase {
 		Expectations exp = new Expectations();
 		exp.put(UNTILLDB, ActionNone.class);
 		exp.put(UNTILL, SCMActionFork.class);
-		exp.put(UNTILL, "reason", ReleaseReason.ACTUALIZE_MDEPS);
+		exp.put(UNTILL, "fromstatus", ReleaseBranchStatus.MDEPS_FROZEN);
+		exp.put(UNTILL, "tostatus", ReleaseBranchStatus.MDEPS_ACTUAL);
 		exp.put(UBL, SCMActionFork.class);
-		exp.put(UBL, "reason", ReleaseReason.ACTUALIZE_MDEPS);
+		exp.put(UBL, "fromstatus", ReleaseBranchStatus.MDEPS_FROZEN);
+		exp.put(UBL, "tostatus", ReleaseBranchStatus.MDEPS_ACTUAL);
 		checkChildActionsTypes(action, exp);
 		// actualize unTill and UBL mdeps
 		try (IProgress progress = new ProgressConsole(action.getName(), ">>> ", "<<< ")) {

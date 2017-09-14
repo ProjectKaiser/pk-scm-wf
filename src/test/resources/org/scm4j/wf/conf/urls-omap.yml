@@ -4,7 +4,7 @@
 - my(.*):
     url: http://localhost/git/myProj$1
     type: git
-    releaseBanchPrefix: B
+    releaseBranchPrefix: B
     devBranch: null
 - ~:
     url: https://github.com/qwerty/$0
