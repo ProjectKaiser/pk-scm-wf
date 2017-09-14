@@ -1,3 +1,3 @@
-com.github.scm4j:scm4j-vcs-git:4.0
-com.github.scm4j:scm4j-vcs-svn:4.0
-com.github.scm4j:scm4j-commons:2.0
+com.github.scm4j:scm4j-vcs-git:4.1
+com.github.scm4j:scm4j-vcs-svn:4.1
+com.github.scm4j:scm4j-commons:2.2
