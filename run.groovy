@@ -1,8 +1,8 @@
 @GrabResolver(name='jitpack', root='https://jitpack.io')
-@Grab('com.github.scm4j:scm4j-wf:dev-SNAPSHOT')
+@Grab('com.github.scm4j:scm4j-releaser:dev-SNAPSHOT')
 
-import org.scm4j.wf.cli.CLI;
-import org.scm4j.wf.exceptions.EConfig;
+import org.scm4j.releaser.cli.CLI;
+import org.scm4j.releaser.exceptions.EConfig;
 
 class CLIRunner {
 	static void main(args) {
