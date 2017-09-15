@@ -13,7 +13,7 @@ public class VCSRepository {
 	private final Credentials credentials;
 	private final VCSType type;
 	private final String devBranch;
-	private final String releaseBanchPrefix;
+	private final String releaseBranchPrefix;
 	private final IVCS vcs;
 	private final IBuilder builder;
 	
@@ -43,7 +43,7 @@ public class VCSRepository {
 	}
 
 	public String getReleaseBranchPrefix() {
-		return releaseBanchPrefix;
+		return releaseBranchPrefix;
 	}
 
 	public String getDevBranch() {
@@ -75,7 +75,7 @@ public class VCSRepository {
 		this.type = type;
 		this.devBranch = devBranch;
 		this.vcs = vcs;
-		this.releaseBanchPrefix = releaseBranchPrefix;
+		this.releaseBranchPrefix = releaseBranchPrefix;
 		this.builder = builder;
 	}
 

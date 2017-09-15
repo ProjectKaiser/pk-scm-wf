@@ -45,9 +45,18 @@ public class ReleaseBranch {
 		DevelopBranch db = new DevelopBranch(comp);
 
 		// if not product and not snapshot then will work with just one Release Branch which is related to provided version. 
-		// e.g 4.x -> release/4, 4.x-SNAPSHTOT -> release/* 
-		List<String> releaseBranches = new ArrayList<>(vcs.getBranches(
-				comp.getVcsRepository().getReleaseBranchPrefix() + (comp.getVersion().isSnapshot() ? "" : comp.getVersion().getReleaseNoPatchString())));
+		// e.g 4.x -> release/4, 4.x-SNAPSHTOT -> release/*
+		List<String> releaseBranches;
+		if (comp.getVersion().isEmpty() || comp.getVersion().isSnapshot()) {
+			releaseBranches = new ArrayList<>(vcs.getBranches(comp.getVcsRepository().getReleaseBranchPrefix()));
+		} else {
+			String exactReleaseBranchName = comp.getVcsRepository().getReleaseBranchPrefix() + comp.getVersion().getReleaseNoPatchString();
+			if (vcs.getBranches(comp.getVcsRepository().getReleaseBranchPrefix()).contains(exactReleaseBranchName)) {
+				releaseBranches = Arrays.asList(exactReleaseBranchName);
+			} else {
+				releaseBranches = new ArrayList<>();
+			}
+		}
 		
 		if (releaseBranches.isEmpty()) {
 			this.version = db.getVersion().toRelease();
