@@ -1,9 +1,9 @@
 package org.scm4j.releaser;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static org.junit.Assert.assertNotNull;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -18,7 +18,6 @@ import org.scm4j.releaser.branch.DevelopBranch;
 import org.scm4j.releaser.branch.ReleaseBranch;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.DelayedTagsFile;
-import org.scm4j.releaser.conf.VCSRepositories;
 import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.vcs.api.VCSTag;
 import org.scm4j.vcs.api.WalkDirection;
@@ -55,7 +54,6 @@ public class WorkflowTestBase {
 			env.close();
 		}
 		TestBuilder.setBuilders(null);
-		VCSRepositories.resetDefault();
 	}
 	
 	protected void checkChildActionsTypes(IAction action, Expectations exp) {

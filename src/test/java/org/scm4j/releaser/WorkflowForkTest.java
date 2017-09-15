@@ -277,7 +277,7 @@ public class WorkflowForkTest extends WorkflowTestBase {
 	}
 	
 	@Test
-	public void testExactDevVersionsAsIs() {
+	public void testUseExactDevVersionsAsIsInRelease() {
 		env.generateFeatureCommit(env.getUnTillVCS(), compUnTill.getVcsRepository().getDevBranch(), "feature added");
 		env.generateFeatureCommit(env.getUblVCS(), compUBL.getVcsRepository().getDevBranch(), "feature added");
 		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), "feature added");
@@ -317,7 +317,7 @@ public class WorkflowForkTest extends WorkflowTestBase {
 	}
 	
 	@Test
-	public void testExactSnapshotDevVersionsReplacement() {
+	public void testActualizeExactSnapshotDevVersionsInRelease() {
 		env.generateFeatureCommit(env.getUnTillVCS(), compUnTill.getVcsRepository().getDevBranch(), "feature added");
 		env.generateFeatureCommit(env.getUblVCS(), compUBL.getVcsRepository().getDevBranch(), "feature added");
 		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), "feature added");

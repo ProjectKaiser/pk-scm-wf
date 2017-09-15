@@ -42,11 +42,11 @@ Yaml file consists of number of rules which are applied in order of appearance, 
 - mycompany:component4:
    url: http://mycompany.com/repos/component4
    type: svn
-   releaseBanchPrefix: B
+   releaseBranchPrefix: B
    devBranch: branches/develop
 
 # All repos will have `rel` as a `release` branch prefix by default, if not specified above
 - ~:
-   releaseBanchPrefix: rel/
+   releaseBranchPrefix: rel/
 
 ```
