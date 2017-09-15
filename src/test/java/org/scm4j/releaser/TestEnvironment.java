@@ -83,10 +83,14 @@ public class TestEnvironment implements AutoCloseable {
 	private void createReposFile() throws IOException {
 		reposFile = new File(TEST_ENVIRONMENT_DIR, TEST_REPOS_FILE_NAME);
 		reposFile.createNewFile();
+		String url = new File(TEST_REMOTE_REPO_DIR, "$1-" + RANDOM_VCS_NAME_SUFFIX).toURI().toURL().toString();
+		if (TESTING_VCS == VCSType.SVN) {
+			url = url.replace("file:/", "file://");
+		}
 		FileUtils.writeLines(reposFile,Arrays.asList(
 				"!!omap",
 				"- eu.untill:(.*):",
-				"    url: " + new File(TEST_REMOTE_REPO_DIR, "$1-" + RANDOM_VCS_NAME_SUFFIX).toURI().toURL().toString().replace("file:/", "file://"),
+				"    url: " + url,
 				"    builder: " + BuilderFactory.SCM4J_BUILDER_CLASS_STRING + "org.scm4j.releaser.TestBuilder",
 				"    type: " + TESTING_VCS.toString().toLowerCase()));
 	}
