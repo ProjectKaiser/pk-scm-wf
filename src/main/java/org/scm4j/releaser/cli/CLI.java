@@ -12,15 +12,11 @@ import org.scm4j.releaser.exceptions.EConfig;
 
 public class CLI {
 	
-	private SCMReleaser releaser;
-	private CommandLine cmd;
-	private PrintStream ps;
+	public static int EXIT_CODE_OK = 0;
+	public static int EXIT_CODE_ERROR = 1;
 	
-	public CommandLine getCmd() {
-		return cmd;
-	}
-	
-	public void exec() throws Exception {
+	public int exec( SCMReleaser releaser, CommandLine cmd, PrintStream ps) throws Exception {
+		
 		IAction action;
 		switch(cmd.getCommand()) {
 		case BUILD:
@@ -47,31 +43,22 @@ public class CLI {
 			}
 			break;
 		}
+		return EXIT_CODE_OK;
 	}
 	
-	public CLI(String[] args) {
+	public int exec(String[] args) throws Exception {
+		CommandLine cmd;
 		try {
 			cmd = new CommandLine(args);
 		} catch (EConfig e) {
 			System.out.println(e.getMessage());
 			System.out.println(CommandLine.getUsage());
-			throw e;
+			return EXIT_CODE_ERROR;
 		}
-		releaser = new SCMReleaser(cmd.getOptions());
-		ps = System.out;
+		return exec(new SCMReleaser(cmd.getOptions()), cmd, System.out);
 	}
 	
-	public CLI(SCMReleaser releaser, CommandLine cmd, PrintStream ps) {
-		this.releaser = releaser;
-		this.cmd = cmd;
-		this.ps = ps;
-	}
-
 	public static void main(String[] args) throws Exception {
-		new CLI(args).exec();
-	}
-
-	public SCMReleaser getWorkflow() {
-		return releaser;
+		System.exit(new CLI().exec(args));
 	}
 }

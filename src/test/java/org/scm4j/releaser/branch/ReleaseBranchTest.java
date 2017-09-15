@@ -1,28 +1,31 @@
 package org.scm4j.releaser.branch;
 
-import nl.jqno.equalsverifier.EqualsVerifier;
-import org.junit.Test;
-import org.scm4j.commons.Version;
-import org.scm4j.commons.progress.IProgress;
-import org.scm4j.commons.progress.ProgressConsole;
-import org.scm4j.releaser.SCMReleaser;
-import org.scm4j.releaser.actions.IAction;
-import org.scm4j.releaser.branch.ReleaseBranch;
-import org.scm4j.releaser.branch.ReleaseBranchStatus;
-import org.scm4j.releaser.conf.MDepsFile;
-import org.scm4j.vcs.api.VCSCommit;
-import org.scm4j.vcs.api.VCSTag;
-import org.scm4j.releaser.NullProgress;
-import org.scm4j.releaser.WorkflowTestBase;
-
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.spy;
 
 import java.util.Arrays;
 import java.util.List;
 
+import org.junit.Test;
+import org.scm4j.commons.Version;
+import org.scm4j.commons.progress.IProgress;
+import org.scm4j.commons.progress.ProgressConsole;
+import org.scm4j.releaser.NullProgress;
+import org.scm4j.releaser.SCMReleaser;
+import org.scm4j.releaser.WorkflowTestBase;
+import org.scm4j.releaser.actions.IAction;
+import org.scm4j.releaser.conf.Component;
+import org.scm4j.releaser.conf.MDepsFile;
+import org.scm4j.vcs.api.VCSCommit;
+import org.scm4j.vcs.api.VCSTag;
+
+import nl.jqno.equalsverifier.EqualsVerifier;
+
 public class ReleaseBranchTest extends WorkflowTestBase {
 	
+	private static final String CUSTOM_VERSION_STR = "1.2.3";
 	private IProgress nullProgress = new NullProgress();
 	private SCMReleaser releaser;
 	private ReleaseBranch rbUBL;
@@ -254,5 +257,12 @@ public class ReleaseBranchTest extends WorkflowTestBase {
 		env.getUnTillDbVCS().createTag(rb.getName(), "wrong_tag", "", taggedRev);
 		
 		assertEquals(ReleaseBranchStatus.MDEPS_ACTUAL, rb.getStatus());
+	}
+	
+	@Test
+	public void testProductComponentUsage() {
+		Component compProduct = new Component(UNTILL + ":" + CUSTOM_VERSION_STR, true);
+		ReleaseBranch rb = new ReleaseBranch(compProduct);
+		assertEquals(CUSTOM_VERSION_STR, rb.getVersion().toString());
 	}
 }
