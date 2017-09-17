@@ -21,12 +21,12 @@ import java.util.List;
 	
 public class SCMActionBuild extends ActionAbstract {
 	private final ReleaseReason reason;
-	private final Version targetVersion;
+	private final ReleaseBranch rb;
 
-	public SCMActionBuild(Component comp, List<IAction> childActions, ReleaseReason reason, Version targetVersion, List<Option> options) {
+	public SCMActionBuild(Component comp, ReleaseBranch rb, List<IAction> childActions, ReleaseReason reason, Version targetVersion, List<Option> options) {
 		super(comp, childActions, options);
 		this.reason = reason;
-		this.targetVersion = targetVersion;
+		this.rb = rb;
 	}
 
 	public ReleaseReason getReason() {
@@ -37,10 +37,9 @@ public class SCMActionBuild extends ActionAbstract {
 	public void execute(IProgress progress) {
 		try {
 			IVCS vcs = getVCS();
-			ReleaseBranch rb = new ReleaseBranch(comp);
 			ReleaseBranchStatus rbs = rb.getStatus();
 			if (rbs == ReleaseBranchStatus.ACTUAL) {
-				progress.reportStatus("version " + rb.getVersion().toString() + " already built ");
+				progress.reportStatus("version " + rb.getVersion().toString() + " already built");
 				return;
 			}
 			
@@ -59,7 +58,7 @@ public class SCMActionBuild extends ActionAbstract {
 				}
 			}
 			
-			progress.reportStatus("target version to build: " + targetVersion);
+			progress.reportStatus("target version to build: " + rb.getVersion());
 			
 			for (IAction action : childActions) {
 				try (IProgress nestedProgress = progress.createNestedProgress(action.toString())) {
@@ -70,11 +69,9 @@ public class SCMActionBuild extends ActionAbstract {
 			if (comp.getVcsRepository().getBuilder() == null) {
 				throw new EBuilder("no builder defined");
 			} 
-			
-			
-				
+
 			try (IVCSLockedWorkingCopy lwc = vcs.getWorkspace().getVCSRepositoryWorkspace(vcs.getRepoUrl()).getVCSLockedWorkingCopy()) {
-				lwc.setCorrupted(true); // use lwc only once
+				lwc.setCorrupted(true); // use lwc only once for building
 				progress.reportStatus(String.format("checking out %s on revision %s into %s", getName(), headCommit.getRevision(), lwc.getFolder().getPath()));
 				vcs.checkout(rb.getName(), lwc.getFolder().getPath(), headCommit.getRevision());
 				comp.getVcsRepository().getBuilder().build(comp, lwc.getFolder(), progress);
@@ -91,10 +88,11 @@ public class SCMActionBuild extends ActionAbstract {
 				progress.reportStatus("head of \"" + releaseBranchName + "\" tagged: " + tag.toString());
 			}
 
-			vcs.setFileContent(rb.getName(), SCMReleaser.VER_FILE_NAME, targetVersion.toNextPatch().toReleaseString(), 
-					LogTag.SCM_VER + " " + targetVersion.toNextPatch().toReleaseString());
+			// TODO: add check if patch is raised already after build
+			vcs.setFileContent(rb.getName(), SCMReleaser.VER_FILE_NAME, rb.getVersion().toNextPatch().toReleaseString(),
+					LogTag.SCM_VER + " " + rb.getVersion().toNextPatch().toReleaseString());
 			
-			progress.reportStatus(comp.getName() + " " + targetVersion.toString() + " is built in " + rb.getName());
+			progress.reportStatus(comp.getName() + " " + rb.getVersion().toString() + " is built in " + rb.getName());
 		} catch (Throwable t) {
 			progress.error("execution error: " + t.toString() + ": " + t.getMessage());
 			throw new RuntimeException(t);
@@ -103,10 +101,10 @@ public class SCMActionBuild extends ActionAbstract {
 
 	@Override
 	public String toString() {
-		return "build " + comp.getCoords().toString() + ", targetVersion: " + targetVersion.toString() + ", " + reason.toString();
+		return "build " + comp.getCoords().toString() + ", targetVersion: " + rb.getVersion().toString() + ", " + reason.toString();
 	}
-	
+
 	public Version getTargetVersion() {
-		return targetVersion;
+		return rb.getVersion();
 	}
 }

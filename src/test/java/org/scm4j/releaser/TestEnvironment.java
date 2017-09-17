@@ -1,10 +1,5 @@
 package org.scm4j.releaser;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.UUID;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.scm4j.commons.Version;
@@ -22,6 +17,11 @@ import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
 import org.scm4j.vcs.api.workingcopy.VCSWorkspace;
 import org.scm4j.vcs.svn.SVNVCS;
 import org.scm4j.vcs.svn.SVNVCSUtils;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.UUID;
 
 public class TestEnvironment implements AutoCloseable {
 	public static final String TEST_REPOS_FILE_NAME = "repos";
@@ -154,7 +154,7 @@ public class TestEnvironment implements AutoCloseable {
 			SVNVCSUtils.createFolderStructure((SVNVCS) unTillDbVCS, "initial commit");
 			break;
 		default:
-			throw new IllegalStateException("wrong testing vcs type: " + TESTING_VCS.toString());
+			throw new IllegalStateException("unsupported testing vcs type: " + TESTING_VCS.toString());
 		}
 	}
 

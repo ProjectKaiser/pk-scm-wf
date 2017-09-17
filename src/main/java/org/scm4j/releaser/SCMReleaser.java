@@ -79,10 +79,10 @@ public class SCMReleaser {
 			childActions.add(getProductionReleaseAction(mDep, actionKind)); 
 		}
 
-		return getProductionReleaseActionRoot(comp, childActions, actionKind);
+		return getProductionReleaseActionRoot(comp, rb, childActions, actionKind);
 	}
 		
-	public IAction getProductionReleaseActionRoot(Component comp, List<IAction> childActions, ActionKind actionKind) {
+	private  IAction getProductionReleaseActionRoot(Component comp, ReleaseBranch rb, List<IAction> childActions, ActionKind actionKind) {
 		DevelopBranch db = new DevelopBranch(comp);
 		if (!db.hasVersionFile()) {
 			throw new EComponentConfig("no " + VER_FILE_NAME + " file for " + comp.toString());
@@ -93,7 +93,6 @@ public class SCMReleaser {
 			return new ActionNone(comp, childActions, "develop branch is IGNORED");
 		}
 		
-		ReleaseBranch rb = new ReleaseBranch(comp);
 		ReleaseBranchStatus rbs = rb.getStatus();
 
 		if (rbs == ReleaseBranchStatus.MISSING) {
@@ -102,7 +101,7 @@ public class SCMReleaser {
 				return new ActionNone(comp, childActions, "nothing to build. " + rb.getVersion() + " " + rb.getStatus());
 			}
 			
-			return new SCMActionFork(comp, childActions, ReleaseBranchStatus.MISSING, ReleaseBranchStatus.MDEPS_ACTUAL, options);
+			return new SCMActionFork(comp, rb, childActions, ReleaseBranchStatus.MISSING, ReleaseBranchStatus.MDEPS_ACTUAL, options);
 		}
 
 		if (rbs == ReleaseBranchStatus.BRANCHED) {
@@ -111,7 +110,7 @@ public class SCMReleaser {
 			if (actionKind == ActionKind.BUILD) {
 				return new ActionNone(comp, childActions, "nothing to build. " + rb.getVersion() + " " + rb.getStatus());
 			}
-			return new SCMActionFork(comp, childActions, ReleaseBranchStatus.BRANCHED,  ReleaseBranchStatus.MDEPS_ACTUAL, options);
+			return new SCMActionFork(comp, rb, childActions, ReleaseBranchStatus.BRANCHED,  ReleaseBranchStatus.MDEPS_ACTUAL, options);
 		}
 
 		if (rbs == ReleaseBranchStatus.MDEPS_FROZEN) {
@@ -121,14 +120,14 @@ public class SCMReleaser {
 				if (actionKind == ActionKind.BUILD) {
 					return new ActionNone(comp, childActions, "nothing to build. " + rb.getVersion() + " " + rb.getStatus());
 				}
-				return new SCMActionFork(comp, childActions, ReleaseBranchStatus.MDEPS_FROZEN, ReleaseBranchStatus.MDEPS_ACTUAL, options);
+				return new SCMActionFork(comp, rb, childActions, ReleaseBranchStatus.MDEPS_FROZEN, ReleaseBranchStatus.MDEPS_ACTUAL, options);
 			} else {
 				// All necessary version will be build by Child Actions. Need to build
 				skipAllForks(childActions);
 				if (actionKind == ActionKind.FORK) {
 					return new ActionNone(comp, childActions, "nothing to fork. " + rb.getVersion() + " " + rb.getStatus());
 				}
-				return new SCMActionBuild(comp, childActions, ReleaseReason.NEW_DEPENDENCIES, rb.getVersion(), options);
+				return new SCMActionBuild(comp, rb, childActions, ReleaseReason.NEW_DEPENDENCIES, rb.getVersion(), options);
 			}
 		}
 
@@ -137,7 +136,7 @@ public class SCMReleaser {
 			if (actionKind == ActionKind.FORK) {
 				return new ActionNone(comp, childActions, "nothing to fork. " + rb.getVersion() + " " + rb.getStatus());
 			}
-			return new SCMActionBuild(comp, childActions, ReleaseReason.NEW_FEATURES, rb.getVersion(), options);
+			return new SCMActionBuild(comp, rb, childActions, ReleaseReason.NEW_FEATURES, rb.getVersion(), options);
 		}
 
 		if (hasForkChildActions(childActions)) {
@@ -145,7 +144,7 @@ public class SCMReleaser {
 			if (actionKind == ActionKind.FORK) {
 				return new ActionNone(comp, childActions, "nothing to build. " + rb.getVersion() + " " + rb.getStatus());
 			}
-			return new SCMActionFork(comp, childActions, rbs, rbs, options);
+			return new SCMActionFork(comp, rb, childActions, rbs, rbs, options);
 		}
 
 		return new ActionNone(comp, childActions, rb.getVersion().toString() + " " + rbs.toString());
@@ -158,12 +157,12 @@ public class SCMReleaser {
 			mDepRB = new ReleaseBranch(mDep);
 			ReleaseBranchStatus rbs = mDepRB.getStatus();
 			if (rbs == ReleaseBranchStatus.MDEPS_ACTUAL) {
-				if (!mDepRB.getCurrentVersion().equals(mDep.getVersion())) {
+				if (!mDepRB.getHeadVersion().equals(mDep.getVersion())) {
 					return true;
 				}
 			
 			} else if (rbs == ReleaseBranchStatus.ACTUAL) {
-				if (!mDepRB.getCurrentVersion().toPreviousPatch().equals(mDep.getVersion())) {
+				if (!mDepRB.getHeadVersion().toPreviousPatch().equals(mDep.getVersion())) {
 					return true;
 				}
 			} else {
@@ -225,7 +224,6 @@ public class SCMReleaser {
 	}
 
 	private IAction getTagReleaseActionRoot(Component comp, List<IAction> childActions) {
-		ReleaseBranch rb = new ReleaseBranch(comp);
 		DelayedTagsFile cf = new DelayedTagsFile();
 		IVCS vcs = comp.getVCS();
 		
@@ -234,10 +232,11 @@ public class SCMReleaser {
 		if (delayedRevisionToTag == null) {
 			return new ActionNone(comp, childActions, "no delayed tags");
 		}
-		
+
+		ReleaseBranch rb = new ReleaseBranch(comp);
 		List<VCSTag> tagsOnRevision = vcs.getTagsOnRevision(delayedRevisionToTag);
 		if (tagsOnRevision.isEmpty()) {
-			return new SCMActionTagRelease(comp, childActions, options);
+			return new SCMActionTagRelease(comp, rb, childActions, options);
 		}
 		Version delayedTagVersion = new Version(vcs.getFileContent(rb.getName(), SCMReleaser.VER_FILE_NAME, delayedRevisionToTag));
 		for (VCSTag tag : tagsOnRevision) {
@@ -245,13 +244,12 @@ public class SCMReleaser {
 				return new ActionNone(comp, childActions, "tag " + tag.getTagName() + " already exists");
 			}
 		}
-		return new SCMActionTagRelease(comp, childActions, options);
+		return new SCMActionTagRelease(comp, rb, childActions, options);
 	}
 	
 	public static TagDesc getTagDesc(String verStr) {
-		String tagName = verStr;
-		String tagMessage = tagName + " release";
-		return new TagDesc(tagName, tagMessage);
+		String tagMessage = verStr + " release";
+		return new TagDesc(verStr, tagMessage);
 	}
 
 	public List<Option> getOptions() {

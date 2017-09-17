@@ -1,15 +1,5 @@
 package org.scm4j.releaser;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
-import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.junit.After;
 import org.junit.Before;
 import org.scm4j.commons.Version;
@@ -21,6 +11,13 @@ import org.scm4j.releaser.conf.DelayedTagsFile;
 import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.vcs.api.VCSTag;
 import org.scm4j.vcs.api.WalkDirection;
+
+import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static org.junit.Assert.*;
 
 public class WorkflowTestBase {
 	protected TestEnvironment env;
@@ -98,7 +95,7 @@ public class WorkflowTestBase {
 
 		// check versions
 		ReleaseBranch rbUnTillDb = new ReleaseBranch(compUnTillDb);
-		Version verRelease = rbUnTillDb.getCurrentVersion();
+		Version verRelease = rbUnTillDb.getHeadVersion();
 		assertEquals(env.getUnTillDbVer().toNextPatch().toReleaseString(), verRelease.toString());
 
 		// check tags
@@ -116,11 +113,11 @@ public class WorkflowTestBase {
 		ReleaseBranch rbUnTillDb = new ReleaseBranch(compUnTillDb);
 		// check UBL versions
 		assertEquals(env.getUblVer().toNextMinor(), dbUBL.getVersion());
-		assertEquals(env.getUblVer().toNextPatch().toRelease(), rbUBL.getCurrentVersion());
+		assertEquals(env.getUblVer().toNextPatch().toRelease(), rbUBL.getHeadVersion());
 
 		// check unTillDb versions
 		assertEquals(env.getUnTillDbVer().toNextMinor(), dbUnTillDb.getVersion());
-		assertEquals(env.getUnTillDbVer().toNextPatch().toRelease(), rbUnTillDb.getCurrentVersion());
+		assertEquals(env.getUnTillDbVer().toNextPatch().toRelease(), rbUnTillDb.getHeadVersion());
 
 		// check UBL mDeps. Should contain unTillDb version minor-1 relative to current dev branch version
 		List<Component> ublReleaseMDeps = rbUBL.getMDeps();
@@ -145,7 +142,7 @@ public class WorkflowTestBase {
 
 		// check versions
 		Version verTrunk = dbUBL.getVersion();
-		Version verRelease = rbUBL.getCurrentVersion();
+		Version verRelease = rbUBL.getHeadVersion();
 		assertEquals(env.getUblVer().toNextMinor(),verTrunk);
 		assertEquals(env.getUblVer().toRelease(), verRelease);
 
@@ -164,7 +161,7 @@ public class WorkflowTestBase {
 
 		// check versions.
 		Version verTrunk = dbUnTillDb.getVersion();
-		Version verRelease = newUnTillDbRB.getCurrentVersion();
+		Version verRelease = newUnTillDbRB.getHeadVersion();
 		assertEquals(env.getUnTillDbVer().toNextMinor(), verTrunk);
 		assertEquals(env.getUnTillDbVer().toRelease(), verRelease);
 	}
@@ -180,7 +177,7 @@ public class WorkflowTestBase {
 
 		// check versions
 		Version verTrunk = dbUnTill.getVersion();
-		Version verRelease = rbUnTill.getCurrentVersion();
+		Version verRelease = rbUnTill.getHeadVersion();
 		assertEquals(env.getUnTillVer().toNextMinor(), verTrunk);
 		assertEquals(env.getUnTillVer().toRelease(), verRelease);
 

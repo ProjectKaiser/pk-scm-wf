@@ -4,8 +4,6 @@ import org.junit.Test;
 import org.scm4j.commons.Version;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.commons.progress.ProgressConsole;
-import org.scm4j.releaser.LogTag;
-import org.scm4j.releaser.SCMReleaser;
 import org.scm4j.releaser.actions.ActionNone;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.branch.ReleaseBranch;
@@ -18,9 +16,9 @@ import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.vcs.api.VCSTag;
 import org.scm4j.vcs.api.WalkDirection;
 
-import static org.junit.Assert.*;
-
 import java.util.List;
+
+import static org.junit.Assert.*;
 
 public class WorkflowBuildTest extends WorkflowTestBase {
 	
@@ -163,7 +161,7 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		
 		// check versions
 		ReleaseBranch rbUnTillDb = new ReleaseBranch(compUnTillDb);
-		Version verRelease = rbUnTillDb.getCurrentVersion();
+		Version verRelease = rbUnTillDb.getHeadVersion();
 		assertEquals(env.getUnTillDbVer().toNextPatch().toReleaseString(), verRelease.toString());
 		
 		// check tags

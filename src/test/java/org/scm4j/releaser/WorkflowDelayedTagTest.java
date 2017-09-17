@@ -2,7 +2,6 @@ package org.scm4j.releaser;
 
 import org.junit.Test;
 import org.scm4j.commons.progress.IProgress;
-import org.scm4j.releaser.SCMReleaser;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.branch.ReleaseBranch;
 import org.scm4j.releaser.branch.ReleaseBranchStatus;
@@ -13,7 +12,7 @@ import org.scm4j.vcs.api.VCSTag;
 import org.scm4j.vcs.api.WalkDirection;
 
 import java.io.IOException;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.Assert.*;
@@ -27,7 +26,7 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 		env.generateFeatureCommit(env.getUnTillDbVCS(), dbUnTillDb.getName(), "feature added");
 		env.generateFeatureCommit(env.getUnTillVCS(), dbUnTill.getName(), "feature added");
 		env.generateFeatureCommit(env.getUblVCS(), dbUBL.getName(), "feature added");
-		SCMReleaser releaser = new SCMReleaser(Arrays.asList(Option.DELAYED_TAG));
+		SCMReleaser releaser = new SCMReleaser(Collections.singletonList(Option.DELAYED_TAG));
 		
 		// fork all
 		IAction action = releaser.getProductionReleaseAction(compUnTill);
@@ -57,7 +56,7 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 		env.generateFeatureCommit(env.getUnTillDbVCS(), dbUnTillDb.getName(), "feature added");
 		env.generateFeatureCommit(env.getUnTillVCS(), dbUnTill.getName(), "feature added");
 		env.generateFeatureCommit(env.getUblVCS(), dbUBL.getName(), "feature added");
-		SCMReleaser releaser = new SCMReleaser(Arrays.asList(Option.DELAYED_TAG));
+		SCMReleaser releaser = new SCMReleaser(Collections.singletonList(Option.DELAYED_TAG));
 		
 		// fork all
 		IAction action = releaser.getProductionReleaseAction(compUnTill);
@@ -85,7 +84,7 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 		ReleaseBranch rb = new ReleaseBranch(comp);
 		List<VCSTag> tags = comp.getVCS().getTagsOnRevision(comp.getVCS().getCommitsRange(rb.getName(), null, WalkDirection.DESC, 2).get(1).getRevision());
 		for (VCSTag tag : tags) {
-			if (tag.getTagName().equals(rb.getCurrentVersion().toPreviousPatch().toReleaseString())) {
+			if (tag.getTagName().equals(rb.getHeadVersion().toPreviousPatch().toReleaseString())) {
 				return true;
 			}
 		}
