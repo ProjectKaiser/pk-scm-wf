@@ -5,30 +5,30 @@ import org.junit.Test;
 import org.scm4j.commons.Version;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.commons.progress.ProgressConsole;
+import org.scm4j.releaser.NullProgress;
 import org.scm4j.releaser.SCMReleaser;
+import org.scm4j.releaser.WorkflowTestBase;
 import org.scm4j.releaser.actions.IAction;
-import org.scm4j.releaser.branch.ReleaseBranch;
-import org.scm4j.releaser.branch.ReleaseBranchStatus;
+import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.MDepsFile;
 import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.vcs.api.VCSTag;
-import org.scm4j.releaser.NullProgress;
-import org.scm4j.releaser.WorkflowTestBase;
-
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.spy;
 
 public class ReleaseBranchTest extends WorkflowTestBase {
 	
+	private static final String CUSTOM_VERSION_STR = "1.2.3";
 	private IProgress nullProgress = new NullProgress();
 	private SCMReleaser releaser;
-	private ReleaseBranch rbUBL;
-	private ReleaseBranch rbUnTillDb;
-	private ReleaseBranch rbUnTill;
-	
+
 	@Override
 	public void setUp() throws Exception {
 		super.setUp();
@@ -36,21 +36,18 @@ public class ReleaseBranchTest extends WorkflowTestBase {
 		env.generateFeatureCommit(env.getUnTillDbVCS(), dbUnTillDb.getName(), "feature added");
 		env.generateFeatureCommit(env.getUnTillVCS(), dbUnTill.getName(), "feature added");
 		env.generateFeatureCommit(env.getUblVCS(), dbUBL.getName(), "feature added");
-		rbUBL = new ReleaseBranch(compUBL);
-		rbUnTillDb = new ReleaseBranch(compUnTillDb);
-		rbUnTill = new ReleaseBranch(compUnTill);
 	}
 	
 	@Test
 	public void testMissing() {
-		assertEquals(ReleaseBranchStatus.MISSING, rbUnTillDb.getStatus());
+		assertEquals(ReleaseBranchStatus.MISSING, new ReleaseBranch(compUnTillDb).getStatus());
 	}
 	
 	@Test
 	public void testMDEPS_ACTUALIfNoMDeps() throws Exception {
 		IAction action = releaser.getProductionReleaseAction(compUnTillDb);
 		action.execute(nullProgress);
-		assertEquals(ReleaseBranchStatus.MDEPS_ACTUAL, rbUnTillDb.getStatus());
+		assertEquals(ReleaseBranchStatus.MDEPS_ACTUAL, new ReleaseBranch(compUnTillDb).getStatus());
 	}
 	
 	@Test
@@ -60,8 +57,9 @@ public class ReleaseBranchTest extends WorkflowTestBase {
 		
 		// simulate mdeps are not frozen
 		MDepsFile mDepsFile = new MDepsFile(Arrays.asList(compUBL.cloneWithDifferentVersion(Version.SNAPSHOT), compUnTillDb.cloneWithDifferentVersion(Version.SNAPSHOT)));
-		env.getUnTillVCS().setFileContent(rbUnTill.getName(), SCMReleaser.MDEPS_FILE_NAME, mDepsFile.toFileContent(), "mdeps unversioned");
-		assertEquals(ReleaseBranchStatus.BRANCHED, rbUnTill.getStatus());
+		ReleaseBranch rb = new ReleaseBranch(compUnTill);
+		env.getUnTillVCS().setFileContent(rb.getName(), SCMReleaser.MDEPS_FILE_NAME, mDepsFile.toFileContent(), "mdeps unversioned");
+		assertEquals(ReleaseBranchStatus.BRANCHED, rb.getStatus());
 	}
 	
 	@Test
@@ -69,6 +67,9 @@ public class ReleaseBranchTest extends WorkflowTestBase {
 		// fork all. All release branches must became MDEPS_FROZEN except unTillDb sicne it has no mDeps
 		IAction action = releaser.getProductionReleaseAction(compUnTill);
 		action.execute(nullProgress);
+		ReleaseBranch rbUnTill = new ReleaseBranch(compUnTill);
+		ReleaseBranch rbUnTillDb = new ReleaseBranch(compUnTillDb);
+		ReleaseBranch rbUBL = new ReleaseBranch(compUBL);
 		assertEquals(ReleaseBranchStatus.MDEPS_FROZEN, rbUnTill.getStatus());
 		assertEquals(ReleaseBranchStatus.MDEPS_FROZEN, rbUBL.getStatus());
 		assertEquals(ReleaseBranchStatus.MDEPS_ACTUAL, rbUnTillDb.getStatus());
@@ -94,15 +95,17 @@ public class ReleaseBranchTest extends WorkflowTestBase {
 		// fork all
 		IAction action = releaser.getProductionReleaseAction(compUnTill);
 		action.execute(nullProgress);
-		
+
+		ReleaseBranch rbUnTillDb = new ReleaseBranch(compUnTillDb);
+
 		// unTillDb release must be MDEPS_ACTUAL since it has no mDeps
 		assertEquals(ReleaseBranchStatus.MDEPS_ACTUAL, rbUnTillDb.getStatus());
 		
 		// Build unTillDb and UBL. unTill release should became MDEPS_ACTUAL 
 		action = releaser.getProductionReleaseAction(compUBL);
 		action.execute(nullProgress);
-		assertEquals(ReleaseBranchStatus.MDEPS_ACTUAL, rbUnTill.getStatus());
-		assertEquals(ReleaseBranchStatus.ACTUAL, rbUBL.getStatus());
+		assertEquals(ReleaseBranchStatus.MDEPS_ACTUAL, new ReleaseBranch(compUnTill).getStatus());
+		assertEquals(ReleaseBranchStatus.ACTUAL, new ReleaseBranch(compUBL).getStatus());
 		assertEquals(ReleaseBranchStatus.ACTUAL, rbUnTillDb.getStatus());
 	}
 
@@ -115,10 +118,10 @@ public class ReleaseBranchTest extends WorkflowTestBase {
 		// build all
 		action = releaser.getProductionReleaseAction(compUnTill);
 		action.execute(nullProgress);
-		
-		assertEquals(ReleaseBranchStatus.ACTUAL, rbUnTill.getStatus());
-		assertEquals(ReleaseBranchStatus.ACTUAL, rbUBL.getStatus());
-		assertEquals(ReleaseBranchStatus.ACTUAL, rbUnTillDb.getStatus());
+
+		assertEquals(ReleaseBranchStatus.ACTUAL, new ReleaseBranch(compUnTill).getStatus());
+		assertEquals(ReleaseBranchStatus.ACTUAL, new ReleaseBranch(compUBL).getStatus());
+		assertEquals(ReleaseBranchStatus.ACTUAL, new ReleaseBranch(compUnTillDb).getStatus());
 	}
 	
 	@Test
@@ -177,9 +180,7 @@ public class ReleaseBranchTest extends WorkflowTestBase {
 		
 		ReleaseBranch ethalon = new ReleaseBranch(compUnTillDb);
 		
-		assertEquals(ethalon, new ReleaseBranch(compUnTillDb));
-		
-		//fork all 
+		//fork all
 		IAction action = releaser.getProductionReleaseAction(compUnTill);
 		action.execute(new NullProgress());
 		
@@ -191,7 +192,7 @@ public class ReleaseBranchTest extends WorkflowTestBase {
 		action.execute(new NullProgress());
 		
 		// add feature to Release Branch. Next patch should be selected
-		env.generateFeatureCommit(env.getUnTillDbVCS(), rbUnTillDb.getName(), "feature merged");
+		env.generateFeatureCommit(env.getUnTillDbVCS(), new ReleaseBranch(compUnTillDb).getName(), "feature merged");
 		assertEquals(ethalon.getVersion().toNextPatch(), new ReleaseBranch(compUnTillDb).getVersion());
 	}
 	
@@ -229,7 +230,7 @@ public class ReleaseBranchTest extends WorkflowTestBase {
 		ReleaseBranch rb = spy(new ReleaseBranch(compUnTillDb));
 		assertEquals(ReleaseBranchStatus.ACTUAL, rb.getStatus());
 		VCSCommit commit = VCSCommit.EMPTY;
-		doReturn(Arrays.asList(commit)).when(rb).getLast2Commits();
+		doReturn(Collections.singletonList(commit)).when(rb).getLast2Commits();
 		assertEquals(ReleaseBranchStatus.MDEPS_ACTUAL, rb.getStatus());
 	}
 	
@@ -254,5 +255,12 @@ public class ReleaseBranchTest extends WorkflowTestBase {
 		env.getUnTillDbVCS().createTag(rb.getName(), "wrong_tag", "", taggedRev);
 		
 		assertEquals(ReleaseBranchStatus.MDEPS_ACTUAL, rb.getStatus());
+	}
+	
+	@Test
+	public void testProductComponentUsage() {
+		Component compProduct = new Component(UNTILL + ":" + CUSTOM_VERSION_STR, true);
+		ReleaseBranch rb = new ReleaseBranch(compProduct);
+		assertEquals(CUSTOM_VERSION_STR, rb.getVersion().toString());
 	}
 }

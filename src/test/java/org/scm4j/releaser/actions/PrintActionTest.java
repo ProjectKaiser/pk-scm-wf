@@ -1,12 +1,10 @@
 package org.scm4j.releaser.actions;
 
-import java.io.PrintStream;
-import java.util.Arrays;
-
 import org.junit.Test;
 import org.mockito.Mockito;
-import org.scm4j.releaser.actions.IAction;
-import org.scm4j.releaser.actions.PrintAction;
+
+import java.io.PrintStream;
+import java.util.Arrays;
 
 public class PrintActionTest {
 	
@@ -14,7 +12,7 @@ public class PrintActionTest {
 	public void testPrintAction() {
 		IAction mockedAction = Mockito.mock(IAction.class);
 		IAction mockedActionNested = Mockito.mock(IAction.class);
-		Mockito.doReturn(Arrays.<IAction>asList(mockedActionNested)).when(mockedAction).getChildActions();
+		Mockito.doReturn(Arrays.asList(mockedActionNested)).when(mockedAction).getChildActions();
 		PrintStream mockedPS = Mockito.mock(PrintStream.class);
 		
 		PrintAction pa = new PrintAction();

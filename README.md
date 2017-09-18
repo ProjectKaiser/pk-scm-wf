@@ -2,13 +2,6 @@
 [![Build Status](https://travis-ci.org/scm4j/scm4j-releaser.svg?branch=release/2)](https://travis-ci.org/scm4j/scm4j-releaser)
 [![Coverage Status](https://coveralls.io/repos/github/scm4j/scm4j-releaser/badge.svg?branch=release/2)](https://coveralls.io/github/scm4j/scm4j-releaser?branch=release/2)
 
-# Status
-
-IN DEVELOPMENT
-
-# Overview
-
-Tool to manage projects which are represented by many components, each component has its own repository (multi-repository configuration). It  detectes changes in repositories, builds new components versions and actualizes dependency lists.
 
 # Terms
 

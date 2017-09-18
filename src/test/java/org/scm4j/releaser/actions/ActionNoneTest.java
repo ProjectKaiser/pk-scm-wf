@@ -1,21 +1,17 @@
 package org.scm4j.releaser.actions;
 
+import org.junit.Test;
+import org.scm4j.commons.progress.IProgress;
+import org.scm4j.releaser.TestEnvironment;
+import org.scm4j.releaser.conf.Component;
+
+import java.util.ArrayList;
+import java.util.Collections;
+
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-
-import org.junit.Test;
-import org.scm4j.commons.progress.IProgress;
-import org.scm4j.releaser.actions.ActionNone;
-import org.scm4j.releaser.actions.IAction;
-import org.scm4j.releaser.conf.Component;
-import org.scm4j.releaser.TestEnvironment;
+import static org.mockito.Mockito.*;
 
 
 public class ActionNoneTest {
@@ -29,7 +25,7 @@ public class ActionNoneTest {
 		IAction mockedNestedAction = mock(IAction.class);
 		RuntimeException testException = new RuntimeException(TEST_EXCEPTION);
 		doThrow(testException).when(mockedNestedAction).execute(any(IProgress.class));
-		ActionNone action = new ActionNone(comp, Arrays.asList(mockedNestedAction), TEST_REASON);
+		ActionNone action = new ActionNone(comp, Collections.singletonList(mockedNestedAction), TEST_REASON);
 		IProgress mockedProgress = mock(IProgress.class);
 		try {
 			action.execute(mockedProgress);

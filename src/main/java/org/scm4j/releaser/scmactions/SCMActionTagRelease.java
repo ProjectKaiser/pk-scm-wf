@@ -14,8 +14,11 @@ import java.util.List;
 
 public class SCMActionTagRelease extends ActionAbstract {
 
-	public SCMActionTagRelease(Component dep, List<IAction> childActions, List<Option> options) {
+	private final ReleaseBranch rb;
+
+	public SCMActionTagRelease(Component dep, ReleaseBranch rb, List<IAction> childActions, List<Option> options) {
 		super(dep, childActions, options);
+		this.rb = rb;
 	}
 	
 	@Override
@@ -36,7 +39,6 @@ public class SCMActionTagRelease extends ActionAbstract {
 			}
 			
 			List<VCSTag> tagsOnRevision = vcs.getTagsOnRevision(revisionToTag);
-			ReleaseBranch rb = new ReleaseBranch(comp);
 			Version delayedTagVersion = new Version(vcs.getFileContent(rb.getName(), SCMReleaser.VER_FILE_NAME, revisionToTag));
 			TagDesc tagDesc = SCMReleaser.getTagDesc(delayedTagVersion.toString());
 			for (VCSTag tag : tagsOnRevision) {
@@ -49,7 +51,7 @@ public class SCMActionTagRelease extends ActionAbstract {
 			vcs.createTag(rb.getName(), tagDesc.getName(), tagDesc.getMessage(), revisionToTag);
 			
 			cf.removeRevisionByUrl(comp.getVcsRepository().getUrl());
-			progress.reportStatus(String.format("%s of %s tagged: %s", revisionToTag == null ? "head " : "commit " + revisionToTag, rb.getName(), delayedTagVersion.toReleaseString()));
+			progress.reportStatus(String.format("%s of %s tagged: %s", "commit " + revisionToTag, rb.getName(), delayedTagVersion.toReleaseString()));
 		} catch (Throwable t) {
 			progress.error(t.getMessage());
 			throw new RuntimeException(t);

@@ -46,6 +46,7 @@ dependencies {
 		add(configuration ?: name.contains('test') ? 'testCompile' : 'compile', "$group:$name:${version?:''}${classifier?:''}${ext?:''}")
 	}
 
+	testCompile 'com.github.stefanbirkner:system-rules:1.16.1'
 	testCompile 'junit:junit:4.12'
 	testCompile 'org.mockito:mockito-all:1.9.5'
 	testCompile 'nl.jqno.equalsverifier:equalsverifier:2.3'

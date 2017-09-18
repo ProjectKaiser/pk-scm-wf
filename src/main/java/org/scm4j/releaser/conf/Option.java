@@ -6,7 +6,7 @@ import java.util.Map;
 public enum Option {
 	DELAYED_TAG("--delayed-tag");
 	
-	private static final Map<String, Option> map = new HashMap<String, Option>();
+	private static final Map<String, Option> map = new HashMap<>();
 
 	static {
 		for (Option option : Option.values()) {

@@ -21,6 +21,7 @@ public class ReleaseBranch {
 	private final String name;
 	private Map<String, Object> cache = new HashMap<>();
 
+	// comp version is ignored
 	public ReleaseBranch(Component comp, Version version) {
 		this.version = version.toRelease();
 		this.comp = comp;
@@ -44,10 +45,17 @@ public class ReleaseBranch {
 		vcs = comp.getVCS();
 		DevelopBranch db = new DevelopBranch(comp);
 
-		// if not product and not snapshot then will work with just one Release Branch which is related to provided version. 
-		// e.g 4.x -> release/4, 4.x-SNAPSHTOT -> release/* 
-		List<String> releaseBranches = new ArrayList<>(vcs.getBranches(
-				comp.getVcsRepository().getReleaseBranchPrefix() + (comp.getVersion().isSnapshot() ? "" : comp.getVersion().getReleaseNoPatchString())));
+		List<String> releaseBranches;
+		if (comp.getVersion().isEmpty() || comp.getVersion().isSnapshot()) {
+			releaseBranches = new ArrayList<>(vcs.getBranches(comp.getVcsRepository().getReleaseBranchPrefix()));
+		} else {
+			String exactReleaseBranchName = comp.getVcsRepository().getReleaseBranchPrefix() + comp.getVersion().getReleaseNoPatchString();
+			if (vcs.getBranches(comp.getVcsRepository().getReleaseBranchPrefix()).contains(exactReleaseBranchName)) {
+				releaseBranches = Arrays.asList(exactReleaseBranchName);
+			} else {
+				releaseBranches = new ArrayList<>();
+			}
+		}
 		
 		if (releaseBranches.isEmpty()) {
 			this.version = db.getVersion().toRelease();
@@ -70,7 +78,11 @@ public class ReleaseBranch {
 				return 1;
 			}
 		});
-		
+		/**
+		 * TODO: to test:
+		 * We have api 4.1 released and have new commits in api dev. Execute status git:4.1. 
+		 * We want to get api 4.1 ACTUAL since we provided exact git version but we get api 5.0 MISSING
+		 */
 		Version ver = new Version(vcs.getFileContent(releaseBranches.get(0), SCMReleaser.VER_FILE_NAME, null));
 		List<VCSCommit> commits = vcs.getCommitsRange(releaseBranches.get(0), null, WalkDirection.DESC, 2);
 		if (commits.size() == 2) {
@@ -78,18 +90,31 @@ public class ReleaseBranch {
 			if (!tags.isEmpty()) {
 				for (VCSTag tag : tags) {
 					if (tag.getTagName().equals(ver.toPreviousPatch().toReleaseString())) {
-						// if db MODIFIED and head-1 commit of last release branch tagged then all is built and we need new release. Use DB version.
-						// if db BRANCHED and head-1 commit of last release branch tagged then all is built and we need the built release. Use patch-- 
-						// otherwise we must return last built RB version.
-						if (comp.getVersion().isExact()) {
+						DevelopBranchStatus dbs = db.getStatus();
+						if(comp.getVersion().isExact()) {
+							/**
+							 * exact version provided and ACTUAL - result must be last ACTUAL despite the DevelopBranch.
+							 */
 							ver = ver.toPreviousPatch();
-						} else {
-							DevelopBranchStatus dbs = db.getStatus();
-							if (dbs == DevelopBranchStatus.BRANCHED) {
-								ver = ver.toPreviousPatch();
-							} else if(dbs == DevelopBranchStatus.MODIFIED) {
-								ver = db.getVersion().toRelease(); 
-							}
+						} else if (dbs == DevelopBranchStatus.BRANCHED ) {
+							/**
+							 *   * - scm-ver 3.0-SNAPSHOT
+							 *   |                         * - #scm-ver 2.1
+							 *   |                         * - #scm-ver 2.0, tag
+							 *   *------------------------/
+							 *   result must be 2.0 ACTUAL
+							 */
+							ver = ver.toPreviousPatch();
+						} else if (dbs == DevelopBranchStatus.MODIFIED) {
+							/**
+							 *   * - feature commit
+							 *   * - scm-ver 3.0-SNAPSHOT
+							 *   |                         * - #scm-ver 2.1
+							 *   |                         * - #scm-ver 2.0, tag
+							 *   *------------------------/
+							 *   result must be 3.0 MISSING
+							 */
+							ver = db.getVersion().toRelease();
 						}
 						break;
 					}
@@ -145,7 +170,7 @@ public class ReleaseBranch {
 	
 			if (mDepsFrozen()) {
 				if (mDepsActual()) {
-					if (isPreHeadCommitTaggedWithVersion() || isPreHeadCommitTagDelayed()) {
+					if (isActual()) {
 						return ReleaseBranchStatus.ACTUAL;
 					}
 					return ReleaseBranchStatus.MDEPS_ACTUAL;
@@ -159,6 +184,10 @@ public class ReleaseBranch {
 		}
 	}
 
+	private boolean isActual() {
+		return isPreHeadCommitTaggedWithVersion() || isPreHeadCommitTagDelayed();
+	}
+
 	private boolean mDepsActual() {
 		List<Component> mDeps = getMDeps();
 		if (mDeps.isEmpty()) {
@@ -167,10 +196,10 @@ public class ReleaseBranch {
 		ReleaseBranch mDepRB;
 		for (Component mDep : mDeps) {
 			mDepRB = new ReleaseBranch(mDep, mDep.getVersion());
-			if (!mDepRB.isPreHeadCommitTaggedWithVersion() && !mDepRB.isPreHeadCommitTagDelayed()) {
+			if (!mDepRB.isActual()) {
 				return false;
 			}
-			if (!mDep.getVersion().equals(mDepRB.getCurrentVersion().toPreviousPatch())) {
+			if (!mDep.getVersion().equals(mDepRB.getHeadVersion().toPreviousPatch())) {
 				return false;
 			}
 		}
@@ -188,7 +217,7 @@ public class ReleaseBranch {
 		return commits.size() >= 2 && commits.get(1).getRevision().equals(delayedTagRevision);
 	}
 
-	protected boolean isPreHeadCommitTaggedWithVersion() {
+	private boolean isPreHeadCommitTaggedWithVersion() {
 		List<VCSCommit> commits = getLast2Commits();
 		if (commits.size() < 2) {
 			return false;
@@ -198,7 +227,7 @@ public class ReleaseBranch {
 			return false;
 		}
 		for (VCSTag tag : tags) {
-			if (tag.getTagName().equals(getCurrentVersion().toPreviousPatch().toReleaseString())) {
+			if (tag.getTagName().equals(getHeadVersion().toPreviousPatch().toReleaseString())) {
 				return true;
 			}
 		}
@@ -261,7 +290,7 @@ public class ReleaseBranch {
 		return name;
 	}
 
-	public Version getCurrentVersion() {
+	public Version getHeadVersion() {
 		return new Version(comp.getVCS().getFileContent(getName(), SCMReleaser.VER_FILE_NAME, null).trim());
 	}
 

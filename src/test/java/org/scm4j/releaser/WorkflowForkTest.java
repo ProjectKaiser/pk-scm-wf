@@ -3,8 +3,6 @@ import org.junit.Test;
 import org.scm4j.commons.Version;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.commons.progress.ProgressConsole;
-import org.scm4j.releaser.LogTag;
-import org.scm4j.releaser.SCMReleaser;
 import org.scm4j.releaser.actions.ActionNone;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.branch.ReleaseBranch;
@@ -60,7 +58,7 @@ public class WorkflowForkTest extends WorkflowTestBase {
 		// check versions
 		Version verTrunk = dbUnTill.getVersion();
 		ReleaseBranch newUnTillRB = new ReleaseBranch(compUnTill);
-		Version verRelease = newUnTillRB.getCurrentVersion();
+		Version verRelease = newUnTillRB.getHeadVersion();
 		assertEquals(env.getUnTillVer().toNextMinor(), verTrunk);
 		assertEquals(env.getUnTillVer().toRelease(), verRelease);
 
@@ -144,14 +142,14 @@ public class WorkflowForkTest extends WorkflowTestBase {
 		
 		// check UBL versions
 		assertEquals(env.getUblVer().toNextMinor(), dbUBL.getVersion());
-		assertEquals(env.getUblVer().toRelease(), rbUBL.getCurrentVersion());
+		assertEquals(env.getUblVer().toRelease(), rbUBL.getHeadVersion());
 		
 		// check unTillDb versions
 		assertEquals(env.getUnTillDbVer(), dbUnTillDb.getVersion());
 		
 		// check unTill versions
 		assertEquals(env.getUnTillVer().toNextMinor(), dbUnTill.getVersion());
-		assertEquals(env.getUnTillVer().toRelease(), rbUnTill.getCurrentVersion());
+		assertEquals(env.getUnTillVer().toRelease(), rbUnTill.getHeadVersion());
 		
 		// check UBL mDeps
 		List<Component> ublReleaseMDeps = rbUBL.getMDeps();
@@ -277,7 +275,7 @@ public class WorkflowForkTest extends WorkflowTestBase {
 	}
 	
 	@Test
-	public void testExactDevVersionsAsIs() {
+	public void testUseExactDevVersionsAsIsInRelease() {
 		env.generateFeatureCommit(env.getUnTillVCS(), compUnTill.getVcsRepository().getDevBranch(), "feature added");
 		env.generateFeatureCommit(env.getUblVCS(), compUBL.getVcsRepository().getDevBranch(), "feature added");
 		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), "feature added");
@@ -317,7 +315,7 @@ public class WorkflowForkTest extends WorkflowTestBase {
 	}
 	
 	@Test
-	public void testExactSnapshotDevVersionsReplacement() {
+	public void testActualizeExactSnapshotDevVersionsInRelease() {
 		env.generateFeatureCommit(env.getUnTillVCS(), compUnTill.getVcsRepository().getDevBranch(), "feature added");
 		env.generateFeatureCommit(env.getUblVCS(), compUBL.getVcsRepository().getDevBranch(), "feature added");
 		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), "feature added");
