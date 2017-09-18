@@ -15,45 +15,40 @@ import org.scm4j.releaser.exceptions.EBuilder;
 public class CmdLineBuilder implements IBuilder {
 
 	private final String cmdLine;
+	private ProcessBuilder pb;
 
 	public CmdLineBuilder(String cmdLine) {
 		this.cmdLine = cmdLine;
+		pb = new ProcessBuilder(cmdLine.split(" "));
 	}
 	
-	protected ProcessBuilder getProcessBuilder(String[] cmds) {
-		return new ProcessBuilder(cmds);
+	public void setProcessBuilder(ProcessBuilder pb) {
+		this.pb = pb;
+	}
+	
+	protected Process getProcess(File workingFolder) throws Exception {
+		pb.redirectErrorStream(true);
+		pb.redirectOutput(Redirect.INHERIT);
+		pb.redirectError(Redirect.INHERIT);
+		pb.directory(workingFolder);
+		return pb.start();
 	}
 
 	@Override
 	public void build(Component comp, File workingFolder, IProgress progress) throws Exception {
 		progress.reportStatus(String.format("executing \"%s\" in folder %s", cmdLine, workingFolder.getPath()));
 
-		String[] cmds = cmdLine.split(" ");
-		
-		ProcessBuilder pb = getProcessBuilder(cmds);
-		
-		pb.redirectErrorStream(true);
-		pb.redirectOutput(Redirect.INHERIT);
-		pb.redirectError(Redirect.INHERIT);
-		pb.directory(workingFolder);
-		Process process = pb.start();
+		Process process = getProcess(workingFolder);
 
 		BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()));
 		String line;
 		while ((line = br.readLine()) != null) {
-			System.out.println(line);
+			progress.reportStatus(line);
 		}
 
 		if (process.waitFor() != 0) {
-			try (InputStream is = process.getErrorStream()) {
-				throw new EBuilder(IOUtils.toString(is, StandardCharsets.UTF_8));
-			}
+			InputStream is = process.getErrorStream();
+			throw new EBuilder(IOUtils.toString(is, StandardCharsets.UTF_8));
 		}
 	}
-
-	public String getCmdLine() {
-		return cmdLine;
-	}
-
-
 }

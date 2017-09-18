@@ -51,7 +51,7 @@ public class ReleaseBranch {
 		} else {
 			String exactReleaseBranchName = comp.getVcsRepository().getReleaseBranchPrefix() + comp.getVersion().getReleaseNoPatchString();
 			if (vcs.getBranches(comp.getVcsRepository().getReleaseBranchPrefix()).contains(exactReleaseBranchName)) {
-				releaseBranches = Collections.singletonList(exactReleaseBranchName);
+				releaseBranches = Arrays.asList(exactReleaseBranchName);
 			} else {
 				releaseBranches = new ArrayList<>();
 			}
@@ -78,7 +78,10 @@ public class ReleaseBranch {
 				return 1;
 			}
 		});
-		
+		/**
+		 * TODO: to test:
+		 * status git:4.1. We have api 4.1 released and have new commits in api dev. We want to get 4.1 ACTUAL since we provided exact git version but we get 5.0 MISSING
+		 */
 		Version ver = new Version(vcs.getFileContent(releaseBranches.get(0), SCMReleaser.VER_FILE_NAME, null));
 		List<VCSCommit> commits = vcs.getCommitsRange(releaseBranches.get(0), null, WalkDirection.DESC, 2);
 		if (commits.size() == 2) {
@@ -209,9 +212,6 @@ public class ReleaseBranch {
 	}
 
 	private boolean isPreHeadCommitTaggedWithVersion() {
-		if (!exists()) {
-			return false;
-		}
 		List<VCSCommit> commits = getLast2Commits();
 		if (commits.size() < 2) {
 			return false;

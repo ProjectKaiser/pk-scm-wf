@@ -77,7 +77,6 @@ public class SCMActionFork extends ActionAbstract {
 		Boolean hasNewMDeps = false;
 		for (Component currentMDep : currentMDeps) {
 			if (currentMDep.getVersion().isSnapshot() || getFromStatus() == ReleaseBranchStatus.MDEPS_FROZEN) {
-				// TODO: added test: create UBL release, create unTillDb patch and then new release and test UBL actualizes just patch, not new version.
 				ReleaseBranch rbCurrentMDep = new ReleaseBranch(currentMDep);
 				String futureReleaseVersionStr = rbCurrentMDep.getVersion().toReleaseString();
 				actualizedMDeps.add(currentMDep.cloneWithDifferentVersion(futureReleaseVersionStr));
@@ -108,7 +107,6 @@ public class SCMActionFork extends ActionAbstract {
 
 	private void raiseTrunkMinorVersion(IProgress progress) {
 		Version newMinorVersion = db.getVersion().setMinor(rb.getVersion().toNextMinor().getMinor());
-		// TODO: add test: assume we have dev version 5.0-SNAPSHOT, released 3.2 patch -> do not commit 4.0-SNAPSHOT to trunk 
 		if (db.getVersion().equals(newMinorVersion) || db.getVersion().isGreaterThan(newMinorVersion)) {
 			progress.reportStatus("trunk version is raised already: " + newMinorVersion);
 			return;

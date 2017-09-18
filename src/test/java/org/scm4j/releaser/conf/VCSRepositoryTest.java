@@ -20,7 +20,7 @@ public class VCSRepositoryTest {
 	
 	@Test
 	public void testToString() {
-		assertNotNull(new VCSRepository("name", "url", null, null, null, null, null, null));
+		assertNotNull(new VCSRepository("name", "url", null, null, null, null, null, null).toString());
 	}
 
 }
