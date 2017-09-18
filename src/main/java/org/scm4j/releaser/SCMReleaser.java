@@ -98,7 +98,7 @@ public class SCMReleaser {
 		if (rbs == ReleaseBranchStatus.MISSING) {
 			skipAllBuilds(childActions);
 			if (actionKind == ActionKind.BUILD) {
-				return new ActionNone(comp, childActions, "nothing to build. " + rb.getVersion() + " " + rb.getStatus());
+				return new ActionNone(comp, childActions, "nothing to build. " + getReleaseBranchDetailsStr(rb, rbs));
 			}
 			
 			return new SCMActionFork(comp, rb, childActions, ReleaseBranchStatus.MISSING, ReleaseBranchStatus.MDEPS_ACTUAL, options);
@@ -108,7 +108,7 @@ public class SCMReleaser {
 			// need to freeze mdeps
 			skipAllBuilds(childActions);
 			if (actionKind == ActionKind.BUILD) {
-				return new ActionNone(comp, childActions, "nothing to build. " + rb.getVersion() + " " + rb.getStatus());
+				return new ActionNone(comp, childActions, "nothing to build. " + getReleaseBranchDetailsStr(rb, rbs));
 			}
 			return new SCMActionFork(comp, rb, childActions, ReleaseBranchStatus.BRANCHED,  ReleaseBranchStatus.MDEPS_ACTUAL, options);
 		}
@@ -118,14 +118,14 @@ public class SCMReleaser {
 				// need to actualize
 				skipAllBuilds(childActions);
 				if (actionKind == ActionKind.BUILD) {
-					return new ActionNone(comp, childActions, "nothing to build. " + rb.getVersion() + " " + rb.getStatus());
+					return new ActionNone(comp, childActions, "nothing to build. " + getReleaseBranchDetailsStr(rb, rbs));
 				}
 				return new SCMActionFork(comp, rb, childActions, ReleaseBranchStatus.MDEPS_FROZEN, ReleaseBranchStatus.MDEPS_ACTUAL, options);
 			} else {
 				// All necessary version will be build by Child Actions. Need to build
 				skipAllForks(childActions);
 				if (actionKind == ActionKind.FORK) {
-					return new ActionNone(comp, childActions, "nothing to fork. " + rb.getVersion() + " " + rb.getStatus());
+					return new ActionNone(comp, childActions, "nothing to fork. " + getReleaseBranchDetailsStr(rb, rbs));
 				}
 				return new SCMActionBuild(comp, rb, childActions, ReleaseReason.NEW_DEPENDENCIES, rb.getVersion(), options);
 			}
@@ -134,7 +134,7 @@ public class SCMReleaser {
 		if (rbs == ReleaseBranchStatus.MDEPS_ACTUAL) {
 			// need to build
 			if (actionKind == ActionKind.FORK) {
-				return new ActionNone(comp, childActions, "nothing to fork. " + rb.getVersion() + " " + rb.getStatus());
+				return new ActionNone(comp, childActions, "nothing to fork. " + getReleaseBranchDetailsStr(rb, rbs));
 			}
 			return new SCMActionBuild(comp, rb, childActions, ReleaseReason.NEW_FEATURES, rb.getVersion(), options);
 		}
@@ -147,7 +147,11 @@ public class SCMReleaser {
 			return new SCMActionFork(comp, rb, childActions, rbs, rbs, options);
 		}
 
-		return new ActionNone(comp, childActions, rb.getVersion().toString() + " " + rbs.toString());
+		return new ActionNone(comp, childActions, getReleaseBranchDetailsStr(rb, rbs));
+	}
+
+	private String getReleaseBranchDetailsStr(ReleaseBranch rb, ReleaseBranchStatus rbs) {
+		return rb.getName() + " " + rbs + ", target version " + rb.getVersion();
 	}
 
 	private boolean needToActualizeMDeps(ReleaseBranch currentCompRB) {

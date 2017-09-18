@@ -80,7 +80,8 @@ public class ReleaseBranch {
 		});
 		/**
 		 * TODO: to test:
-		 * status git:4.1. We have api 4.1 released and have new commits in api dev. We want to get 4.1 ACTUAL since we provided exact git version but we get 5.0 MISSING
+		 * We have api 4.1 released and have new commits in api dev. Execute status git:4.1. 
+		 * We want to get api 4.1 ACTUAL since we provided exact git version but we get api 5.0 MISSING
 		 */
 		Version ver = new Version(vcs.getFileContent(releaseBranches.get(0), SCMReleaser.VER_FILE_NAME, null));
 		List<VCSCommit> commits = vcs.getCommitsRange(releaseBranches.get(0), null, WalkDirection.DESC, 2);
@@ -90,16 +91,21 @@ public class ReleaseBranch {
 				for (VCSTag tag : tags) {
 					if (tag.getTagName().equals(ver.toPreviousPatch().toReleaseString())) {
 						DevelopBranchStatus dbs = db.getStatus();
-						if (dbs == DevelopBranchStatus.BRANCHED) {
+						if(comp.getVersion().isExact()) {
+							/**
+							 * exact version provided and ACTUAL - result must be last ACTUAL despite the DevelopBranch.
+							 */
+							ver = ver.toPreviousPatch();
+						} else if (dbs == DevelopBranchStatus.BRANCHED ) {
 							/**
 							 *   * - scm-ver 3.0-SNAPSHOT
 							 *   |                         * - #scm-ver 2.1
 							 *   |                         * - #scm-ver 2.0, tag
 							 *   *------------------------/
-							 *   result must be 2.1 ACTUAL
+							 *   result must be 2.0 ACTUAL
 							 */
 							ver = ver.toPreviousPatch();
-						} else if(dbs == DevelopBranchStatus.MODIFIED) {
+						} else if (dbs == DevelopBranchStatus.MODIFIED) {
 							/**
 							 *   * - feature commit
 							 *   * - scm-ver 3.0-SNAPSHOT
