@@ -3,10 +3,6 @@
 [![Coverage Status](https://coveralls.io/repos/github/scm4j/scm4j-releaser/badge.svg?branch=master)](https://coveralls.io/github/scm4j/scm4j-releaser?branch=master)
 
 
-# Overview
-
-Tool to manage projects which are represented by many components, each component has its own repository (multi-repository configuration). It  detectes changes in repositories, builds new components versions and actualizes dependency lists.
-
 # Terms
 
 - `component`: component has its own repository and can be built and uploaded to some repository
