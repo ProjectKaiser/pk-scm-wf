@@ -5,7 +5,7 @@
 
 # Overview
 
-Software release automation tool. Automates such tasks as release branches creation, versions bumpings, tags creation etc. for Product and all its dependencies. Git and Subversion are supported.
+Software release automation tool. Automates such tasks as release branches creation, versions bumpings, tags creation etc. for a root component (product) and all its dependencies. Git and Subversion repositories are supported.
 
 # Terms
 
