@@ -69,7 +69,7 @@ public class SCMActionBuild extends ActionAbstract {
 			build(progress, headCommit);
 			
 			tagBuild(progress, headCommit);
-
+			
 			raisePatchVersion(progress);
 			
 			progress.reportStatus(comp.getName() + " " + rb.getVersion().toString() + " is built in " + rb.getName());
@@ -94,8 +94,7 @@ public class SCMActionBuild extends ActionAbstract {
 	}
 
 	private void build(IProgress progress, VCSCommit headCommit) throws Exception, IOException {
-		try (IVCSLockedWorkingCopy lwc = vcs.getWorkspace().getVCSRepositoryWorkspace(vcs.getRepoUrl()).getVCSLockedWorkingCopy()) {
-			lwc.setCorrupted(true); // use lwc only once for building
+		try (IVCSLockedWorkingCopy lwc = vcs.getWorkspace().getVCSRepositoryWorkspace(vcs.getRepoUrl()).getVCSLockedWorkingCopyTemp()) {
 			progress.reportStatus(String.format("checking out %s on revision %s into %s", getName(), headCommit.getRevision(), lwc.getFolder().getPath()));
 			vcs.checkout(rb.getName(), lwc.getFolder().getPath(), headCommit.getRevision());
 			comp.getVcsRepository().getBuilder().build(comp, lwc.getFolder(), progress);
