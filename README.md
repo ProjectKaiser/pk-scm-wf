@@ -5,7 +5,7 @@
 
 # Overview
 
-Tool to manage projects which are represented by many components, each component has its own repository (multi-repository configuration). It  detectes changes in repositories, builds new components versions and actualizes dependency lists.
+Software release automation tool. Automates such tasks as release branches creation, versions bumpings, tags creation etc. for Product and all its dependencies. Git and Subversion are supported.
 
 # Terms
 
