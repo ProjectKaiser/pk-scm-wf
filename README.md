@@ -3,10 +3,6 @@
 [![Coverage Status](https://coveralls.io/repos/github/scm4j/scm4j-releaser/badge.svg?branch=master)](https://coveralls.io/github/scm4j/scm4j-releaser?branch=master)
 
 
-# Overview
-
-Software release automation tool. Automates such tasks as release branches creation, versions bumpings, tags creation etc. for a root component (product) and all its dependencies. Git and Subversion repositories are supported.
-
 # Terms
 
 - `component`: component has its own repository and can be built and uploaded to some repository
