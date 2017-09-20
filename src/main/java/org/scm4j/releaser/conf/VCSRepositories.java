@@ -9,6 +9,7 @@ import org.scm4j.commons.Coords;
 import org.scm4j.releaser.SCMReleaser;
 import org.scm4j.releaser.VCSFactory;
 import org.scm4j.releaser.builders.BuilderFactory;
+import org.scm4j.releaser.exceptions.EComponentConfig;
 import org.scm4j.releaser.exceptions.EConfig;
 import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
 import org.scm4j.vcs.api.workingcopy.VCSWorkspace;
@@ -48,7 +49,7 @@ public class VCSRepositories {
 	public VCSRepository getByName(String componentName) {
 		String url = getPropByNameAsStringWithReplace(urls, componentName, "url", null);
 		if (url == null) {
-			throw new EConfig("no repo url for: " + componentName);
+			throw new EComponentConfig("no repo url for: " + componentName);
 		}
 
 		Credentials credentials;

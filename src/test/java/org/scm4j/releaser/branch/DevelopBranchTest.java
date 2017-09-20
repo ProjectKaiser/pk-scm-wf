@@ -2,7 +2,7 @@ package org.scm4j.releaser.branch;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
 
@@ -10,15 +10,14 @@ import org.eclipse.jgit.api.errors.GitAPIException;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.scm4j.releaser.LogTag;
+import org.scm4j.releaser.NullProgress;
 import org.scm4j.releaser.SCMReleaser;
+import org.scm4j.releaser.WorkflowTestBase;
 import org.scm4j.releaser.actions.IAction;
-import org.scm4j.releaser.branch.DevelopBranch;
-import org.scm4j.releaser.branch.DevelopBranchStatus;
 import org.scm4j.releaser.conf.Component;
+import org.scm4j.releaser.exceptions.EComponentConfig;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSCommit;
-import org.scm4j.releaser.NullProgress;
-import org.scm4j.releaser.WorkflowTestBase;
 
 public class DevelopBranchTest extends WorkflowTestBase {
 
@@ -61,8 +60,14 @@ public class DevelopBranchTest extends WorkflowTestBase {
 	}
 	
 	@Test
-	public void testNullVersionIfNoVersionFile() {
+	public void testExceptionIfNoVersionFile() {
 		env.getUnTillVCS().removeFile(compUnTill.getVcsRepository().getDevBranch(), SCMReleaser.VER_FILE_NAME, "version file deleted");
-		assertNull(new DevelopBranch(compUnTill).getVersion());
+		try {
+			new DevelopBranch(compUnTill).getVersion();
+			fail();
+		} catch (EComponentConfig e) {
+			
+		}
+			
 	}
 }

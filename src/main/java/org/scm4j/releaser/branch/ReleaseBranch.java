@@ -56,7 +56,7 @@ public class ReleaseBranch {
 				releaseBranches = new ArrayList<>();
 			}
 		}
-		
+
 		if (releaseBranches.isEmpty()) {
 			this.version = db.getVersion().toRelease();
 			name = computeName();

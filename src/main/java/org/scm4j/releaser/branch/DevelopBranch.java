@@ -5,6 +5,7 @@ import org.scm4j.releaser.LogTag;
 import org.scm4j.releaser.SCMReleaser;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.MDepsFile;
+import org.scm4j.releaser.exceptions.EComponentConfig;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSCommit;
 
@@ -26,7 +27,7 @@ public class DevelopBranch {
 			String verFileContent = vcs.getFileContent(comp.getVcsRepository().getDevBranch(), SCMReleaser.VER_FILE_NAME, null);
 			return new Version(verFileContent.trim());
 		}
-		return null;
+		throw new EComponentConfig(SCMReleaser.VER_FILE_NAME + " file is missing in dev branch of " + comp);
 	}
 	
 	public DevelopBranchStatus getStatus() {

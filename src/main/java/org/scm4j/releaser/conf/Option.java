@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public enum Option {
-	DELAYED_TAG("--delayed-tag");
+	DELAYED_TAG("--delayed-tag"), STACK_TRACE("--stacktrace");
 	
 	private static final Map<String, Option> map = new HashMap<>();
 

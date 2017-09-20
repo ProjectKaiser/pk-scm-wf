@@ -118,17 +118,8 @@ public class CLITest {
 	
 	@Test 
 	public void testEConfig() throws Exception {
-		assertEquals(new CLI().exec(new String[] {"wrong command", UNTILL, Option.DELAYED_TAG.getStrValue()}), CLI.EXIT_CODE_ERROR);
-	}
-	
-	@Test
-	public void testMainException() throws Exception {
-		try {
-			CLI.main(new String[] {"status", "unknown component"});
-			fail();
-		} catch (IllegalArgumentException e) {
-			
-		}
+		assertEquals(CLI.EXIT_CODE_ERROR, new CLI().exec(new String[] {"wrong command", UNTILL, Option.DELAYED_TAG.getStrValue()}));
+		assertEquals(CLI.EXIT_CODE_ERROR, new CLI().exec(new String[] {"status", "unknown component"}));
 	}
 	
 	@Test
