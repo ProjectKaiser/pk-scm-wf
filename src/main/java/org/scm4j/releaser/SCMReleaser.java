@@ -75,8 +75,9 @@ public class SCMReleaser {
 			mDeps = new DevelopBranch(comp).getMDeps();
 		}
 
+		boolean useSR = comp.getVersion().isExact();
 		for (Component mDep : mDeps) {
-			childActions.add(getProductionReleaseAction(mDep, actionKind)); 
+			childActions.add(getProductionReleaseAction(useSR ? mDep.toServiceRelease() : mDep, actionKind)); 
 		}
 
 		return getProductionReleaseActionRoot(comp, rb, childActions, actionKind);

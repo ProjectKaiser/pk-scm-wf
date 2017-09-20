@@ -44,18 +44,15 @@ public class ReleaseBranch {
 		this.comp = comp;
 		vcs = comp.getVCS();
 		DevelopBranch db = new DevelopBranch(comp);
+		
+		if (!comp.isServiceRelease() && db.getStatus() == DevelopBranchStatus.MODIFIED) {
+			this.version = db.getVersion().toRelease();
+			name = computeName();
+			return;
+		}
 
 		List<String> releaseBranches;
-		if (comp.getVersion().isEmpty() || comp.getVersion().isSnapshot()) {
-			releaseBranches = new ArrayList<>(vcs.getBranches(comp.getVcsRepository().getReleaseBranchPrefix()));
-		} else {
-			String exactReleaseBranchName = comp.getVcsRepository().getReleaseBranchPrefix() + comp.getVersion().getReleaseNoPatchString();
-			if (vcs.getBranches(comp.getVcsRepository().getReleaseBranchPrefix()).contains(exactReleaseBranchName)) {
-				releaseBranches = Arrays.asList(exactReleaseBranchName);
-			} else {
-				releaseBranches = new ArrayList<>();
-			}
-		}
+		releaseBranches = getReleaseBranches(comp);
 
 		if (releaseBranches.isEmpty()) {
 			this.version = db.getVersion().toRelease();
@@ -123,6 +120,18 @@ public class ReleaseBranch {
 		}
 		this.version = ver;
 		name = computeName();
+	}
+
+	private List<String> getReleaseBranches(final Component comp) {
+		if (comp.getVersion().isEmpty() || comp.getVersion().isSnapshot()) {
+			return new ArrayList<>(vcs.getBranches(comp.getVcsRepository().getReleaseBranchPrefix()));
+		} 
+		
+		String exactReleaseBranchName = comp.getVcsRepository().getReleaseBranchPrefix() + comp.getVersion().getReleaseNoPatchString();
+		if (vcs.getBranches(comp.getVcsRepository().getReleaseBranchPrefix()).contains(exactReleaseBranchName)) {
+			return Arrays.asList(exactReleaseBranchName);
+		} 
+		return new ArrayList<>();
 	}
 	
 	@Override

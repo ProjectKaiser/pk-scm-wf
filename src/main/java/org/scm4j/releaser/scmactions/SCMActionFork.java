@@ -48,7 +48,7 @@ public class SCMActionFork extends ActionAbstract {
 			
 			actualizeMDeps(progress);
 			
-			raiseTrunkMinorVersion(progress);
+ 			raiseTrunkMinorVersion(progress);
 			truncateSnapshotReleaseVersion(progress);
 
 		} catch (Throwable t) {
