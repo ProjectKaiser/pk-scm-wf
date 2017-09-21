@@ -54,36 +54,70 @@ public class SCMReleaser {
 	}
 	
 	public IAction getProductionReleaseAction(String componentName) {
-		return getProductionReleaseAction(new Component(componentName, true), ActionKind.AUTO);
+		return getProductionReleaseActionFiltered(new Component(componentName, true), ActionKind.AUTO);
 	}
 	
 	public IAction getProductionReleaseAction(String componentCoords, ActionKind actionKind) {
-		return getProductionReleaseAction(new Component(componentCoords, true), actionKind);
+		return getProductionReleaseActionFiltered(new Component(componentCoords, true), actionKind);
 	}
 	
 	public IAction getProductionReleaseAction(Component comp) {
-		return getProductionReleaseAction(comp, ActionKind.AUTO);
+		return getProductionReleaseActionFiltered(comp, ActionKind.AUTO);
+	}
+	
+	private IAction getProductionReleaseActionFiltered(Component comp, ActionKind actionKind) {
+		IAction res = getProductionReleaseActionUnfiltered(comp);
+		filterUnsuitableActions(res, actionKind);
+		return res;
+	}
+	
+	private void filterUnsuitableActions(IAction res, ActionKind actionKind) {
+		if (actionKind == ActionKind.AUTO) {
+			return;
+		}
+		ListIterator<IAction> li = res.getChildActions().listIterator();
+		IAction action;
+		while (li.hasNext()) {
+			action = li.next();
+			filterUnsuitableActions(action, actionKind);
+			switch (actionKind) {
+			case FORK:
+				if (action instanceof SCMActionBuild) {
+					li.set(new ActionNone(((SCMActionBuild) action).getComponent(), action.getChildActions(), ((SCMActionBuild) action).getTargetVersion() + 
+							" build skipped because not all parent components forked"));
+				}
+				break;
+			case BUILD:
+				if (action instanceof SCMActionFork) {
+					li.set(new ActionNone(((SCMActionFork) action).getComponent(), action.getChildActions(), "fork skipped because not all parent components built"));
+				}
+				break;
+			default: {
+				throw new IllegalArgumentException("Unsupported action kind: " + actionKind);
+			}
+			}
+		}
 	}
 
-	public IAction getProductionReleaseAction(Component comp, ActionKind actionKind) {
+	private IAction getProductionReleaseActionUnfiltered(Component comp) {
 		List<IAction> childActions = new ArrayList<>();
-		ReleaseBranch rb = new ReleaseBranch(comp);
-		List<Component> mDeps;
-		if (rb.exists()) {
-			mDeps = rb.getMDeps();
-		} else {
-			mDeps = new DevelopBranch(comp).getMDeps();
-		}
+		
+		/**
+		 * all components are forked and ready o build. But Product is not changed. We have rb pointing to previous release.
+		 * rb exists, so mdeps list will contain exact versions (for prev Product release) . So new versions of mdpes will not be taken. So need to use dev mdeps (snapshots) always. 
+		 */
+		List<Component> mDeps = new DevelopBranch(comp).getMDeps();
 
 		boolean useSR = comp.getVersion().isExact();
 		for (Component mDep : mDeps) {
-			childActions.add(getProductionReleaseAction(useSR ? mDep.toServiceRelease() : mDep, actionKind)); 
+			childActions.add(getProductionReleaseActionUnfiltered(useSR ? mDep.toServiceRelease() : mDep)); 
 		}
 
-		return getProductionReleaseActionRoot(comp, rb, childActions, actionKind);
+		ReleaseBranch rb = new ReleaseBranch(comp);
+		return getProductionReleaseActionRoot(comp, rb, childActions);
 	}
 		
-	private  IAction getProductionReleaseActionRoot(Component comp, ReleaseBranch rb, List<IAction> childActions, ActionKind actionKind) {
+	private  IAction getProductionReleaseActionRoot(Component comp, ReleaseBranch rb, List<IAction> childActions) {
 		DevelopBranch db = new DevelopBranch(comp);
 		if (!db.hasVersionFile()) {
 			throw new EComponentConfig("no " + VER_FILE_NAME + " file for " + comp.toString());
@@ -97,55 +131,33 @@ public class SCMReleaser {
 		ReleaseBranchStatus rbs = rb.getStatus();
 
 		if (rbs == ReleaseBranchStatus.MISSING) {
-			skipAllBuilds(childActions);
-			if (actionKind == ActionKind.BUILD) {
-				return new ActionNone(comp, childActions, "nothing to build. " + getReleaseBranchDetailsStr(rb, rbs));
-			}
-			
 			return new SCMActionFork(comp, rb, childActions, ReleaseBranchStatus.MISSING, ReleaseBranchStatus.MDEPS_ACTUAL, options);
 		}
 
 		if (rbs == ReleaseBranchStatus.BRANCHED) {
 			// need to freeze mdeps
-			skipAllBuilds(childActions);
-			if (actionKind == ActionKind.BUILD) {
-				return new ActionNone(comp, childActions, "nothing to build. " + getReleaseBranchDetailsStr(rb, rbs));
-			}
 			return new SCMActionFork(comp, rb, childActions, ReleaseBranchStatus.BRANCHED,  ReleaseBranchStatus.MDEPS_ACTUAL, options);
 		}
 
 		if (rbs == ReleaseBranchStatus.MDEPS_FROZEN) {
 			if (needToActualizeMDeps(rb)) {
 				// need to actualize
-				skipAllBuilds(childActions);
-				if (actionKind == ActionKind.BUILD) {
-					return new ActionNone(comp, childActions, "nothing to build. " + getReleaseBranchDetailsStr(rb, rbs));
-				}
 				return new SCMActionFork(comp, rb, childActions, ReleaseBranchStatus.MDEPS_FROZEN, ReleaseBranchStatus.MDEPS_ACTUAL, options);
 			} else {
 				// All necessary version will be build by Child Actions. Need to build
-				skipAllForks(childActions);
-				if (actionKind == ActionKind.FORK) {
-					return new ActionNone(comp, childActions, "nothing to fork. " + getReleaseBranchDetailsStr(rb, rbs));
-				}
 				return new SCMActionBuild(comp, rb, childActions, ReleaseReason.NEW_DEPENDENCIES, rb.getVersion(), options);
 			}
 		}
 
 		if (rbs == ReleaseBranchStatus.MDEPS_ACTUAL) {
 			// need to build
-			if (actionKind == ActionKind.FORK) {
-				return new ActionNone(comp, childActions, "nothing to fork. " + getReleaseBranchDetailsStr(rb, rbs));
-			}
 			return new SCMActionBuild(comp, rb, childActions, ReleaseReason.NEW_FEATURES, rb.getVersion(), options);
 		}
 
-		if (hasForkChildActions(childActions)) {
-			skipAllBuilds(childActions);
-			if (actionKind == ActionKind.FORK) {
-				return new ActionNone(comp, childActions, "nothing to build. " + rb.getVersion() + " " + rb.getStatus());
-			}
-			return new SCMActionFork(comp, rb, childActions, rbs, rbs, options);
+		// TODO: add test: product is ACTUAL, but child was forked sepearately. Product should be forked because component needs to be built.
+		if (hasSignificantActions(childActions)) {
+			// we are ACTUAL and have child forks or builds => we need to be forked
+			return new SCMActionFork(comp, new ReleaseBranch(comp, db.getVersion()), childActions, ReleaseBranchStatus.MISSING, ReleaseBranchStatus.MDEPS_ACTUAL, options);
 		}
 
 		return new ActionNone(comp, childActions, getReleaseBranchDetailsStr(rb, rbs));
@@ -179,40 +191,15 @@ public class SCMReleaser {
 		return false;
 	}
 
-	private boolean hasForkChildActions(List<IAction> childActions) {
+	private boolean hasSignificantActions(List<IAction> childActions) {
 		for (IAction action : childActions) {
-			if (action instanceof SCMActionFork) {
+			if (action instanceof SCMActionFork || action instanceof SCMActionBuild) {
 				return true;
 			}
 		}
 		return false;
 	}
 
-	private void skipAllForks(List<IAction> childActions) {
-		ListIterator<IAction> li = childActions.listIterator();
-		IAction action;
-		while (li.hasNext()) {
-			action = li.next();
-			skipAllForks(action.getChildActions());
-			if (action instanceof SCMActionFork) {
-				li.set(new ActionNone(((SCMActionFork) action).getComponent(), action.getChildActions(), "fork skipped because not all parent components built"));
-			}
-		}
-	}
-
-	private void skipAllBuilds(List<IAction> childActions) {
-		ListIterator<IAction> li = childActions.listIterator();
-		IAction action;
-		while (li.hasNext()) {
-			action = li.next();
-			skipAllBuilds(action.getChildActions());
-			if (action instanceof SCMActionBuild) {
-				li.set(new ActionNone(((SCMActionBuild) action).getComponent(), action.getChildActions(), ((SCMActionBuild) action).getTargetVersion() + 
-						" build skipped because not all parent components forked"));
-			}
-		}
-	}
-	
 	public IAction getTagReleaseAction(Component comp) {
 		List<IAction> childActions = new ArrayList<>();
 		DevelopBranch db = new DevelopBranch(comp);

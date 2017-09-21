@@ -101,6 +101,13 @@ public class ReleaseBranch {
 							 *   *------------------------/
 							 *   result must be 2.0 ACTUAL
 							 */
+							// if trunk is empty then check if there are new mdeps. If there is any new then result must be 3.0 MISSING, otherwise 2.0 ACTUAL
+//							List<Component> mDeps = new MDepsFile(vcs.getFileContent(branchName, fileRelativePath, revision)
+//							if (hasNewMDeps(getMDeps())) {
+//								ver = db.getVersion().toRelease();
+//							} else {
+//								ver = ver.toPreviousPatch();
+//							}
 							ver = ver.toPreviousPatch();
 						} else if (dbs == DevelopBranchStatus.MODIFIED) {
 							/**
