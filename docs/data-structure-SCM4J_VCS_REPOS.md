@@ -49,8 +49,10 @@ Yaml file consists of number of rules which are applied in order of appearance, 
 - ~:
    releaseBranchPrefix: rel/
 
-# All #8
+# Component with `afterTag` hook (ref. issue #8)
 
-wqee
+- mycompany:component5:
+   builder: gradlew.bat build
+   afterTag: gradlew.bat afterTag
 
 ```
