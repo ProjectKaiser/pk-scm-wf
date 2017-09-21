@@ -68,9 +68,37 @@ public class SCMReleaser {
 	private IAction getProductionReleaseActionFiltered(Component comp, ActionKind actionKind) {
 		IAction res = getProductionReleaseActionUnfiltered(comp);
 		filterUnsuitableActions(res, actionKind);
+		filterNonFirstParentKindActions(res, null);
 		return res;
 	}
 	
+	private void filterNonFirstParentKindActions(IAction res, Class<?> firstParentActionClass) {
+		ListIterator<IAction> li = res.getChildActions().listIterator();
+		IAction action;
+		if (firstParentActionClass == null) {
+			if (res instanceof SCMActionBuild) {
+				firstParentActionClass = SCMActionBuild.class;
+			} else if (res instanceof SCMActionFork) {
+				firstParentActionClass = SCMActionFork.class;
+			}
+		}
+		while (li.hasNext()) {
+			action = li.next();
+			filterNonFirstParentKindActions(action, firstParentActionClass);
+			if (firstParentActionClass == SCMActionFork.class) {
+				if (action instanceof SCMActionBuild) {
+					li.set(new ActionNone(((SCMActionBuild) action).getComponent(), action.getChildActions(), ((SCMActionBuild) action).getTargetVersion() + 
+							" build skipped because not all parent components forked"));
+				}
+			}
+			if (firstParentActionClass == SCMActionBuild.class) {
+				if (action instanceof SCMActionFork) {
+					li.set(new ActionNone(((SCMActionFork) action).getComponent(), action.getChildActions(), "fork skipped because not all parent components built"));
+				}
+			}
+		}
+	}
+
 	private void filterUnsuitableActions(IAction res, ActionKind actionKind) {
 		if (actionKind == ActionKind.AUTO) {
 			return;
