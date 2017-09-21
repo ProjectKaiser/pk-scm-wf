@@ -27,6 +27,7 @@ Install groovy, download [run.grovy](https://raw.githubusercontent.com/scm4j/scm
 # Data Structure
 
 - ref [data-structure.md](docs/data-structure.md)
+- minor release status #10
 
 # Features
 
