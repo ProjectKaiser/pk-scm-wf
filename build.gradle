@@ -45,7 +45,6 @@ dependencies {
 			match, group, name, version, classifier, ext, configuration ->
 		add(configuration ?: name.contains('test') ? 'testCompile' : 'compile', "$group:$name:${version?:''}${classifier?:''}${ext?:''}", { changing = true })
 	}
-	compile 'com.github.scm4j:scm4j-vcs-api:4.3'
 
 	testCompile 'com.github.stefanbirkner:system-rules:1.16.1'
 	testCompile 'junit:junit:4.12'
