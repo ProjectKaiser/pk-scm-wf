@@ -68,11 +68,11 @@ public class SCMReleaser {
 	private IAction getProductionReleaseActionFiltered(Component comp, ActionKind actionKind) {
 		IAction res = getProductionReleaseActionUnfiltered(comp);
 		filterUnsuitableActions(res, actionKind);
-		filterNonFirstParentKindActions(res, null);
+		filterChildsByFirstParentActionType(res, null);
 		return res;
 	}
 	
-	private void filterNonFirstParentKindActions(IAction res, Class<?> firstParentActionClass) {
+	private void filterChildsByFirstParentActionType(IAction res, Class<?> firstParentActionClass) {
 		ListIterator<IAction> li = res.getChildActions().listIterator();
 		IAction action;
 		if (firstParentActionClass == null) {
@@ -84,7 +84,7 @@ public class SCMReleaser {
 		}
 		while (li.hasNext()) {
 			action = li.next();
-			filterNonFirstParentKindActions(action, firstParentActionClass);
+			filterChildsByFirstParentActionType(action, firstParentActionClass);
 			if (firstParentActionClass == SCMActionFork.class) {
 				if (action instanceof SCMActionBuild) {
 					li.set(new ActionNone(((SCMActionBuild) action).getComponent(), action.getChildActions(), ((SCMActionBuild) action).getTargetVersion() + 
