@@ -8,11 +8,14 @@ import org.scm4j.releaser.branch.DevelopBranch;
 import org.scm4j.releaser.branch.ReleaseBranch;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.DelayedTagsFile;
+import org.scm4j.releaser.conf.Option;
+import org.scm4j.releaser.conf.Options;
 import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.vcs.api.VCSTag;
 import org.scm4j.vcs.api.WalkDirection;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -51,6 +54,7 @@ public class WorkflowTestBase {
 			env.close();
 		}
 		TestBuilder.setBuilders(null);
+		Options.setOptions(new ArrayList<Option>());
 	}
 	
 	protected void checkChildActionsTypes(IAction action, Expectations exp) {

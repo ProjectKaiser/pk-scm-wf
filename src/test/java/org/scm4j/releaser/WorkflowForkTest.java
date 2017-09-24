@@ -20,18 +20,16 @@ import static org.junit.Assert.*;
 
 public class WorkflowForkTest extends WorkflowTestBase {
 
-	
-	
 	@Test
 	public void testForkSingleComponent() throws Exception {
 		SCMReleaser releaser = new SCMReleaser();
 
 		// check none if Develop Branch is IGNORED
-		IAction action = releaser.getProductionReleaseAction(UNTILLDB);
+		IAction action = releaser.getActionTree(UNTILLDB);
 		assertTrue(action instanceof ActionNone);
 
 		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), "feature added");
-		action = releaser.getProductionReleaseAction(UNTILLDB);
+		action = releaser.getActionTree(UNTILLDB);
 		try (IProgress progress = new ProgressConsole(action.toString(), ">>> ", "<<< ")) {
 			action.execute(progress);
 		}
@@ -42,7 +40,7 @@ public class WorkflowForkTest extends WorkflowTestBase {
 	public void testForkRootComponentWithMDeps() throws Exception {
 		env.generateFeatureCommit(env.getUnTillVCS(), compUnTill.getVcsRepository().getDevBranch(), "feature added");
 		SCMReleaser releaser = new SCMReleaser();
-		IAction action = releaser.getProductionReleaseAction(UNTILL);
+		IAction action = releaser.getActionTree(UNTILL);
 
 		// fork unTill. Only this component should be forked since it only has new features
 		try (IProgress progress = new ProgressConsole(action.toString(), ">>> ", "<<< ")) {
@@ -82,19 +80,19 @@ public class WorkflowForkTest extends WorkflowTestBase {
 		SCMReleaser releaser = new SCMReleaser();
 		
 		// fork unTillDb
-		IAction action = releaser.getProductionReleaseAction(UNTILLDB);
+		IAction action = releaser.getActionTree(UNTILLDB);
 		action.execute(new NullProgress());
 		checkUnTillDbForked();
 		
 		// build unTillDb
-		action = releaser.getProductionReleaseAction(UNTILLDB);
+		action = releaser.getActionTree(UNTILLDB);
 		action.execute(new NullProgress());
 		checkUnTillDbBuilt();
 		
 		// fork UBL. It should be forked since it has new dependencies.
 		// simulate BRANCHED dev branch status
 		env.generateContent(env.getUblVCS(), compUBL.getVcsRepository().getDevBranch(), "test file", "test content", LogTag.SCM_VER);
-		action = releaser.getProductionReleaseAction(UBL);
+		action = releaser.getActionTree(UBL);
 		action.execute(new NullProgress());
 		checkUBLForked();
 		Expectations exp = new Expectations();
@@ -105,7 +103,7 @@ public class WorkflowForkTest extends WorkflowTestBase {
 		checkChildActionsTypes(action, exp);
 		
 		// build UBL
-		action = releaser.getProductionReleaseAction(UBL);
+		action = releaser.getActionTree(UBL);
 		try (IProgress progress = new ProgressConsole(action.toString(), ">>> ", "<<< ")) {
 			action.execute(progress);
 		}
@@ -117,7 +115,7 @@ public class WorkflowForkTest extends WorkflowTestBase {
 		env.generateFeatureCommit(env.getUnTillVCS(), compUnTill.getVcsRepository().getDevBranch(), "feature added");
 		env.generateFeatureCommit(env.getUblVCS(), compUBL.getVcsRepository().getDevBranch(), "feature added");
 		SCMReleaser releaser = new SCMReleaser();
-		IAction action = releaser.getProductionReleaseAction(UNTILL);
+		IAction action = releaser.getActionTree(UNTILL);
 		Expectations exp = new Expectations();
 		exp.put(UNTILL, SCMActionFork.class);
 		exp.put(UNTILL, "fromstatus", ReleaseBranchStatus.MISSING);
@@ -177,7 +175,7 @@ public class WorkflowForkTest extends WorkflowTestBase {
 		env.generateFeatureCommit(env.getUblVCS(), compUBL.getVcsRepository().getDevBranch(), "feature added");
 		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), "feature added");
 		SCMReleaser releaser = new SCMReleaser();
-		IAction action = releaser.getProductionReleaseAction(UNTILL);
+		IAction action = releaser.getActionTree(UNTILL);
 		Expectations exp = new Expectations();
 		exp.put(UNTILL, SCMActionFork.class);
 		exp.put(UNTILL, "fromstatus", ReleaseBranchStatus.MISSING);
@@ -204,12 +202,12 @@ public class WorkflowForkTest extends WorkflowTestBase {
 		SCMReleaser releaser = new SCMReleaser();
 
 		// fork all
-		IAction action = releaser.getProductionReleaseAction(compUnTill);
+		IAction action = releaser.getActionTree(compUnTill);
 		action.execute(new NullProgress());
 		checkUnTillForked();
 
 		// build all
-		action = releaser.getProductionReleaseAction(compUnTill);
+		action = releaser.getActionTree(compUnTill);
 		action.execute(new NullProgress());
 		checkUnTillBuilt();
 
@@ -218,7 +216,7 @@ public class WorkflowForkTest extends WorkflowTestBase {
 		env.generateFeatureCommit(env.getUnTillDbVCS(), rbUnTillDb.getName(), "patch feature added");
 
 		// Existing unTill and UBL release branches should actualize its mdeps first
-		action = releaser.getProductionReleaseAction(compUnTill);
+		action = releaser.getActionTree(compUnTill);
 		Expectations exp = new Expectations();
 		exp.put(UNTILLDB, ActionNone.class);
 		exp.put(UNTILL, SCMActionFork.class);
@@ -247,7 +245,7 @@ public class WorkflowForkTest extends WorkflowTestBase {
 		}
 
 		// now new unTillDb patch should be built
-		action = releaser.getProductionReleaseAction(compUnTill);
+		action = releaser.getActionTree(compUnTill);
 		exp = new Expectations();
 		exp.put(UNTILL, SCMActionBuild.class);
 		exp.put(UNTILL, "reason", ReleaseReason.NEW_DEPENDENCIES);
@@ -287,7 +285,7 @@ public class WorkflowForkTest extends WorkflowTestBase {
 		SCMReleaser releaser = new SCMReleaser();
 
 		// fork all
-		IAction action = releaser.getProductionReleaseAction(compUnTill);
+		IAction action = releaser.getActionTree(compUnTill);
 		action.execute(new NullProgress());
 		
 		// check mDeps versions. All of them should be kept unchanged
@@ -327,7 +325,7 @@ public class WorkflowForkTest extends WorkflowTestBase {
 		SCMReleaser releaser = new SCMReleaser();
 
 		// fork all
-		IAction action = releaser.getProductionReleaseAction(compUnTill);
+		IAction action = releaser.getActionTree(compUnTill);
 		action.execute(new NullProgress());
 		
 		// check mDeps versions. All of them should be replaced with new ones with no snapshot

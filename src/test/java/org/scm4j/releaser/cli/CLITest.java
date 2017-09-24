@@ -1,19 +1,5 @@
 package org.scm4j.releaser.cli;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.atLeast;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.verify;
-
-import java.io.PrintStream;
-
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -24,6 +10,15 @@ import org.scm4j.releaser.TestEnvironment;
 import org.scm4j.releaser.actions.ActionKind;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.conf.Option;
+import org.scm4j.releaser.conf.Options;
+import org.scm4j.releaser.exceptions.EConfig;
+
+import java.io.PrintStream;
+
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.*;
 
 public class CLITest {
 	
@@ -38,7 +33,7 @@ public class CLITest {
 	
 	@Before
 	public void setUp() throws Exception {
-		mockedWF = mock(SCMReleaser.class); // spy(new SCMReleaser());
+		mockedWF = mock(SCMReleaser.class);
 		mockedAction = mock(IAction.class);
 		mockedPS = mock(PrintStream.class);
 	}
@@ -48,12 +43,12 @@ public class CLITest {
 		SCMReleaser mockedWF = spy(new SCMReleaser());
 		IAction mockedAction = mock(IAction.class);
 		PrintStream mockedPS = mock(PrintStream.class);
-		doReturn(mockedAction).when(mockedWF).getProductionReleaseAction(UNTILL);
+		doReturn(mockedAction).when(mockedWF).getActionTree(UNTILL);
 		CommandLine cmd = new CommandLine(new String[] {"status", UNTILL});
 		
 		assertEquals(new CLI().exec(mockedWF, cmd, mockedPS), CLI.EXIT_CODE_OK);
 		
-		verify(mockedWF).getProductionReleaseAction(UNTILL);
+		verify(mockedWF).getActionTree(UNTILL);
 		verify(mockedAction, never()).execute(any(IProgress.class));
 		verify(mockedPS, atLeast(1)).println(anyString());
 	}
@@ -64,12 +59,12 @@ public class CLITest {
 //		env.generateFeatureCommit(env.getUblVCS(), compUBL.getVcsRepository().getDevBranch(), "feature added");
 //		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), "feature added");
 		
-		doReturn(mockedAction).when(mockedWF).getProductionReleaseAction(UNTILL, ActionKind.FORK);
+		doReturn(mockedAction).when(mockedWF).getActionTree(UNTILL, ActionKind.FORK);
 		CommandLine cmd = new CommandLine(new String[] {"fork", UNTILL});
 		
 		assertEquals(new CLI().exec(mockedWF, cmd, mockedPS), CLI.EXIT_CODE_OK);
 		
-		verify(mockedWF).getProductionReleaseAction(UNTILL, ActionKind.FORK);
+		verify(mockedWF).getActionTree(UNTILL, ActionKind.FORK);
 		verify(mockedAction).execute(any(IProgress.class));
 	}
 	
@@ -79,30 +74,30 @@ public class CLITest {
 //		env.generateFeatureCommit(env.getUblVCS(), compUBL.getVcsRepository().getDevBranch(), "feature added");
 //		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), "feature added");
 		
-		doReturn(mockedAction).when(mockedWF).getProductionReleaseAction(UNTILL, ActionKind.BUILD);
+		doReturn(mockedAction).when(mockedWF).getActionTree(UNTILL, ActionKind.BUILD);
 		CommandLine cmd = new CommandLine(new String[] {"build", UNTILL});
 		
 		assertEquals(new CLI().exec(mockedWF, cmd, mockedPS), CLI.EXIT_CODE_OK);
 		
-		verify(mockedWF).getProductionReleaseAction(UNTILL, ActionKind.BUILD);
+		verify(mockedWF).getActionTree(UNTILL, ActionKind.BUILD);
 		verify(mockedAction).execute(any(IProgress.class));
 	}
 	
 	@Test
 	public void testCommandTAG() throws Exception {
-		doReturn(mockedAction).when(mockedWF).getTagReleaseAction(UNTILL);
+		doReturn(mockedAction).when(mockedWF).getActionTree(UNTILL);
 		CommandLine cmd = new CommandLine(new String[] {"tag", UNTILL});
 		
 		assertEquals(new CLI().exec(mockedWF, cmd, mockedPS), CLI.EXIT_CODE_OK);
 		
-		verify(mockedWF).getTagReleaseAction(UNTILL);
+		verify(mockedWF).getActionTree(UNTILL);
 		verify(mockedAction).execute(any(IProgress.class));
 	}
 	
 	@Test
 	public void testExceptions() throws Exception {
 		RuntimeException mockedException = spy(new RuntimeException(TEST_EXCEPTION));
-		doThrow(mockedException).when(mockedWF).getProductionReleaseAction(UNTILL);
+		doThrow(mockedException).when(mockedWF).getActionTree(UNTILL);
 		CommandLine cmd = new CommandLine(new String[] {"status", UNTILL});
 		
 		CLI cli = new CLI();
@@ -112,7 +107,7 @@ public class CLITest {
 		} catch (RuntimeException e) {
 			assertEquals(mockedException, e);
 		}
-		verify(mockedWF).getProductionReleaseAction(UNTILL);
+		verify(mockedWF).getActionTree(UNTILL);
 		verify(mockedAction, never()).execute(any(IProgress.class));
 	}
 	
@@ -135,6 +130,23 @@ public class CLITest {
 	public void testMainExitCodeERROR() throws Exception {
 		exit.expectSystemExitWithStatus(CLI.EXIT_CODE_ERROR);
 		CLI.main(new String[] {"wrong command", UNTILL});
+	}
+
+	@Test
+	public void testSetOptions() throws Exception {
+		CLI.main(new String[] {"status", UNTILL});
+		assertTrue(Options.getOptions().isEmpty());
+
+		CLI.main(new String[] {"status", UNTILL, Option.DELAYED_TAG.getStrValue()});
+		assertTrue(Options.hasOption(Option.DELAYED_TAG));
+
+		try {
+			CLI.main(new String[]{"status", UNTILL, "wrong option"});
+			fail();
+		} catch (EConfig e) {
+
+		}
+
 	}
 	
 }

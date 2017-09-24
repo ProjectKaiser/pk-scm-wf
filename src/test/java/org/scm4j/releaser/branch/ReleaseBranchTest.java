@@ -45,14 +45,14 @@ public class ReleaseBranchTest extends WorkflowTestBase {
 	
 	@Test
 	public void testMDEPS_ACTUALIfNoMDeps() throws Exception {
-		IAction action = releaser.getProductionReleaseAction(compUnTillDb);
+		IAction action = releaser.getActionTree(compUnTillDb);
 		action.execute(nullProgress);
 		assertEquals(ReleaseBranchStatus.MDEPS_ACTUAL, new ReleaseBranch(compUnTillDb).getStatus());
 	}
 	
 	@Test
 	public void testBranched() throws Exception {
-		IAction action = releaser.getProductionReleaseAction(compUnTill);
+		IAction action = releaser.getActionTree(compUnTill);
 		action.execute(new ProgressConsole(action.getName(), ">>> ", "<<< "));
 		
 		// simulate mdeps are not frozen
@@ -63,9 +63,9 @@ public class ReleaseBranchTest extends WorkflowTestBase {
 	}
 	
 	@Test
-	public void testMDepsFrozen() {
+	public void testMDepsFrozen() throws Exception {
 		// fork all. All release branches must became MDEPS_FROZEN except unTillDb sicne it has no mDeps
-		IAction action = releaser.getProductionReleaseAction(compUnTill);
+		IAction action = releaser.getActionTree(compUnTill);
 		action.execute(nullProgress);
 		ReleaseBranch rbUnTill = new ReleaseBranch(compUnTill);
 		ReleaseBranch rbUnTillDb = new ReleaseBranch(compUnTillDb);
@@ -75,7 +75,7 @@ public class ReleaseBranchTest extends WorkflowTestBase {
 		assertEquals(ReleaseBranchStatus.MDEPS_ACTUAL, rbUnTillDb.getStatus());
 		
 		// Build unTillDb and UBL releases. unTill release should became MDEPS_ACTUAL 
-		action = releaser.getProductionReleaseAction(compUBL);
+		action = releaser.getActionTree(compUBL);
 		action.execute(nullProgress);
 		assertEquals(ReleaseBranchStatus.MDEPS_ACTUAL, rbUnTill.getStatus());
 		
@@ -85,15 +85,15 @@ public class ReleaseBranchTest extends WorkflowTestBase {
 		assertEquals(ReleaseBranchStatus.MDEPS_ACTUAL, rbUnTillDb.getStatus());
 		
 		// build new unTillDb patch. MDeps of root component should still not be actual because we have new unTillDb patch which is not used by upper-level components 
-		releaser.getProductionReleaseAction(compUnTillDb).execute(nullProgress);
+		releaser.getActionTree(compUnTillDb).execute(nullProgress);
 		assertEquals(ReleaseBranchStatus.MDEPS_FROZEN, rbUnTill.getStatus());
 		assertEquals(ReleaseBranchStatus.ACTUAL, rbUnTillDb.getStatus());
 	}
 	
 	@Test
-	public void testMDepsActual() {
+	public void testMDepsActual() throws Exception {
 		// fork all
-		IAction action = releaser.getProductionReleaseAction(compUnTill);
+		IAction action = releaser.getActionTree(compUnTill);
 		action.execute(nullProgress);
 
 		ReleaseBranch rbUnTillDb = new ReleaseBranch(compUnTillDb);
@@ -102,7 +102,7 @@ public class ReleaseBranchTest extends WorkflowTestBase {
 		assertEquals(ReleaseBranchStatus.MDEPS_ACTUAL, rbUnTillDb.getStatus());
 		
 		// Build unTillDb and UBL. unTill release should became MDEPS_ACTUAL 
-		action = releaser.getProductionReleaseAction(compUBL);
+		action = releaser.getActionTree(compUBL);
 		action.execute(nullProgress);
 		assertEquals(ReleaseBranchStatus.MDEPS_ACTUAL, new ReleaseBranch(compUnTill).getStatus());
 		assertEquals(ReleaseBranchStatus.ACTUAL, new ReleaseBranch(compUBL).getStatus());
@@ -110,13 +110,13 @@ public class ReleaseBranchTest extends WorkflowTestBase {
 	}
 
 	@Test
-	public void testActual() {
+	public void testActual() throws Exception {
 		// fork all
-		IAction action = releaser.getProductionReleaseAction(compUnTill);
+		IAction action = releaser.getActionTree(compUnTill);
 		action.execute(nullProgress);
 		
 		// build all
-		action = releaser.getProductionReleaseAction(compUnTill);
+		action = releaser.getActionTree(compUnTill);
 		action.execute(nullProgress);
 
 		assertEquals(ReleaseBranchStatus.ACTUAL, new ReleaseBranch(compUnTill).getStatus());
@@ -125,7 +125,7 @@ public class ReleaseBranchTest extends WorkflowTestBase {
 	}
 	
 	@Test
-	public void testLastBuiltSelect() {
+	public void testLastBuiltSelect() throws Exception {
 		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), "feature added");
 		
 		ReleaseBranch ethalon = new ReleaseBranch(compUnTillDb);
@@ -133,14 +133,14 @@ public class ReleaseBranchTest extends WorkflowTestBase {
 		assertEquals(ethalon, new ReleaseBranch(compUnTillDb));
 		
 		//fork all 
-		IAction action = releaser.getProductionReleaseAction(compUnTill);
+		IAction action = releaser.getActionTree(compUnTill);
 		action.execute(new NullProgress());
 		
 		// check branch for current release is used
 		assertEquals(ethalon, new ReleaseBranch(compUnTillDb));
 		
 		// build unTillDb
-		action = releaser.getProductionReleaseAction(compUnTillDb);
+		action = releaser.getActionTree(compUnTillDb);
 		action.execute(new NullProgress());
 		
 		// check built release version is selected
@@ -148,7 +148,7 @@ public class ReleaseBranchTest extends WorkflowTestBase {
 	}
 	
 	@Test
-	public void testNextMinorSelect() {
+	public void testNextMinorSelect() throws Exception {
 		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), "feature added");
 		
 		ReleaseBranch ethalon = new ReleaseBranch(compUnTillDb);
@@ -156,7 +156,7 @@ public class ReleaseBranchTest extends WorkflowTestBase {
 		assertEquals(ethalon, new ReleaseBranch(compUnTillDb));
 		
 		//fork all 
-		IAction action = releaser.getProductionReleaseAction(compUnTill);
+		IAction action = releaser.getActionTree(compUnTill);
 		action.execute(new NullProgress());
 		
 		// check branch for current release is used
@@ -167,7 +167,7 @@ public class ReleaseBranchTest extends WorkflowTestBase {
 		assertEquals(ethalon, new ReleaseBranch(compUnTillDb));
 		
 		// build unTillDb
-		action = releaser.getProductionReleaseAction(compUnTillDb);
+		action = releaser.getActionTree(compUnTillDb);
 		action.execute(new NullProgress());
 		
 		// check next minor release version is used since we have new commits in Develop Branch
@@ -181,14 +181,14 @@ public class ReleaseBranchTest extends WorkflowTestBase {
 		ReleaseBranch ethalon = new ReleaseBranch(compUnTillDb);
 		
 		//fork all
-		IAction action = releaser.getProductionReleaseAction(compUnTill);
+		IAction action = releaser.getActionTree(compUnTill);
 		action.execute(new NullProgress());
 		
 		// check branch for current release is used
 		assertEquals(ethalon, new ReleaseBranch(compUnTillDb));
 		
 		// build unTillDb
-		action = releaser.getProductionReleaseAction(compUnTillDb);
+		action = releaser.getActionTree(compUnTillDb);
 		action.execute(new NullProgress());
 		
 		// add feature to Release Branch. Next patch should be selected
@@ -220,11 +220,11 @@ public class ReleaseBranchTest extends WorkflowTestBase {
 	@Test
 	public void testPreHeadIsNotTaggedIfPreHeadMissing() {
 		// fork unTillDb
-		IAction action = releaser.getProductionReleaseAction(compUnTillDb);
+		IAction action = releaser.getActionTree(compUnTillDb);
 		action.execute(nullProgress);
 		
 		// build unTillDb
-		action = releaser.getProductionReleaseAction(compUnTillDb);
+		action = releaser.getActionTree(compUnTillDb);
 		action.execute(nullProgress);
 		
 		ReleaseBranch rb = spy(new ReleaseBranch(compUnTillDb));
@@ -237,11 +237,11 @@ public class ReleaseBranchTest extends WorkflowTestBase {
 	@Test
 	public void testMDEPS_ACTUALIfWrongTagOnPreHead() {
 		// fork unTillDb
-		IAction action = releaser.getProductionReleaseAction(compUnTillDb);
+		IAction action = releaser.getActionTree(compUnTillDb);
 		action.execute(nullProgress);
 		
 		// build unTillDb
-		action = releaser.getProductionReleaseAction(compUnTillDb);
+		action = releaser.getActionTree(compUnTillDb);
 		action.execute(nullProgress);
 		
 		List<VCSTag> tags = env.getUnTillDbVCS().getTags();

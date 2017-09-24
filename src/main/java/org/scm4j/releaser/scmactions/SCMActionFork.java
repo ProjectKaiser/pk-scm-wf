@@ -2,129 +2,92 @@ package org.scm4j.releaser.scmactions;
 
 import org.scm4j.commons.Version;
 import org.scm4j.commons.progress.IProgress;
-import org.scm4j.releaser.LogTag;
-import org.scm4j.releaser.SCMReleaser;
+import org.scm4j.releaser.*;
 import org.scm4j.releaser.actions.ActionAbstract;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.branch.DevelopBranch;
-import org.scm4j.releaser.branch.ReleaseBranch;
-import org.scm4j.releaser.branch.ReleaseBranchStatus;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.MDepsFile;
-import org.scm4j.releaser.conf.Option;
 import org.scm4j.vcs.api.IVCS;
-import org.scm4j.vcs.api.exceptions.EVCSBranchExists;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class SCMActionFork extends ActionAbstract {
 	
-	private final ReleaseBranchStatus fromStatus;
-	private final ReleaseBranchStatus toStatus;
-	private final ReleaseBranch rb;
 	private final DevelopBranch db;
+	private final MinorBuildStatus mbs;
+	private final CurrentReleaseBranch crb;
 	private final IVCS vcs;
 
-	public SCMActionFork(Component comp, ReleaseBranch rb, List<IAction> childActions, ReleaseBranchStatus fromStatus, ReleaseBranchStatus toStatus, List<Option> options) {
-		super(comp, childActions, options);
-		this.toStatus = toStatus;
-		this.fromStatus = fromStatus;
-		this.rb = rb;
+	public SCMActionFork(CurrentReleaseBranch crb, List<IAction> childActions, MinorBuildStatus mbs) {
+		super(crb.getComponent(), childActions);
 		db = new DevelopBranch(comp);
+		this.mbs = mbs;
+		this.crb = crb;
 		vcs = getVCS();
 	}
 	
 	@Override
-	public void execute(IProgress progress) {
+	public void execute(IProgress progress)  {
+		if (isCompProcessed(comp)) {
+			progress.reportStatus("already executed");
+			return;
+		}
 		try {
-			for (IAction action : childActions) {
-				try (IProgress nestedProgress = progress.createNestedProgress(action.toString())) {
-					action.execute(nestedProgress);
-				}
+			super.executeChilds(progress);
+			switch(mbs) {
+				case FORK:
+					createBranch(progress);
+					truncateSnapshotReleaseVersion(progress);
+					raiseTrunkMinorVersion(progress);
+				case FREEZE:
+				case ACTUALIZE_PATCHES:
+					actualizeMDeps(progress);
 			}
-			
-			createBranch(progress);
-			
-			actualizeMDeps(progress);
-			
- 			raiseTrunkMinorVersion(progress);
-			truncateSnapshotReleaseVersion(progress);
-
-		} catch (Throwable t) {
-			progress.reportStatus("execution error: " + t.toString() + ": " + t.getMessage());
-			throw new RuntimeException(t);
-		}  
+		} catch (Exception e) {
+			progress.reportStatus("execution error: " + e.toString() + ": " + e.getMessage());
+			throw new RuntimeException(e);
+		}
 	}
 	
 	private void createBranch(IProgress progress) {
-		try {
-			vcs.createBranch(db.getName(), rb.getName(), "release branch created");
-		} catch (EVCSBranchExists e) {
-			progress.reportStatus("release branch already forked: " + rb.getName());
-			return;
-		}
-		progress.reportStatus("branch " + rb.getName() + " created");
+		vcs.createBranch(db.getName(), crb.getName(), "release branch created");
+		progress.reportStatus("branch " + crb.getName() + " created");
 	}
 	
 	private void actualizeMDeps(IProgress progress) {
-		List<Component> currentMDeps = rb.getMDeps();
+		List<Component> currentMDeps = crb.getMDeps();
 		if (currentMDeps.isEmpty()) {
 			progress.reportStatus("no mdeps");
 			return;
 		}
 		List<Component> actualizedMDeps = new ArrayList<>();
-		Boolean hasNewMDeps = false;
 		for (Component currentMDep : currentMDeps) {
-			if (currentMDep.getVersion().isSnapshot() || getFromStatus() == ReleaseBranchStatus.MDEPS_FROZEN) {
-				ReleaseBranch rbCurrentMDep = new ReleaseBranch(currentMDep);
-				String futureReleaseVersionStr = rbCurrentMDep.getVersion().toReleaseString();
-				actualizedMDeps.add(currentMDep.cloneWithDifferentVersion(futureReleaseVersionStr));
-				hasNewMDeps = true;
-			} else {
-				actualizedMDeps.add(currentMDep);
-			}
-		}
-		if (hasNewMDeps) {
+			CurrentReleaseBranch crbMDep = new CurrentReleaseBranch(currentMDep);
+			String futureReleaseVersionStr = crbMDep.getVersion().toReleaseString();
+			actualizedMDeps.add(currentMDep.cloneWithDifferentVersion(futureReleaseVersionStr));
 			MDepsFile actualizedMDepsFile = new MDepsFile(actualizedMDeps);
-			vcs.setFileContent(rb.getName(), SCMReleaser.MDEPS_FILE_NAME, actualizedMDepsFile.toFileContent(), LogTag.SCM_MDEPS);
+			vcs.setFileContent(crb.getName(), SCMReleaser.MDEPS_FILE_NAME, actualizedMDepsFile.toFileContent(), LogTag.SCM_MDEPS);
 			progress.reportStatus("mdeps actualized");
-		} else {
-			progress.reportStatus("no mdeps to actualize");
 		}
 	}
 
 	private void truncateSnapshotReleaseVersion(IProgress progress) {
-		Version rbHeadVer = rb.getHeadVersion();
-		if (!rbHeadVer.isSnapshot()) {
-			progress.reportStatus("snapshot is truncated already in release branch: " + rbHeadVer);
-			return;
-		}
-		String noSnapshotVersion = rbHeadVer.toReleaseString();
-		getVCS().setFileContent(rb.getName(), SCMReleaser.VER_FILE_NAME, noSnapshotVersion, LogTag.SCM_VER + " " + noSnapshotVersion);
-		progress.reportStatus("truncated snapshot: " + noSnapshotVersion + " in branch " + rb.getName());
+		String noSnapshotVersion = db.getVersion().setPatch("0").toReleaseString(); // TODO: test zeroing patch in release branch
+		getVCS().setFileContent(crb.getName(), SCMReleaser.VER_FILE_NAME, noSnapshotVersion, LogTag.SCM_VER + " " + noSnapshotVersion);
+		progress.reportStatus("truncated snapshot: " + noSnapshotVersion + " in branch " + crb.getName());
 	}
 
 	private void raiseTrunkMinorVersion(IProgress progress) {
-		Version newMinorVersion = db.getVersion().setMinor(rb.getVersion().toNextMinor().getMinor());
-		if (db.getVersion().equals(newMinorVersion) || db.getVersion().isGreaterThan(newMinorVersion)) {
-			progress.reportStatus("trunk version is raised already: " + newMinorVersion);
-			return;
-		}
+		Version newMinorVersion = db.getVersion().toNextMinor();
 		getVCS().setFileContent(db.getName(), SCMReleaser.VER_FILE_NAME, newMinorVersion.toString(), LogTag.SCM_VER + " " + newMinorVersion);
 		progress.reportStatus("change to version " + newMinorVersion + " in trunk");
 	}
 
 	@Override
 	public String toString() {
-		return "fork " + comp.getCoords() + ", " + rb.getVersion()+ " " + getFromStatus() + " -> " + getToStatus();
+		return "fork " + comp.getCoords() + ", " + crb.getVersion();
 	}
 
-	public ReleaseBranchStatus getFromStatus() {
-		return fromStatus;
-	}
-
-	public ReleaseBranchStatus getToStatus() {
-		return toStatus;
-	}
 }

@@ -1,11 +1,5 @@
 package org.scm4j.releaser.branch;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
-
-import java.util.ArrayList;
-
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -19,15 +13,19 @@ import org.scm4j.releaser.exceptions.EComponentConfig;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSCommit;
 
+import java.util.ArrayList;
+
+import static org.junit.Assert.*;
+
 public class DevelopBranchTest extends WorkflowTestBase {
 
 	@Test
-	public void testBranchedIfNothingIsMade() {
+	public void testBranchedIfNothingIsMade() throws Exception {
 		env.generateFeatureCommit(env.getUnTillDbVCS(), dbUnTillDb.getName(), "feature added");
 		env.generateFeatureCommit(env.getUnTillVCS(), dbUnTill.getName(), "feature added");
 		env.generateFeatureCommit(env.getUblVCS(), dbUBL.getName(), "feature added");
 		SCMReleaser releaser = new SCMReleaser();
-		IAction action = releaser.getProductionReleaseAction(compUnTill);
+		IAction action = releaser.getActionTree(compUnTill);
 		action.execute(new NullProgress());
 		assertEquals(DevelopBranchStatus.BRANCHED, dbUnTill.getStatus());
 	}

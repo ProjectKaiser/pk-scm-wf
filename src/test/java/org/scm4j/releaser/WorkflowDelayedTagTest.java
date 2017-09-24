@@ -8,6 +8,7 @@ import org.scm4j.releaser.branch.ReleaseBranchStatus;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.DelayedTagsFile;
 import org.scm4j.releaser.conf.Option;
+import org.scm4j.releaser.conf.Options;
 import org.scm4j.vcs.api.VCSTag;
 import org.scm4j.vcs.api.WalkDirection;
 
@@ -18,7 +19,7 @@ import java.util.List;
 import static org.junit.Assert.*;
 
 public class WorkflowDelayedTagTest extends WorkflowTestBase {
-	
+
 	private IProgress nullProgress = new NullProgress();
 
 	@Test
@@ -26,14 +27,15 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 		env.generateFeatureCommit(env.getUnTillDbVCS(), dbUnTillDb.getName(), "feature added");
 		env.generateFeatureCommit(env.getUnTillVCS(), dbUnTill.getName(), "feature added");
 		env.generateFeatureCommit(env.getUblVCS(), dbUBL.getName(), "feature added");
-		SCMReleaser releaser = new SCMReleaser(Collections.singletonList(Option.DELAYED_TAG));
+		Options.setOptions(Collections.singletonList(Option.DELAYED_TAG));
+		SCMReleaser releaser = new SCMReleaser();
 		
 		// fork all
-		IAction action = releaser.getProductionReleaseAction(compUnTill);
+		IAction action = releaser.getActionTree(compUnTill);
 		action.execute(nullProgress);
 		
 		// build all
-		action = releaser.getProductionReleaseAction(compUnTill);
+		action = releaser.getActionTree(compUnTill);
 		action.execute(nullProgress);
 		
 		// check no tags
@@ -56,18 +58,19 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 		env.generateFeatureCommit(env.getUnTillDbVCS(), dbUnTillDb.getName(), "feature added");
 		env.generateFeatureCommit(env.getUnTillVCS(), dbUnTill.getName(), "feature added");
 		env.generateFeatureCommit(env.getUblVCS(), dbUBL.getName(), "feature added");
-		SCMReleaser releaser = new SCMReleaser(Collections.singletonList(Option.DELAYED_TAG));
+		SCMReleaser releaser = new SCMReleaser();
+		Options.setOptions(Collections.singletonList(Option.DELAYED_TAG));
 		
 		// fork all
-		IAction action = releaser.getProductionReleaseAction(compUnTill);
+		IAction action = releaser.getActionTree(compUnTill);
 		action.execute(nullProgress);
 		
 		// build all
-		action = releaser.getProductionReleaseAction(compUnTill);
+		action = releaser.getActionTree(compUnTill);
 		action.execute(nullProgress);
 		
 		// create delayed tags
-		action = releaser.getTagReleaseAction(compUnTill);
+		action = releaser.getActionTree(compUnTill);
 		action.execute(nullProgress);
 		
 		// check tags
