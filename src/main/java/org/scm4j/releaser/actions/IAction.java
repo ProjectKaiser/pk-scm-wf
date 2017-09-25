@@ -18,6 +18,7 @@ public interface IAction {
 	IAction getParent();
 
 	void addProcessedComp(Component comp);
+	
+	boolean isCompProcessed(Component comp);
 
-	List<Component> getProcessedComps();
 }

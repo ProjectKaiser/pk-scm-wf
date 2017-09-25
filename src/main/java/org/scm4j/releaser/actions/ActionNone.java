@@ -1,7 +1,7 @@
 package org.scm4j.releaser.actions;
 
 import org.scm4j.commons.progress.IProgress;
-import org.scm4j.releaser.CurrentReleaseBranch;
+import org.scm4j.releaser.branch.CurrentReleaseBranch;
 
 import java.util.List;
 

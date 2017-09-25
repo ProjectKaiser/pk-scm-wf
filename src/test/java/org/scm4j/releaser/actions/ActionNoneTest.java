@@ -2,8 +2,8 @@ package org.scm4j.releaser.actions;
 
 import org.junit.Test;
 import org.scm4j.commons.progress.IProgress;
-import org.scm4j.releaser.CurrentReleaseBranch;
 import org.scm4j.releaser.TestEnvironment;
+import org.scm4j.releaser.branch.CurrentReleaseBranch;
 import org.scm4j.releaser.conf.Component;
 
 import java.util.ArrayList;

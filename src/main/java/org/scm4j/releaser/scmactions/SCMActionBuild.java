@@ -5,6 +5,7 @@ import org.scm4j.commons.progress.IProgress;
 import org.scm4j.releaser.*;
 import org.scm4j.releaser.actions.ActionAbstract;
 import org.scm4j.releaser.actions.IAction;
+import org.scm4j.releaser.branch.CurrentReleaseBranch;
 import org.scm4j.releaser.conf.DelayedTagsFile;
 import org.scm4j.releaser.conf.Option;
 import org.scm4j.releaser.conf.Options;
@@ -87,7 +88,7 @@ public class SCMActionBuild extends ActionAbstract {
 	}
 
 	private void raisePatchVersion(IProgress progress) {
-		Version nextPatchVersion = crb.getVersion().toNextPatch().toRelease();
+		Version nextPatchVersion = crb.getVersion().toNextPatch();
 		vcs.setFileContent(crb.getName(), SCMReleaser.VER_FILE_NAME, nextPatchVersion.toString(),
 				LogTag.SCM_VER + " " + crb.getVersion().toNextPatch().toReleaseString());
 		progress.reportStatus("patch version is raised in release branch: " + nextPatchVersion);

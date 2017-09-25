@@ -55,7 +55,11 @@ public class Component {
 	public Component cloneWithDifferentVersion(String versionStr) {
 		return new Component(coords.toString(versionStr));
 	}
-
+	
+	public Component cloneWithDifferentVersion(Version version) {
+		return new Component(coords.toString(version.toString()));
+	}
+	
 	@Override
 	public boolean equals(Object o) {
 		if (this == o) return true;

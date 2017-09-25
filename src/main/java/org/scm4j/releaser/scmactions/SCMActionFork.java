@@ -5,6 +5,7 @@ import org.scm4j.commons.progress.IProgress;
 import org.scm4j.releaser.*;
 import org.scm4j.releaser.actions.ActionAbstract;
 import org.scm4j.releaser.actions.IAction;
+import org.scm4j.releaser.branch.CurrentReleaseBranch;
 import org.scm4j.releaser.branch.DevelopBranch;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.MDepsFile;
@@ -17,15 +18,15 @@ public class SCMActionFork extends ActionAbstract {
 	
 	private final DevelopBranch db;
 	private final MinorBuildStatus mbs;
-	private final CurrentReleaseBranch crb;
 	private final IVCS vcs;
+	private final Version targetVersion;
 
 	public SCMActionFork(CurrentReleaseBranch crb, List<IAction> childActions, MinorBuildStatus mbs) {
 		super(crb.getComponent(), childActions);
 		db = new DevelopBranch(comp);
 		this.mbs = mbs;
-		this.crb = crb;
 		vcs = getVCS();
+		targetVersion = crb.getVersion().toNextMinor();
 	}
 	
 	@Override
@@ -44,7 +45,12 @@ public class SCMActionFork extends ActionAbstract {
 				case FREEZE:
 				case ACTUALIZE_PATCHES:
 					actualizeMDeps(progress);
+					break;
+			case BUILD:
+			case NONE:
+				throw new IllegalStateException(mbs + " target action is occured when fork only is expected");
 			}
+			addProcessedComp(comp);
 		} catch (Exception e) {
 			progress.reportStatus("execution error: " + e.toString() + ": " + e.getMessage());
 			throw new RuntimeException(e);
@@ -52,11 +58,13 @@ public class SCMActionFork extends ActionAbstract {
 	}
 	
 	private void createBranch(IProgress progress) {
-		vcs.createBranch(db.getName(), crb.getName(), "release branch created");
-		progress.reportStatus("branch " + crb.getName() + " created");
+		String newBranchName =  CurrentReleaseBranch.getName(comp, targetVersion);
+		vcs.createBranch(db.getName(), newBranchName, "release branch created");
+		progress.reportStatus("branch " + newBranchName + " created");
 	}
 	
 	private void actualizeMDeps(IProgress progress) {
+		CurrentReleaseBranch crb = new CurrentReleaseBranch(comp, targetVersion);
 		List<Component> currentMDeps = crb.getMDeps();
 		if (currentMDeps.isEmpty()) {
 			progress.reportStatus("no mdeps");
@@ -74,9 +82,10 @@ public class SCMActionFork extends ActionAbstract {
 	}
 
 	private void truncateSnapshotReleaseVersion(IProgress progress) {
-		String noSnapshotVersion = db.getVersion().setPatch("0").toReleaseString(); // TODO: test zeroing patch in release branch
-		getVCS().setFileContent(crb.getName(), SCMReleaser.VER_FILE_NAME, noSnapshotVersion, LogTag.SCM_VER + " " + noSnapshotVersion);
-		progress.reportStatus("truncated snapshot: " + noSnapshotVersion + " in branch " + crb.getName());
+		String noSnapshotVersion = db.getVersion().toReleaseString();
+		String newBranchName =  CurrentReleaseBranch.getName(comp, targetVersion);
+		getVCS().setFileContent(newBranchName, SCMReleaser.VER_FILE_NAME, noSnapshotVersion, LogTag.SCM_VER + " " + noSnapshotVersion);
+		progress.reportStatus("truncated snapshot: " + noSnapshotVersion + " in branch " + newBranchName);
 	}
 
 	private void raiseTrunkMinorVersion(IProgress progress) {
@@ -87,7 +96,7 @@ public class SCMActionFork extends ActionAbstract {
 
 	@Override
 	public String toString() {
-		return "fork " + comp.getCoords() + ", " + crb.getVersion();
+		return "fork " + comp.getCoords() + ", " + targetVersion;
 	}
-
+	
 }

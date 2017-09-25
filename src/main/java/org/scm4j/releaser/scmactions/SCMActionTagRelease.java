@@ -2,10 +2,10 @@ package org.scm4j.releaser.scmactions;
 
 import org.scm4j.commons.Version;
 import org.scm4j.commons.progress.IProgress;
-import org.scm4j.releaser.CurrentReleaseBranch;
 import org.scm4j.releaser.SCMReleaser;
 import org.scm4j.releaser.actions.ActionAbstract;
 import org.scm4j.releaser.actions.IAction;
+import org.scm4j.releaser.branch.CurrentReleaseBranch;
 import org.scm4j.releaser.conf.DelayedTagsFile;
 import org.scm4j.releaser.conf.TagDesc;
 import org.scm4j.vcs.api.IVCS;

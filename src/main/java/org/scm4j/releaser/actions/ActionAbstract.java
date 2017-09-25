@@ -26,19 +26,20 @@ public abstract class ActionAbstract implements IAction {
 		}
 	}
 
-	public List<Component> getProcessedComps() {
-		if (parent != null) {
-			return getParent().getProcessedComps();
+	protected boolean isCompProcessed_(Component comp) {
+		if(null == parent){
+			return processedComps.contains(comp);
 		}
-		return processedComps;
+		return parent.isCompProcessed(comp);
+		
 	}
-
+	
 	public boolean isCompProcessed(Component comp) {
-		return getProcessedComps().contains(comp);
+		return isCompProcessed_(comp);
 	}
 
 	@Override
-	public void setParent(IAction parentAction) {
+	public void setParent(IAction parent) {
 		this.parent = parent;
 	}
 
@@ -52,7 +53,11 @@ public abstract class ActionAbstract implements IAction {
 
 	@Override
 	public void addProcessedComp(Component comp) {
-		getProcessedComps().add(comp);
+		if(null != parent){
+			parent.addProcessedComp(comp);
+		} else {
+			processedComps.add(comp);
+		}
 	}
 
 	public Component getComponent() {

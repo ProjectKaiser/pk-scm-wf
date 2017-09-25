@@ -3,6 +3,7 @@ package org.scm4j.releaser;
 import org.scm4j.releaser.actions.ActionKind;
 import org.scm4j.releaser.actions.ActionNone;
 import org.scm4j.releaser.actions.IAction;
+import org.scm4j.releaser.branch.CurrentReleaseBranch;
 import org.scm4j.releaser.branch.DevelopBranch;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.TagDesc;
@@ -44,28 +45,30 @@ public class SCMReleaser {
 		CurrentReleaseBranch crb = new CurrentReleaseBranch(comp);
 		MinorBuild mb = new MinorBuild(crb);
 		MinorBuildStatus mbs = mb.getStatus();
-		switch(mbs) {
-
-			case FORK:
-			case FREEZE:
-			case ACTUALIZE_PATCHES:
-				return getForkOrSkipAction(crb, childActions, mbs, actionKind);
-			case BUILD:
-				return getBuildOrSkipAction(crb, childActions, mbs, actionKind);
-
+		switch (mbs) {
+		case FORK:
+		case FREEZE:
+		case ACTUALIZE_PATCHES:
+			return getForkOrSkipAction(crb, childActions, mbs, actionKind);
+		case BUILD:
+			return getBuildOrSkipAction(crb, childActions, mbs, actionKind);
+		case NONE:
+			return new ActionNone(crb, childActions, null);
+		default:
+			throw new IllegalArgumentException("unsupported minor build status: " + mbs);
 		}
-		return new ActionNone(crb, childActions, null);
 	}
 
-
-	private IAction getBuildOrSkipAction(CurrentReleaseBranch crb, List<IAction> childActions, MinorBuildStatus mbs, ActionKind actionKind) {
+	private IAction getBuildOrSkipAction(CurrentReleaseBranch crb, List<IAction> childActions, MinorBuildStatus mbs,
+			ActionKind actionKind) {
 		if (actionKind == ActionKind.FORK) {
 			return new ActionNone(crb, childActions, "nothing to build");
 		}
 		return new SCMActionBuild(crb, childActions, mbs);
 	}
 
-	private IAction getForkOrSkipAction(CurrentReleaseBranch crb, List<IAction> childActions, MinorBuildStatus mbs, ActionKind actionKind) {
+	private IAction getForkOrSkipAction(CurrentReleaseBranch crb, List<IAction> childActions, MinorBuildStatus mbs,
+			ActionKind actionKind) {
 		if (actionKind == ActionKind.BUILD) {
 			return new ActionNone(crb, childActions, "nothing to fork");
 		}

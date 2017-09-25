@@ -5,7 +5,7 @@ import java.util.List;
 
 public class Options {
 
-	private static List<Option> options;
+	private static List<Option> options = new ArrayList<>();
 
 	public static synchronized List<Option> getOptions() {
 		return options;

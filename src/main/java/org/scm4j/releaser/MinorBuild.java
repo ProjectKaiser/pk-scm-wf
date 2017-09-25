@@ -1,6 +1,7 @@
 package org.scm4j.releaser;
 
 import org.scm4j.commons.Version;
+import org.scm4j.releaser.branch.CurrentReleaseBranch;
 import org.scm4j.releaser.branch.DevelopBranch;
 import org.scm4j.releaser.branch.DevelopBranchStatus;
 import org.scm4j.releaser.conf.Component;
@@ -16,6 +17,10 @@ public class MinorBuild {
 		comp = crb.getComponent();
 		this.crb = crb;
 	}
+	
+	public MinorBuild(Component comp) {
+		this(new CurrentReleaseBranch(comp));
+	}
 
 	public MinorBuildStatus getStatus() {
 		if (isNeedToFork(crb)) {
@@ -23,7 +28,7 @@ public class MinorBuild {
 		}
 
 		Version crbVersion = crb.getVersion();
-		if (crbVersion.getPatch().equals("0")) {
+		if (Integer.parseInt(crbVersion.getPatch()) > 0) {
 			return MinorBuildStatus.NONE;
 		}
 
@@ -36,11 +41,7 @@ public class MinorBuild {
 			return MinorBuildStatus.ACTUALIZE_PATCHES;
 		}
 
-		if (crbVersion.getPatch().equals("0")) {
-			return MinorBuildStatus.BUILD;
-		}
-
-		return MinorBuildStatus.NONE;
+		return MinorBuildStatus.BUILD;
 
 	}
 
@@ -68,7 +69,7 @@ public class MinorBuild {
 			return true;
 		}
 
-		Version ver = crb.getVersion();
+		Version ver = crb.getHeadVersion();
 		if (ver.getPatch().equals("0")) {
 			return false;
 		}

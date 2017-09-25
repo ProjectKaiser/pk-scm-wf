@@ -1,6 +1,7 @@
-package org.scm4j.releaser;
+package org.scm4j.releaser.branch;
 
 import org.scm4j.commons.Version;
+import org.scm4j.releaser.SCMReleaser;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.MDepsFile;
 import org.scm4j.vcs.api.IVCS;
@@ -23,20 +24,24 @@ public class CurrentReleaseBranch {
 	public String getName() {
 		return name;
 	}
-
+	
 	public CurrentReleaseBranch(Component comp) {
+		this(comp, getDevVersion(comp).toPreviousMinor().toRelease());
+	}
+
+	public CurrentReleaseBranch(Component comp, Version exactVersion) {
 		this.comp = comp;
 		vcs = comp.getVCS();
-		version = getDevVersion().toPreviousMinor().setPatch("0").toRelease();
-		name = comp.getVcsRepository().getReleaseBranchPrefix() + version.getReleaseNoPatchString();
+		version = exactVersion;
+		name = getName(comp, version);
 	}
 
 	public Component getComponent() {
 		return comp;
 	}
-
-	private Version getDevVersion() {
-		return new Version(vcs.getFileContent(comp.getVcsRepository().getDevBranch(), SCMReleaser.VER_FILE_NAME, null));
+	
+	private static Version getDevVersion(Component comp) {
+		return new Version(comp.getVCS().getFileContent(comp.getVcsRepository().getDevBranch(), SCMReleaser.VER_FILE_NAME, null));
 	}
 
 	public boolean exists() {
@@ -55,5 +60,14 @@ public class CurrentReleaseBranch {
 
 	public Version getHeadVersion() {
 		return new Version(comp.getVCS().getFileContent(getName(), SCMReleaser.VER_FILE_NAME, null).trim());
+	}
+
+	public static String getName(Component comp, Version forVersion) {
+		return comp.getVcsRepository().getReleaseBranchPrefix() + forVersion.getReleaseNoPatchString();
+	}
+	
+	@Override
+	public String toString() {
+		return "ReleaseBranch [comp=" + comp + ", version=" + version.toReleaseString() + ", name=" + name + "]";
 	}
 }
