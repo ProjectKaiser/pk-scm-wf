@@ -26,7 +26,15 @@ public class ReleaseBranch {
 	}
 	
 	public ReleaseBranch(Component comp) {
-		this(comp, getDevVersion(comp).toPreviousMinor().toRelease());
+		this.comp = comp;
+		vcs = comp.getVCS();
+		Version candidateVer = getDevVersion(comp).toPreviousMinor().toRelease();
+		if (exists(comp, candidateVer)) {
+			version = new Version(comp.getVCS().getFileContent(getName(comp, candidateVer), SCMReleaser.VER_FILE_NAME, null));
+		} else {
+			version = candidateVer;
+		}
+		name = getName(comp, version);
 	}
 
 	public ReleaseBranch(Component comp, Version exactVersion) {
@@ -44,6 +52,10 @@ public class ReleaseBranch {
 		return new Version(comp.getVCS().getFileContent(comp.getVcsRepository().getDevBranch(), SCMReleaser.VER_FILE_NAME, null));
 	}
 
+	private static boolean exists(Component comp, Version forVersion) {
+		return comp.getVCS().getBranches(comp.getVcsRepository().getReleaseBranchPrefix()).contains(getName(comp, forVersion));
+	}
+
 	public boolean exists() {
 		return vcs.getBranches(comp.getVcsRepository().getReleaseBranchPrefix()).contains(name);
 	}
@@ -56,10 +68,6 @@ public class ReleaseBranch {
 		} catch (EVCSFileNotFound e) {
 			return new ArrayList<>();
 		}
-	}
-
-	public Version getHeadVersion() {
-		return new Version(comp.getVCS().getFileContent(getName(), SCMReleaser.VER_FILE_NAME, null).trim());
 	}
 
 	public static String getName(Component comp, Version forVersion) {

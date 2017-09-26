@@ -1,27 +1,27 @@
 package org.scm4j.releaser;
 
-import java.util.List;
-
 import org.scm4j.commons.Version;
-import org.scm4j.releaser.branch.ReleaseBranch;
 import org.scm4j.releaser.branch.DevelopBranch;
 import org.scm4j.releaser.branch.DevelopBranchStatus;
+import org.scm4j.releaser.branch.ReleaseBranch;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.vcs.api.VCSTag;
 import org.scm4j.vcs.api.WalkDirection;
 
+import java.util.List;
+
 public class Build {
 
 	private final Component comp;
-	private final ReleaseBranch crb;
+	private final ReleaseBranch rb;
 	private final boolean isPatch;
 
-	public Build(ReleaseBranch crb) {
-		comp = crb.getComponent();
+	public Build(ReleaseBranch rb) {
+		comp = rb.getComponent();
 		isPatch = comp.getVersion().isExact();
-		this.crb = crb;
+		this.rb = rb;
 	}
 	
 	public Build(Component comp) {
@@ -40,22 +40,22 @@ public class Build {
 			}
 			
 
-			Version crbVersion = crb.getHeadVersion();
-			if (Integer.parseInt(crbVersion.getPatch()) > 0) {
+			Version rbVersion = rb.getVersion();
+			if (Integer.parseInt(rbVersion.getPatch()) > 0) {
 				return BuildStatus.NONE;
 			}
 		} else {
-			if (!crb.exists()) {
+			if (!rb.exists()) {
 				return BuildStatus.ERROR;
 			}
 			
-			Version headVersion = crb.getHeadVersion();
+			Version headVersion = rb.getVersion();
 			if (Integer.parseInt(headVersion.getPatch()) < 1) {
 				return BuildStatus.ERROR;
 			}
 		}
 
-		List<Component> mDeps = crb.getMDeps();
+		List<Component> mDeps = rb.getMDeps();
 		if (!areMDepsFrozen(mDeps)) {
 			return BuildStatus.FREEZE;
 		}
@@ -74,12 +74,12 @@ public class Build {
 
 	private boolean hasValueableCommitsAfterLastTag() {
 		IVCS vcs = comp.getVCS();
-		VCSTag lastTag = vcs.getLastTag(crb.getName());
+		VCSTag lastTag = null; //vcs.getLastTag(rb.getName());
 		if (lastTag == null) {
 			return false;
 		}
 		
-		List<VCSCommit> commits = vcs.getCommitsRange(crb.getName(), lastTag.getRelatedCommit().getRevision(), WalkDirection.ASC, 0);
+		List<VCSCommit> commits = vcs.getCommitsRange(rb.getName(), lastTag.getRelatedCommit().getRevision(), WalkDirection.ASC, 0);
 		for (VCSCommit commit : commits) {
 			if (lastTag.getRelatedCommit().equals(commit)) {
 				continue;
@@ -93,8 +93,8 @@ public class Build {
 
 	private boolean areMDepsPatchesActual(List<Component> mDeps) {
 		for (Component mDep : mDeps) {
-			ReleaseBranch crbMDep = new ReleaseBranch(mDep);
-			if (!crbMDep.getHeadVersion().equals(mDep.getVersion()) && crbMDep.getHeadVersion().isGreaterThan(mDep.getVersion())) {
+			ReleaseBranch rbMDep = new ReleaseBranch(mDep);
+			if (!rbMDep.getVersion().equals(mDep.getVersion()) && rbMDep.getVersion().isGreaterThan(mDep.getVersion())) {
 				return false;
 			}
 		}
@@ -111,11 +111,11 @@ public class Build {
 	}
 
 	public boolean isNeedToFork() {
-		if (!crb.exists()) {
+		if (!rb.exists()) {
 			return true;
 		}
 
-		Version ver = crb.getHeadVersion();
+		Version ver = rb.getVersion();
 		if (ver.getPatch().equals("0")) {
 			return false;
 		}
@@ -133,21 +133,21 @@ public class Build {
 			}
 		}
 
-		mDeps = crb.getMDeps();
+		mDeps = rb.getMDeps();
 		if (mDeps.isEmpty()) {
 			return false;
 
 		}
-		ReleaseBranch mDepCRB;
+		ReleaseBranch mDeprb;
 		for (Component mDep : mDeps) {
-			mDepCRB = new ReleaseBranch(mDep);
-			Version mDepCRBHeadVersion = mDepCRB.getHeadVersion();
-			if (mDepCRBHeadVersion.getPatch().equals("0")) {
-				if (!mDepCRBHeadVersion.equals(mDep.getVersion())) {
+			mDeprb = new ReleaseBranch(mDep);
+			Version mDeprbHeadVersion = mDeprb.getVersion();
+			if (mDeprbHeadVersion.getPatch().equals("0")) {
+				if (!mDeprbHeadVersion.equals(mDep.getVersion())) {
 					return true;
 				}
 			} else {
-				if (!mDepCRBHeadVersion.toPreviousPatch().equals(mDep.getVersion())) {
+				if (!mDeprbHeadVersion.toPreviousPatch().equals(mDep.getVersion())) {
 					return true;
 				}
 			}

@@ -1,7 +1,5 @@
 package org.scm4j.releaser.scmactions;
 
-import java.util.List;
-
 import org.scm4j.commons.Version;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.releaser.SCMReleaser;
@@ -14,13 +12,15 @@ import org.scm4j.releaser.exceptions.EReleaserException;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSTag;
 
+import java.util.List;
+
 public class SCMActionTagRelease extends ActionAbstract {
 
-	private final ReleaseBranch crb;
+	private final ReleaseBranch rb;
 
-	public SCMActionTagRelease(ReleaseBranch crb, List<IAction> childActions) {
-		super(crb.getComponent(), childActions);
-		this.crb = crb;
+	public SCMActionTagRelease(ReleaseBranch rb, List<IAction> childActions) {
+		super(rb.getComponent(), childActions);
+		this.rb = rb;
 	}
 	
 	@Override
@@ -45,7 +45,7 @@ public class SCMActionTagRelease extends ActionAbstract {
 			}
 			
 			List<VCSTag> tagsOnRevision = vcs.getTagsOnRevision(revisionToTag);
-			Version delayedTagVersion = new Version(vcs.getFileContent(crb.getName(), SCMReleaser.VER_FILE_NAME, revisionToTag));
+			Version delayedTagVersion = new Version(vcs.getFileContent(rb.getName(), SCMReleaser.VER_FILE_NAME, revisionToTag));
 			TagDesc tagDesc = SCMReleaser.getTagDesc(delayedTagVersion.toString());
 			for (VCSTag tag : tagsOnRevision) {
 				if (tag.getTagName().equals(tagDesc.getName())) {
@@ -54,10 +54,10 @@ public class SCMActionTagRelease extends ActionAbstract {
 				}
 			}
 			
-			vcs.createTag(crb.getName(), tagDesc.getName(), tagDesc.getMessage(), revisionToTag);
+			vcs.createTag(rb.getName(), tagDesc.getName(), tagDesc.getMessage(), revisionToTag);
 			
 			cf.removeRevisionByUrl(comp.getVcsRepository().getUrl());
-			progress.reportStatus(String.format("%s of %s tagged: %s", "commit " + revisionToTag, crb.getName(), delayedTagVersion.toReleaseString()));
+			progress.reportStatus(String.format("%s of %s tagged: %s", "commit " + revisionToTag, rb.getName(), delayedTagVersion.toReleaseString()));
 		} catch (EReleaserException e) {
 			throw e;
 		} catch (Exception e) {

@@ -1,11 +1,5 @@
 package org.scm4j.releaser;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
-import java.util.Arrays;
-import java.util.List;
-
 import org.junit.Ignore;
 import org.junit.Test;
 import org.scm4j.releaser.actions.IAction;
@@ -14,6 +8,12 @@ import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.MDepsFile;
 import org.scm4j.releaser.scmactions.SCMActionBuild;
 import org.scm4j.releaser.scmactions.SCMActionFork;
+
+import java.util.Arrays;
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class BuildTest extends WorkflowTestBase {
 	
@@ -79,7 +79,7 @@ public class BuildTest extends WorkflowTestBase {
 		assertTrue(action instanceof SCMActionFork); // test unTillDb will be forked too because there are no release branches at all
 		action.execute(new NullProgress());
 		
-		// build UBL to avoid skip forking due of CRB.version.patch == 0
+		// build UBL to avoid skip forking due of rb.version.patch == 0
 		action = releaser.getActionTree(compUBL);
 		assertTrue(action instanceof SCMActionBuild);
 		action.execute(new NullProgress());
@@ -142,11 +142,11 @@ public class BuildTest extends WorkflowTestBase {
 		action.execute(new NullProgress());
 		
 		// simulate mdeps not frozen
-		ReleaseBranch crb = new ReleaseBranch(compUBL);
-		List<Component> mDeps = crb.getMDeps();
+		ReleaseBranch rb = new ReleaseBranch(compUBL);
+		List<Component> mDeps = rb.getMDeps();
 		Component snapshotedUnTillDb = mDeps.get(0).cloneWithDifferentVersion(mDeps.get(0).getVersion().toSnapshot());
 		MDepsFile mDepsFile = new MDepsFile(Arrays.asList(snapshotedUnTillDb));
-		env.getUblVCS().setFileContent(crb.getName(), SCMReleaser.MDEPS_FILE_NAME, mDepsFile.toFileContent(), "mdeps snapshoted");
+		env.getUblVCS().setFileContent(rb.getName(), SCMReleaser.MDEPS_FILE_NAME, mDepsFile.toFileContent(), "mdeps snapshoted");
 		
 		assertEquals(BuildStatus.FREEZE, new Build(compUBL).getStatus());
 	}
@@ -174,12 +174,12 @@ public class BuildTest extends WorkflowTestBase {
 		action.execute(new NullProgress());
 		
 		// build unTillDb patch
-		ReleaseBranch crbUnTillDb = new ReleaseBranch(compUnTillDb);
-		env.generateFeatureCommit(env.getUnTillDbVCS(), crbUnTillDb.getName(), "patch feature merged");
+		ReleaseBranch rbUnTillDb = new ReleaseBranch(compUnTillDb);
+		env.generateFeatureCommit(env.getUnTillDbVCS(), rbUnTillDb.getName(), "patch feature merged");
 		action = releaser.getActionTree(compUnTillDb);
 		assertTrue(action instanceof SCMActionBuild);
 		action.execute(new NullProgress());
-		assertEquals(env.getUnTillDbVer().toNextPatch().toNextPatch(), crbUnTillDb.getHeadVersion());
+		assertEquals(env.getUnTillDbVer().toNextPatch().toNextPatch(), rbUnTillDb.getVersion());
 		
 		assertEquals(BuildStatus.ACTUALIZE_PATCHES, new Build(compUBL).getStatus());
 	}

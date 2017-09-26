@@ -98,8 +98,8 @@ public class WorkflowTestBase {
 		assertNotNull(TestBuilder.getBuilders().get(UNTILLDB));
 
 		// check versions
-		ReleaseBranch crbUnTillDb = new ReleaseBranch(compUnTillDb);
-		Version verRelease = crbUnTillDb.getHeadVersion();
+		ReleaseBranch rbUnTillDb = new ReleaseBranch(compUnTillDb);
+		Version verRelease = rbUnTillDb.getVersion();
 		assertEquals(env.getUnTillDbVer().toRelease().toNextPatch(), verRelease);
 
 		// check tags
@@ -107,24 +107,24 @@ public class WorkflowTestBase {
 		assertTrue(tags.size() == 1);
 		VCSTag tag = tags.get(0);
 		assertEquals(env.getUnTillDbVer().toReleaseString(), tag.getTagName());
-		List<VCSCommit> commits = env.getUnTillDbVCS().getCommitsRange(crbUnTillDb.getName(), null, WalkDirection.DESC, 2);
+		List<VCSCommit> commits = env.getUnTillDbVCS().getCommitsRange(rbUnTillDb.getName(), null, WalkDirection.DESC, 2);
 		assertEquals(commits.get(1), tag.getRelatedCommit());
 	}
 
 	public void checkUBLBuilt() {
 		checkUnTillDbBuilt();
-		ReleaseBranch crbUBL = new ReleaseBranch(compUBL);
-		ReleaseBranch crbUnTillDb = new ReleaseBranch(compUnTillDb);
+		ReleaseBranch rbUBL = new ReleaseBranch(compUBL);
+		ReleaseBranch rbUnTillDb = new ReleaseBranch(compUnTillDb);
 		// check UBL versions
 		assertEquals(env.getUblVer().toNextMinor(), dbUBL.getVersion());
-		assertEquals(env.getUblVer().toRelease().toNextPatch(), crbUBL.getHeadVersion());
+		assertEquals(env.getUblVer().toRelease().toNextPatch(), rbUBL.getVersion());
 
 		// check unTillDb versions
 		assertEquals(env.getUnTillDbVer().toNextMinor(), dbUnTillDb.getVersion());
-		assertEquals(env.getUnTillDbVer().toRelease().toNextPatch(), crbUnTillDb.getHeadVersion());
+		assertEquals(env.getUnTillDbVer().toRelease().toNextPatch(), rbUnTillDb.getVersion());
 
 		// check UBL mDeps. Should contain unTillDb version minor-1 relative to current dev branch version
-		List<Component> ublReleaseMDeps = crbUBL.getMDeps();
+		List<Component> ublReleaseMDeps = rbUBL.getMDeps();
 		assertTrue(ublReleaseMDeps.size() == 1);
 		assertEquals(compUnTillDb.getName(), ublReleaseMDeps.get(0).getName());
 		assertEquals(dbUnTillDb.getVersion().toPreviousMinor().toRelease(), ublReleaseMDeps.get(0).getVersion());
@@ -134,38 +134,38 @@ public class WorkflowTestBase {
 		assertTrue(tags.size() == 1);
 		VCSTag tag = tags.get(0);
 		assertEquals(dbUBL.getVersion().toPreviousMinor().toReleaseString(), tag.getTagName());
-		List<VCSCommit> commits = env.getUblVCS().getCommitsRange(crbUBL.getName(), null, WalkDirection.DESC, 2);
+		List<VCSCommit> commits = env.getUblVCS().getCommitsRange(rbUBL.getName(), null, WalkDirection.DESC, 2);
 		assertEquals(commits.get(1), tag.getRelatedCommit());
 	}
 
 
 	public void checkUBLForked() {
-		ReleaseBranch crbUBL = new ReleaseBranch(compUBL);
+		ReleaseBranch rbUBL = new ReleaseBranch(compUBL);
 		// check branches
-		assertTrue(env.getUblVCS().getBranches("").contains(crbUBL.getName()));
+		assertTrue(env.getUblVCS().getBranches("").contains(rbUBL.getName()));
 
 		// check versions
 		Version verTrunk = dbUBL.getVersion();
-		Version verRelease = crbUBL.getHeadVersion();
+		Version verRelease = rbUBL.getVersion();
 		assertEquals(env.getUblVer().toNextMinor(),verTrunk);
 		assertEquals(env.getUblVer().toRelease(), verRelease);
 
 		// check mDeps
-		List<Component> ublReleaseMDeps = crbUBL.getMDeps();
+		List<Component> ublReleaseMDeps = rbUBL.getMDeps();
 		assertTrue(ublReleaseMDeps.size() == 1);
 		assertEquals(compUnTillDb.getName(), ublReleaseMDeps.get(0).getName());
 		assertEquals(dbUnTillDb.getVersion().toPreviousMinor().toRelease(), ublReleaseMDeps.get(0).getVersion());
 	}
 
 	public void checkUnTillDbForked() {
-		ReleaseBranch newUnTillDbCRB = new ReleaseBranch(compUnTillDb);
+		ReleaseBranch newUnTillDbrb = new ReleaseBranch(compUnTillDb);
 
 		// check branches
-		assertTrue(env.getUnTillDbVCS().getBranches("").contains(newUnTillDbCRB.getName()));
+		assertTrue(env.getUnTillDbVCS().getBranches("").contains(newUnTillDbrb.getName()));
 
 		// check versions.
 		Version verTrunk = dbUnTillDb.getVersion();
-		Version verRelease = newUnTillDbCRB.getHeadVersion();
+		Version verRelease = newUnTillDbrb.getVersion();
 		assertEquals(env.getUnTillDbVer().toNextMinor(), verTrunk);
 		assertEquals(env.getUnTillDbVer().toRelease(), verRelease);
 	}
@@ -174,19 +174,19 @@ public class WorkflowTestBase {
 		checkUnTillDbForked();
 		checkUBLForked();
 
-		ReleaseBranch crbUnTill = new ReleaseBranch(compUnTill);
+		ReleaseBranch rbUnTill = new ReleaseBranch(compUnTill);
 
 		// check branches
-		assertTrue(env.getUnTillVCS().getBranches("").contains(crbUnTill.getName()));
+		assertTrue(env.getUnTillVCS().getBranches("").contains(rbUnTill.getName()));
 
 		// check versions
 		Version verTrunk = dbUnTill.getVersion();
-		Version verRelease = crbUnTill.getHeadVersion();
+		Version verRelease = rbUnTill.getVersion();
 		assertEquals(env.getUnTillVer().toNextMinor(), verTrunk);
 		assertEquals(env.getUnTillVer().toRelease(), verRelease);
 
 		// check mDeps
-		List<Component> unTillReleaseMDeps = crbUnTill.getMDeps();
+		List<Component> unTillReleaseMDeps = rbUnTill.getMDeps();
 		assertTrue(unTillReleaseMDeps.size() == 2);
 		for (Component unTillReleaseMDep : unTillReleaseMDeps) {
 			if (unTillReleaseMDep.getName().equals(UBL)) {

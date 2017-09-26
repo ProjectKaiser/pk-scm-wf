@@ -9,8 +9,8 @@ public class ActionNone extends ActionAbstract {
 	
 	private final String reason;
 	
-	public ActionNone(ReleaseBranch crb, List<IAction> childActions, String reason) {
-		super(crb.getComponent(), childActions);
+	public ActionNone(ReleaseBranch rb, List<IAction> childActions, String reason) {
+		super(rb.getComponent(), childActions);
 		this.reason = reason;
 	}
 

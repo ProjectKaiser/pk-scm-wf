@@ -153,8 +153,8 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		assertNotNull(TestBuilder.getBuilders().get(UNTILLDB));
 		
 		// check versions
-		ReleaseBranch crbUnTillDb = new ReleaseBranch(compUnTillDb);
-		Version verRelease = crbUnTillDb.getHeadVersion();
+		ReleaseBranch rbUnTillDb = new ReleaseBranch(compUnTillDb);
+		Version verRelease = rbUnTillDb.getVersion();
 		assertEquals(env.getUnTillDbVer().toNextPatch().toReleaseString(), verRelease.toString());
 		
 		// check tags
@@ -162,7 +162,7 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		assertTrue(tags.size() == 1);
 		VCSTag tag = tags.get(0);
 		assertEquals(env.getUnTillDbVer().toReleaseString(), tag.getTagName());
-		List<VCSCommit> commits = env.getUnTillDbVCS().getCommitsRange(crbUnTillDb.getName(), null, WalkDirection.DESC, 2);
+		List<VCSCommit> commits = env.getUnTillDbVCS().getCommitsRange(rbUnTillDb.getName(), null, WalkDirection.DESC, 2);
 		assertEquals(commits.get(1), tag.getRelatedCommit());
 	}
 	
@@ -178,13 +178,13 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		}
 		checkUnTillDbForked();
 
-		ReleaseBranch crbUBL = new ReleaseBranch(compUBL);
-		ReleaseBranch crbUnTillDb = new ReleaseBranch(compUnTillDb);
-		ReleaseBranch crbUnTill = new ReleaseBranch(compUnTill);
+		ReleaseBranch rbUBL = new ReleaseBranch(compUBL);
+		ReleaseBranch rbUnTillDb = new ReleaseBranch(compUnTillDb);
+		ReleaseBranch rbUnTill = new ReleaseBranch(compUnTill);
 
-		assertFalse(env.getUnTillVCS().getBranches("").contains(crbUnTill.getName()));
-		assertTrue(env.getUnTillDbVCS().getBranches("").contains(crbUnTillDb.getName()));
-		assertFalse(env.getUblVCS().getBranches("").contains(crbUBL.getName()));
+		assertFalse(env.getUnTillVCS().getBranches("").contains(rbUnTill.getName()));
+		assertTrue(env.getUnTillDbVCS().getBranches("").contains(rbUnTillDb.getName()));
+		assertFalse(env.getUblVCS().getBranches("").contains(rbUBL.getName()));
 		
 		// fork unTill. unTillDb build must be skipped
 		// simulate UBL and unTill BRANCHED dev branch status
@@ -228,11 +228,11 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		
 		//check desired release version is selected
 		Component comp = new Component(UNTILLDB + ":2.59.1");
-		ReleaseBranch crb = new ReleaseBranch(comp);
-		assertEquals(dbUnTillDb.getVersion().toPreviousMinor().toPreviousMinor().toRelease(), crb.getVersion());
+		ReleaseBranch rb = new ReleaseBranch(comp);
+		assertEquals(dbUnTillDb.getVersion().toPreviousMinor().toPreviousMinor().toRelease(), rb.getVersion());
 		
 		// add feature for 2.59.2
-		env.generateFeatureCommit(env.getUnTillDbVCS(), crb.getName(), "2.59.2 feature added");
+		env.generateFeatureCommit(env.getUnTillDbVCS(), rb.getName(), "2.59.2 feature added");
 		
 		// build new unTIllDb patch
 		action = releaser.getActionTree(comp);

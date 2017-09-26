@@ -1,20 +1,20 @@
 package org.scm4j.releaser;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.ListIterator;
-
 import org.scm4j.commons.Coords;
 import org.scm4j.releaser.actions.ActionKind;
 import org.scm4j.releaser.actions.ActionNone;
 import org.scm4j.releaser.actions.IAction;
-import org.scm4j.releaser.branch.ReleaseBranch;
 import org.scm4j.releaser.branch.DevelopBranch;
+import org.scm4j.releaser.branch.ReleaseBranch;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.TagDesc;
 import org.scm4j.releaser.scmactions.SCMActionBuild;
 import org.scm4j.releaser.scmactions.SCMActionFork;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.ListIterator;
 
 public class SCMReleaser {
 
@@ -38,12 +38,12 @@ public class SCMReleaser {
 	public IAction getActionTree(Component comp, ActionKind actionKind, boolean isPatch) {
 		List<IAction> childActions = new ArrayList<>();
 		List<Component> mDeps;
-		ReleaseBranch crb;
+		ReleaseBranch rb;
 		if (isPatch) {
-			crb = new ReleaseBranch(comp, comp.getCoords().getVersion());
-			mDeps = crb.getMDeps();
+			rb = new ReleaseBranch(comp, comp.getCoords().getVersion());
+			mDeps = rb.getMDeps();
 		} else {
-			crb = new ReleaseBranch(comp);
+			rb = new ReleaseBranch(comp);
 			mDeps = new DevelopBranch(comp).getMDeps();
 		}
 
@@ -51,40 +51,40 @@ public class SCMReleaser {
 			childActions.add(getActionTree(mDep, actionKind, isPatch));
 		}
 
-		Build mb = new Build(crb);
+		Build mb = new Build(rb);
 		BuildStatus mbs = mb.getStatus();
 		switch (mbs) {
 		case FORK:
 		case FREEZE:
 		case ACTUALIZE_PATCHES:
-			return getForkOrSkipAction(crb, childActions, mbs, actionKind);
+			return getForkOrSkipAction(rb, childActions, mbs, actionKind);
 		case BUILD:
-			return getBuildOrSkipAction(crb, childActions, mbs, actionKind);
+			return getBuildOrSkipAction(rb, childActions, mbs, actionKind);
 		case NONE:
-			return new ActionNone(crb, childActions, null);
+			return new ActionNone(rb, childActions, null);
 		case IGNORED:
-			return new ActionNone(crb, childActions, "develop branch is IGONRED");
+			return new ActionNone(rb, childActions, "develop branch is IGONRED");
 		default:
 			throw new IllegalArgumentException("unsupported minor build status: " + mbs);
 		}
 	}
 
-	private IAction getBuildOrSkipAction(ReleaseBranch crb, List<IAction> childActions, BuildStatus mbs,
+	private IAction getBuildOrSkipAction(ReleaseBranch rb, List<IAction> childActions, BuildStatus mbs,
 			ActionKind actionKind) {
 		if (actionKind == ActionKind.FORK) {
-			return new ActionNone(crb, childActions, "nothing to build");
+			return new ActionNone(rb, childActions, "nothing to build");
 		}
-		skipAllForks(crb, childActions);
-		return new SCMActionBuild(crb, childActions, mbs);
+		skipAllForks(rb, childActions);
+		return new SCMActionBuild(rb, childActions, mbs);
 	}
 
-	private IAction getForkOrSkipAction(ReleaseBranch crb, List<IAction> childActions, BuildStatus mbs,
+	private IAction getForkOrSkipAction(ReleaseBranch rb, List<IAction> childActions, BuildStatus mbs,
 			ActionKind actionKind) {
 		if (actionKind == ActionKind.BUILD) {
-			return new ActionNone(crb, childActions, "nothing to fork");
+			return new ActionNone(rb, childActions, "nothing to fork");
 		}
-		skipAllBuilds(crb, childActions);
-		return new SCMActionFork(crb, childActions, mbs);
+		skipAllBuilds(rb, childActions);
+		return new SCMActionFork(rb, childActions, mbs);
 	}
 
 	public static TagDesc getTagDesc(String verStr) {
@@ -92,26 +92,26 @@ public class SCMReleaser {
 		return new TagDesc(verStr, tagMessage);
 	}
 	
-	private void skipAllForks(ReleaseBranch crb, List<IAction> childActions) {
+	private void skipAllForks(ReleaseBranch rb, List<IAction> childActions) {
 		ListIterator<IAction> li = childActions.listIterator();
 		IAction action;
 		while (li.hasNext()) {
 			action = li.next();
-			skipAllForks(crb, action.getChildActions());
+			skipAllForks(rb, action.getChildActions());
 			if (action instanceof SCMActionFork) {
-				li.set(new ActionNone(crb, action.getChildActions(), "fork skipped because not all parent components built"));
+				li.set(new ActionNone(rb, action.getChildActions(), "fork skipped because not all parent components built"));
 			}
 		}
 	}
 
-	private void skipAllBuilds(ReleaseBranch crb, List<IAction> childActions) {
+	private void skipAllBuilds(ReleaseBranch rb, List<IAction> childActions) {
 		ListIterator<IAction> li = childActions.listIterator();
 		IAction action;
 		while (li.hasNext()) {
 			action = li.next();
-			skipAllBuilds(crb, action.getChildActions());
+			skipAllBuilds(rb, action.getChildActions());
 			if (action instanceof SCMActionBuild) {
-				li.set(new ActionNone(crb, action.getChildActions(), ((SCMActionBuild) action).getTargetVersion() + 
+				li.set(new ActionNone(rb, action.getChildActions(), ((SCMActionBuild) action).getVersion() +
 						" build skipped because not all parent components forked"));
 			}
 		}
