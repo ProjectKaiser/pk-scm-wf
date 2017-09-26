@@ -1,12 +1,12 @@
 package org.scm4j.releaser;
+
 import org.junit.Test;
 import org.scm4j.commons.Version;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.commons.progress.ProgressConsole;
 import org.scm4j.releaser.actions.ActionNone;
 import org.scm4j.releaser.actions.IAction;
-import org.scm4j.releaser.branch.ReleaseBranch;
-import org.scm4j.releaser.branch.ReleaseBranchStatus;
+import org.scm4j.releaser.branch.CurrentReleaseBranch;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.MDepsFile;
 import org.scm4j.releaser.scmactions.ReleaseReason;
@@ -47,21 +47,21 @@ public class WorkflowForkTest extends WorkflowTestBase {
 			action.execute(progress);
 		}
 
-		ReleaseBranch rbUnTill = new ReleaseBranch(compUnTill);
+		CurrentReleaseBranch crbUnTill = new CurrentReleaseBranch(compUnTill);
 		// check branches
-		assertTrue(env.getUnTillVCS().getBranches("").contains(rbUnTill.getName()));
-		assertFalse(env.getUnTillDbVCS().getBranches("").contains(new ReleaseBranch(compUnTillDb).getName()));
-		assertFalse(env.getUblVCS().getBranches("").contains(new ReleaseBranch(compUBL).getName()));
+		assertTrue(env.getUnTillVCS().getBranches("").contains(crbUnTill.getName()));
+		assertFalse(env.getUnTillDbVCS().getBranches("").contains(new CurrentReleaseBranch(compUnTillDb).getName()));
+		assertFalse(env.getUblVCS().getBranches("").contains(new CurrentReleaseBranch(compUBL).getName()));
 
 		// check versions
 		Version verTrunk = dbUnTill.getVersion();
-		ReleaseBranch newUnTillRB = new ReleaseBranch(compUnTill);
-		Version verRelease = newUnTillRB.getHeadVersion();
+		CurrentReleaseBranch newUnTillCRB = new CurrentReleaseBranch(compUnTill);
+		Version verRelease = newUnTillCRB.getHeadVersion();
 		assertEquals(env.getUnTillVer().toNextMinor(), verTrunk);
 		assertEquals(env.getUnTillVer().toRelease(), verRelease);
 
 		// check mDeps. Should contain versions from its current dev branches
-		List<Component> unTillReleaseMDeps = rbUnTill.getMDeps();
+		List<Component> unTillReleaseMDeps = crbUnTill.getMDeps();
 		assertTrue(unTillReleaseMDeps.size() == 2);
 		for (Component unTillReleaseMDep : unTillReleaseMDeps) {
 			if (unTillReleaseMDep.getName().equals(UBL)) {
@@ -98,8 +98,6 @@ public class WorkflowForkTest extends WorkflowTestBase {
 		Expectations exp = new Expectations();
 		exp.put(UNTILLDB, ActionNone.class);
 		exp.put(UBL, SCMActionFork.class);
-		exp.put(UBL, "fromstatus", ReleaseBranchStatus.MISSING);
-		exp.put(UBL, "tostatus", ReleaseBranchStatus.MDEPS_ACTUAL);
 		checkChildActionsTypes(action, exp);
 		
 		// build UBL
@@ -118,11 +116,7 @@ public class WorkflowForkTest extends WorkflowTestBase {
 		IAction action = releaser.getActionTree(UNTILL);
 		Expectations exp = new Expectations();
 		exp.put(UNTILL, SCMActionFork.class);
-		exp.put(UNTILL, "fromstatus", ReleaseBranchStatus.MISSING);
-		exp.put(UNTILL, "tostatus", ReleaseBranchStatus.MDEPS_ACTUAL);
 		exp.put(UBL, SCMActionFork.class);
-		exp.put(UBL, "fromstatus", ReleaseBranchStatus.MISSING);
-		exp.put(UBL, "tostatus", ReleaseBranchStatus.MDEPS_ACTUAL);
 		exp.put(UNTILLDB, ActionNone.class);
 		checkChildActionsTypes(action, exp);
 		
@@ -130,33 +124,33 @@ public class WorkflowForkTest extends WorkflowTestBase {
 			action.execute(progress);
 		}
 
-		ReleaseBranch rbUBL = new ReleaseBranch(compUBL);
-		ReleaseBranch rbUnTillDb = new ReleaseBranch(compUnTillDb);
-		ReleaseBranch rbUnTill = new ReleaseBranch(compUnTill);
+		CurrentReleaseBranch crbUBL = new CurrentReleaseBranch(compUBL);
+		CurrentReleaseBranch crbUnTillDb = new CurrentReleaseBranch(compUnTillDb);
+		CurrentReleaseBranch crbUnTill = new CurrentReleaseBranch(compUnTill);
 
-		assertTrue(env.getUnTillVCS().getBranches("").contains(rbUnTill.getName()));
-		assertFalse(env.getUnTillDbVCS().getBranches("").contains(rbUnTillDb.getName()));
-		assertTrue(env.getUblVCS().getBranches("").contains(rbUBL.getName()));
+		assertTrue(env.getUnTillVCS().getBranches("").contains(crbUnTill.getName()));
+		assertFalse(env.getUnTillDbVCS().getBranches("").contains(crbUnTillDb.getName()));
+		assertTrue(env.getUblVCS().getBranches("").contains(crbUBL.getName()));
 		
 		// check UBL versions
 		assertEquals(env.getUblVer().toNextMinor(), dbUBL.getVersion());
-		assertEquals(env.getUblVer().toRelease(), rbUBL.getHeadVersion());
+		assertEquals(env.getUblVer().toRelease(), crbUBL.getHeadVersion());
 		
 		// check unTillDb versions
 		assertEquals(env.getUnTillDbVer(), dbUnTillDb.getVersion());
 		
 		// check unTill versions
 		assertEquals(env.getUnTillVer().toNextMinor(), dbUnTill.getVersion());
-		assertEquals(env.getUnTillVer().toRelease(), rbUnTill.getHeadVersion());
+		assertEquals(env.getUnTillVer().toRelease(), crbUnTill.getHeadVersion());
 		
 		// check UBL mDeps
-		List<Component> ublReleaseMDeps = rbUBL.getMDeps();
+		List<Component> ublReleaseMDeps = crbUBL.getMDeps();
 		assertTrue(ublReleaseMDeps.size() == 1);
 		assertEquals(compUnTillDb.getName(), ublReleaseMDeps.get(0).getName());
 		assertEquals(dbUnTillDb.getVersion().toRelease(), ublReleaseMDeps.get(0).getVersion());
 		
 		// check unTill mDeps
-		List<Component> unTillReleaseMDeps = rbUnTill.getMDeps();
+		List<Component> unTillReleaseMDeps = crbUnTill.getMDeps();
 		assertTrue(unTillReleaseMDeps.size() == 2);
 		for (Component unTillReleaseMDep : unTillReleaseMDeps) {
 			if (unTillReleaseMDep.getName().equals(UBL)) {
@@ -178,14 +172,8 @@ public class WorkflowForkTest extends WorkflowTestBase {
 		IAction action = releaser.getActionTree(UNTILL);
 		Expectations exp = new Expectations();
 		exp.put(UNTILL, SCMActionFork.class);
-		exp.put(UNTILL, "fromstatus", ReleaseBranchStatus.MISSING);
-		exp.put(UNTILL, "tostatus", ReleaseBranchStatus.MDEPS_ACTUAL);
 		exp.put(UBL, SCMActionFork.class);
-		exp.put(UBL, "fromstatus", ReleaseBranchStatus.MISSING);
-		exp.put(UBL, "tostatus", ReleaseBranchStatus.MDEPS_ACTUAL);
 		exp.put(UNTILLDB, SCMActionFork.class);
-		exp.put(UNTILLDB, "fromstatus", ReleaseBranchStatus.MISSING);
-		exp.put(UNTILLDB, "tostatus", ReleaseBranchStatus.MDEPS_ACTUAL);
 		checkChildActionsTypes(action, exp);
 		
 		try (IProgress progress = new ProgressConsole(action.toString(), ">>> ", "<<< ")) {
@@ -212,19 +200,15 @@ public class WorkflowForkTest extends WorkflowTestBase {
 		checkUnTillBuilt();
 
 		// add feature to existing unTIllDb release. Next unTillDb patch should be released then
-		ReleaseBranch rbUnTillDb = new ReleaseBranch(compUnTillDb);
-		env.generateFeatureCommit(env.getUnTillDbVCS(), rbUnTillDb.getName(), "patch feature added");
+		CurrentReleaseBranch crbUnTillDb = new CurrentReleaseBranch(compUnTillDb);
+		env.generateFeatureCommit(env.getUnTillDbVCS(), crbUnTillDb.getName(), "patch feature added");
 
 		// Existing unTill and UBL release branches should actualize its mdeps first
 		action = releaser.getActionTree(compUnTill);
 		Expectations exp = new Expectations();
 		exp.put(UNTILLDB, ActionNone.class);
 		exp.put(UNTILL, SCMActionFork.class);
-		exp.put(UNTILL, "fromstatus", ReleaseBranchStatus.MDEPS_FROZEN);
-		exp.put(UNTILL, "tostatus", ReleaseBranchStatus.MDEPS_ACTUAL);
 		exp.put(UBL, SCMActionFork.class);
-		exp.put(UBL, "fromstatus", ReleaseBranchStatus.MDEPS_FROZEN);
-		exp.put(UBL, "tostatus", ReleaseBranchStatus.MDEPS_ACTUAL);
 		checkChildActionsTypes(action, exp);
 		// actualize unTill and UBL mdeps
 		try (IProgress progress = new ProgressConsole(action.getName(), ">>> ", "<<< ")) {
@@ -232,8 +216,8 @@ public class WorkflowForkTest extends WorkflowTestBase {
 		}
 
 		// check unTill uses new untillDb and UBL versions in existing unTill release branch.
-		ReleaseBranch rbUnTill = new ReleaseBranch(compUnTill);
-		List<Component> mdeps = rbUnTill.getMDeps();
+		CurrentReleaseBranch crbUnTill = new CurrentReleaseBranch(compUnTill);
+		List<Component> mdeps = crbUnTill.getMDeps();
 		for (Component mdep : mdeps) {
 			if (mdep.getName().equals(UBL)) {
 				assertEquals(dbUBL.getVersion().toPreviousMinor().toNextPatch().toRelease(), mdep.getVersion());
@@ -259,8 +243,8 @@ public class WorkflowForkTest extends WorkflowTestBase {
 		}
 
 		// check unTill uses new untillDb and UBL patches in existing unTill release branch.
-		rbUnTill = new ReleaseBranch(compUnTill);
-		mdeps = rbUnTill.getMDeps();
+		crbUnTill = new CurrentReleaseBranch(compUnTill);
+		mdeps = crbUnTill.getMDeps();
 		for (Component mdep : mdeps) {
 			if (mdep.getName().equals(UBL)) {
 				assertEquals(dbUBL.getVersion().toPreviousMinor().toNextPatch().toRelease(), mdep.getVersion());
@@ -290,16 +274,16 @@ public class WorkflowForkTest extends WorkflowTestBase {
 		
 		// check mDeps versions. All of them should be kept unchanged
 		// UBL mDeps
-		ReleaseBranch rbUBL = new ReleaseBranch(compUBL);
-		List<Component> ublReleaseMDeps = rbUBL.getMDeps();
+		CurrentReleaseBranch crbUBL = new CurrentReleaseBranch(compUBL);
+		List<Component> ublReleaseMDeps = crbUBL.getMDeps();
 		assertTrue(ublReleaseMDeps.size() == 1);
 		assertEquals(compUnTillDb.getName(), ublReleaseMDeps.get(0).getName());
 		assertEquals(env.getUnTillDbVer().toRelease(), ublReleaseMDeps.get(0).getVersion());
 				
 		
 		// unTill mDeps
-		ReleaseBranch rbUnTill = new ReleaseBranch(compUnTill);
-		List<Component> unTillReleaseMDeps = rbUnTill.getMDeps();
+		CurrentReleaseBranch crbUnTill = new CurrentReleaseBranch(compUnTill);
+		List<Component> unTillReleaseMDeps = crbUnTill.getMDeps();
 		assertTrue(unTillReleaseMDeps.size() == 2);
 		for (Component mDep : unTillReleaseMDeps) {
 			if (mDep.getName().equals(UBL)) {
@@ -330,16 +314,16 @@ public class WorkflowForkTest extends WorkflowTestBase {
 		
 		// check mDeps versions. All of them should be replaced with new ones with no snapshot
 		// UBL mDeps
-		ReleaseBranch rbUBL = new ReleaseBranch(compUBL);
-		List<Component> ublReleaseMDeps = rbUBL.getMDeps();
+		CurrentReleaseBranch crbUBL = new CurrentReleaseBranch(compUBL);
+		List<Component> ublReleaseMDeps = crbUBL.getMDeps();
 		assertTrue(ublReleaseMDeps.size() == 1);
 		assertEquals(compUnTillDb.getName(), ublReleaseMDeps.get(0).getName());
 		assertEquals(dbUnTillDb.getVersion().toPreviousMinor().toRelease(), ublReleaseMDeps.get(0).getVersion());
 				
 		
 		// unTill mDeps
-		ReleaseBranch rbUnTill = new ReleaseBranch(compUnTill);
-		List<Component> unTillReleaseMDeps = rbUnTill.getMDeps();
+		CurrentReleaseBranch crbUnTill = new CurrentReleaseBranch(compUnTill);
+		List<Component> unTillReleaseMDeps = crbUnTill.getMDeps();
 		assertTrue(unTillReleaseMDeps.size() == 2);
 		for (Component mDep : unTillReleaseMDeps) {
 			if (mDep.getName().equals(UBL)) {

@@ -6,8 +6,7 @@ import org.scm4j.commons.progress.IProgress;
 import org.scm4j.commons.progress.ProgressConsole;
 import org.scm4j.releaser.actions.ActionNone;
 import org.scm4j.releaser.actions.IAction;
-import org.scm4j.releaser.branch.ReleaseBranch;
-import org.scm4j.releaser.branch.ReleaseBranchStatus;
+import org.scm4j.releaser.branch.CurrentReleaseBranch;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.scmactions.ReleaseReason;
 import org.scm4j.releaser.scmactions.SCMActionBuild;
@@ -61,8 +60,6 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		action = releaser.getActionTree(UBL);
 		Expectations exp = new Expectations();
 		exp.put(UBL, SCMActionFork.class);
-		exp.put(UBL, "fromstatus", ReleaseBranchStatus.MISSING);
-		exp.put(UBL, "tostatus", ReleaseBranchStatus.MDEPS_ACTUAL);
 		exp.put(UNTILLDB, ActionNone.class);
 		checkChildActionsTypes(action, exp);
 		try (IProgress progress = new ProgressConsole(action.toString(), ">>> ", "<<< ")) {
@@ -92,8 +89,6 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		IAction action = releaser.getActionTree(UNTILLDB);
 		Expectations exp = new Expectations();
 		exp.put(UNTILLDB, SCMActionFork.class);
-		exp.put(UNTILLDB, "fromstatus", ReleaseBranchStatus.MISSING);
-		exp.put(UNTILLDB, "tostatus", ReleaseBranchStatus.MDEPS_ACTUAL);
 		checkChildActionsTypes(action, exp);
 		try (IProgress progress = new ProgressConsole(action.toString(), ">>> ", "<<< ")) {
 			action.execute(progress);
@@ -105,8 +100,6 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		action = releaser.getActionTree(UBL);
 		exp = new Expectations();
 		exp.put(UBL, SCMActionFork.class);
-		exp.put(UBL, "fromstatus", ReleaseBranchStatus.MISSING);
-		exp.put(UBL, "tostatus", ReleaseBranchStatus.MDEPS_ACTUAL);
 		exp.put(UNTILLDB, ActionNone.class);
 		checkChildActionsTypes(action, exp);
 		try (IProgress progress = new ProgressConsole(action.toString(), ">>> ", "<<< ")) {
@@ -160,8 +153,8 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		assertNotNull(TestBuilder.getBuilders().get(UNTILLDB));
 		
 		// check versions
-		ReleaseBranch rbUnTillDb = new ReleaseBranch(compUnTillDb);
-		Version verRelease = rbUnTillDb.getHeadVersion();
+		CurrentReleaseBranch crbUnTillDb = new CurrentReleaseBranch(compUnTillDb);
+		Version verRelease = crbUnTillDb.getHeadVersion();
 		assertEquals(env.getUnTillDbVer().toNextPatch().toReleaseString(), verRelease.toString());
 		
 		// check tags
@@ -169,7 +162,7 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		assertTrue(tags.size() == 1);
 		VCSTag tag = tags.get(0);
 		assertEquals(env.getUnTillDbVer().toReleaseString(), tag.getTagName());
-		List<VCSCommit> commits = env.getUnTillDbVCS().getCommitsRange(rbUnTillDb.getName(), null, WalkDirection.DESC, 2);
+		List<VCSCommit> commits = env.getUnTillDbVCS().getCommitsRange(crbUnTillDb.getName(), null, WalkDirection.DESC, 2);
 		assertEquals(commits.get(1), tag.getRelatedCommit());
 	}
 	
@@ -185,13 +178,13 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		}
 		checkUnTillDbForked();
 
-		ReleaseBranch rbUBL = new ReleaseBranch(compUBL);
-		ReleaseBranch rbUnTillDb = new ReleaseBranch(compUnTillDb);
-		ReleaseBranch rbUnTill = new ReleaseBranch(compUnTill);
+		CurrentReleaseBranch crbUBL = new CurrentReleaseBranch(compUBL);
+		CurrentReleaseBranch crbUnTillDb = new CurrentReleaseBranch(compUnTillDb);
+		CurrentReleaseBranch crbUnTill = new CurrentReleaseBranch(compUnTill);
 
-		assertFalse(env.getUnTillVCS().getBranches("").contains(rbUnTill.getName()));
-		assertTrue(env.getUnTillDbVCS().getBranches("").contains(rbUnTillDb.getName()));
-		assertFalse(env.getUblVCS().getBranches("").contains(rbUBL.getName()));
+		assertFalse(env.getUnTillVCS().getBranches("").contains(crbUnTill.getName()));
+		assertTrue(env.getUnTillDbVCS().getBranches("").contains(crbUnTillDb.getName()));
+		assertFalse(env.getUblVCS().getBranches("").contains(crbUBL.getName()));
 		
 		// fork unTill. unTillDb build must be skipped
 		// simulate UBL and unTill BRANCHED dev branch status
@@ -201,11 +194,7 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		Expectations exp = new Expectations();
 		exp.put(UNTILLDB, ActionNone.class);
 		exp.put(UNTILL, SCMActionFork.class);
-		exp.put(UNTILL, "fromstatus", ReleaseBranchStatus.MISSING);
-		exp.put(UNTILL, "tostatus", ReleaseBranchStatus.MDEPS_ACTUAL);
 		exp.put(UBL, SCMActionFork.class);
-		exp.put(UBL, "fromstatus", ReleaseBranchStatus.MISSING);
-		exp.put(UBL, "tostatus", ReleaseBranchStatus.MDEPS_ACTUAL);
 		checkChildActionsTypes(action, exp);
 		try (IProgress progress = new ProgressConsole(action.toString(), ">>> ", "<<< ")) {
 			action.execute(progress);
@@ -235,19 +224,19 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		action = releaser.getActionTree(UNTILLDB);
 		action.execute(new NullProgress());
 		
-		assertEquals(env.getUnTillDbVer().toNextMinor().toRelease(), new ReleaseBranch(compUnTillDb).getVersion());
+		assertEquals(env.getUnTillDbVer().toNextMinor().toRelease(), new CurrentReleaseBranch(compUnTillDb).getVersion());
 		
 		//check desired release version is selected
 		Component comp = new Component(UNTILLDB + ":2.59.1");
-		ReleaseBranch rb = new ReleaseBranch(comp);
-		assertEquals(dbUnTillDb.getVersion().toPreviousMinor().toPreviousMinor().toRelease(), rb.getVersion());
+		CurrentReleaseBranch crb = new CurrentReleaseBranch(comp);
+		assertEquals(dbUnTillDb.getVersion().toPreviousMinor().toPreviousMinor().toRelease(), crb.getVersion());
 		
 		// add feature for 2.59.2
-		env.generateFeatureCommit(env.getUnTillDbVCS(), rb.getName(), "2.59.2 feature added");
+		env.generateFeatureCommit(env.getUnTillDbVCS(), crb.getName(), "2.59.2 feature added");
 		
 		// build new unTIllDb patch
 		action = releaser.getActionTree(comp);
 		action.execute(new NullProgress());
-		assertEquals(dbUnTillDb.getVersion().toPreviousMinor().toPreviousMinor().toNextPatch().toRelease(), new ReleaseBranch(comp).getVersion());
+		assertEquals(dbUnTillDb.getVersion().toPreviousMinor().toPreviousMinor().toNextPatch().toRelease(), new CurrentReleaseBranch(comp).getVersion());
 	}
 }

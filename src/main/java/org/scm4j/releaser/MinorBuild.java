@@ -23,7 +23,7 @@ public class MinorBuild {
 	}
 
 	public MinorBuildStatus getStatus() {
-		if (isNeedToFork(crb)) {
+		if (isNeedToFork()) {
 			return MinorBuildStatus.FORK;
 		}
 
@@ -64,7 +64,7 @@ public class MinorBuild {
 		return true;
 	}
 
-	private boolean isNeedToFork(CurrentReleaseBranch crb) {
+	public boolean isNeedToFork() {
 		if (!crb.exists()) {
 			return true;
 		}
@@ -81,8 +81,8 @@ public class MinorBuild {
 
 		List<Component> mDeps = db.getMDeps();
 		for (Component mDep : mDeps) {
-			CurrentReleaseBranch crbMDep = new CurrentReleaseBranch(mDep);
-			if (isNeedToFork(crbMDep)) {
+			MinorBuild mbMDep = new MinorBuild(mDep);
+			if (mbMDep.isNeedToFork()) {
 				return true;
 			}
 		}
@@ -94,10 +94,6 @@ public class MinorBuild {
 		}
 		CurrentReleaseBranch mDepCRB;
 		for (Component mDep : mDeps) {
-			if (mDep.getVersion().isSnapshot()) {
-				return true;
-			}
-
 			mDepCRB = new CurrentReleaseBranch(mDep);
 			if (!mDepCRB.getVersion().equals(mDep.getVersion())) {
 				return true;
