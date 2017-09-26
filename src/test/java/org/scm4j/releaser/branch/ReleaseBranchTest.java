@@ -11,14 +11,14 @@ import org.scm4j.releaser.NullProgress;
 import org.scm4j.releaser.SCMReleaser;
 import org.scm4j.releaser.WorkflowTestBase;
 import org.scm4j.releaser.actions.IAction;
-import org.scm4j.releaser.branch.CurrentReleaseBranch;
+import org.scm4j.releaser.branch.ReleaseBranch;
 import org.scm4j.releaser.conf.Component;
 
-public class CurrentReleaseBranchTest extends WorkflowTestBase {
+public class ReleaseBranchTest extends WorkflowTestBase {
 
 	@Test
 	public void testCreate() {
-		CurrentReleaseBranch crb = new CurrentReleaseBranch(compUnTillDb);
+		ReleaseBranch crb = new ReleaseBranch(compUnTillDb);
 		assertEquals(compUnTillDb, crb.getComponent());
 		assertEquals(compUnTillDb.getVcsRepository().getReleaseBranchPrefix()
 				+ env.getUnTillDbVer().toPreviousMinor().getReleaseNoPatchString(), crb.getName());
@@ -27,7 +27,7 @@ public class CurrentReleaseBranchTest extends WorkflowTestBase {
 
 	@Test
 	public void testExists() throws Exception {
-		CurrentReleaseBranch crb = new CurrentReleaseBranch(compUnTillDb);
+		ReleaseBranch crb = new ReleaseBranch(compUnTillDb);
 		assertFalse(crb.exists());
 
 		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(),
@@ -36,7 +36,7 @@ public class CurrentReleaseBranchTest extends WorkflowTestBase {
 		IAction action = releaser.getActionTree(compUnTillDb);
 		action.execute(new NullProgress());
 
-		crb = new CurrentReleaseBranch(compUnTillDb);
+		crb = new ReleaseBranch(compUnTillDb);
 		assertTrue(crb.exists());
 		assertEquals(compUnTillDb.getVcsRepository().getReleaseBranchPrefix()
 				+ env.getUnTillDbVer().getReleaseNoPatchString(), crb.getName());
@@ -44,7 +44,7 @@ public class CurrentReleaseBranchTest extends WorkflowTestBase {
 
 	@Test
 	public void testGetVersions() {
-		CurrentReleaseBranch crb = new CurrentReleaseBranch(compUnTillDb);
+		ReleaseBranch crb = new ReleaseBranch(compUnTillDb);
 		assertFalse(env.getUnTillDbVer().getPatch().equals("0"));
 		assertEquals(env.getUnTillDbVer().toPreviousMinor().toRelease(), crb.getVersion());
 
@@ -54,7 +54,7 @@ public class CurrentReleaseBranchTest extends WorkflowTestBase {
 		IAction action = releaser.getActionTree(compUnTillDb);
 		action.execute(new NullProgress());
 
-		crb = new CurrentReleaseBranch(compUnTillDb);
+		crb = new ReleaseBranch(compUnTillDb);
 		assertEquals(env.getUnTillDbVer().toRelease(), crb.getVersion());
 		assertEquals(env.getUnTillDbVer().toRelease(), crb.getHeadVersion());
 	}
@@ -66,7 +66,7 @@ public class CurrentReleaseBranchTest extends WorkflowTestBase {
 		IAction action = releaser.getActionTree(compUnTill);
 		action.execute(new NullProgress());
 		
-		CurrentReleaseBranch crb = new CurrentReleaseBranch(compUnTill);
+		ReleaseBranch crb = new ReleaseBranch(compUnTill);
 		List<Component> mDeps = crb.getMDeps();
 		assertTrue(mDeps.size() == 2);
 		assertTrue(mDeps.contains(compUBL.cloneWithDifferentVersion(env.getUblVer().toRelease())));

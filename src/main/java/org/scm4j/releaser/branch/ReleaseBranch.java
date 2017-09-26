@@ -10,7 +10,7 @@ import org.scm4j.vcs.api.exceptions.EVCSFileNotFound;
 import java.util.ArrayList;
 import java.util.List;
 
-public class CurrentReleaseBranch {
+public class ReleaseBranch {
 
 	private final Component comp;
 	private final IVCS vcs;
@@ -25,11 +25,11 @@ public class CurrentReleaseBranch {
 		return name;
 	}
 	
-	public CurrentReleaseBranch(Component comp) {
+	public ReleaseBranch(Component comp) {
 		this(comp, getDevVersion(comp).toPreviousMinor().toRelease());
 	}
 
-	public CurrentReleaseBranch(Component comp, Version exactVersion) {
+	public ReleaseBranch(Component comp, Version exactVersion) {
 		this.comp = comp;
 		vcs = comp.getVCS();
 		version = exactVersion;

@@ -7,7 +7,6 @@ import org.scm4j.vcs.api.IVCS;
 public class Component {
 	private final boolean isProduct;
 	private final Coords coords;
-	private final boolean isServiceRelease;
 
 	public VCSRepository getVcsRepository() {
 		return VCSRepositories.getDefault().getByName(coords.getName());
@@ -16,21 +15,13 @@ public class Component {
 	public Component(String coordsStr) {
 		coords = new Coords(coordsStr);
 		isProduct = false;
-		isServiceRelease = false;
-	}
-	
-	public Component(String coordsStr, boolean isProduct, boolean isServiceRelease) {
-		coords = new Coords(coordsStr);
-		this.isProduct = isProduct;
-		this.isServiceRelease = isServiceRelease;
 	}
 	
 	public Component(String coordsStr, boolean isProduct) {
 		coords = new Coords(coordsStr);
 		this.isProduct = isProduct;
-		isServiceRelease = coords.getVersion().isExact();
 	}
-
+	
 	public IVCS getVCS() {
 		return getVcsRepository().getVcs();
 	}
@@ -45,7 +36,7 @@ public class Component {
 
 	@Override
 	public String toString() {
-		return coords.toString() + (isProduct ? ", PRODUCT" : "") + (isServiceRelease ? ", SERVICE_RELEASE" : "");
+		return coords.toString() + (isProduct ? ", PRODUCT" : "");
 	}
 	
 	public Version getVersion() {
@@ -77,13 +68,5 @@ public class Component {
 
 	public boolean isProduct() {
 		return isProduct;
-	}
-	
-	public boolean isServiceRelease() {
-		return isServiceRelease;
-	}
-	
-	public Component toServiceRelease() {
-		return new Component(coords.toString(), isProduct, true);
 	}
 }

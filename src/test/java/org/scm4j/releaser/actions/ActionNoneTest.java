@@ -3,7 +3,7 @@ package org.scm4j.releaser.actions;
 import org.junit.Test;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.releaser.TestEnvironment;
-import org.scm4j.releaser.branch.CurrentReleaseBranch;
+import org.scm4j.releaser.branch.ReleaseBranch;
 import org.scm4j.releaser.conf.Component;
 
 import java.util.ArrayList;
@@ -26,7 +26,7 @@ public class ActionNoneTest {
 		IAction mockedNestedAction = mock(IAction.class);
 		RuntimeException testException = new RuntimeException(TEST_EXCEPTION);
 		doThrow(testException).when(mockedNestedAction).execute(any(IProgress.class));
-		ActionNone action = new ActionNone(new CurrentReleaseBranch(comp), Collections.singletonList(mockedNestedAction), TEST_REASON);
+		ActionNone action = new ActionNone(new ReleaseBranch(comp), Collections.singletonList(mockedNestedAction), TEST_REASON);
 		IProgress mockedProgress = mock(IProgress.class);
 		try {
 			action.execute(mockedProgress);
@@ -40,14 +40,14 @@ public class ActionNoneTest {
 	@Test
 	public void testReason() {
 		Component comp = new Component(TestEnvironment.PRODUCT_UNTILL);
-		ActionNone action = new ActionNone(new CurrentReleaseBranch(comp), new ArrayList<IAction>(), TEST_REASON);
+		ActionNone action = new ActionNone(new ReleaseBranch(comp), new ArrayList<IAction>(), TEST_REASON);
 		assertEquals(TEST_REASON, action.getReason());
 	}
 	
 	@Test
 	public void testToString() {
 		Component comp = new Component(TestEnvironment.PRODUCT_UNTILL);
-		ActionNone action = new ActionNone(new CurrentReleaseBranch(comp), new ArrayList<IAction>(), TEST_REASON);
+		ActionNone action = new ActionNone(new ReleaseBranch(comp), new ArrayList<IAction>(), TEST_REASON);
 		String toString = action.toString();
 		assertTrue(toString.contains(comp.getCoords().toString()));
 	}

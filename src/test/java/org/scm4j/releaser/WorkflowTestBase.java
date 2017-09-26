@@ -4,7 +4,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.scm4j.commons.Version;
 import org.scm4j.releaser.actions.IAction;
-import org.scm4j.releaser.branch.CurrentReleaseBranch;
+import org.scm4j.releaser.branch.ReleaseBranch;
 import org.scm4j.releaser.branch.DevelopBranch;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.DelayedTagsFile;
@@ -98,9 +98,9 @@ public class WorkflowTestBase {
 		assertNotNull(TestBuilder.getBuilders().get(UNTILLDB));
 
 		// check versions
-		CurrentReleaseBranch crbUnTillDb = new CurrentReleaseBranch(compUnTillDb);
+		ReleaseBranch crbUnTillDb = new ReleaseBranch(compUnTillDb);
 		Version verRelease = crbUnTillDb.getHeadVersion();
-		assertEquals(env.getUnTillDbVer().toNextPatch().toReleaseString(), verRelease.toString());
+		assertEquals(env.getUnTillDbVer().toRelease().toNextPatch(), verRelease);
 
 		// check tags
 		List<VCSTag> tags = env.getUnTillDbVCS().getTags();
@@ -113,15 +113,15 @@ public class WorkflowTestBase {
 
 	public void checkUBLBuilt() {
 		checkUnTillDbBuilt();
-		CurrentReleaseBranch crbUBL = new CurrentReleaseBranch(compUBL);
-		CurrentReleaseBranch crbUnTillDb = new CurrentReleaseBranch(compUnTillDb);
+		ReleaseBranch crbUBL = new ReleaseBranch(compUBL);
+		ReleaseBranch crbUnTillDb = new ReleaseBranch(compUnTillDb);
 		// check UBL versions
 		assertEquals(env.getUblVer().toNextMinor(), dbUBL.getVersion());
-		assertEquals(env.getUblVer().toNextPatch().toRelease(), crbUBL.getHeadVersion());
+		assertEquals(env.getUblVer().toRelease().toNextPatch(), crbUBL.getHeadVersion());
 
 		// check unTillDb versions
 		assertEquals(env.getUnTillDbVer().toNextMinor(), dbUnTillDb.getVersion());
-		assertEquals(env.getUnTillDbVer().toNextPatch().toRelease(), crbUnTillDb.getHeadVersion());
+		assertEquals(env.getUnTillDbVer().toRelease().toNextPatch(), crbUnTillDb.getHeadVersion());
 
 		// check UBL mDeps. Should contain unTillDb version minor-1 relative to current dev branch version
 		List<Component> ublReleaseMDeps = crbUBL.getMDeps();
@@ -140,7 +140,7 @@ public class WorkflowTestBase {
 
 
 	public void checkUBLForked() {
-		CurrentReleaseBranch crbUBL = new CurrentReleaseBranch(compUBL);
+		ReleaseBranch crbUBL = new ReleaseBranch(compUBL);
 		// check branches
 		assertTrue(env.getUblVCS().getBranches("").contains(crbUBL.getName()));
 
@@ -158,7 +158,7 @@ public class WorkflowTestBase {
 	}
 
 	public void checkUnTillDbForked() {
-		CurrentReleaseBranch newUnTillDbCRB = new CurrentReleaseBranch(compUnTillDb);
+		ReleaseBranch newUnTillDbCRB = new ReleaseBranch(compUnTillDb);
 
 		// check branches
 		assertTrue(env.getUnTillDbVCS().getBranches("").contains(newUnTillDbCRB.getName()));
@@ -174,7 +174,7 @@ public class WorkflowTestBase {
 		checkUnTillDbForked();
 		checkUBLForked();
 
-		CurrentReleaseBranch crbUnTill = new CurrentReleaseBranch(compUnTill);
+		ReleaseBranch crbUnTill = new ReleaseBranch(compUnTill);
 
 		// check branches
 		assertTrue(env.getUnTillVCS().getBranches("").contains(crbUnTill.getName()));

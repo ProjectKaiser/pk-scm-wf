@@ -1,9 +1,8 @@
 package org.scm4j.releaser.actions;
 
-import org.scm4j.commons.progress.IProgress;
-import org.scm4j.releaser.conf.Component;
-
 import java.util.List;
+
+import org.scm4j.commons.progress.IProgress;
 
 public interface IAction {
 
@@ -17,8 +16,8 @@ public interface IAction {
 
 	IAction getParent();
 
-	void addProcessedComp(Component comp);
+	void addProcessedUrl(String url);
 	
-	boolean isCompProcessed(Component comp);
+	boolean isUrlProcessed(String url);
 
 }

@@ -1,7 +1,7 @@
 package org.scm4j.releaser.actions;
 
 import org.scm4j.commons.progress.IProgress;
-import org.scm4j.releaser.branch.CurrentReleaseBranch;
+import org.scm4j.releaser.branch.ReleaseBranch;
 
 import java.util.List;
 
@@ -9,7 +9,7 @@ public class ActionNone extends ActionAbstract {
 	
 	private final String reason;
 	
-	public ActionNone(CurrentReleaseBranch crb, List<IAction> childActions, String reason) {
+	public ActionNone(ReleaseBranch crb, List<IAction> childActions, String reason) {
 		super(crb.getComponent(), childActions);
 		this.reason = reason;
 	}

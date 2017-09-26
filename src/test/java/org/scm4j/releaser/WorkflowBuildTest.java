@@ -6,7 +6,7 @@ import org.scm4j.commons.progress.IProgress;
 import org.scm4j.commons.progress.ProgressConsole;
 import org.scm4j.releaser.actions.ActionNone;
 import org.scm4j.releaser.actions.IAction;
-import org.scm4j.releaser.branch.CurrentReleaseBranch;
+import org.scm4j.releaser.branch.ReleaseBranch;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.scmactions.ReleaseReason;
 import org.scm4j.releaser.scmactions.SCMActionBuild;
@@ -153,7 +153,7 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		assertNotNull(TestBuilder.getBuilders().get(UNTILLDB));
 		
 		// check versions
-		CurrentReleaseBranch crbUnTillDb = new CurrentReleaseBranch(compUnTillDb);
+		ReleaseBranch crbUnTillDb = new ReleaseBranch(compUnTillDb);
 		Version verRelease = crbUnTillDb.getHeadVersion();
 		assertEquals(env.getUnTillDbVer().toNextPatch().toReleaseString(), verRelease.toString());
 		
@@ -178,9 +178,9 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		}
 		checkUnTillDbForked();
 
-		CurrentReleaseBranch crbUBL = new CurrentReleaseBranch(compUBL);
-		CurrentReleaseBranch crbUnTillDb = new CurrentReleaseBranch(compUnTillDb);
-		CurrentReleaseBranch crbUnTill = new CurrentReleaseBranch(compUnTill);
+		ReleaseBranch crbUBL = new ReleaseBranch(compUBL);
+		ReleaseBranch crbUnTillDb = new ReleaseBranch(compUnTillDb);
+		ReleaseBranch crbUnTill = new ReleaseBranch(compUnTill);
 
 		assertFalse(env.getUnTillVCS().getBranches("").contains(crbUnTill.getName()));
 		assertTrue(env.getUnTillDbVCS().getBranches("").contains(crbUnTillDb.getName()));
@@ -224,11 +224,11 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		action = releaser.getActionTree(UNTILLDB);
 		action.execute(new NullProgress());
 		
-		assertEquals(env.getUnTillDbVer().toNextMinor().toRelease(), new CurrentReleaseBranch(compUnTillDb).getVersion());
+		assertEquals(env.getUnTillDbVer().toNextMinor().toRelease(), new ReleaseBranch(compUnTillDb).getVersion());
 		
 		//check desired release version is selected
 		Component comp = new Component(UNTILLDB + ":2.59.1");
-		CurrentReleaseBranch crb = new CurrentReleaseBranch(comp);
+		ReleaseBranch crb = new ReleaseBranch(comp);
 		assertEquals(dbUnTillDb.getVersion().toPreviousMinor().toPreviousMinor().toRelease(), crb.getVersion());
 		
 		// add feature for 2.59.2
@@ -237,6 +237,6 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		// build new unTIllDb patch
 		action = releaser.getActionTree(comp);
 		action.execute(new NullProgress());
-		assertEquals(dbUnTillDb.getVersion().toPreviousMinor().toPreviousMinor().toNextPatch().toRelease(), new CurrentReleaseBranch(comp).getVersion());
+		assertEquals(dbUnTillDb.getVersion().toPreviousMinor().toPreviousMinor().toNextPatch().toRelease(), new ReleaseBranch(comp).getVersion());
 	}
 }

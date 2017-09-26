@@ -1,32 +1,35 @@
 package org.scm4j.releaser.scmactions;
 
+import java.io.IOException;
+import java.util.List;
+
 import org.scm4j.commons.Version;
 import org.scm4j.commons.progress.IProgress;
-import org.scm4j.releaser.*;
+import org.scm4j.releaser.LogTag;
+import org.scm4j.releaser.BuildStatus;
+import org.scm4j.releaser.SCMReleaser;
 import org.scm4j.releaser.actions.ActionAbstract;
 import org.scm4j.releaser.actions.IAction;
-import org.scm4j.releaser.branch.CurrentReleaseBranch;
+import org.scm4j.releaser.branch.ReleaseBranch;
 import org.scm4j.releaser.conf.DelayedTagsFile;
 import org.scm4j.releaser.conf.Option;
 import org.scm4j.releaser.conf.Options;
 import org.scm4j.releaser.conf.TagDesc;
 import org.scm4j.releaser.exceptions.EBuilder;
+import org.scm4j.releaser.exceptions.EReleaserException;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.vcs.api.VCSTag;
 import org.scm4j.vcs.api.exceptions.EVCSTagExists;
 import org.scm4j.vcs.api.workingcopy.IVCSLockedWorkingCopy;
 
-import java.io.IOException;
-import java.util.List;
-
 	
 public class SCMActionBuild extends ActionAbstract {
 
 	private final IVCS vcs;
-	private final CurrentReleaseBranch crb;
+	private final ReleaseBranch crb;
 
-	public SCMActionBuild(CurrentReleaseBranch crb, List<IAction> childActions, MinorBuildStatus mbs) {
+	public SCMActionBuild(ReleaseBranch crb, List<IAction> childActions, BuildStatus mbs) {
 		super(crb.getComponent(), childActions);
 		this.crb = crb;
 		vcs = getVCS();
@@ -34,7 +37,7 @@ public class SCMActionBuild extends ActionAbstract {
 
 	@Override
 	public void execute(IProgress progress) {
-		if (isCompProcessed(comp)) {
+		if (isUrlProcessed(comp.getVcsRepository().getUrl())) {
 			progress.reportStatus("already executed");
 			return;
 		}
@@ -56,9 +59,12 @@ public class SCMActionBuild extends ActionAbstract {
 			raisePatchVersion(progress);
 			
 			progress.reportStatus(comp.getName() + " " + crb.getVersion().toString() + " is built in " + crb.getName());
-		} catch (Throwable t) {
-			progress.error("execution error: " + t.toString() + ": " + t.getMessage());
-			throw new RuntimeException(t);
+			addProcessedUrl(comp.getVcsRepository().getUrl());
+		} catch (EReleaserException e) {
+			throw e;
+		} catch (Exception e) {
+			progress.error("execution error: " + e.toString());
+			throw new EReleaserException(e);
 		}
 	}
 
@@ -77,7 +83,7 @@ public class SCMActionBuild extends ActionAbstract {
 			progress.reportStatus("build commit " + headCommit.getRevision() + " is saved for delayed tagging");
 		} else {
 			String releaseBranchName = crb.getName();
-			TagDesc tagDesc = SCMReleaser.getTagDesc(crb.getVersion().toString());
+			TagDesc tagDesc = SCMReleaser.getTagDesc(crb.getHeadVersion().toString());
 			try {
 				VCSTag tag = vcs.createTag(releaseBranchName, tagDesc.getName(), tagDesc.getMessage(), headCommit.getRevision());
 				progress.reportStatus("head of \"" + releaseBranchName + "\" tagged: " + tag.toString());
@@ -88,9 +94,9 @@ public class SCMActionBuild extends ActionAbstract {
 	}
 
 	private void raisePatchVersion(IProgress progress) {
-		Version nextPatchVersion = crb.getVersion().toNextPatch();
+		Version nextPatchVersion = crb.getHeadVersion().toNextPatch();
 		vcs.setFileContent(crb.getName(), SCMReleaser.VER_FILE_NAME, nextPatchVersion.toString(),
-				LogTag.SCM_VER + " " + crb.getVersion().toNextPatch().toReleaseString());
+				LogTag.SCM_VER + " " + nextPatchVersion);
 		progress.reportStatus("patch version is raised in release branch: " + nextPatchVersion);
 	}
 

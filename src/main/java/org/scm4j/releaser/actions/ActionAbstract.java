@@ -11,7 +11,7 @@ public abstract class ActionAbstract implements IAction {
 
 	protected final List<IAction> childActions;
 	protected final Component comp;
-	protected final List<Component> processedComps = new ArrayList<>();
+	protected final List<String> processedUrls = new ArrayList<>();
 	protected IAction parent = null;
 
 	public IVCS getVCS() {
@@ -26,16 +26,16 @@ public abstract class ActionAbstract implements IAction {
 		}
 	}
 
-	protected boolean isCompProcessed_(Component comp) {
+	protected boolean isUrlProcessed_(String url) {
 		if(null == parent){
-			return processedComps.contains(comp);
+			return processedUrls.contains(url.toLowerCase());
 		}
-		return parent.isCompProcessed(comp);
+		return parent.isUrlProcessed(url);
 		
 	}
 	
-	public boolean isCompProcessed(Component comp) {
-		return isCompProcessed_(comp);
+	public boolean isUrlProcessed(String url) {
+		return isUrlProcessed_(url);
 	}
 
 	@Override
@@ -52,11 +52,11 @@ public abstract class ActionAbstract implements IAction {
 	}
 
 	@Override
-	public void addProcessedComp(Component comp) {
+	public void addProcessedUrl(String url) {
 		if(null != parent){
-			parent.addProcessedComp(comp);
+			parent.addProcessedUrl(url);
 		} else {
-			processedComps.add(comp);
+			processedUrls.add(url.toLowerCase());
 		}
 	}
 
