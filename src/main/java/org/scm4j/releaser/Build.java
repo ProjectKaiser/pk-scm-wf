@@ -74,7 +74,7 @@ public class Build {
 
 	private boolean hasValueableCommitsAfterLastTag() {
 		IVCS vcs = comp.getVCS();
-		VCSTag lastTag = null; //vcs.getLastTag(rb.getName());
+		VCSTag lastTag = vcs.getLastTag(rb.getName());
 		if (lastTag == null) {
 			return false;
 		}
