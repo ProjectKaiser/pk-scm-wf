@@ -12,14 +12,14 @@ public class Component {
 		return VCSRepositories.getDefault().getByName(coords.getName());
 	}
 
-	public Component(String coordsStr) {
-		coords = new Coords(coordsStr);
-		isProduct = false;
-	}
-	
 	public Component(String coordsStr, boolean isProduct) {
 		coords = new Coords(coordsStr);
 		this.isProduct = isProduct;
+	}
+	
+	public Component(String coordsStr) {
+		coords = new Coords(coordsStr);
+		isProduct = false;
 	}
 	
 	public IVCS getVCS() {
@@ -43,12 +43,16 @@ public class Component {
 		return coords.getVersion();
 	}
 
-	public Component cloneWithDifferentVersion(String versionStr) {
-		return new Component(coords.toString(versionStr));
+	public Component clone(String newVersion) {
+		return new Component(coords.toString(newVersion), isProduct);
 	}
 	
-	public Component cloneWithDifferentVersion(Version version) {
-		return new Component(coords.toString(version.toString()));
+	public Component clone(Version newVersion) {
+		return clone(newVersion.toString());
+	}
+	
+	public Component cloneProduct(Version newVersion) {
+		return new Component(coords.toString(newVersion.toString()), true);
 	}
 	
 	@Override

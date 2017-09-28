@@ -9,7 +9,7 @@ public interface IAction {
 	void execute(IProgress progress);
 
 	List<IAction> getChildActions();
-	
+
 	String getName();
 
 	void setParent(IAction parent);
@@ -17,7 +17,6 @@ public interface IAction {
 	IAction getParent();
 
 	void addProcessedUrl(String url);
-	
-	boolean isUrlProcessed(String url);
 
+	boolean isUrlProcessed(String url);
 }

@@ -14,7 +14,7 @@ public class ReleaseBranch {
 
 	private final Component comp;
 	private final IVCS vcs;
-	private final Version version;
+	private final Version version; // exists ? head version : db.version.minor-1.zeroPatch
 	private final String name;
 
 	public Version getVersion() {
@@ -28,9 +28,9 @@ public class ReleaseBranch {
 	public ReleaseBranch(Component comp) {
 		this.comp = comp;
 		vcs = comp.getVCS();
-		Version candidateVer = getDevVersion(comp).toPreviousMinor().toRelease();
+		Version candidateVer = getDevVersion(comp).toPreviousMinor().toReleaseZeroPatch();
 		if (exists(comp, candidateVer)) {
-			version = new Version(comp.getVCS().getFileContent(getName(comp, candidateVer), SCMReleaser.VER_FILE_NAME, null));
+			version = new Version(comp.getVCS().getFileContent(getName(comp, candidateVer), SCMReleaser.VER_FILE_NAME, null)).toRelease();
 		} else {
 			version = candidateVer;
 		}
@@ -40,8 +40,12 @@ public class ReleaseBranch {
 	public ReleaseBranch(Component comp, Version exactVersion) {
 		this.comp = comp;
 		vcs = comp.getVCS();
-		version = exactVersion;
-		name = getName(comp, version);
+		name = getName(comp, exactVersion);
+		if (exists(comp, exactVersion)) {
+			version = new Version(comp.getVCS().getFileContent(name, SCMReleaser.VER_FILE_NAME, null));
+		} else {
+			version = exactVersion;
+		}
 	}
 
 	public Component getComponent() {
@@ -63,7 +67,7 @@ public class ReleaseBranch {
 	public List<Component> getMDeps() {
 		try {
 			String mDepsFileContent = comp.getVCS().getFileContent(name, SCMReleaser.MDEPS_FILE_NAME, null);
-			MDepsFile mDeps = new MDepsFile(mDepsFileContent);
+			MDepsFile mDeps = new MDepsFile(mDepsFileContent, false);
 			return mDeps.getMDeps();
 		} catch (EVCSFileNotFound e) {
 			return new ArrayList<>();

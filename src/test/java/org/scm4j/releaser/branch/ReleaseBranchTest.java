@@ -1,17 +1,18 @@
 package org.scm4j.releaser.branch;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
+import java.util.List;
+
 import org.junit.Test;
 import org.scm4j.commons.Version;
-import org.scm4j.releaser.NullProgress;
 import org.scm4j.releaser.SCMReleaser;
 import org.scm4j.releaser.WorkflowTestBase;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.scmactions.SCMActionFork;
-
-import java.util.List;
-
-import static org.junit.Assert.*;
 
 public class ReleaseBranchTest extends WorkflowTestBase {
 
@@ -21,7 +22,6 @@ public class ReleaseBranchTest extends WorkflowTestBase {
 		assertEquals(compUnTillDb, rb.getComponent());
 		assertEquals(compUnTillDb.getVcsRepository().getReleaseBranchPrefix()
 				+ env.getUnTillDbVer().toPreviousMinor().getReleaseNoPatchString(), rb.getName());
-		assertEquals(env.getUnTillDbVer().toPreviousMinor().toRelease(), rb.getVersion());
 	}
 
 	@Test
@@ -33,7 +33,7 @@ public class ReleaseBranchTest extends WorkflowTestBase {
 				"feature added");
 		SCMReleaser releaser = new SCMReleaser();
 		IAction action = releaser.getActionTree(compUnTillDb);
-		action.execute(new NullProgress());
+		action.execute(getProgress(action));
 
 		rb = new ReleaseBranch(compUnTillDb);
 		assertTrue(rb.exists());
@@ -42,41 +42,24 @@ public class ReleaseBranchTest extends WorkflowTestBase {
 	}
 
 	@Test
-	public void testGetVersions() {
-		ReleaseBranch rb = new ReleaseBranch(compUnTillDb);
-		assertFalse(env.getUnTillDbVer().getPatch().equals("0"));
-		assertEquals(env.getUnTillDbVer().toPreviousMinor().toRelease(), rb.getVersion());
-
-		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(),
-				"feature added");
-		SCMReleaser releaser = new SCMReleaser();
-		IAction action = releaser.getActionTree(compUnTillDb);
-		action.execute(new NullProgress());
-
-		rb = new ReleaseBranch(compUnTillDb);
-		assertEquals(env.getUnTillDbVer().toRelease(), rb.getVersion());
-		assertEquals(env.getUnTillDbVer().toRelease(), rb.getVersion());
-	}
-	
-	@Test
 	public void testGetMDeps() {
 		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), "feature added");
 		env.generateFeatureCommit(env.getUnTillVCS(), compUnTill.getVcsRepository().getDevBranch(), "feature added");
 		env.generateFeatureCommit(env.getUblVCS(), compUBL.getVcsRepository().getDevBranch(), "feature added");
 		SCMReleaser releaser = new SCMReleaser();
 		IAction action = releaser.getActionTree(compUnTill);
-		action.execute(new NullProgress());
+		action.execute(getProgress(action));
 		
 		ReleaseBranch rb = new ReleaseBranch(compUnTill);
 		List<Component> mDeps = rb.getMDeps();
 		assertTrue(mDeps.size() == 2);
-		assertTrue(mDeps.contains(compUBL.cloneWithDifferentVersion(env.getUblVer().toRelease())));
-		assertTrue(mDeps.contains(compUnTillDb.cloneWithDifferentVersion(env.getUnTillDbVer().toRelease())));
+		assertTrue(mDeps.contains(compUBL.clone(env.getUblVer().toReleaseZeroPatch())));
+		assertTrue(mDeps.contains(compUnTillDb.clone(env.getUnTillDbVer().toReleaseZeroPatch())));
 	}
 
 	@Test
 	public void testVersionSelect() {
-		assertEquals(env.getUnTillDbVer().toPreviousMinor().toRelease(), new ReleaseBranch(compUnTillDb).getVersion());
+		assertEquals(env.getUnTillDbVer().toPreviousMinor().toReleaseZeroPatch(), new ReleaseBranch(compUnTillDb).getVersion());
 		Version testVer = new Version("11.12");
 		assertEquals(testVer, new ReleaseBranch(compUnTillDb, testVer).getVersion());
 
@@ -84,8 +67,8 @@ public class ReleaseBranchTest extends WorkflowTestBase {
 		SCMReleaser releaser = new SCMReleaser();
 		IAction action = releaser.getActionTree(compUnTill);
 		assertTrue(action instanceof SCMActionFork);
-		action.execute(new NullProgress());
+		action.execute(getProgress(action));
 
-		assertEquals(env.getUnTillDbVer().toPreviousMinor().toRelease().toNextPatch(), new ReleaseBranch(compUnTillDb).getVersion());
+		assertEquals(env.getUnTillDbVer().toReleaseZeroPatch(), new ReleaseBranch(compUnTillDb).getVersion());
 	}
 }

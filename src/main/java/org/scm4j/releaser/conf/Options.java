@@ -6,6 +6,7 @@ import java.util.List;
 public class Options {
 
 	private static List<Option> options = new ArrayList<>();
+	private static boolean isPatch;
 
 	public static synchronized List<Option> getOptions() {
 		return options;
@@ -28,5 +29,13 @@ public class Options {
 			}
 		}
 		setOptions(options);
+	}
+	
+	public static void setIsPatch(boolean isPatch) {
+		Options.isPatch = isPatch;
+	}
+
+	public static boolean isPatch() {
+		return isPatch;
 	}
 }

@@ -1,5 +1,9 @@
 package org.scm4j.releaser.scmactions;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.commons.lang3.StringUtils;
 import org.scm4j.commons.Version;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.releaser.Build;
@@ -15,9 +19,6 @@ import org.scm4j.releaser.conf.MDepsFile;
 import org.scm4j.releaser.exceptions.EReleaserException;
 import org.scm4j.vcs.api.IVCS;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class SCMActionFork extends ActionAbstract {
 	
 	private final DevelopBranch db;
@@ -30,7 +31,7 @@ public class SCMActionFork extends ActionAbstract {
 		db = new DevelopBranch(comp);
 		this.mbs = mbs;
 		vcs = getVCS();
-		this.rb = new ReleaseBranch(comp, db.getVersion().toRelease());
+		this.rb = new ReleaseBranch(comp, rb.getVersion().toNextMinor().toReleaseZeroPatch());
 	}
 	
 	@Override
@@ -47,8 +48,7 @@ public class SCMActionFork extends ActionAbstract {
 				truncateSnapshotReleaseVersion(progress);
 				raiseTrunkMinorVersion(progress);
 			case FREEZE:
-			case ACTUALIZE_PATCHES:
-				actualizeMDeps(progress);
+				freezeMDeps(progress);
 				break;
 			default:
 				throw new IllegalStateException(mbs + " target action is occured when fork only is expected");
@@ -68,32 +68,31 @@ public class SCMActionFork extends ActionAbstract {
 		progress.reportStatus("branch " + newBranchName + " created");
 	}
 	
-	private void actualizeMDeps(IProgress progress) {
+	private void freezeMDeps(IProgress progress) {
 		List<Component> currentMDeps = rb.getMDeps();
 		if (currentMDeps.isEmpty()) {
-			progress.reportStatus("no mdeps");
+			progress.reportStatus("no mdeps to freeze");
 			return;
 		}
 		List<Component> actualizedMDeps = new ArrayList<>();
+		StringBuilder sb = new StringBuilder();
+		ReleaseBranch rbMDep;
+		Version newVersion;
 		for (Component currentMDep : currentMDeps) {
-			ReleaseBranch rbMDep;
-			Version futureReleaseVersion;
-			if (comp.getVersion().isExact()) {
-				rbMDep = new ReleaseBranch(currentMDep, comp.getVersion());
-				futureReleaseVersion = rbMDep.getVersion();
-			} else {
-				rbMDep = new ReleaseBranch(currentMDep);
-				Build mbMDep = new Build(currentMDep);
-				futureReleaseVersion = rbMDep.getVersion();
-				if (mbMDep.isNeedToFork()) {
-					futureReleaseVersion = futureReleaseVersion.toNextMinor().toRelease();
-				}
+			rbMDep = new ReleaseBranch(currentMDep);
+			// untilldb is built -> rbMDep.getVersion is 2.59.1, but we need 2.59.0
+			newVersion = rbMDep.getVersion();
+			if (!newVersion.getPatch().equals(Build.ZERO_PATCH)) {
+				newVersion = newVersion.toPreviousPatch();
 			}
-			actualizedMDeps.add(currentMDep.cloneWithDifferentVersion(futureReleaseVersion.toString()));
+			
+			sb.append("" + currentMDep.getName() + ": " + currentMDep.getVersion() + " -> " + newVersion + "\r\n");
+			actualizedMDeps.add(currentMDep.clone(newVersion.toString()));
 		}
 		MDepsFile actualizedMDepsFile = new MDepsFile(actualizedMDeps);
 		vcs.setFileContent(rb.getName(), SCMReleaser.MDEPS_FILE_NAME, actualizedMDepsFile.toFileContent(), LogTag.SCM_MDEPS);
-		progress.reportStatus("mdeps actualized");
+		progress.reportStatus("mdeps frozen" + (sb.length() == 0 ? "" : ":\r\n" + StringUtils.removeEnd(sb.toString(), "\r\n")));
+		
 	}
 
 	private void truncateSnapshotReleaseVersion(IProgress progress) {
@@ -111,7 +110,10 @@ public class SCMActionFork extends ActionAbstract {
 
 	@Override
 	public String toString() {
-		return "fork " + comp.getCoords() + ", " + rb.getVersion();
+		return mbs.toString() + " " + comp.getCoords() + ", " + rb.getVersion();
 	}
 	
+	public ReleaseBranch getReleaseBranch() {
+		return rb;
+	}
 }

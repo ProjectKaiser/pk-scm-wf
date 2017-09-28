@@ -1,10 +1,15 @@
 package org.scm4j.releaser.branch;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
+
+import java.util.ArrayList;
+
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.scm4j.releaser.LogTag;
-import org.scm4j.releaser.NullProgress;
 import org.scm4j.releaser.SCMReleaser;
 import org.scm4j.releaser.WorkflowTestBase;
 import org.scm4j.releaser.actions.IAction;
@@ -12,10 +17,6 @@ import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.exceptions.EComponentConfig;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSCommit;
-
-import java.util.ArrayList;
-
-import static org.junit.Assert.*;
 
 public class DevelopBranchTest extends WorkflowTestBase {
 
@@ -26,7 +27,7 @@ public class DevelopBranchTest extends WorkflowTestBase {
 		env.generateFeatureCommit(env.getUblVCS(), dbUBL.getName(), "feature added");
 		SCMReleaser releaser = new SCMReleaser();
 		IAction action = releaser.getActionTree(compUnTill);
-		action.execute(new NullProgress());
+		action.execute(getProgress(action));
 		assertEquals(DevelopBranchStatus.BRANCHED, dbUnTill.getStatus());
 	}
 
