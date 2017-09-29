@@ -14,32 +14,42 @@ import org.scm4j.releaser.scmactions.SCMActionFork;
 
 public class WorkflowBuildTest extends WorkflowTestBase {
 	
+	private SCMReleaser releaser = new SCMReleaser();
+	
 	@Test
-	public void testBuildAll() {
-		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), "feature added");
-		SCMReleaser releaser = new SCMReleaser();
-
-		// simulate BRANCHED dev branches statuses
-		env.generateContent(env.getUblVCS(), compUBL.getVcsRepository().getDevBranch(), "test file", "test content", LogTag.SCM_VER);
-		env.generateContent(env.getUnTillVCS(), compUnTill.getVcsRepository().getDevBranch(), "test file", "test content", LogTag.SCM_VER);
-
+	public void testBuildAllAndTestIGNOREDDev() {
 		// fork unTill
 		IAction action = releaser.getActionTree(UNTILL);
+		Expectations exp = new Expectations();
+		exp.put(UNTILLDB, SCMActionFork.class);
+		exp.put(UNTILL, SCMActionFork.class);
+		exp.put(UBL, SCMActionFork.class);
+		checkChildActionsTypes(action, exp);
 		action.execute(getProgress(action));
 		checkUnTillForked();
 
 		// build unTill
 		action = releaser.getActionTree(UNTILL);
+		exp = new Expectations();
+		exp.put(UNTILLDB, SCMActionBuild.class);
+		exp.put(UNTILL, SCMActionBuild.class);
+		exp.put(UBL, SCMActionBuild.class);
+		checkChildActionsTypes(action, exp);
 		action.execute(getProgress(action));
 		checkUnTillBuilt();
 		
-		// TODO: add skip build if dev branch is IGNORED
+		// test IGNORED dev branch state
+		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), LogTag.SCM_IGNORE + " feature commit added");
+		action = releaser.getActionTree(UNTILL);
+		exp = new Expectations();
+		exp.put(UNTILLDB, ActionNone.class);
+		exp.put(UNTILL, ActionNone.class);
+		exp.put(UBL, ActionNone.class);
+		checkChildActionsTypes(action, exp);
 	}
 
 	@Test
 	public void testBuildRootIfNestedIsBuiltAlready() throws Exception {
-		SCMReleaser releaser = new SCMReleaser();
-		
 		// fork unTillDb 
 		IAction action = releaser.getActionTree(UNTILLDB);
 		action.execute(getProgress(action));
@@ -68,9 +78,7 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 	}
 
 	@Test
-	public void testBuildUBLAndUnTillDb() throws Exception {
-		SCMReleaser releaser = new SCMReleaser();
-		
+	public void testBuildRootAndChildIfAllForkedAlready() throws Exception {
 		// fork unTillDb
 		IAction action = releaser.getActionTree(UNTILLDB);
 		Expectations exp = new Expectations();
@@ -121,9 +129,6 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 	
 	@Test
 	public void testSkipBuildsIfParentUnforked() throws Exception {
-		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), "feature added");
-		SCMReleaser releaser = new SCMReleaser();
-		
 		// fork unTillDb
 		IAction action = releaser.getActionTree(UNTILLDB);
 		action.execute(getProgress(action));
@@ -138,9 +143,6 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		assertFalse(env.getUblVCS().getBranches("").contains(rbUBL.getName()));
 		
 		// fork unTill. unTillDb build must be skipped
-		// simulate UBL and unTill BRANCHED dev branch status
-		env.generateContent(env.getUblVCS(), compUBL.getVcsRepository().getDevBranch(), "test file", "test content", LogTag.SCM_VER);
-		env.generateContent(env.getUnTillVCS(), compUnTill.getVcsRepository().getDevBranch(), "test file", "test content", LogTag.SCM_VER);
 		action = releaser.getActionTree(UNTILL);
 		Expectations exp = new Expectations();
 		exp.put(UNTILLDB, ActionNone.class);
@@ -149,13 +151,18 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		checkChildActionsTypes(action, exp);
 		action.execute(getProgress(action));
 		checkUnTillForked();
+		
+		// check all is going to build
+		action = releaser.getActionTree(UNTILL);
+		exp = new Expectations();
+		exp.put(UNTILLDB, SCMActionBuild.class);
+		exp.put(UNTILL, SCMActionBuild.class);
+		exp.put(UBL, SCMActionBuild.class);
+		checkChildActionsTypes(action, exp);
 	}
 	
 	@Test
-	public void testBuildPatchOnPreviousRelease() throws Exception {
-		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), "feature added");
-		SCMReleaser releaser = new SCMReleaser();
-		
+	public void testBuildPatchOnExistingRelease() throws Exception {
 		// fork unTillDb 2.59
 		IAction action = releaser.getActionTree(UNTILLDB);
 		action.execute(getProgress(action));

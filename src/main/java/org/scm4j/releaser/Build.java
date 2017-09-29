@@ -90,21 +90,16 @@ public class Build {
 
 	private boolean noValueableCommitsAfterLastTag() {
 		IVCS vcs = comp.getVCS();
-		VCSTag lastTag = vcs.getLastTag(rb.getName());
-		if (lastTag == null) {
-			return true;
-		}
-		
+		List<VCSCommit> commits = vcs.getCommitsRange(rb.getName(), null, WalkDirection.DESC, 0);
 		DelayedTagsFile dtf = new DelayedTagsFile();
 		String delayedTagRevision = dtf.getRevisitonByUrl(comp.getVcsRepository().getUrl());
-		
-		List<VCSCommit> commits = vcs.getCommitsRange(rb.getName(), lastTag.getRelatedCommit().getRevision(), WalkDirection.ASC, 0);
 		for (VCSCommit commit : commits) {
-			if (lastTag.getRelatedCommit().equals(commit)) {
-				continue;
+			if (commit.getRevision().equals(delayedTagRevision)) {
+				return true;
 			}
-			if (!commit.getRevision().equals(delayedTagRevision) && !commit.getLogMessage().contains(LogTag.SCM_VER) && !commit.getLogMessage().contains(LogTag.SCM_IGNORE)) {
-				return false;
+			if (!commit.getLogMessage().contains(LogTag.SCM_VER) && !commit.getLogMessage().contains(LogTag.SCM_IGNORE)) {
+				List<VCSTag> tags = vcs.getTagsOnRevision(commit.getRevision());
+				return !tags.isEmpty();
 			}
 		}
 		return true;

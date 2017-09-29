@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.branch.ReleaseBranch;
@@ -20,11 +22,18 @@ import org.scm4j.vcs.api.WalkDirection;
 
 public class WorkflowDelayedTagTest extends WorkflowTestBase {
 
+	
+	private SCMReleaser releaser = new SCMReleaser();
+	DelayedTagsFile cf = new DelayedTagsFile();
+	
+	@Before
+	@After
+	public void setUpTearDown() {
+		cf.delete();
+	}
+
 	@Test
 	public void testBuildWithDelayedTag() throws IOException {
-		
-		SCMReleaser releaser = new SCMReleaser();
-		
 		// fork all
 		IAction action = releaser.getActionTree(compUnTill);
 		action.execute(getProgress(action));
@@ -50,7 +59,7 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 		assertTrue(env.getUnTillVCS().getTags().size() == 1);
 		
 		// check Delayed Tags file
-		DelayedTagsFile cf = new DelayedTagsFile();
+		
 		assertNotNull(cf.getRevisitonByUrl(compUnTillDb.getVcsRepository().getUrl()));
 		assertNotNull(cf.getRevisitonByUrl(compUnTill.getVcsRepository().getUrl()));
 		assertNotNull(cf.getRevisitonByUrl(compUBL.getVcsRepository().getUrl()));
@@ -62,7 +71,6 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 	
 	@Test
 	public void testTagDelayed() {
-		SCMReleaser releaser = new SCMReleaser();
 		Options.setOptions(Collections.singletonList(Option.DELAYED_TAG));
 		
 		// fork all
@@ -83,7 +91,7 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 		assertTrue(isPreHeadCommitTaggedWithVersion(compUnTill));
 		
 		// check Dealyed Tags file
-		DelayedTagsFile cf = new DelayedTagsFile();
+		
 		assertTrue(cf.getContent().isEmpty());
 	}
 	

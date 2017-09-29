@@ -9,7 +9,6 @@ import java.util.List;
 
 import org.junit.Ignore;
 import org.junit.Test;
-import org.scm4j.commons.progress.IProgress;
 import org.scm4j.releaser.actions.ActionNone;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.branch.ReleaseBranch;
@@ -19,36 +18,70 @@ import org.scm4j.releaser.scmactions.SCMActionBuild;
 import org.scm4j.releaser.scmactions.SCMActionFork;
 
 public class WorkflowForkTest extends WorkflowTestBase {
+	
+	SCMReleaser releaser = new SCMReleaser();
 
 	@Test
-	public void testForkSingleComponent() throws Exception {
-		SCMReleaser releaser = new SCMReleaser();
-		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), "feature added");
+	public void testForkSingleComponentNoMDeps() throws Exception {
 		IAction action = releaser.getActionTree(UNTILLDB);
-		try (IProgress progress = getProgress(action)) {
-			action.execute(progress);
-		}
+		assertTrue(action instanceof SCMActionFork);
+		action.execute(getProgress(action));
 		checkUnTillDbForked();
 	}
 	
 	@Test
-	public void testForkRootOnlyComponentWithMDeps() throws Exception {
-		SCMReleaser releaser = new SCMReleaser();
+	public void testForkRootOnly() throws Exception {
+		// fork unTill
 		IAction action = releaser.getActionTree(UNTILL);
-
-		// fork unTill. Nested comopents has IGNORED dev branches but they will be build anyway because they're never built 
-		try (IProgress progress = getProgress(action)) {
-			action.execute(progress);
-		}
+		action.execute(getProgress(action));
+		assertTrue(action instanceof SCMActionFork);
 		checkUnTillForked();
+		
+		// build untill
+		action = releaser.getActionTree(UNTILL);
+		assertTrue(action instanceof SCMActionBuild);
+		action.execute(getProgress(action));
+		checkUnTillBuilt();
+		
 		env.generateFeatureCommit(env.getUnTillVCS(), compUnTill.getVcsRepository().getDevBranch(), "feature added");
+		// fork untill only
+		action = releaser.getActionTree(UNTILL);
+		Expectations exp = new Expectations();
+		exp.put(UNTILLDB, ActionNone.class);
+		exp.put(UNTILL, SCMActionFork.class);
+		exp.put(UBL, ActionNone.class);
+		checkChildActionsTypes(action, exp);
+		action.execute(getProgress(action));
+		
+		ReleaseBranch rbUBL = new ReleaseBranch(compUBL);
+		ReleaseBranch rbUnTill = new ReleaseBranch(compUnTill);
+		ReleaseBranch rbUnTillDb= new ReleaseBranch(compUnTillDb);
+		assertEquals(env.getUblVer().toReleaseZeroPatch().toNextPatch(), rbUBL.getVersion());
+		assertEquals(env.getUnTillVer().toReleaseZeroPatch().toNextMinor(), rbUnTill.getVersion());
+		assertEquals(env.getUnTillDbVer().toReleaseZeroPatch().toNextPatch(), rbUnTillDb.getVersion());
+		//checkUnTillForked();
+		
+		// build untill only
+		action = releaser.getActionTree(UNTILL);
+		exp = new Expectations();
+		exp.put(UNTILLDB, ActionNone.class);
+		exp.put(UNTILL, SCMActionBuild.class);
+		exp.put(UBL, ActionNone.class);
+		checkChildActionsTypes(action, exp);
+		action.execute(getProgress(action));
+		rbUBL = new ReleaseBranch(compUBL);
+		rbUnTill = new ReleaseBranch(compUnTill);
+		rbUnTillDb= new ReleaseBranch(compUnTillDb);
+		assertEquals(env.getUblVer().toReleaseZeroPatch().toNextPatch(), rbUBL.getVersion());
+		assertEquals(env.getUnTillVer().toReleaseZeroPatch().toNextMinor().toNextPatch(), rbUnTill.getVersion());
+		assertEquals(env.getUnTillDbVer().toReleaseZeroPatch().toNextPatch(), rbUnTillDb.getVersion());
+		assertEquals(env.getUblVer().toNextMinor(), dbUBL.getVersion());
+		assertEquals(env.getUnTillVer().toNextMinor().toNextMinor(), dbUnTill.getVersion());
+		assertEquals(env.getUnTillDbVer().toNextMinor(), dbUnTillDb.getVersion());
 	}
 	
 	@Test
-	public void testRootBuiltWithNewPatchesIfNestedBuiltAlready() throws Exception {
-		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), "feature added");
-		SCMReleaser releaser = new SCMReleaser();
-		
+	public void testRootBuiltUsingNewPatchesIfNestedBuiltAlready() throws Exception {
 		// fork unTillDb
 		IAction action = releaser.getActionTree(UNTILLDB);
 		action.execute(getProgress(action));
@@ -59,7 +92,7 @@ public class WorkflowForkTest extends WorkflowTestBase {
 		action.execute(getProgress(action));
 		checkUnTillDbBuilt();
 		
-		// untill should be forked because no release rbanch at all
+		// fork UBL
 		action = releaser.getActionTree(UBL);
 		action.execute(getProgress(action));
 		checkUBLForked();
@@ -70,18 +103,16 @@ public class WorkflowForkTest extends WorkflowTestBase {
 		
 		// build UBL
 		action = releaser.getActionTree(UBL);
-		try (IProgress progress = getProgress(action)) {
-			action.execute(progress);
-		}
+		exp = new Expectations();
+		exp.put(UNTILLDB, ActionNone.class);
+		exp.put(UBL, SCMActionBuild.class);
+		checkChildActionsTypes(action, exp);
+		action.execute(getProgress(action));
 		checkUBLBuilt();
 	}
 
 	@Test
 	public void testForkAll() throws Exception {
-		env.generateFeatureCommit(env.getUnTillVCS(), compUnTill.getVcsRepository().getDevBranch(), "feature added");
-		env.generateFeatureCommit(env.getUblVCS(), compUBL.getVcsRepository().getDevBranch(), "feature added");
-		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), "feature added");
-		SCMReleaser releaser = new SCMReleaser();
 		IAction action = releaser.getActionTree(UNTILL);
 		Expectations exp = new Expectations();
 		exp.put(UNTILL, SCMActionFork.class);
@@ -89,19 +120,12 @@ public class WorkflowForkTest extends WorkflowTestBase {
 		exp.put(UNTILLDB, SCMActionFork.class);
 		checkChildActionsTypes(action, exp);
 		
-		try (IProgress progress = getProgress(action)) {
-			action.execute(progress);
-		}
+		action.execute(getProgress(action));
 		checkUnTillForked();
-			}
+	}
 
 	@Test
 	public void testPatches() throws Exception {
-		env.generateFeatureCommit(env.getUnTillVCS(), compUnTill.getVcsRepository().getDevBranch(), "feature added");
-		env.generateFeatureCommit(env.getUblVCS(), compUBL.getVcsRepository().getDevBranch(), "feature added");
-		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), "feature added");
-		SCMReleaser releaser = new SCMReleaser();
-
 		// fork all
 		IAction action = releaser.getActionTree(compUnTill);
 		action.execute(getProgress(action));
@@ -117,7 +141,7 @@ public class WorkflowForkTest extends WorkflowTestBase {
 		env.generateFeatureCommit(env.getUnTillDbVCS(), rbUnTillDb.getName(), "patch feature added");
 		
 		// build unTillDb patch
-		action = releaser.getActionTree(new Component(UNTILLDB + ":" + env.getUnTillDbVer().toRelease(), true));
+		action = releaser.getActionTree(new Component(UNTILLDB + ":" + env.getUnTillDbVer().toRelease()));
 		action.execute(getProgress(action));
 
 		// Existing unTill and UBL release branches should actualize its mdeps first
@@ -147,9 +171,6 @@ public class WorkflowForkTest extends WorkflowTestBase {
 	@Ignore // TODO: Are we need to use exact dev versions as is in release?
 	@Test
 	public void testUseExactDevVersionsAsIsInRelease() {
-		env.generateFeatureCommit(env.getUnTillVCS(), compUnTill.getVcsRepository().getDevBranch(), "feature added");
-		env.generateFeatureCommit(env.getUblVCS(), compUBL.getVcsRepository().getDevBranch(), "feature added");
-		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), "feature added");
 		Component compUnTillVersioned = new Component(UNTILL + ":" + env.getUnTillVer().toRelease());
 		Component compUnTillDbVersioned = new Component(UNTILLDB + ":" + env.getUnTillDbVer().toRelease());
 		Component compUblVersioned = new Component(UBL + ":" + env.getUblVer().toRelease());
@@ -187,15 +208,11 @@ public class WorkflowForkTest extends WorkflowTestBase {
 	
 	@Test
 	public void testActualizeExactSnapshotDevVersionsInRelease() {
-		env.generateFeatureCommit(env.getUnTillVCS(), compUnTill.getVcsRepository().getDevBranch(), "feature added");
-		env.generateFeatureCommit(env.getUblVCS(), compUBL.getVcsRepository().getDevBranch(), "feature added");
-		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), "feature added");
 		Component compUnTillVersioned = new Component(UNTILL + ":" + env.getUnTillVer().toSnapshot());
 		Component compUnTillDbVersioned = new Component(UNTILLDB + ":" + env.getUnTillDbVer().toSnapshot());
 		Component compUblVersioned = new Component(UBL + ":" + env.getUblVer().toSnapshot());
 		MDepsFile mDepsFile = new MDepsFile(Arrays.asList(compUnTillDbVersioned, compUblVersioned));
 		env.getUnTillVCS().setFileContent(compUnTillVersioned.getVcsRepository().getDevBranch(), SCMReleaser.MDEPS_FILE_NAME, mDepsFile.toFileContent(), "-SNAPSHOT added to mDeps versions");
-		SCMReleaser releaser = new SCMReleaser();
 
 		// fork all
 		IAction action = releaser.getActionTree(compUnTill);

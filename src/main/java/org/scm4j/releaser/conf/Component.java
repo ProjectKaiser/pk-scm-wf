@@ -5,21 +5,14 @@ import org.scm4j.commons.Version;
 import org.scm4j.vcs.api.IVCS;
 
 public class Component {
-	private final boolean isProduct;
 	private final Coords coords;
 
 	public VCSRepository getVcsRepository() {
 		return VCSRepositories.getDefault().getByName(coords.getName());
 	}
 
-	public Component(String coordsStr, boolean isProduct) {
-		coords = new Coords(coordsStr);
-		this.isProduct = isProduct;
-	}
-	
 	public Component(String coordsStr) {
 		coords = new Coords(coordsStr);
-		isProduct = false;
 	}
 	
 	public IVCS getVCS() {
@@ -36,7 +29,7 @@ public class Component {
 
 	@Override
 	public String toString() {
-		return coords.toString() + (isProduct ? ", PRODUCT" : "");
+		return coords.toString();
 	}
 	
 	public Version getVersion() {
@@ -44,15 +37,11 @@ public class Component {
 	}
 
 	public Component clone(String newVersion) {
-		return new Component(coords.toString(newVersion), isProduct);
+		return new Component(coords.toString(newVersion));
 	}
 	
 	public Component clone(Version newVersion) {
 		return clone(newVersion.toString());
-	}
-	
-	public Component cloneProduct(Version newVersion) {
-		return new Component(coords.toString(newVersion.toString()), true);
 	}
 	
 	@Override
@@ -68,9 +57,5 @@ public class Component {
 	@Override
 	public int hashCode() {
 		return coords.hashCode();
-	}
-
-	public boolean isProduct() {
-		return isProduct;
 	}
 }

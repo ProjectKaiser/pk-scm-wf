@@ -167,7 +167,7 @@ public class BuildTest extends WorkflowTestBase {
 		// build unTillDb patch
 		ReleaseBranch rbUnTillDb = new ReleaseBranch(compUnTillDb);
 		env.generateFeatureCommit(env.getUnTillDbVCS(), rbUnTillDb.getName(), "patch feature merged");
-		action = releaser.getActionTree(compUnTillDb.cloneProduct(env.getUnTillDbVer().toRelease()));
+		action = releaser.getActionTree(compUnTillDb.clone(env.getUnTillDbVer().toRelease()));
 		Options.setIsPatch(false);
 		assertTrue(action instanceof SCMActionBuild);
 		action.execute(getProgress(action));
