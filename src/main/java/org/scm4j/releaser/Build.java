@@ -97,9 +97,13 @@ public class Build {
 			if (commit.getRevision().equals(delayedTagRevision)) {
 				return true;
 			}
+			//TODO: add test when we put tag on #scm-ver commit. noValueableCommitsAfterLastTag() should check if we have tags on it 
+			List<VCSTag> tags = vcs.getTagsOnRevision(commit.getRevision());
 			if (!commit.getLogMessage().contains(LogTag.SCM_VER) && !commit.getLogMessage().contains(LogTag.SCM_IGNORE)) {
-				List<VCSTag> tags = vcs.getTagsOnRevision(commit.getRevision());
 				return !tags.isEmpty();
+			}
+			if (!tags.isEmpty()) {
+				return true;
 			}
 		}
 		return true;
