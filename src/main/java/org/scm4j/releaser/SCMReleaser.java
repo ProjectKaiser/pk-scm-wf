@@ -79,7 +79,7 @@ public class SCMReleaser {
 	private IAction getBuildOrSkipAction(ReleaseBranch rb, List<IAction> childActions, BuildStatus mbs,
 			ActionKind actionKind) {
 		if (actionKind == ActionKind.FORK) {
-			return new ActionNone(rb, childActions, "nothing to build");
+			return new ActionNone(rb, childActions, "nothing to fork");
 		}
 		skipAllForks(rb, childActions);
 		return new SCMActionBuild(rb, childActions, mbs);
@@ -88,7 +88,7 @@ public class SCMReleaser {
 	private IAction getForkOrSkipAction(ReleaseBranch rb, List<IAction> childActions, BuildStatus mbs,
 			ActionKind actionKind) {
 		if (actionKind == ActionKind.BUILD) {
-			return new ActionNone(rb, childActions, "nothing to fork");
+			return new ActionNone(rb, childActions, "nothing to build");
 		}
 		skipAllBuilds(rb, childActions);
 		return new SCMActionFork(rb, childActions, mbs);
