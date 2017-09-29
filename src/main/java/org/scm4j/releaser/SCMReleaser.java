@@ -43,20 +43,16 @@ public class SCMReleaser {
 		return getActionTree(new Component(coords), actionKind);
 	}
 
-	// not needed isPatch because of note: For any mdep which version is known FORK status check is skipped
 	public IAction getActionTree(Component comp, ActionKind actionKind) {
 		List<IAction> childActions = new ArrayList<>();
 		List<Component> mDeps;
 		ReleaseBranch rb;
-		// do not understand for what - this is for case when we build 2.59.1 SR. otherwise 2.60 will be selected
-		// we only use exact RB version only if isPatch
-		
 		if (Options.isPatch()) {
 			rb = new ReleaseBranch(comp, comp.getCoords().getVersion());
 			mDeps = rb.getMDeps();
 		} else {
 			rb = new ReleaseBranch(comp);
-			mDeps = rb.exists() ? rb.getMDeps() : new DevelopBranch(comp).getMDeps();
+			mDeps = new DevelopBranch(comp).getMDeps(); 
 		}
 
 		for (Component mDep : mDeps) {

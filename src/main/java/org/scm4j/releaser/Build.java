@@ -126,6 +126,7 @@ public class Build {
 	}
 
 	public boolean isNeedToFork() {
+		// TODO: add test fork next release if one release exists already
 		if (!rb.exists()) {
 			return true;
 		}
