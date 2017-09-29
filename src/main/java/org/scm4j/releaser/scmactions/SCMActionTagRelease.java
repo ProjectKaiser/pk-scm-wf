@@ -6,7 +6,9 @@ import org.scm4j.releaser.SCMReleaser;
 import org.scm4j.releaser.actions.ActionAbstract;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.branch.ReleaseBranch;
-import org.scm4j.releaser.conf.*;
+import org.scm4j.releaser.conf.DelayedTagsFile;
+import org.scm4j.releaser.conf.TagDesc;
+import org.scm4j.releaser.exceptions.EReleaserException;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSTag;
 
@@ -16,13 +18,17 @@ public class SCMActionTagRelease extends ActionAbstract {
 
 	private final ReleaseBranch rb;
 
-	public SCMActionTagRelease(Component dep, ReleaseBranch rb, List<IAction> childActions, List<Option> options) {
-		super(dep, childActions, options);
+	public SCMActionTagRelease(ReleaseBranch rb, List<IAction> childActions) {
+		super(rb.getComponent(), childActions);
 		this.rb = rb;
 	}
 	
 	@Override
 	public void execute(IProgress progress) {
+		if (isUrlProcessed(comp.getVcsRepository().getUrl())) {
+			progress.reportStatus("already executed");
+			return;
+		}
 		try {
 			for (IAction action : childActions) {
 				try (IProgress nestedProgress = progress.createNestedProgress(action.toString())) {
@@ -52,9 +58,11 @@ public class SCMActionTagRelease extends ActionAbstract {
 			
 			cf.removeRevisionByUrl(comp.getVcsRepository().getUrl());
 			progress.reportStatus(String.format("%s of %s tagged: %s", "commit " + revisionToTag, rb.getName(), delayedTagVersion.toReleaseString()));
-		} catch (Throwable t) {
-			progress.error(t.getMessage());
-			throw new RuntimeException(t);
+		} catch (EReleaserException e) {
+			throw e;
+		} catch (Exception e) {
+			progress.error("execution error: " + e.toString());
+			throw new EReleaserException(e);
 		}
 	}
 	

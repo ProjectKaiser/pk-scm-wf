@@ -1,13 +1,8 @@
 package org.scm4j.releaser.conf;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-
 import org.scm4j.commons.Coords;
-import org.scm4j.releaser.SCMReleaser;
 import org.scm4j.releaser.VCSFactory;
+import org.scm4j.releaser.SCMReleaser;
 import org.scm4j.releaser.builders.BuilderFactory;
 import org.scm4j.releaser.exceptions.EComponentConfig;
 import org.scm4j.releaser.exceptions.EConfig;
@@ -15,6 +10,11 @@ import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
 import org.scm4j.vcs.api.workingcopy.VCSWorkspace;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.error.YAMLException;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 public class VCSRepositories {
 	public static final String DEFAULT_VCS_WORKSPACE_DIR = new File(SCMReleaser.BASE_WORKING_DIR, "releaser-vcs-workspaces").getPath();

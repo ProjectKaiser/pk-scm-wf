@@ -1,16 +1,16 @@
 package org.scm4j.releaser.actions;
 
-import java.util.List;
-
 import org.scm4j.commons.progress.IProgress;
-import org.scm4j.releaser.conf.Component;
+import org.scm4j.releaser.branch.ReleaseBranch;
+
+import java.util.List;
 
 public class ActionNone extends ActionAbstract {
 	
 	private final String reason;
 	
-	public ActionNone(Component comp, List<IAction> actions, String reason) {
-		super(comp, actions, null);
+	public ActionNone(ReleaseBranch rb, List<IAction> childActions, String reason) {
+		super(rb.getComponent(), childActions);
 		this.reason = reason;
 	}
 

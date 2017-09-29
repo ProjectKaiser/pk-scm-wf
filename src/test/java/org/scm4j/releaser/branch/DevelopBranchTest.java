@@ -10,7 +10,6 @@ import org.eclipse.jgit.api.errors.GitAPIException;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.scm4j.releaser.LogTag;
-import org.scm4j.releaser.NullProgress;
 import org.scm4j.releaser.SCMReleaser;
 import org.scm4j.releaser.WorkflowTestBase;
 import org.scm4j.releaser.actions.IAction;
@@ -22,13 +21,13 @@ import org.scm4j.vcs.api.VCSCommit;
 public class DevelopBranchTest extends WorkflowTestBase {
 
 	@Test
-	public void testBranchedIfNothingIsMade() {
+	public void testBranchedIfNothingIsMade() throws Exception {
 		env.generateFeatureCommit(env.getUnTillDbVCS(), dbUnTillDb.getName(), "feature added");
 		env.generateFeatureCommit(env.getUnTillVCS(), dbUnTill.getName(), "feature added");
 		env.generateFeatureCommit(env.getUblVCS(), dbUBL.getName(), "feature added");
 		SCMReleaser releaser = new SCMReleaser();
-		IAction action = releaser.getProductionReleaseAction(compUnTill);
-		action.execute(new NullProgress());
+		IAction action = releaser.getActionTree(compUnTill);
+		action.execute(getProgress(action));
 		assertEquals(DevelopBranchStatus.BRANCHED, dbUnTill.getStatus());
 	}
 

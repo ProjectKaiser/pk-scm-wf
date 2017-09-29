@@ -11,15 +11,6 @@ public class MDepsFile {
 	
 	private List<Component> mDeps = new ArrayList<>();
 	
-	public MDepsFile(String content, boolean isProduct) {
-		String[] strs = StringUtils.split(content, "\r\n");
-		for (String str: strs) {
-			if (isLineValueable(str)) {
-				mDeps.add(new Component(str, isProduct));
-			}
-		}
-	}
-	
 	public MDepsFile(String content) {
 		String[] strs = StringUtils.split(content, "\r\n");
 		for (String str: strs) {

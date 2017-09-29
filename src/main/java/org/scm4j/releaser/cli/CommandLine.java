@@ -1,25 +1,17 @@
 package org.scm4j.releaser.cli;
 
-import java.util.List;
-
-import org.scm4j.releaser.SCMReleaser;
 import org.scm4j.releaser.conf.Option;
 import org.scm4j.releaser.exceptions.EConfig;
 
 public class CommandLine {
 
 	private final CLICommand command;
-	private final List<Option> options;
 	private final String productCoords;
 
 	public CLICommand getCommand() {
 		return command;
 	}
 
-	public List<Option> getOptions() {
-		return options;
-	}
-	
 	public String getProductCoords() {
 		return productCoords;
 	}
@@ -35,8 +27,6 @@ public class CommandLine {
 		}
 		
 		productCoords = args[1];
-		
-		options = SCMReleaser.parseOptions(args);
 	}
 	
 	private static String printOptions() {

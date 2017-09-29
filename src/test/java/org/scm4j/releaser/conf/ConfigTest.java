@@ -41,6 +41,7 @@ public class ConfigTest {
 				return creds;
 			}
 		});
+		//VCSRepositories.resetDefault();
 	}
 	
 	@After

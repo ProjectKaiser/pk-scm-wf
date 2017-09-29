@@ -9,7 +9,14 @@ public interface IAction {
 	void execute(IProgress progress);
 
 	List<IAction> getChildActions();
-	
+
 	String getName();
 
+	void setParent(IAction parent);
+
+	IAction getParent();
+
+	void addProcessedUrl(String url);
+
+	boolean isUrlProcessed(String url);
 }
