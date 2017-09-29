@@ -37,7 +37,6 @@ public class VCSFactoryTest {
 		IVCSRepositoryWorkspace mockedRW = Mockito.mock(IVCSRepositoryWorkspace.class);
 		Mockito.doReturn(mockedRW).when(mockedWS).getVCSRepositoryWorkspace(URL);
 		Mockito.doReturn(URL).when(mockedRW).getRepoUrl();
-		
 		IVCS vcs = VCSFactory.getVCS(VCSType.SVN, new Credentials(NAME, PWD, true), URL, mockedWS);
 		assertTrue(vcs instanceof SVNVCS);
 		assertEquals(URL, vcs.getRepoUrl());
