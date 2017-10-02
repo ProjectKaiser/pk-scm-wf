@@ -1,10 +1,5 @@
 package org.scm4j.releaser;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.ListIterator;
-
 import org.scm4j.commons.Version;
 import org.scm4j.releaser.actions.ActionKind;
 import org.scm4j.releaser.actions.ActionNone;
@@ -21,6 +16,9 @@ import org.scm4j.releaser.scmactions.SCMActionTagRelease;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSTag;
 
+import java.io.File;
+import java.util.*;
+
 public class SCMReleaser {
 
 	public static final String MDEPS_FILE_NAME = "mdeps";
@@ -34,33 +32,41 @@ public class SCMReleaser {
 	
 	public IAction getActionTree(Component comp) {
 		Options.setIsPatch(comp.getVersion().isExact());
-		return getActionTree(comp, ActionKind.AUTO);
+		return getActionTree(comp, ActionKind.AUTO, new HashMap<Component, BuildStatus>());
 	}
 	
 	public IAction getActionTree(String coords, ActionKind actionKind) {
 		Component comp = new Component(coords);
 		Options.setIsPatch(comp.getVersion().isExact());
-		return getActionTree(new Component(coords), actionKind);
+		return getActionTree(new Component(coords), actionKind, new HashMap<Component, BuildStatus>());
 	}
 
-	public IAction getActionTree(Component comp, ActionKind actionKind) {
+	public IAction getActionTree(Component comp, ActionKind actionKind, Map<Component, BuildStatus> calculatedStatuses) {
 		List<IAction> childActions = new ArrayList<>();
-		List<Component> mDeps;
+		List<Component> mDeps = new ArrayList<>();
 		ReleaseBranch rb;
 		if (Options.isPatch()) {
 			rb = new ReleaseBranch(comp, comp.getCoords().getVersion());
-			mDeps = rb.getMDeps();
+			if (!calculatedStatuses.containsKey(comp)) {
+				mDeps = rb.getMDeps();
+			}
 		} else {
 			rb = new ReleaseBranch(comp);
-			mDeps = new DevelopBranch(comp).getMDeps(); 
+			if (!calculatedStatuses.containsKey(comp)) {
+				mDeps = new DevelopBranch(comp).getMDeps();
+			}
 		}
+		BuildStatus mbs;
+		mbs = calculatedStatuses.get(comp);
+		if (mbs == null) {
+			for (Component mDep : mDeps) {
+				childActions.add(getActionTree(mDep, actionKind, calculatedStatuses));
+			}
 
-		for (Component mDep : mDeps) {
-			childActions.add(getActionTree(mDep, actionKind));
+			Build mb = new Build(rb);
+			mbs = mb.getStatus(calculatedStatuses);
+			calculatedStatuses.put(comp, mbs);
 		}
-
-		Build mb = new Build(rb);
-		BuildStatus mbs = mb.getStatus();
 		switch (mbs) {
 		case FORK:
 		case FREEZE:

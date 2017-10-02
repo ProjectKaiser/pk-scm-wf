@@ -12,7 +12,9 @@ import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.vcs.api.VCSTag;
 import org.scm4j.vcs.api.WalkDirection;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Build {
 
@@ -29,19 +31,19 @@ public class Build {
 		this(new ReleaseBranch(comp));
 	}
 
-	public BuildStatus getStatus() {
+	public BuildStatus getStatus(Map<Component, BuildStatus> calculatedStatuses) {
 		if (Options.isPatch()) {
 			if (!rb.exists()) {
 				return BuildStatus.ERROR;
 			}
 			
 			Version headVersion = rb.getVersion();
-			if (/*comp.isProduct() && */Integer.parseInt(headVersion.getPatch()) < 1) {
+			if (Integer.parseInt(headVersion.getPatch()) < 1) {
 				return BuildStatus.ERROR;
 			}
 		} else {
 			if (!comp.getVersion().isExact()) {
-				if (isNeedToFork()) {
+				if (isNeedToFork(calculatedStatuses)) {
 					return BuildStatus.FORK;
 				}
 			}
@@ -56,7 +58,7 @@ public class Build {
 			return BuildStatus.FREEZE;
 		}
 		
-		if (hasMDepsNotInDONEStatus(mDeps)) {
+		if (hasMDepsNotInDONEStatus(mDeps, calculatedStatuses)) {
 			return BuildStatus.BUILD_MDEPS;
 		}
 
@@ -71,18 +73,25 @@ public class Build {
 		return BuildStatus.BUILD;
 	}
 
-	private boolean hasMDepsNotInDONEStatus(List<Component> mDeps) {
+	private boolean hasMDepsNotInDONEStatus(List<Component> mDeps, Map<Component, BuildStatus> calculatedStatuses) {
 		for (Component mDep : mDeps) {
 			ReleaseBranch rbMDep = new ReleaseBranch(mDep);
 			if (!rbMDep.exists()) {
 				return false;
 			}
-			if (hasMDepsNotInDONEStatus(rbMDep.getMDeps())) {
+			if (hasMDepsNotInDONEStatus(rbMDep.getMDeps(), calculatedStatuses)) {
 				return true;
 			}
 			Build bMDep = new Build(mDep);
-			if (bMDep.getStatus() != BuildStatus.DONE) {
-				return true;
+			BuildStatus calculatedStatus = calculatedStatuses.get(mDep);
+			if (calculatedStatus == null) {
+				if (bMDep.getStatus(calculatedStatuses) != BuildStatus.DONE) {
+					return true;
+				}
+			} else {
+				if (calculatedStatus != BuildStatus.DONE) {
+					return true;
+				}
 			}
 		}
 		return false;
@@ -129,7 +138,7 @@ public class Build {
 		return true;
 	}
 
-	public boolean isNeedToFork() {
+	public boolean isNeedToFork(Map<Component, BuildStatus> calculatedStatuses) {
 		// TODO: add test fork next release if one release exists already
 		if (!rb.exists()) {
 			return true;
@@ -148,8 +157,15 @@ public class Build {
 		List<Component> mDeps = db.getMDeps();
 		for (Component mDep : mDeps) {
 			Build mbMDep = new Build(mDep);
-			if (mbMDep.isNeedToFork()) {
-				return true;
+			BuildStatus calculatedStatus = calculatedStatuses.get(mDep);
+			if (calculatedStatus == null) {
+				if (mbMDep.isNeedToFork(calculatedStatuses)) {
+					return true;
+				}
+			} else {
+				if (calculatedStatus == BuildStatus.FORK) {
+					return true;
+				}
 			}
 		}
 
@@ -174,5 +190,9 @@ public class Build {
 		}
 
 		return false;
+	}
+
+	public BuildStatus getStatus() {
+		return getStatus(new HashMap<Component, BuildStatus>());
 	}
 }

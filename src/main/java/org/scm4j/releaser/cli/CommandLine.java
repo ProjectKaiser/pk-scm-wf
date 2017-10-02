@@ -41,11 +41,11 @@ public class CommandLine {
 	public static String getUsage() {
 		return "usage:  groovy run.groovy status|fork|build|tag productCoords " + printOptions() + "\r\n" 
 				+ "\r\n"
-				+ "status: show actions will be made with product specified by productCoords\r\n"
-				+ "fork:   cerate all necessary release branches for product specified by productCoords\r\n"
-				+ "build:  execute production release action on product specified by productCoords. If " + Option.DELAYED_TAG.getStrValue() + " option is provided then "
-				+ "tag will not be applied to a new relase commit. Use tag command to apply delayed tags\r\n"
-				+ "tag:    apply delayed tags on product specified by productCoords"
+				+ "status:   show actions will be made with product specified by productCoords\r\n"
+				+ "fork:     create all necessary release branches for product specified by productCoords\r\n"
+				+ "build:    execute production release action on product specified by productCoords. If " + Option.DELAYED_TAG.getStrValue() + " option is provided then "
+				+ "tag will not be applied to a new release commit. Use tag command to apply delayed tags\r\n"
+				+ "tag:      apply delayed tags on product specified by productCoords"
 				+ "\r\n"
 				+ "If productCoords contains an exact version then this version will be used. Otherwise VCS versions will be used.\r\n"
 				+ "Use " + Option.STACK_TRACE.getStrValue() + " option to get full stack trace in case of any errors";
