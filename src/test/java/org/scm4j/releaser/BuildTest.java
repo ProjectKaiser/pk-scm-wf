@@ -55,7 +55,7 @@ public class BuildTest extends WorkflowTestBase {
 		
 		SCMReleaser releaser = new SCMReleaser();
 		IAction action = releaser.getActionTree(compUBL);
-		assertTrue(action instanceof SCMActionFork); //TODO: test unTillDb will be forked too because there are no release branches at all
+		assertTrue(action instanceof SCMActionFork);
 		action.execute(getProgress(action));
 		
 		// build UBL
