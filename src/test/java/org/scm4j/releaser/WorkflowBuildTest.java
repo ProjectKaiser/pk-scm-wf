@@ -39,7 +39,7 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		checkUnTillBuilt();
 		
 		// test IGNORED dev branch state
-		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), LogTag.SCM_IGNORE + " feature commit added");
+		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), LogTag.SCM_IGNORE + " ignored feature commit added");
 		action = releaser.getActionTree(UNTILL);
 		exp = new Expectations();
 		exp.put(UNTILLDB, ActionNone.class);
@@ -109,22 +109,39 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 	}
 	
 	@Test
-	public void testBuildSingleComponent() throws Exception {
+	public void testBuildSingleComponentTwice() throws Exception {
 		// fork unTillDb
 		SCMReleaser releaser = new SCMReleaser();
 		IAction action = releaser.getActionTree(UNTILLDB);
 		action.execute(getProgress(action));
 		checkUnTillDbForked();
 		
+		// build unTillDb
 		action = releaser.getActionTree(UNTILLDB);
 		Expectations exp = new Expectations();
 		exp.put(UNTILLDB, SCMActionBuild.class);
 		checkChildActionsTypes(action, exp);
-
-		// build unTillDb
 		assertTrue(TestBuilder.getBuilders().isEmpty());
 		action.execute(getProgress(action));
 		checkUnTillDbBuilt();
+		
+		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), "feature commit added");
+		
+		// fork unTillDb next release
+		releaser = new SCMReleaser();
+		action = releaser.getActionTree(UNTILLDB);
+		action.execute(getProgress(action));
+		checkUnTillDbForked(2);
+		
+		// build unTillDb next release
+		action = releaser.getActionTree(UNTILLDB);
+		exp = new Expectations();
+		exp.put(UNTILLDB, SCMActionBuild.class);
+		checkChildActionsTypes(action, exp);
+		TestBuilder.getBuilders().clear();
+		action.execute(getProgress(action));
+		checkUnTillDbBuilt(2);
+		
 	}
 	
 	@Test

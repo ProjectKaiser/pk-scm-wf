@@ -98,22 +98,29 @@ public class WorkflowTestBase {
 		}
 	}
 	
-	public void checkUnTillDbBuilt() {
+	public void checkUnTillDbBuilt(int times) {
 		assertNotNull(TestBuilder.getBuilders());
 		assertNotNull(TestBuilder.getBuilders().get(UNTILLDB));
 
 		// check versions
 		ReleaseBranch rbUnTillDb = new ReleaseBranch(compUnTillDb);
 		Version verRelease = rbUnTillDb.getVersion();
-		assertEquals(env.getUnTillDbVer().toReleaseZeroPatch().toNextPatch(), verRelease);
+		Version expectedReleaseVer = env.getUnTillDbVer().toReleaseZeroPatch().toPreviousMinor().toNextPatch();
+		for (int i = 0; i < times; i++) {
+			expectedReleaseVer = expectedReleaseVer.toNextMinor();
+		}
+		assertEquals(expectedReleaseVer, verRelease);
 
 		// check tags
-		List<VCSTag> tags = env.getUnTillDbVCS().getTags();
+		List<VCSCommit> commits = env.getUnTillDbVCS().getCommitsRange(rbUnTillDb.getName(), null, WalkDirection.DESC, 2);
+		List<VCSTag> tags = env.getUnTillDbVCS().getTagsOnRevision(commits.get(1).getRevision());
 		assertTrue(tags.size() == 1);
 		VCSTag tag = tags.get(0);
-		assertEquals(env.getUnTillDbVer().toReleaseZeroPatch().toString(), tag.getTagName());
-		List<VCSCommit> commits = env.getUnTillDbVCS().getCommitsRange(rbUnTillDb.getName(), null, WalkDirection.DESC, 2);
-		assertEquals(commits.get(1), tag.getRelatedCommit());
+		assertEquals(verRelease.toPreviousPatch().toString(), tag.getTagName());
+	}
+	
+	public void checkUnTillDbBuilt() {
+		checkUnTillDbBuilt(1);
 	}
 
 	public void checkUBLBuilt() {
@@ -162,8 +169,8 @@ public class WorkflowTestBase {
 		// do not consider patch because unTillDb could be build already befor UBL fork so target patch is unknown
 		assertEquals(dbUnTillDb.getVersion().toPreviousMinor().toReleaseZeroPatch(), ublReleaseMDeps.get(0).getVersion().toReleaseZeroPatch()); 
 	}
-
-	public void checkUnTillDbForked() {
+	
+	public void checkUnTillDbForked(int times) {
 		ReleaseBranch newUnTillDbrb = new ReleaseBranch(compUnTillDb);
 
 		// check branches
@@ -172,8 +179,18 @@ public class WorkflowTestBase {
 		// check versions.
 		Version verTrunk = dbUnTillDb.getVersion();
 		Version verRelease = newUnTillDbrb.getVersion();
-		assertEquals(env.getUnTillDbVer().toNextMinor(), verTrunk);
-		assertEquals(env.getUnTillDbVer().toReleaseZeroPatch(), verRelease);
+		Version expectedTrunkVer = env.getUnTillDbVer();
+		Version expectedReleaseVer = env.getUnTillDbVer().toReleaseZeroPatch().toPreviousMinor();
+		for (int i = 0; i < times; i++) {
+			expectedTrunkVer = expectedTrunkVer.toNextMinor();
+			expectedReleaseVer = expectedReleaseVer.toNextMinor();
+		}
+		assertEquals(expectedTrunkVer, verTrunk);
+		assertEquals(expectedReleaseVer, verRelease);
+	}
+
+	public void checkUnTillDbForked() {
+		checkUnTillDbForked(1);
 	}
 
 	public void checkUnTillForked() {
