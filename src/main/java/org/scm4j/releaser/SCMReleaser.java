@@ -72,7 +72,7 @@ public class SCMReleaser {
 		case DONE:
 			return new ActionNone(rb, childActions, mbs.toString());
 		default:
-			throw new IllegalArgumentException("unsupported minor build status: " + mbs);
+			throw new IllegalArgumentException("unsupported build status: " + mbs);
 		}
 	}
 
