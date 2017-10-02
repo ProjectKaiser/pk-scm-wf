@@ -31,7 +31,7 @@ public class Build {
 		this(new ReleaseBranch(comp));
 	}
 
-	public BuildStatus getStatus(Map<Component, BuildStatus> calculatedStatuses) {
+	public BuildStatus getStatus(Map<Component, CalculatedResult> cr) {
 		if (Options.isPatch()) {
 			if (!rb.exists()) {
 				return BuildStatus.ERROR;
@@ -43,7 +43,7 @@ public class Build {
 			}
 		} else {
 			if (!comp.getVersion().isExact()) {
-				if (isNeedToFork(calculatedStatuses)) {
+				if (isNeedToFork(cr)) {
 					return BuildStatus.FORK;
 				}
 			}
@@ -58,7 +58,7 @@ public class Build {
 			return BuildStatus.FREEZE;
 		}
 		
-		if (hasMDepsNotInDONEStatus(mDeps, calculatedStatuses)) {
+		if (hasMDepsNotInDONEStatus(mDeps, cr)) {
 			return BuildStatus.BUILD_MDEPS;
 		}
 
@@ -73,23 +73,23 @@ public class Build {
 		return BuildStatus.BUILD;
 	}
 
-	private boolean hasMDepsNotInDONEStatus(List<Component> mDeps, Map<Component, BuildStatus> calculatedStatuses) {
+	private boolean hasMDepsNotInDONEStatus(List<Component> mDeps, Map<Component, CalculatedResult> cr) {
 		for (Component mDep : mDeps) {
 			ReleaseBranch rbMDep = new ReleaseBranch(mDep);
 			if (!rbMDep.exists()) {
 				return false;
 			}
-			if (hasMDepsNotInDONEStatus(rbMDep.getMDeps(), calculatedStatuses)) {
+			if (hasMDepsNotInDONEStatus(rbMDep.getMDeps(), cr)) {
 				return true;
 			}
 			Build bMDep = new Build(mDep);
-			BuildStatus calculatedStatus = calculatedStatuses.get(mDep);
+			CalculatedResult calculatedStatus = cr.get(mDep);
 			if (calculatedStatus == null) {
-				if (bMDep.getStatus(calculatedStatuses) != BuildStatus.DONE) {
+				if (bMDep.getStatus(cr) != BuildStatus.DONE) {
 					return true;
 				}
 			} else {
-				if (calculatedStatus != BuildStatus.DONE) {
+				if (calculatedStatus.getBuildStatus() != BuildStatus.DONE) {
 					return true;
 				}
 			}
@@ -138,7 +138,7 @@ public class Build {
 		return true;
 	}
 
-	public boolean isNeedToFork(Map<Component, BuildStatus> calculatedStatuses) {
+	public boolean isNeedToFork(Map<Component, CalculatedResult> calculatedStatuses) {
 		// TODO: add test fork next release if one release exists already
 		if (!rb.exists()) {
 			return true;
@@ -157,13 +157,13 @@ public class Build {
 		List<Component> mDeps = db.getMDeps();
 		for (Component mDep : mDeps) {
 			Build mbMDep = new Build(mDep);
-			BuildStatus calculatedStatus = calculatedStatuses.get(mDep);
+			CalculatedResult calculatedStatus = calculatedStatuses.get(mDep);
 			if (calculatedStatus == null) {
 				if (mbMDep.isNeedToFork(calculatedStatuses)) {
 					return true;
 				}
 			} else {
-				if (calculatedStatus == BuildStatus.FORK) {
+				if (calculatedStatus.getBuildStatus() == BuildStatus.FORK) {
 					return true;
 				}
 			}
@@ -193,6 +193,6 @@ public class Build {
 	}
 
 	public BuildStatus getStatus() {
-		return getStatus(new HashMap<Component, BuildStatus>());
+		return getStatus(new HashMap<Component, CalculatedResult>());
 	}
 }
