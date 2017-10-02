@@ -99,23 +99,30 @@ public class Build {
 
 	private boolean noValueableCommitsAfterLastTag() {
 		IVCS vcs = comp.getVCS();
-		List<VCSCommit> commits = vcs.getCommitsRange(rb.getName(), null, WalkDirection.DESC, 0);
+		String startingFromRevision = null;
+		
 		DelayedTagsFile dtf = new DelayedTagsFile();
 		String delayedTagRevision = dtf.getRevisitonByUrl(comp.getVcsRepository().getUrl());
-		for (VCSCommit commit : commits) {
-			if (commit.getRevision().equals(delayedTagRevision)) {
-				return true;
+		while (true) {
+			List<VCSCommit> commits = vcs.getCommitsRange(rb.getName(), startingFromRevision, WalkDirection.DESC, 10);
+			for (VCSCommit commit : commits) {
+				if (commit.getRevision().equals(delayedTagRevision)) {
+					return true;
+				}
+				//TODO: add test when we put tag on #scm-ver commit. noValueableCommitsAfterLastTag() should check if we have tags on it 
+				List<VCSTag> tags = vcs.getTagsOnRevision(commit.getRevision());
+				if (!commit.getLogMessage().contains(LogTag.SCM_VER) && !commit.getLogMessage().contains(LogTag.SCM_IGNORE)) {
+					return !tags.isEmpty();
+				}
+				if (!tags.isEmpty()) {
+					return true;
+				}
+				startingFromRevision = commit.getRevision();
 			}
-			//TODO: add test when we put tag on #scm-ver commit. noValueableCommitsAfterLastTag() should check if we have tags on it 
-			List<VCSTag> tags = vcs.getTagsOnRevision(commit.getRevision());
-			if (!commit.getLogMessage().contains(LogTag.SCM_VER) && !commit.getLogMessage().contains(LogTag.SCM_IGNORE)) {
-				return !tags.isEmpty();
-			}
-			if (!tags.isEmpty()) {
+			if (commits.size() < 10) {
 				return true;
 			}
 		}
-		return true;
 	}
 
 	private boolean areMDepsPatchesActual(List<Component> mDeps) {
