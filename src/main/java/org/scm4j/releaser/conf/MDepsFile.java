@@ -60,11 +60,11 @@ public class MDepsFile {
 		StringWriter sw = new StringWriter();
 		PrintWriter pw = new PrintWriter(sw);
 		for (int i = 0; i < mDeps.size(); i++) {
-			if (i == mDeps.size() - 1) {
-				pw.print(mDeps.get(i).toString());
-			} else {
+//			if (i == mDeps.size() - 1) {
+//				pw.print(mDeps.get(i).toString());
+//			} else {
 				pw.println(mDeps.get(i).toString());
-			}
+//			}
 			
 		}
 		return sw.toString();
