@@ -6,13 +6,15 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.scm4j.releaser.TestEnvironment;
 
 public class MDepsFileTest {
 	
 	@Test
-	public void test() {
+	@Ignore
+	public void testMDepsFile() {
 		assertFalse(new MDepsFile("").hasMDeps());
 		assertFalse(new MDepsFile((String) null).hasMDeps());
 		assertFalse(new MDepsFile((List<Component>) null).hasMDeps());
@@ -39,10 +41,5 @@ public class MDepsFileTest {
 		mdf.replaceMDep(initialComp.clone("12.13.14"));
 		
 		assertEquals(content.replace(TestEnvironment.PRODUCT_UNTILL, TestEnvironment.PRODUCT_UNTILL + ":12.13.14"), mdf.toFileContent());
-		
-		
-		
-		
 	}
-
 }
