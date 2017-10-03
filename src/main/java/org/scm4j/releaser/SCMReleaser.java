@@ -87,6 +87,7 @@ public class SCMReleaser {
 		}
 	}
 
+	
 	private IAction getBuildOrSkipAction(ReleaseBranch rb, List<IAction> childActions, BuildStatus mbs,
 			ActionKind actionKind) {
 		if (actionKind == ActionKind.FORK) {
