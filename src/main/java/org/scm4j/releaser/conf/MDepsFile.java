@@ -13,7 +13,7 @@ public class MDepsFile {
 		if (content == null || content.isEmpty()) {
 			return;
 		}
-		String[] strs = content.split("\\r?\\n", -1); //StringUtils.split(content, "\n");
+		String[] strs = content.split("\\r?\\n", -1);
 		for (String str: strs) {
 			if (isLineValueable(str)) {
 				mDeps.add(new Component(str));

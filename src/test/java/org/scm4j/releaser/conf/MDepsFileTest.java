@@ -28,7 +28,7 @@ public class MDepsFileTest {
 		String content = "\r\n"
 				+ "        # my cool comment \r\n\r\n"
 				+ "    " + TestEnvironment.PRODUCT_UNTILL + " # product comment \r\n"
-				+ "  \r\n";
+				+ "  ";
 		MDepsFile mdf = new MDepsFile(content);
 		assertTrue(mdf.hasMDeps());
 		List<Component> mDeps = mdf.getMDeps();
