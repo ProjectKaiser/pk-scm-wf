@@ -153,6 +153,7 @@ public class WorkflowForkTest extends WorkflowTestBase {
 		checkChildActionsTypes(action, exp);
 		// actualize unTill and UBL mdeps
 		action.execute(getProgress(action));
+		
 
 		// check unTill uses new untillDb and UBL versions in existing unTill release branch.
 		ReleaseBranch rbUnTill = new ReleaseBranch(compUnTill.clone(env.getUnTillVer().toRelease()));

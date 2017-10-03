@@ -17,7 +17,7 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 	private SCMReleaser releaser = new SCMReleaser();
 	
 	@Test
-	public void testBuildAllAndTestIGNOREDDev() {
+	public void testBuildAyllAndTestIGNOREDDev() {
 		// fork unTill
 		IAction action = releaser.getActionTree(UNTILL);
 		Expectations exp = new Expectations();
@@ -155,9 +155,9 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		ReleaseBranch rbUnTillDb = new ReleaseBranch(compUnTillDb);
 		ReleaseBranch rbUnTill = new ReleaseBranch(compUnTill);
 
-		assertFalse(env.getUnTillVCS().getBranches("").contains(rbUnTill.getName()));
-		assertTrue(env.getUnTillDbVCS().getBranches("").contains(rbUnTillDb.getName()));
-		assertFalse(env.getUblVCS().getBranches("").contains(rbUBL.getName()));
+		assertFalse(env.getUnTillVCS().getBranches(compUnTill.getVcsRepository().getReleaseBranchPrefix()).contains(rbUnTill.getName()));
+		assertTrue(env.getUnTillDbVCS().getBranches(compUnTillDb.getVcsRepository().getReleaseBranchPrefix()).contains(rbUnTillDb.getName()));
+		assertFalse(env.getUblVCS().getBranches(compUBL.getVcsRepository().getReleaseBranchPrefix()).contains(rbUBL.getName()));
 		
 		// fork unTill. unTillDb build must be skipped
 		action = releaser.getActionTree(UNTILL);

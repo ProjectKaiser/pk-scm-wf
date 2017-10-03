@@ -154,7 +154,7 @@ public class WorkflowTestBase {
 	public void checkUBLForked() {
 		ReleaseBranch rbUBL = new ReleaseBranch(compUBL);
 		// check branches
-		assertTrue(env.getUblVCS().getBranches("").contains(rbUBL.getName()));
+		assertTrue(env.getUblVCS().getBranches(compUBL.getVcsRepository().getReleaseBranchPrefix()).contains(rbUBL.getName()));
 
 		// check versions
 		Version verTrunk = dbUBL.getVersion();
@@ -174,7 +174,7 @@ public class WorkflowTestBase {
 		ReleaseBranch newUnTillDbrb = new ReleaseBranch(compUnTillDb);
 
 		// check branches
-		assertTrue(env.getUnTillDbVCS().getBranches("").contains(newUnTillDbrb.getName()));
+		assertTrue(env.getUnTillDbVCS().getBranches(compUnTillDb.getVcsRepository().getReleaseBranchPrefix()).contains(newUnTillDbrb.getName()));
 
 		// check versions.
 		Version verTrunk = dbUnTillDb.getVersion();
@@ -200,7 +200,7 @@ public class WorkflowTestBase {
 		ReleaseBranch rbUnTill = new ReleaseBranch(compUnTill);
 
 		// check branches
-		assertTrue(env.getUnTillVCS().getBranches("").contains(rbUnTill.getName()));
+		assertTrue(env.getUnTillVCS().getBranches(compUnTill.getVcsRepository().getReleaseBranchPrefix()).contains(rbUnTill.getName()));
 
 		// check versions
 		Version verTrunk = dbUnTill.getVersion();

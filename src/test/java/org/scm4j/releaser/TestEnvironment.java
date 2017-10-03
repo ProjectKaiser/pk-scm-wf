@@ -26,15 +26,16 @@ import java.util.UUID;
 public class TestEnvironment implements AutoCloseable {
 	public static final String TEST_REPOS_FILE_NAME = "repos";
 	public static final String TEST_CREDENTIALS_FILE_NAME = "credentials";
-	public static final String TEST_ENVIRONMENT_DIR = new File(System.getProperty("java.io.tmpdir"), "scm4j-releaser-test").getPath();
+	public static final String TEST_ENVIRONMENT_DIR = new File(System.getProperty("java.io.tmpdir"),
+			"scm4j-releaser-test").getPath();
 	public static final String TEST_REMOTE_REPO_DIR = new File(TEST_ENVIRONMENT_DIR, "remote-repos").getPath();
 	public static final String TEST_FEATURE_FILE_NAME = "feature.txt";
 	public static final String TEST_DUMMY_FILE_NAME = "dummy.txt";
-	
+
 	public static final String PRODUCT_UNTILL = "eu.untill:unTill";
 	public static final String PRODUCT_UBL = "eu.untill:UBL";
 	public static final String PRODUCT_UNTILLDB = "eu.untill:unTillDb";
-	
+
 	public final String RANDOM_VCS_NAME_SUFFIX;
 
 	private static final VCSType TESTING_VCS = VCSType.GIT;
@@ -47,11 +48,11 @@ public class TestEnvironment implements AutoCloseable {
 	private final Version ublVer = new Version("1.18.5-SNAPSHOT");
 	private final Version unTillDbVer = new Version("2.59.1-SNAPSHOT");
 	private File envDir;
-	
+
 	public TestEnvironment() {
 		RANDOM_VCS_NAME_SUFFIX = UUID.randomUUID().toString();
 	}
-	
+
 	public void generateTestEnvironment() throws Exception {
 		generateTestEnvironmentNoVCS();
 
@@ -87,12 +88,13 @@ public class TestEnvironment implements AutoCloseable {
 		if (TESTING_VCS == VCSType.SVN) {
 			url = url.replace("file:/", "file://");
 		}
-		FileUtils.writeLines(reposFile,Arrays.asList(
-				"!!omap",
-				"- eu.untill:(.*):",
-				"    url: " + url,
-				"    builder: " + BuilderFactory.SCM4J_BUILDER_CLASS_STRING + "org.scm4j.releaser.TestBuilder",
-				"    type: " + TESTING_VCS.toString().toLowerCase()));
+		FileUtils.writeLines(reposFile, Arrays.asList(
+				"!!omap", 
+				"- eu.untill:(.*):", 
+				"   url: " + url,
+				"   builder: " + BuilderFactory.SCM4J_BUILDER_CLASS_STRING + "org.scm4j.releaser.TestBuilder",
+				"   type: " + TESTING_VCS.toString().toLowerCase(),
+				"   releaseBranchPrefix: release/B"));
 	}
 
 	private void createCredentialsFile() throws IOException {
@@ -101,16 +103,21 @@ public class TestEnvironment implements AutoCloseable {
 	}
 
 	private void uploadVCSConfigFiles() {
-		unTillVCS.setFileContent(null, SCMReleaser.VER_FILE_NAME, unTillVer.toString(), LogTag.SCM_IGNORE+ " ver file added");
-		unTillVCS.setFileContent(null, SCMReleaser.MDEPS_FILE_NAME,
-				PRODUCT_UBL + ":" + ublVer.getSnapshot() + " # comment 1\r\n" +
-				PRODUCT_UNTILLDB + ":" + unTillDbVer.getSnapshot() + "# comment 2\r\n", LogTag.SCM_IGNORE + " mdeps file added");
+		unTillVCS.setFileContent(null, SCMReleaser.VER_FILE_NAME, unTillVer.toString(),
+				LogTag.SCM_IGNORE + " ver file added");
+		unTillVCS.setFileContent(null,
+				SCMReleaser.MDEPS_FILE_NAME, PRODUCT_UBL + ":" + ublVer.getSnapshot() + " # comment 1\r\n"
+						+ PRODUCT_UNTILLDB + ":" + unTillDbVer.getSnapshot() + "# comment 2\r\n",
+				LogTag.SCM_IGNORE + " mdeps file added");
 
-		ublVCS.setFileContent(null, SCMReleaser.VER_FILE_NAME, ublVer.toString(), LogTag.SCM_IGNORE + " ver file added");
+		ublVCS.setFileContent(null, SCMReleaser.VER_FILE_NAME, ublVer.toString(),
+				LogTag.SCM_IGNORE + " ver file added");
 		ublVCS.setFileContent(null, SCMReleaser.MDEPS_FILE_NAME,
-				PRODUCT_UNTILLDB + ":" + unTillDbVer.getSnapshot() + "#comment 3\r\n", LogTag.SCM_IGNORE + " mdeps file added");
+				PRODUCT_UNTILLDB + ":" + unTillDbVer.getSnapshot() + "#comment 3\r\n",
+				LogTag.SCM_IGNORE + " mdeps file added");
 
-		unTillDbVCS.setFileContent(null, SCMReleaser.VER_FILE_NAME, unTillDbVer.toString(), LogTag.SCM_IGNORE + " ver file added");
+		unTillDbVCS.setFileContent(null, SCMReleaser.VER_FILE_NAME, unTillDbVer.toString(),
+				LogTag.SCM_IGNORE + " ver file added");
 	}
 
 	private void createTestVCSRepos() throws Exception {
@@ -126,12 +133,12 @@ public class TestEnvironment implements AutoCloseable {
 			GitVCSUtils.createRepository(unTillRemoteRepoDir);
 			GitVCSUtils.createRepository(ublRemoteRepoDir);
 			GitVCSUtils.createRepository(unTillRemoteDbRepoDir);
-			unTillVCSRepoWS = localVCSWorkspace
-					.getVCSRepositoryWorkspace(StringUtils.removeEndIgnoreCase(unTillRemoteRepoDir.toURI().toURL().toString(), "/"));
-			ublVCSRepoWS = localVCSWorkspace
-					.getVCSRepositoryWorkspace(StringUtils.removeEndIgnoreCase(ublRemoteRepoDir.toURI().toURL().toString(), "/"));
-			unTillDbVCSRepoWS = localVCSWorkspace
-					.getVCSRepositoryWorkspace(StringUtils.removeEndIgnoreCase(unTillRemoteDbRepoDir.toURI().toURL().toString(), "/"));
+			unTillVCSRepoWS = localVCSWorkspace.getVCSRepositoryWorkspace(
+					StringUtils.removeEndIgnoreCase(unTillRemoteRepoDir.toURI().toURL().toString(), "/"));
+			ublVCSRepoWS = localVCSWorkspace.getVCSRepositoryWorkspace(
+					StringUtils.removeEndIgnoreCase(ublRemoteRepoDir.toURI().toURL().toString(), "/"));
+			unTillDbVCSRepoWS = localVCSWorkspace.getVCSRepositoryWorkspace(
+					StringUtils.removeEndIgnoreCase(unTillRemoteDbRepoDir.toURI().toURL().toString(), "/"));
 			unTillVCS = new GitVCS(unTillVCSRepoWS);
 			ublVCS = new GitVCS(ublVCSRepoWS);
 			unTillDbVCS = new GitVCS(unTillDbVCSRepoWS);
@@ -140,12 +147,15 @@ public class TestEnvironment implements AutoCloseable {
 			SVNVCSUtils.createRepository(unTillRemoteRepoDir);
 			SVNVCSUtils.createRepository(ublRemoteRepoDir);
 			SVNVCSUtils.createRepository(unTillRemoteDbRepoDir);
-			unTillVCSRepoWS = localVCSWorkspace
-					.getVCSRepositoryWorkspace(StringUtils.removeEndIgnoreCase(unTillRemoteRepoDir.toURI().toURL().toString(), "/").replace("file:/", "file://"));
-			ublVCSRepoWS = localVCSWorkspace
-					.getVCSRepositoryWorkspace(StringUtils.removeEndIgnoreCase(ublRemoteRepoDir.toURI().toURL().toString(), "/").replace("file:/", "file://"));
-			unTillDbVCSRepoWS = localVCSWorkspace
-					.getVCSRepositoryWorkspace(StringUtils.removeEndIgnoreCase(unTillRemoteDbRepoDir.toURI().toURL().toString(), "/").replace("file:/", "file://"));
+			unTillVCSRepoWS = localVCSWorkspace.getVCSRepositoryWorkspace(
+					StringUtils.removeEndIgnoreCase(unTillRemoteRepoDir.toURI().toURL().toString(), "/")
+							.replace("file:/", "file://"));
+			ublVCSRepoWS = localVCSWorkspace.getVCSRepositoryWorkspace(
+					StringUtils.removeEndIgnoreCase(ublRemoteRepoDir.toURI().toURL().toString(), "/").replace("file:/",
+							"file://"));
+			unTillDbVCSRepoWS = localVCSWorkspace.getVCSRepositoryWorkspace(
+					StringUtils.removeEndIgnoreCase(unTillRemoteDbRepoDir.toURI().toURL().toString(), "/")
+							.replace("file:/", "file://"));
 			unTillVCS = new SVNVCS(unTillVCSRepoWS, null, null);
 			SVNVCSUtils.createFolderStructure((SVNVCS) unTillVCS, "initial commit");
 			ublVCS = new SVNVCS(ublVCSRepoWS, null, null);
@@ -185,21 +195,23 @@ public class TestEnvironment implements AutoCloseable {
 	public File getReposFile() {
 		return reposFile;
 	}
-	
+
 	public VCSCommit generateLogTag(IVCS vcs, String branchName, String logTag) {
 		return generateDummyContent(vcs, branchName, logTag);
 	}
 
 	public VCSCommit generateFeatureCommit(IVCS vcs, String branchName, String commitMessage) {
-		return generateContent(vcs, branchName, TEST_FEATURE_FILE_NAME, "feature content " + UUID.randomUUID().toString(), commitMessage);
+		return generateContent(vcs, branchName, TEST_FEATURE_FILE_NAME,
+				"feature content " + UUID.randomUUID().toString(), commitMessage);
 	}
-	
+
 	public VCSCommit generateContent(IVCS vcs, String branchName, String fileName, String content, String logMessage) {
 		return vcs.setFileContent(branchName, fileName, content, logMessage);
 	}
-	
+
 	public VCSCommit generateDummyContent(IVCS vcs, String branchName, String logMessage) {
-		return vcs.setFileContent(branchName, TEST_DUMMY_FILE_NAME, "dummy content " + UUID.randomUUID().toString(), logMessage);
+		return vcs.setFileContent(branchName, TEST_DUMMY_FILE_NAME, "dummy content " + UUID.randomUUID().toString(),
+				logMessage);
 	}
 
 	public Version getUnTillVer() {
