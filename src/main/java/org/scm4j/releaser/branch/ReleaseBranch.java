@@ -1,14 +1,13 @@
 package org.scm4j.releaser.branch;
 
+import java.util.List;
+
 import org.scm4j.commons.Version;
 import org.scm4j.releaser.SCMReleaser;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.MDepsFile;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.exceptions.EVCSFileNotFound;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class ReleaseBranch {
 
@@ -63,14 +62,17 @@ public class ReleaseBranch {
 	public boolean exists() {
 		return vcs.getBranches(comp.getVcsRepository().getReleaseBranchPrefix()).contains(name);
 	}
-
+	
 	public List<Component> getMDeps() {
+		return getMDepsFile().getMDeps();
+	}
+
+	public MDepsFile getMDepsFile() {
 		try {
 			String mDepsFileContent = comp.getVCS().getFileContent(name, SCMReleaser.MDEPS_FILE_NAME, null);
-			MDepsFile mDeps = new MDepsFile(mDepsFileContent);
-			return mDeps.getMDeps();
+			return new MDepsFile(mDepsFileContent);
 		} catch (EVCSFileNotFound e) {
-			return new ArrayList<>();
+			return new MDepsFile("");
 		}
 	}
 

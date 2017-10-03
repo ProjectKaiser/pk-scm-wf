@@ -1,6 +1,5 @@
 package org.scm4j.releaser.scmactions;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
@@ -69,30 +68,30 @@ public class SCMActionFork extends ActionAbstract {
 	}
 	
 	private void freezeMDeps(IProgress progress) {
-		List<Component> currentMDeps = rb.getMDeps();
-		if (currentMDeps.isEmpty()) {
+		MDepsFile currentMDepsFile = rb.getMDepsFile();
+		if (!currentMDepsFile.hasMDeps()) {
 			progress.reportStatus("no mdeps to freeze");
 			return;
 		}
-		List<Component> actualizedMDeps = new ArrayList<>();
 		StringBuilder sb = new StringBuilder();
 		ReleaseBranch rbMDep;
 		Version newVersion;
-		for (Component currentMDep : currentMDeps) {
+		boolean hasChanges = false;
+		for (Component currentMDep : currentMDepsFile.getMDeps()) {
 			rbMDep = new ReleaseBranch(currentMDep);
 			// untilldb is built -> rbMDep.getVersion is 2.59.1, but we need 2.59.0
 			newVersion = rbMDep.getVersion();
 			if (!newVersion.getPatch().equals(Build.ZERO_PATCH)) {
 				newVersion = newVersion.toPreviousPatch();
 			}
-			
 			sb.append("" + currentMDep.getName() + ": " + currentMDep.getVersion() + " -> " + newVersion + "\r\n");
-			actualizedMDeps.add(currentMDep.clone(newVersion.toString()));
+			currentMDepsFile.replaceMDep(currentMDep.clone(newVersion));
+			hasChanges = true;
 		}
-		MDepsFile actualizedMDepsFile = new MDepsFile(actualizedMDeps);
-		vcs.setFileContent(rb.getName(), SCMReleaser.MDEPS_FILE_NAME, actualizedMDepsFile.toFileContent(), LogTag.SCM_MDEPS);
-		progress.reportStatus("mdeps frozen" + (sb.length() == 0 ? "" : ":\r\n" + StringUtils.removeEnd(sb.toString(), "\r\n")));
-		
+		if (hasChanges) {
+			vcs.setFileContent(rb.getName(), SCMReleaser.MDEPS_FILE_NAME, currentMDepsFile.toFileContent(), LogTag.SCM_MDEPS);
+			progress.reportStatus("mdeps frozen" + (sb.length() == 0 ? "" : ":\r\n" + StringUtils.removeEnd(sb.toString(), "\r\n")));
+		}
 	}
 
 	private void truncateSnapshotReleaseVersion(IProgress progress) {

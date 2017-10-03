@@ -1,7 +1,6 @@
 package org.scm4j.releaser.scmactions;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
@@ -80,17 +79,16 @@ public class SCMActionBuild extends ActionAbstract {
 	}
 
 	private void actualizePatches(IProgress progress) {
-		List<Component> currentMDeps = rb.getMDeps();
-		if (currentMDeps.isEmpty()) {
+		MDepsFile currentMDepsFile = rb.getMDepsFile();
+		if (!currentMDepsFile.hasMDeps()) {
 			progress.reportStatus("no mdeps to actualize");
 			return;
 		}
-		List<Component> actualizedMDeps = new ArrayList<>();
 		StringBuilder sb = new StringBuilder();
 		boolean hasNew = false;
 		ReleaseBranch rbMDep;
 		Version newVersion;
-		for (Component currentMDep : currentMDeps) {
+		for (Component currentMDep : currentMDepsFile.getMDeps()) {
 			rbMDep = new ReleaseBranch(currentMDep);
 			if (rbMDep.exists()) {
 				newVersion = rbMDep.getVersion().toPreviousPatch();
@@ -104,11 +102,10 @@ public class SCMActionBuild extends ActionAbstract {
 			if (hasNew) {
 				sb.append("" + currentMDep.getName() + ": " + currentMDep.getVersion() + " -> " + newVersion + "\r\n");
 			}
-			actualizedMDeps.add(currentMDep.clone(newVersion.toString()));
+			currentMDepsFile.replaceMDep(currentMDep.clone(newVersion));
 		}
 		if (hasNew) {
-			MDepsFile actualizedMDepsFile = new MDepsFile(actualizedMDeps);
-			vcs.setFileContent(rb.getName(), SCMReleaser.MDEPS_FILE_NAME, actualizedMDepsFile.toFileContent(), LogTag.SCM_MDEPS);
+			vcs.setFileContent(rb.getName(), SCMReleaser.MDEPS_FILE_NAME, currentMDepsFile.toFileContent(), LogTag.SCM_MDEPS);
 			progress.reportStatus("mdeps actualized" + (sb.length() == 0 ? "" : ":\r\n" + StringUtils.removeEnd(sb.toString(), "\r\n")));
 		} else {
 			progress.reportStatus("mdeps are actual already");
