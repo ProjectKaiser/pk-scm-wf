@@ -3,6 +3,8 @@ package org.scm4j.releaser.conf;
 import org.junit.Test;
 import org.scm4j.releaser.TestEnvironment;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.Arrays;
 import java.util.List;
 
@@ -57,10 +59,14 @@ public class MDepsFileTest {
 
 	@Test
 	public void testFormatSavingOnReplace() {
-		String content = "\r\n"
-				+ "        # my cool comment \r\n\r\n"
-				+ "    " + TestEnvironment.PRODUCT_UNTILL + " # product comment \r\n"
-				+ "  ";
+		StringWriter sw = new StringWriter();
+		PrintWriter pw = new PrintWriter(sw);
+		pw.println();
+		pw.println("        # my cool comment ");
+		pw.println();
+		pw.println("    " + TestEnvironment.PRODUCT_UNTILL + " # product comment ");
+		pw.print("  ");
+		String content = sw.toString();
 		MDepsFile mdf = new MDepsFile(content);
 		assertTrue(mdf.hasMDeps());
 		List<Component> mDeps = mdf.getMDeps();
