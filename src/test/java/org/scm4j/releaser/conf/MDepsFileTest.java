@@ -1,14 +1,12 @@
 package org.scm4j.releaser.conf;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
-import java.util.List;
-
 import org.junit.Ignore;
 import org.junit.Test;
 import org.scm4j.releaser.TestEnvironment;
+
+import java.util.List;
+
+import static org.junit.Assert.*;
 
 public class MDepsFileTest {
 	
