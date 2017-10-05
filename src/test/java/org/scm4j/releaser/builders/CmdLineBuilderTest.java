@@ -59,7 +59,7 @@ public class CmdLineBuilderTest {
 	
 	@Test
 	public void testParsingCmdLine() throws Exception {
-		List<String> cmdEth = Arrays.asList("cmd.exe",  "/C",  "\"sdsds ddgfgf\"", "gradlew.bat", "build");
+		List<String> cmdEth = Arrays.asList("cmd.exe",  "/C",  "\"sdsds ddgfgf\"", "gradlew.bat", "build"); 
 		CmdLineBuilder cmd = new CmdLineBuilder(StringUtils.join(cmdEth, " "));
 		assertTrue(cmdEth.containsAll(cmd.getProcessBuilder().command()));
 		assertTrue(cmd.getProcessBuilder().command().containsAll(cmdEth));
