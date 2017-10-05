@@ -1,6 +1,7 @@
 package org.scm4j.releaser.builders;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -11,8 +12,11 @@ import java.io.File;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.List;
 
 import org.apache.commons.io.input.ReaderInputStream;
+import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.releaser.TestEnvironment;
@@ -26,7 +30,7 @@ public class CmdLineBuilderTest {
 	private static final String TEST_PROCESS_ERROR = "test process error";
 	
 	@Test
-	public void testCmdLineBuilder() throws Exception {
+	public void testBuild() throws Exception {
 		CmdLineBuilder clb = spy(new CmdLineBuilder(TEST_CMD_LINE));
 		Component comp = new Component(TestEnvironment.PRODUCT_UNTILLDB);
 		File workingFolder = new File(TestEnvironment.TEST_REMOTE_REPO_DIR); 
@@ -51,5 +55,13 @@ public class CmdLineBuilderTest {
 		} catch (EBuilder e) {
 			assertEquals(TEST_PROCESS_ERROR, e.getMessage());
 		}
+	}
+	
+	@Test
+	public void testParsingCmdLine() throws Exception {
+		List<String> cmdEth = Arrays.asList("cmd.exe",  "/C",  "\"sdsds ddgfgf\"", "gradlew.bat", "build");
+		CmdLineBuilder cmd = new CmdLineBuilder(StringUtils.join(cmdEth, " "));
+		assertTrue(cmdEth.containsAll(cmd.getProcessBuilder().command()));
+		assertTrue(cmd.getProcessBuilder().command().containsAll(cmdEth));
 	}
 }
