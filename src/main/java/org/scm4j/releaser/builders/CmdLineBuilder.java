@@ -33,7 +33,6 @@ public class CmdLineBuilder implements IBuilder {
 
 	protected Process getProcess(File workingFolder) throws Exception {
 		pb.redirectErrorStream(true);
-		pb.inheritIO();
 		pb.directory(workingFolder);
 		return pb.start();
 	}
