@@ -17,7 +17,7 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 	private SCMReleaser releaser = new SCMReleaser();
 	
 	@Test
-	public void testBuildAyllAndTestIGNOREDDev() {
+	public void testBuildAllAndTestIGNOREDDev() {
 		// fork unTill
 		IAction action = releaser.getActionTree(UNTILL);
 		Expectations exp = new Expectations();

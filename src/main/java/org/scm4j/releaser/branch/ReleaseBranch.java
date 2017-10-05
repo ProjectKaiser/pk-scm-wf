@@ -1,7 +1,11 @@
 package org.scm4j.releaser.branch;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.List;
 
+import org.apache.commons.io.FileUtils;
 import org.scm4j.commons.Version;
 import org.scm4j.releaser.SCMReleaser;
 import org.scm4j.releaser.conf.Component;
@@ -11,6 +15,7 @@ import org.scm4j.vcs.api.exceptions.EVCSFileNotFound;
 
 public class ReleaseBranch {
 
+	private static final String RELEASES_DIR_NAME = "releases";
 	private final Component comp;
 	private final IVCS vcs;
 	private final Version version; // exists ? head version : db.version.minor-1.zeroPatch
@@ -83,5 +88,12 @@ public class ReleaseBranch {
 	@Override
 	public String toString() {
 		return "ReleaseBranch [comp=" + comp + ", version=" + version.toReleaseString() + ", name=" + name + "]";
+	}
+	
+	public File getBuildDir() {
+		File buildDir = new File(System.getProperty("user.dir"), RELEASES_DIR_NAME);
+		buildDir = new File(buildDir, comp.getVcsRepository().getUrl().replaceAll("[^a-zA-Z0-9.-]", "_"));
+		buildDir = new File(buildDir, getName().replaceAll("[^a-zA-Z0-9.-]", "_"));
+		return buildDir;
 	}
 }

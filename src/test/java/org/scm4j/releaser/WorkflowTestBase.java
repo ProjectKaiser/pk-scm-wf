@@ -99,11 +99,13 @@ public class WorkflowTestBase {
 	}
 	
 	public void checkUnTillDbBuilt(int times) {
+		ReleaseBranch rbUnTillDb = new ReleaseBranch(compUnTillDb);
 		assertNotNull(TestBuilder.getBuilders());
 		assertNotNull(TestBuilder.getBuilders().get(UNTILLDB));
+		
+		assertTrue(rbUnTillDb.getBuildDir().exists());
 
 		// check versions
-		ReleaseBranch rbUnTillDb = new ReleaseBranch(compUnTillDb);
 		Version verRelease = rbUnTillDb.getVersion();
 		Version expectedReleaseVer = env.getUnTillDbVer().toReleaseZeroPatch().toPreviousMinor().toNextPatch();
 		for (int i = 0; i < times; i++) {
@@ -127,6 +129,9 @@ public class WorkflowTestBase {
 		checkUnTillDbBuilt();
 		ReleaseBranch rbUBL = new ReleaseBranch(compUBL);
 		ReleaseBranch rbUnTillDb = new ReleaseBranch(compUnTillDb);
+		
+		assertTrue(rbUBL.getBuildDir().exists());
+		
 		// check UBL versions
 		assertEquals(env.getUblVer().toNextMinor(), dbUBL.getVersion());
 		assertEquals(env.getUblVer().toReleaseZeroPatch(), rbUBL.getVersion().toReleaseZeroPatch());
@@ -225,6 +230,29 @@ public class WorkflowTestBase {
 
 	public void checkUnTillBuilt() {
 		checkUBLBuilt();
+		ReleaseBranch rbUnTill= new ReleaseBranch(compUnTill);
+		
+		assertTrue(rbUnTill.getBuildDir().exists());
+		
+		// check versions
+		assertEquals(env.getUnTillVer().toNextMinor(), dbUnTill.getVersion());
+		assertEquals(env.getUnTillVer().toReleaseZeroPatch(), rbUnTill.getVersion().toReleaseZeroPatch());
+
+		// check mDeps
+		List<Component> untillReleaseMDeps = rbUnTill.getMDeps();
+		assertTrue(untillReleaseMDeps.size() == 2);
+		assertEquals(compUnTillDb.getName(), untillReleaseMDeps.get(1).getName());
+		assertEquals(env.getUnTillDbVer().toReleaseZeroPatch(), untillReleaseMDeps.get(1).getVersion().toReleaseZeroPatch());
+		assertEquals(compUBL.getName(), untillReleaseMDeps.get(0).getName());
+		assertEquals(env.getUblVer().toReleaseZeroPatch(), untillReleaseMDeps.get(0).getVersion().toReleaseZeroPatch());
+
+		// check tags
+		List<VCSTag> tags = env.getUnTillVCS().getTags();
+		assertTrue(tags.size() == 1);
+		VCSTag tag = tags.get(0);
+		assertEquals(dbUnTill.getVersion().toPreviousMinor().toReleaseZeroPatch().toString(), tag.getTagName());
+		List<VCSCommit> commits = env.getUnTillVCS().getCommitsRange(rbUnTill.getName(), null, WalkDirection.DESC, 2);
+		assertEquals(commits.get(1), tag.getRelatedCommit());
 	}
 	
 	protected IProgress getProgress(IAction action) {

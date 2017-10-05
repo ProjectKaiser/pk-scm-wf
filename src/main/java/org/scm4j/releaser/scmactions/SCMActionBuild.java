@@ -1,8 +1,11 @@
 package org.scm4j.releaser.scmactions;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.List;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.scm4j.commons.Version;
 import org.scm4j.commons.progress.IProgress;
@@ -24,7 +27,6 @@ import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.vcs.api.VCSTag;
 import org.scm4j.vcs.api.exceptions.EVCSTagExists;
-import org.scm4j.vcs.api.workingcopy.IVCSLockedWorkingCopy;
 
 	
 public class SCMActionBuild extends ActionAbstract {
@@ -113,11 +115,14 @@ public class SCMActionBuild extends ActionAbstract {
 	}
 
 	private void build(IProgress progress, VCSCommit headCommit) throws Exception {
-		try (IVCSLockedWorkingCopy lwc = vcs.getWorkspace().getVCSRepositoryWorkspace(vcs.getRepoUrl()).getVCSLockedWorkingCopyTemp()) {
-			progress.reportStatus(String.format("checking out %s on revision %s into %s", getName(), headCommit.getRevision(), lwc.getFolder().getPath()));
-			vcs.checkout(rb.getName(), lwc.getFolder().getPath(), headCommit.getRevision());
-			comp.getVcsRepository().getBuilder().build(comp, lwc.getFolder(), progress);
+		File buildDir = rb.getBuildDir();
+		if (buildDir.exists()) {
+			FileUtils.deleteDirectory(buildDir);
 		}
+		Files.createDirectories(buildDir.toPath());		
+		progress.reportStatus(String.format("checking out %s on revision %s into %s", getName(), headCommit.getRevision(), buildDir.getPath()));
+		vcs.checkout(rb.getName(), buildDir.getPath(), headCommit.getRevision());
+		comp.getVcsRepository().getBuilder().build(comp, buildDir, progress);
 	}
 
 	private void tagBuild(IProgress progress, VCSCommit headCommit) throws IOException {
