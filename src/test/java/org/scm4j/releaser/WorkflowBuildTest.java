@@ -1,6 +1,7 @@
 package org.scm4j.releaser;
 
 import org.junit.Test;
+import org.scm4j.releaser.actions.ActionKind;
 import org.scm4j.releaser.actions.ActionNone;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.branch.ReleaseBranch;
@@ -211,5 +212,54 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		assertTrue(action instanceof SCMActionBuild);
 		action.execute(getProgress(action));
 		assertEquals(dbUnTillDb.getVersion().toPreviousMinor().toPreviousMinor().toNextPatch().toRelease(), new ReleaseBranch(comp, comp.getVersion()).getVersion());
+	}
+
+	@Test
+	public void testSkipBuildsOnFORKActionKind() {
+		// fork all
+		IAction action = releaser.getActionTree(compUnTill);
+		action.execute(getProgress(action));
+		checkUnTillForked();
+
+		// try to build with FORK target action kind. All builds should be skipped
+		action = releaser.getActionTree(compUnTill, ActionKind.FORK);
+		Expectations exp = new Expectations();
+		exp.put(UNTILL, ActionNone.class);
+		exp.put(UNTILLDB, ActionNone.class);
+		exp.put(UBL, ActionNone.class);
+		checkChildActionsTypes(action, exp);
+	}
+
+	@Test
+	public void testSkipChildForkIfParentGoingToBuild() {
+		// fork UBL
+		IAction action = releaser.getActionTree(UBL);
+		action.execute(getProgress(action));
+		checkUBLForked();
+
+		// build UBL
+		action = releaser.getActionTree(UBL);
+		action.execute(getProgress(action));
+		checkUBLBuilt();
+
+		// fork next UBL version
+		env.generateFeatureCommit(env.getUblVCS(), compUBL.getVcsRepository().getDevBranch(), "feature added");
+		action = releaser.getActionTree(UBL);
+		assertTrue(action instanceof SCMActionFork);
+		action.execute(getProgress(action));
+
+		//generate unTillDb fork conditions
+		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), "feature added");
+
+		// ensure UnTillDb is going to fork
+		action = releaser.getActionTree(UNTILLDB);
+		assertTrue(action instanceof SCMActionFork);
+
+		// build UBL. unTillDb fork should be skipped
+		action = releaser.getActionTree(UBL);
+		Expectations exp = new Expectations();
+		exp.put(UBL, SCMActionBuild.class);
+		exp.put(UNTILLDB, ActionNone.class);
+		checkChildActionsTypes(action, exp);
 	}
 }
