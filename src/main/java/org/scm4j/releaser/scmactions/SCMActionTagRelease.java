@@ -10,7 +10,7 @@ import org.scm4j.releaser.conf.DelayedTagsFile;
 import org.scm4j.releaser.conf.TagDesc;
 import org.scm4j.releaser.exceptions.EReleaserException;
 import org.scm4j.vcs.api.IVCS;
-import org.scm4j.vcs.api.VCSTag;
+import org.scm4j.vcs.api.exceptions.EVCSTagExists;
 
 import java.util.List;
 
@@ -30,11 +30,7 @@ public class SCMActionTagRelease extends ActionAbstract {
 			return;
 		}
 		try {
-			for (IAction action : childActions) {
-				try (IProgress nestedProgress = progress.createNestedProgress(action.toString())) {
-					action.execute(nestedProgress);
-				}
-			}
+			super.executeChilds(progress);
 			
 			DelayedTagsFile cf = new DelayedTagsFile();
 			IVCS vcs = getVCS();
@@ -44,20 +40,19 @@ public class SCMActionTagRelease extends ActionAbstract {
 				return;
 			}
 			
-			List<VCSTag> tagsOnRevision = vcs.getTagsOnRevision(revisionToTag);
 			Version delayedTagVersion = new Version(vcs.getFileContent(rb.getName(), SCMReleaser.VER_FILE_NAME, revisionToTag));
 			TagDesc tagDesc = SCMReleaser.getTagDesc(delayedTagVersion.toString());
-			for (VCSTag tag : tagsOnRevision) {
-				if (tag.getTagName().equals(tagDesc.getName())) {
-					progress.reportStatus(String.format("revision %s is already tagged with %s tag", revisionToTag, tag.getTagName()));
-					return;
-				}
+
+			try {
+				vcs.createTag(rb.getName(), tagDesc.getName(), tagDesc.getMessage(), revisionToTag);
+				progress.reportStatus(String.format("%s of %s tagged: %s", "commit " + revisionToTag, rb.getName(), delayedTagVersion.toReleaseString()));
+			} catch (EVCSTagExists e) {
+				progress.reportStatus(String.format("revision %s is already tagged with %s tag", revisionToTag, tagDesc.getName()));
 			}
 			
-			vcs.createTag(rb.getName(), tagDesc.getName(), tagDesc.getMessage(), revisionToTag);
-			
 			cf.removeRevisionByUrl(comp.getVcsRepository().getUrl());
-			progress.reportStatus(String.format("%s of %s tagged: %s", "commit " + revisionToTag, rb.getName(), delayedTagVersion.toReleaseString()));
+
+			addProcessedUrl(comp.getVcsRepository().getUrl());
 		} catch (EReleaserException e) {
 			throw e;
 		} catch (Exception e) {
