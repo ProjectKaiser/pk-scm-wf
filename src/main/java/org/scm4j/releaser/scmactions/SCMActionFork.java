@@ -58,6 +58,7 @@ public class SCMActionFork extends ActionAbstract {
 			if (!(e instanceof EReleaserException)) {
 				throw new EReleaserException(e);
 			}
+			throw (EReleaserException) e;
 		}
 	}
 	
@@ -67,7 +68,7 @@ public class SCMActionFork extends ActionAbstract {
 		progress.reportStatus("branch " + newBranchName + " created");
 	}
 	
-	private void freezeMDeps(IProgress progress) {
+	protected void freezeMDeps(IProgress progress) throws Exception {
 		MDepsFile currentMDepsFile = rb.getMDepsFile();
 		if (!currentMDepsFile.hasMDeps()) {
 			progress.reportStatus("no mdeps to freeze");

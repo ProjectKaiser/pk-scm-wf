@@ -26,7 +26,6 @@ import org.scm4j.releaser.exceptions.EReleaserException;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.vcs.api.VCSTag;
-import org.scm4j.vcs.api.exceptions.EVCSTagExists;
 
 	
 public class SCMActionBuild extends ActionAbstract {
@@ -83,21 +82,13 @@ public class SCMActionBuild extends ActionAbstract {
 
 	protected void actualizePatches(IProgress progress) throws Exception {
 		MDepsFile currentMDepsFile = rb.getMDepsFile();
-		if (!currentMDepsFile.hasMDeps()) {
-			progress.reportStatus("no mdeps to actualize");
-			return;
-		}
 		StringBuilder sb = new StringBuilder();
 		boolean hasNew = false;
 		ReleaseBranch rbMDep;
 		Version newVersion;
 		for (Component currentMDep : currentMDepsFile.getMDeps()) {
 			rbMDep = new ReleaseBranch(currentMDep);
-			if (rbMDep.exists()) {
-				newVersion = rbMDep.getVersion().toPreviousPatch();
-			} else {
-				newVersion = rbMDep.getVersion().toNextMinor();
-			}
+			newVersion = rbMDep.getVersion().toPreviousPatch();
 			if (!newVersion.equals(currentMDep.getVersion())) {
 				hasNew = true;
 			}
@@ -134,12 +125,8 @@ public class SCMActionBuild extends ActionAbstract {
 		} else {
 			String releaseBranchName = rb.getName();
 			TagDesc tagDesc = SCMReleaser.getTagDesc(rb.getVersion().toString());
-			try {
-				VCSTag tag = vcs.createTag(releaseBranchName, tagDesc.getName(), tagDesc.getMessage(), headCommit.getRevision());
-				progress.reportStatus("head of \"" + releaseBranchName + "\" tagged: " + tag.toString());
-			} catch (EVCSTagExists e) {
-				progress.reportStatus("head of \"" + releaseBranchName + "\" is tagged already: " + tagDesc.getName());
-			}
+			VCSTag tag = vcs.createTag(releaseBranchName, tagDesc.getName(), tagDesc.getMessage(), headCommit.getRevision());
+			progress.reportStatus("head of \"" + releaseBranchName + "\" tagged: " + tag.toString());
 		}
 	}
 

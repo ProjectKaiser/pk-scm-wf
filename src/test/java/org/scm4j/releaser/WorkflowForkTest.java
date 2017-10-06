@@ -9,6 +9,7 @@ import java.util.List;
 
 import org.junit.Ignore;
 import org.junit.Test;
+import org.scm4j.releaser.actions.ActionKind;
 import org.scm4j.releaser.actions.ActionNone;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.branch.ReleaseBranch;
@@ -218,6 +219,7 @@ public class WorkflowForkTest extends WorkflowTestBase {
 		// fork all
 		IAction action = releaser.getActionTree(compUnTill);
 		action.execute(getProgress(action));
+		checkUnTillForked();
 		
 		// check mDeps versions. All of them should be replaced with new ones with no snapshot
 		// UBL mDeps
@@ -241,5 +243,32 @@ public class WorkflowForkTest extends WorkflowTestBase {
 				fail();
 			}
 		}
+	}
+	
+	@Test
+	public void testSkipBuilds() {
+		// fork all
+		IAction action = releaser.getActionTree(compUnTill);
+		action.execute(getProgress(action));
+		checkUnTillForked();
+		
+		// try to build with FORK target action kind. All builds should be skipped
+		action = releaser.getActionTree(compUnTill, ActionKind.FORK);
+		Expectations exp = new Expectations();
+		exp.put(UNTILL, ActionNone.class);
+		exp.put(UNTILLDB, ActionNone.class);
+		exp.put(UBL, ActionNone.class);
+		checkChildActionsTypes(action, exp);
+	}
+	
+	@Test
+	public void testSkipForks() {
+		//try to fork all with BUILD target action kind. All forks should be skipped
+		IAction action = releaser.getActionTree(compUnTill, ActionKind.BUILD);
+		Expectations exp = new Expectations();
+		exp.put(UNTILL, ActionNone.class);
+		exp.put(UNTILLDB, ActionNone.class);
+		exp.put(UBL, ActionNone.class);
+		checkChildActionsTypes(action, exp);
 	}
 }

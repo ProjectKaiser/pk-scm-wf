@@ -35,14 +35,19 @@ public class SCMReleaser {
 	}
 	
 	public IAction getActionTree(Component comp) {
-		Options.setIsPatch(comp.getVersion().isExact());
-		return getActionTree(comp, ActionKind.AUTO, new HashMap<Component, CalculatedResult>());
+		return getActionTree(comp, ActionKind.AUTO);
+		
 	}
 	
 	public IAction getActionTree(String coords, ActionKind actionKind) {
 		Component comp = new Component(coords);
 		Options.setIsPatch(comp.getVersion().isExact());
 		return getActionTree(new Component(coords), actionKind, new HashMap<Component, CalculatedResult>());
+	}
+	
+	public IAction getActionTree(Component comp, ActionKind actionKind) {
+		Options.setIsPatch(comp.getVersion().isExact());
+		return getActionTree(comp, actionKind, new HashMap<Component, CalculatedResult>());
 	}
 
 	public IAction getActionTree(Component comp, ActionKind actionKind, Map<Component, CalculatedResult> calculatedStatuses) {
@@ -170,6 +175,4 @@ public class SCMReleaser {
 		}
 		return new SCMActionTagRelease(new ReleaseBranch(comp), childActions);
 	}
-
-	
 }
