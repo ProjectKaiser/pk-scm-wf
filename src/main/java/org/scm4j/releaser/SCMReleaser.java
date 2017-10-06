@@ -1,12 +1,5 @@
 package org.scm4j.releaser;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.Map;
-
 import org.scm4j.commons.Version;
 import org.scm4j.releaser.actions.ActionKind;
 import org.scm4j.releaser.actions.ActionNone;
@@ -22,6 +15,9 @@ import org.scm4j.releaser.scmactions.SCMActionFork;
 import org.scm4j.releaser.scmactions.SCMActionTagRelease;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSTag;
+
+import java.io.File;
+import java.util.*;
 
 public class SCMReleaser {
 
@@ -52,7 +48,7 @@ public class SCMReleaser {
 
 	public IAction getActionTree(Component comp, ActionKind actionKind, Map<Component, CalculatedResult> calculatedStatuses) {
 		List<IAction> childActions = new ArrayList<>();
-		List<Component> mDeps = new ArrayList<>();
+		List<Component> mDeps;
 		ReleaseBranch rb;
 		BuildStatus mbs;
 		CalculatedResult cr = calculatedStatuses.get(comp);

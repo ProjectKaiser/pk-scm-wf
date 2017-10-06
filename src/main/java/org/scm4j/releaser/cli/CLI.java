@@ -15,8 +15,8 @@ import java.io.PrintStream;
 
 public class CLI {
 	
-	public static int EXIT_CODE_OK = 0;
-	public static int EXIT_CODE_ERROR = 1;
+	public static final int EXIT_CODE_OK = 0;
+	public static final int EXIT_CODE_ERROR = 1;
 	
 	public int exec(SCMReleaser releaser, CommandLine cmd, PrintStream ps) throws Exception {
 		IAction action;

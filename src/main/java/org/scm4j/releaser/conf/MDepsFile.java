@@ -7,7 +7,7 @@ import java.util.List;
 
 public class MDepsFile {
 	
-	private List<Object> mDeps = new ArrayList<>();
+	private final List<Object> mDeps = new ArrayList<>();
 	
 	public MDepsFile(String content) {
 		if (content == null || content.isEmpty()) {

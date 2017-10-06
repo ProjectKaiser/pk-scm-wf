@@ -30,7 +30,7 @@ public class VCSRepositories {
 	}
 
 	public VCSRepositories(String urlsStr, String credsStr) {
-		this(urlsStr, credsStr, new VCSWorkspace());
+		this(urlsStr, credsStr, new VCSWorkspace(DEFAULT_VCS_WORKSPACE_DIR));
 	}
 
 	public VCSRepositories(String urlsStr, String credsStr, IVCSWorkspace ws) throws YAMLException {

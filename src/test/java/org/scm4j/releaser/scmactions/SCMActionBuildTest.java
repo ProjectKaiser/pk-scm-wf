@@ -1,7 +1,6 @@
 package org.scm4j.releaser.scmactions;
 
-import java.util.ArrayList;
-
+import org.junit.Before;
 import org.junit.Test;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.releaser.BuildStatus;
@@ -15,20 +14,29 @@ import org.scm4j.releaser.exceptions.ENoBuilder;
 import org.scm4j.releaser.exceptions.EReleaserException;
 import org.scm4j.vcs.api.IVCS;
 
+import java.util.ArrayList;
+
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 public class SCMActionBuildTest {
+
+	private IProgress progress;
+	private Component comp;
+
+	@Before
+	public void setUp() {
+		comp = new Component(TestEnvironment.PRODUCT_UNTILL);
+		IVCS vcs = mock(IVCS.class);
+		doReturn("11.12.13").when(vcs).getFileContent(anyString(), anyString(), anyString());
+		VCSRepository repo =  new VCSRepository("test repo", "test url", null, VCSType.GIT, "dev branch", "release branch prefix", vcs, null);
+		comp.setRepo(repo);
+		progress = mock(IProgress.class);
+	}
 	
 	@Test
 	public void testNoBuilder() {
-		Component comp = new Component(TestEnvironment.PRODUCT_UNTILL);
-		IVCS vcs = mock(IVCS.class);
-		doReturn("11.12.13").when(vcs).getFileContent(anyString(), anyString(), anyString());
-		VCSRepository repo = new VCSRepository("test repo", "test url", null, VCSType.GIT, "dev branch", "release branch prefix", vcs, null);
-		comp.setRepo(repo);
 		SCMActionBuild action = new SCMActionBuild(new ReleaseBranch(comp), new ArrayList<IAction>(), BuildStatus.BUILD);
-		IProgress progress = mock(IProgress.class);
 		try {
 			action.execute(progress);
 			fail();
@@ -40,12 +48,6 @@ public class SCMActionBuildTest {
 	
 	@Test
 	public void testWrongBuildStatus() {
-		Component comp = new Component(TestEnvironment.PRODUCT_UNTILL);
-		IVCS vcs = mock(IVCS.class);
-		doReturn("11.12.13").when(vcs).getFileContent(anyString(), anyString(), anyString());
-		VCSRepository repo = new VCSRepository("test repo", "test url", null, VCSType.GIT, "dev branch", "release branch prefix", vcs, null);
-		comp.setRepo(repo);
-		IProgress progress = mock(IProgress.class);
 		SCMActionBuild action;
 		int count = 1;
 		for (BuildStatus status : BuildStatus.values()) {
@@ -65,12 +67,7 @@ public class SCMActionBuildTest {
 	
 	@Test
 	public void testExceptions() throws Exception {
-		Component comp = new Component(TestEnvironment.PRODUCT_UNTILL);
-		IVCS vcs = mock(IVCS.class);
-		doReturn("11.12.13").when(vcs).getFileContent(anyString(), anyString(), anyString());
-		VCSRepository repo = new VCSRepository("test repo", "test url", null, VCSType.GIT, "dev branch", "release branch prefix", vcs, null);
-		comp.setRepo(repo);
-		IProgress progress = mock(IProgress.class);
+
 		SCMActionBuild action = spy(new SCMActionBuild(new ReleaseBranch(comp), new ArrayList<IAction>(), BuildStatus.ACTUALIZE_PATCHES));
 		Exception testException = new Exception("test exception");
 		EReleaserException testReleaseException = new EReleaserException("test releaser exception");

@@ -1,13 +1,5 @@
 package org.scm4j.releaser;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
-import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -20,11 +12,17 @@ import org.scm4j.releaser.conf.Options;
 import org.scm4j.vcs.api.VCSTag;
 import org.scm4j.vcs.api.WalkDirection;
 
+import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
+
+import static org.junit.Assert.*;
+
 public class WorkflowDelayedTagTest extends WorkflowTestBase {
 
 	
-	private SCMReleaser releaser = new SCMReleaser();
-	DelayedTagsFile cf = new DelayedTagsFile();
+	private final SCMReleaser releaser = new SCMReleaser();
+	private final DelayedTagsFile cf = new DelayedTagsFile();
 	
 	@Before
 	@After

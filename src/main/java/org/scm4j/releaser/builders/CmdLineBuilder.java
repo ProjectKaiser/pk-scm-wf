@@ -1,5 +1,10 @@
 package org.scm4j.releaser.builders;
 
+import org.apache.commons.io.IOUtils;
+import org.scm4j.commons.progress.IProgress;
+import org.scm4j.releaser.conf.Component;
+import org.scm4j.releaser.exceptions.EBuilder;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStream;
@@ -9,11 +14,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import org.apache.commons.io.IOUtils;
-import org.scm4j.commons.progress.IProgress;
-import org.scm4j.releaser.conf.Component;
-import org.scm4j.releaser.exceptions.EBuilder;
 
 public class CmdLineBuilder implements IBuilder {
 
@@ -53,10 +53,6 @@ public class CmdLineBuilder implements IBuilder {
 		}
 	}
 	
-	public void setProcessBuilder(ProcessBuilder pb) {
-		this.pb = pb;
-	}
-
 	public ProcessBuilder getProcessBuilder() {
 		return pb;
 	}

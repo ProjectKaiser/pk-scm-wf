@@ -1,12 +1,5 @@
 package org.scm4j.releaser;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
-import java.util.Arrays;
-import java.util.List;
-
 import org.junit.Ignore;
 import org.junit.Test;
 import org.scm4j.releaser.actions.ActionKind;
@@ -18,9 +11,14 @@ import org.scm4j.releaser.conf.MDepsFile;
 import org.scm4j.releaser.scmactions.SCMActionBuild;
 import org.scm4j.releaser.scmactions.SCMActionFork;
 
+import java.util.Arrays;
+import java.util.List;
+
+import static org.junit.Assert.*;
+
 public class WorkflowForkTest extends WorkflowTestBase {
 	
-	SCMReleaser releaser = new SCMReleaser();
+	private final SCMReleaser releaser = new SCMReleaser();
 
 	@Test
 	public void testForkSingleComponentNoMDeps() throws Exception {

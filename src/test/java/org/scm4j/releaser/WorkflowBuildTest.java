@@ -12,7 +12,7 @@ import static org.junit.Assert.*;
 
 public class WorkflowBuildTest extends WorkflowTestBase {
 	
-	private SCMReleaser releaser = new SCMReleaser();
+	private final SCMReleaser releaser = new SCMReleaser();
 	
 	@Test
 	public void testBuildAllAndTestIGNOREDDev() {
