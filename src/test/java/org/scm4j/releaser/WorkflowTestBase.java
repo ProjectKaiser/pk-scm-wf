@@ -1,5 +1,6 @@
 package org.scm4j.releaser;
 
+import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.scm4j.commons.Version;
@@ -48,6 +49,7 @@ public class WorkflowTestBase {
 		dbUBL = new DevelopBranch(compUBL);
 		TestBuilder.setBuilders(new HashMap<String, TestBuilder>());
 		new DelayedTagsFile().delete();
+		FileUtils.deleteDirectory(ReleaseBranch.RELEASES_DIR);
 	}
 
 	@After
@@ -57,6 +59,7 @@ public class WorkflowTestBase {
 		}
 		TestBuilder.setBuilders(null);
 		Options.setOptions(new ArrayList<Option>());
+		FileUtils.deleteDirectory(ReleaseBranch.RELEASES_DIR);
 	}
 	
 	protected void checkChildActionsTypes(IAction action, Expectations exp) {
