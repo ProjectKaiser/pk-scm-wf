@@ -1,7 +1,9 @@
 package org.scm4j.releaser.branch;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
@@ -65,8 +67,13 @@ public class DevelopBranchTest extends WorkflowTestBase {
 			new DevelopBranch(compUnTill).getVersion();
 			fail();
 		} catch (EComponentConfig e) {
-			
 		}
-			
+	}
+	
+	@Test
+	public void testHasVersionFile() {
+		assertTrue(new DevelopBranch(compUnTill).hasVersionFile());
+		env.getUnTillVCS().removeFile(compUnTill.getVcsRepository().getDevBranch(), SCMReleaser.VER_FILE_NAME, "version file removed");
+		assertFalse(new DevelopBranch(compUnTill).hasVersionFile());
 	}
 }

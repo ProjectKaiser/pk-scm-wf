@@ -44,14 +44,6 @@ public abstract class ActionAbstract implements IAction {
 	}
 
 	@Override
-	public IAction getParent() {
-		if (parent != null) {
-			return parent.getParent();
-		}
-		return this;
-	}
-
-	@Override
 	public void addProcessedUrl(String url) {
 		if(null != parent){
 			parent.addProcessedUrl(url);

@@ -14,8 +14,6 @@ public interface IAction {
 
 	void setParent(IAction parent);
 
-	IAction getParent();
-
 	void addProcessedUrl(String url);
 
 	boolean isUrlProcessed(String url);

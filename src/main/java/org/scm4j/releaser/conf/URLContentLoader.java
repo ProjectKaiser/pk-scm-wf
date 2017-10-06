@@ -25,6 +25,9 @@ public class URLContentLoader {
 	}
 	
 	public String getContentFromUrl(String urlStr) throws IOException {
+		if (urlStr == null) {
+			return null;
+		}
 		URL url = new URL(urlStr);
 		String vcsReposYml;
 		try (InputStream inputStream = url.openStream()) {

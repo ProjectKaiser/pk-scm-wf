@@ -1,11 +1,8 @@
 package org.scm4j.releaser.branch;
 
 import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
 import java.util.List;
 
-import org.apache.commons.io.FileUtils;
 import org.scm4j.commons.Version;
 import org.scm4j.releaser.SCMReleaser;
 import org.scm4j.releaser.conf.Component;

@@ -12,6 +12,7 @@ import java.util.Map;
 
 public class DelayedTagsFile {
 	
+	public static final String MISSING_TO_STRING_MESSAGE = "<missing>";
 	private final File delayedTagsFile;
 	
 	public DelayedTagsFile() {
@@ -25,6 +26,14 @@ public class DelayedTagsFile {
 		Map<String, String> delayedTags = getContent();
 		return delayedTags.get(url);
 	}
+	
+	protected String loadContent() throws IOException {
+		return FileUtils.readFileToString(delayedTagsFile, StandardCharsets.UTF_8);
+	}
+	
+	protected void saveContent(String content) throws IOException {
+		FileUtils.writeStringToFile(delayedTagsFile, content, StandardCharsets.UTF_8);
+	}
 
 	public Map<String, String> getContent() {
 		if (!delayedTagsFile.exists()) {
@@ -33,7 +42,7 @@ public class DelayedTagsFile {
 		Yaml yaml = new Yaml();
 		try {
 			@SuppressWarnings("unchecked")
-			Map<String, String> delayedTags = yaml.loadAs(FileUtils.readFileToString(delayedTagsFile, StandardCharsets.UTF_8), Map.class);
+			Map<String, String> delayedTags = yaml.loadAs(loadContent(), Map.class);
 			if (delayedTags == null) {
 				return new HashMap<>();
 			}
@@ -62,14 +71,14 @@ public class DelayedTagsFile {
 	@Override
 	public String toString() {
 		if (!delayedTagsFile.exists()) {
-			return "<missing>";
+			return MISSING_TO_STRING_MESSAGE;
 		}
 		return getContent().toString();
 	}
 
-	public void removeRevisionByUrl(String compName) {
+	public void removeRevisionByUrl(String url) {
 		Map<String, String> content = getContent();
-		String removedRevision = content.remove(compName);
+		String removedRevision = content.remove(url);
 		if (removedRevision != null) {
 			writeContent(content);
 		}
@@ -78,7 +87,7 @@ public class DelayedTagsFile {
 	private void writeContent(Map<String, String> content) {
 		Yaml yaml = new Yaml();
 		try {
-			FileUtils.writeStringToFile(delayedTagsFile, yaml.dumpAsMap(content), StandardCharsets.UTF_8);
+			saveContent(yaml.dumpAsMap(content));
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}

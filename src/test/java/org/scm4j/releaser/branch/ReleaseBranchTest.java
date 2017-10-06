@@ -2,6 +2,7 @@ package org.scm4j.releaser.branch;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
@@ -70,5 +71,10 @@ public class ReleaseBranchTest extends WorkflowTestBase {
 		action.execute(getProgress(action));
 
 		assertEquals(env.getUnTillDbVer().toReleaseZeroPatch(), new ReleaseBranch(compUnTillDb).getVersion());
+	}
+	
+	@Test
+	public void testToString() {
+		assertNotNull(new ReleaseBranch(compUnTill));
 	}
 }
