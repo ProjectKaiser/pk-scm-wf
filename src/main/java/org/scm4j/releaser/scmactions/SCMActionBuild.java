@@ -21,7 +21,7 @@ import org.scm4j.releaser.conf.MDepsFile;
 import org.scm4j.releaser.conf.Option;
 import org.scm4j.releaser.conf.Options;
 import org.scm4j.releaser.conf.TagDesc;
-import org.scm4j.releaser.exceptions.EBuilder;
+import org.scm4j.releaser.exceptions.ENoBuilder;
 import org.scm4j.releaser.exceptions.EReleaserException;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSCommit;
@@ -60,7 +60,7 @@ public class SCMActionBuild extends ActionAbstract {
 				actualizePatches(progress);
 			case BUILD:
 				if (comp.getVcsRepository().getBuilder() == null) {
-					throw new EBuilder("no builder defined for " + comp);
+					throw new ENoBuilder(comp);
 				}
 				VCSCommit headCommit = vcs.getHeadCommit(rb.getName());
 				build(progress, headCommit);
@@ -72,15 +72,16 @@ public class SCMActionBuild extends ActionAbstract {
 				throw new IllegalStateException(mbs + " target action is occured when build only is expected");
 			}
 			addProcessedUrl(comp.getVcsRepository().getUrl());
-		} catch (EReleaserException e) {
-			throw e;
 		} catch (Exception e) {
 			progress.error("execution error: " + e.toString());
-			throw new EReleaserException(e);
+			if (!(e instanceof EReleaserException)) {
+				throw new EReleaserException(e);
+			}
+			throw (EReleaserException) e;
 		}
 	}
 
-	private void actualizePatches(IProgress progress) {
+	protected void actualizePatches(IProgress progress) throws Exception {
 		MDepsFile currentMDepsFile = rb.getMDepsFile();
 		if (!currentMDepsFile.hasMDeps()) {
 			progress.reportStatus("no mdeps to actualize");

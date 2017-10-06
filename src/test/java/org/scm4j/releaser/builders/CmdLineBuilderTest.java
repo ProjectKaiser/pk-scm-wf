@@ -54,6 +54,7 @@ public class CmdLineBuilderTest {
 			fail();
 		} catch (EBuilder e) {
 			assertEquals(TEST_PROCESS_ERROR, e.getMessage());
+			assertEquals(comp, e.getComp());
 		}
 	}
 	

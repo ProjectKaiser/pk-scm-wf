@@ -7,4 +7,8 @@ public class EReleaserException extends RuntimeException {
 	public EReleaserException(Exception e) {
 		super(e);
 	}
+	
+	public EReleaserException(String message) {
+		super(message);
+	}
 }

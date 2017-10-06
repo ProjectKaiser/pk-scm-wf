@@ -49,8 +49,12 @@ public class CmdLineBuilder implements IBuilder {
 
 		if (process.waitFor() != 0) {
 			InputStream is = process.getErrorStream();
-			throw new EBuilder(IOUtils.toString(is, StandardCharsets.UTF_8));
+			throw new EBuilder(IOUtils.toString(is, StandardCharsets.UTF_8), comp);
 		}
+	}
+	
+	public void setProcessBuilder(ProcessBuilder pb) {
+		this.pb = pb;
 	}
 
 	public ProcessBuilder getProcessBuilder() {

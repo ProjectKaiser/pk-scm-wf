@@ -53,11 +53,11 @@ public class SCMActionFork extends ActionAbstract {
 				throw new IllegalStateException(mbs + " target action is occured when fork only is expected");
 			}
 			addProcessedUrl(comp.getVcsRepository().getUrl());
-		} catch (EReleaserException e) {
-			throw e;
 		} catch (Exception e) {
 			progress.error("execution error: " + e.toString());
-			throw new EReleaserException(e);
+			if (!(e instanceof EReleaserException)) {
+				throw new EReleaserException(e);
+			}
 		}
 	}
 	

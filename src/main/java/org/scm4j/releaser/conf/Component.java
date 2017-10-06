@@ -6,9 +6,10 @@ import org.scm4j.vcs.api.IVCS;
 
 public class Component {
 	private final Coords coords;
-
+	private VCSRepository repo = null;
+	
 	public VCSRepository getVcsRepository() {
-		return VCSRepositories.getDefault().getByName(coords.getName());
+		return repo == null ? VCSRepositories.getDefault().getByName(coords.getName()) : repo;
 	}
 
 	public Component(String coordsStr) {
@@ -57,5 +58,9 @@ public class Component {
 	@Override
 	public int hashCode() {
 		return coords.hashCode();
+	}
+
+	public void setRepo(VCSRepository repo) {
+		this.repo = repo;
 	}
 }

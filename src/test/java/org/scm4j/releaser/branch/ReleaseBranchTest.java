@@ -75,6 +75,6 @@ public class ReleaseBranchTest extends WorkflowTestBase {
 	
 	@Test
 	public void testToString() {
-		assertNotNull(new ReleaseBranch(compUnTill));
+		assertNotNull(new ReleaseBranch(compUnTill).toString());
 	}
 }
