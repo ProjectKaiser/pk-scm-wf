@@ -28,6 +28,7 @@ public class TestEnvironment implements AutoCloseable {
 	public static final String TEST_CREDENTIALS_FILE_NAME = "credentials";
 	public static final String TEST_ENVIRONMENT_DIR = new File(System.getProperty("java.io.tmpdir"),
 			"scm4j-releaser-test").getPath();
+	public static final String TEST_VCS_WORKSPACES_DIR = new File(TEST_ENVIRONMENT_DIR, "vcs-workspaces").getPath();
 	public static final String TEST_REMOTE_REPO_DIR = new File(TEST_ENVIRONMENT_DIR, "remote-repos").getPath();
 	public static final String TEST_FEATURE_FILE_NAME = "feature.txt";
 	public static final String TEST_DUMMY_FILE_NAME = "dummy.txt";
@@ -121,7 +122,7 @@ public class TestEnvironment implements AutoCloseable {
 	}
 
 	private void createTestVCSRepos() throws Exception {
-		IVCSWorkspace localVCSWorkspace = new VCSWorkspace();
+		IVCSWorkspace localVCSWorkspace = new VCSWorkspace(TEST_VCS_WORKSPACES_DIR);
 		File unTillRemoteRepoDir = new File(TEST_REMOTE_REPO_DIR, "unTill-" + RANDOM_VCS_NAME_SUFFIX);
 		File ublRemoteRepoDir = new File(TEST_REMOTE_REPO_DIR, "UBL-" + RANDOM_VCS_NAME_SUFFIX);
 		File unTillRemoteDbRepoDir = new File(TEST_REMOTE_REPO_DIR, "unTillDb-" + RANDOM_VCS_NAME_SUFFIX);

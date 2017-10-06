@@ -1,9 +1,5 @@
 package org.scm4j.releaser;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
 import org.junit.Test;
 import org.scm4j.releaser.actions.ActionNone;
 import org.scm4j.releaser.actions.IAction;
@@ -11,6 +7,8 @@ import org.scm4j.releaser.branch.ReleaseBranch;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.scmactions.SCMActionBuild;
 import org.scm4j.releaser.scmactions.SCMActionFork;
+
+import static org.junit.Assert.*;
 
 public class WorkflowBuildTest extends WorkflowTestBase {
 	
@@ -193,10 +191,12 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		// fork new unTillDb Release 2.60
 		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), "feature added");
 		action = releaser.getActionTree(UNTILLDB);
+		assertTrue(action instanceof SCMActionFork);
 		action.execute(getProgress(action));
 		
 		// build new unTillDbRelease 2.60.0
 		action = releaser.getActionTree(UNTILLDB);
+		assertTrue(action instanceof SCMActionBuild);
 		action.execute(getProgress(action));
 		
 		assertEquals(env.getUnTillDbVer().toNextMinor().toRelease(), new ReleaseBranch(compUnTillDb).getVersion());
@@ -208,6 +208,7 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		
 		// build new unTillDb patch
 		action = releaser.getActionTree(comp);
+		assertTrue(action instanceof SCMActionBuild);
 		action.execute(getProgress(action));
 		assertEquals(dbUnTillDb.getVersion().toPreviousMinor().toPreviousMinor().toNextPatch().toRelease(), new ReleaseBranch(comp, comp.getVersion()).getVersion());
 	}
