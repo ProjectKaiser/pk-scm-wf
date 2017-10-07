@@ -82,7 +82,7 @@ public class SCMReleaser {
 		case BUILD:
 			return getBuildOrSkipAction(rb, childActions, mbs, actionKind);
 		case DONE:
-			return new ActionNone(rb, childActions, mbs.toString());
+			return new ActionNone(rb, childActions, mbs);
 		default:
 			throw new IllegalArgumentException("unsupported build status: " + mbs);
 		}
@@ -92,18 +92,18 @@ public class SCMReleaser {
 	private IAction getBuildOrSkipAction(ReleaseBranch rb, List<IAction> childActions, BuildStatus mbs,
 			ActionKind actionKind) {
 		if (actionKind == ActionKind.FORK) {
-			return new ActionNone(rb, childActions, "nothing to fork");
+			return new ActionNone(rb, childActions, mbs);
 		}
-		skipAllForks(rb, childActions);
+		skipAllForks(childActions);
 		return new SCMActionBuild(rb, childActions, mbs);
 	}
 
 	private IAction getForkOrSkipAction(ReleaseBranch rb, List<IAction> childActions, BuildStatus mbs,
 			ActionKind actionKind) {
 		if (actionKind == ActionKind.BUILD) {
-			return new ActionNone(rb, childActions, "nothing to build");
+			return new ActionNone(rb, childActions, mbs);
 		}
-		skipAllBuilds(rb, childActions);
+		skipAllBuilds(childActions);
 		return new SCMActionFork(rb, childActions, mbs);
 	}
 
@@ -112,26 +112,26 @@ public class SCMReleaser {
 		return new TagDesc(verStr, tagMessage);
 	}
 	
-	private void skipAllForks(ReleaseBranch rb, List<IAction> childActions) {
+	private void skipAllForks(List<IAction> childActions) {
 		ListIterator<IAction> li = childActions.listIterator();
 		IAction action;
 		while (li.hasNext()) {
 			action = li.next();
-			skipAllForks(rb, action.getChildActions());
+			skipAllForks(action.getChildActions());
 			if (action instanceof SCMActionFork) {
-				li.set(new ActionNone(((SCMActionFork) action).getReleaseBranch(), action.getChildActions(), "fork skipped because not all parent components built"));
+				li.set(new ActionNone(((SCMActionFork) action).getReleaseBranch(), action.getChildActions(), null, "fork skipped because not all parent components built"));
 			}
 		}
 	}
 
-	private void skipAllBuilds(ReleaseBranch rb, List<IAction> childActions) {
+	private void skipAllBuilds(List<IAction> childActions) {
 		ListIterator<IAction> li = childActions.listIterator();
 		IAction action;
 		while (li.hasNext()) {
 			action = li.next();
-			skipAllBuilds(rb, action.getChildActions());
+			skipAllBuilds(action.getChildActions());
 			if (action instanceof SCMActionBuild) {
-				li.set(new ActionNone(((SCMActionBuild) action).getReleaseBranch(), action.getChildActions(), ((SCMActionBuild) action).getVersion() +
+				li.set(new ActionNone(((SCMActionBuild) action).getReleaseBranch(), action.getChildActions(), null, ((SCMActionBuild) action).getVersion() +
 						" build skipped because not all parent components forked"));
 			}
 		}
@@ -155,7 +155,7 @@ public class SCMReleaser {
 		String delayedRevisionToTag = cf.getRevisitonByUrl(comp.getVcsRepository().getUrl());
 		
 		if (delayedRevisionToTag == null) {
-			return new ActionNone(new ReleaseBranch(comp), childActions, "no delayed tags");
+			return new ActionNone(new ReleaseBranch(comp), childActions, null, "no delayed tags");
 		}
 
 		ReleaseBranch rb = new ReleaseBranch(comp);
@@ -166,7 +166,7 @@ public class SCMReleaser {
 		Version delayedTagVersion = new Version(vcs.getFileContent(rb.getName(), SCMReleaser.VER_FILE_NAME, delayedRevisionToTag));
 		for (VCSTag tag : tagsOnRevision) {
 			if (tag.getTagName().equals(delayedTagVersion.toReleaseString())) {
-				return new ActionNone(new ReleaseBranch(comp), childActions, "tag " + tag.getTagName() + " already exists");
+				return new ActionNone(new ReleaseBranch(comp), childActions, null, "tag " + tag.getTagName() + " already exists");
 			}
 		}
 		return new SCMActionTagRelease(new ReleaseBranch(comp), childActions);

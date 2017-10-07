@@ -1,7 +1,9 @@
 package org.scm4j.releaser;
 
 import org.apache.commons.io.FileUtils;
+import org.hamcrest.Matcher;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.scm4j.commons.Version;
 import org.scm4j.commons.progress.IProgress;
@@ -13,16 +15,18 @@ import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.DelayedTagsFile;
 import org.scm4j.releaser.conf.Option;
 import org.scm4j.releaser.conf.Options;
+import org.scm4j.releaser.scmactions.SCMActionBuild;
+import org.scm4j.releaser.scmactions.SCMActionFork;
+import org.scm4j.releaser.scmactions.SCMActionTagRelease;
 import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.vcs.api.VCSTag;
 import org.scm4j.vcs.api.WalkDirection;
 
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
 public class WorkflowTestBase {
@@ -62,42 +66,6 @@ public class WorkflowTestBase {
 		FileUtils.deleteDirectory(ReleaseBranch.RELEASES_DIR);
 	}
 	
-	protected void checkChildActionsTypes(IAction action, Expectations exp) {
-		for (IAction nestedAction : action.getChildActions()) {
-			checkChildActionsTypes(nestedAction, exp);
-		}
-		if (!exp.getProps().containsKey(action.getName())) {
-			fail("unexpected action: " + action.getName());
-		}
-		Map<String, Object> props = exp.getProps().get(action.getName());
-		Class<?> clazz = (Class<?>) props.get("class");
-		if (!action.getClass().isAssignableFrom(clazz)) {
-			fail(String.format("%s: expected: %s, actual: %s", action.getName(), clazz.toString(), action.getClass().toString()));
-		}
-		if (props.size() <= 1) {
-			return; 
-		}
-		
-		label1: for (String propName : props.keySet()) {
-			for (Method method : action.getClass().getMethods()) {
-				if (method.getName().toLowerCase().equals("get" + propName)) {
-					Object propValue;
-					try {
-						propValue = method.invoke(action);
-					} catch (Exception e) {
-						throw new RuntimeException(e);
-					}
-					if (!propValue.equals(props.get(propName))) {
-						fail(String.format("%s: property %s failed: expected %s, actual %s", action.getName(), propName,
-								propValue, props.get(propName)));
-					}
-					continue label1;
-				}
-			}
-			fail(String.format("%s: property %s is not declared", action.getName(), propName));
-		}
-	}
-	
 	public void checkUnTillDbBuilt(int times) {
 		ReleaseBranch rbUnTillDb = new ReleaseBranch(compUnTillDb);
 		assertNotNull(TestBuilder.getBuilders());
@@ -128,17 +96,14 @@ public class WorkflowTestBase {
 	public void checkUBLBuilt() {
 		checkUnTillDbBuilt();
 		ReleaseBranch rbUBL = new ReleaseBranch(compUBL);
-		ReleaseBranch rbUnTillDb = new ReleaseBranch(compUnTillDb);
-		
+		assertNotNull(TestBuilder.getBuilders());
+		assertNotNull(TestBuilder.getBuilders().get(UBL));
+
 		assertTrue(rbUBL.getBuildDir().exists());
 		
 		// check UBL versions
 		assertEquals(env.getUblVer().toNextMinor(), dbUBL.getVersion());
 		assertEquals(env.getUblVer().toReleaseZeroPatch(), rbUBL.getVersion().toReleaseZeroPatch());
-
-		// check unTillDb versions
-		assertEquals(env.getUnTillDbVer().toNextMinor(), dbUnTillDb.getVersion());
-		assertEquals(env.getUnTillDbVer().toReleaseZeroPatch(), rbUnTillDb.getVersion().toReleaseZeroPatch());
 
 		// check UBL mDeps
 		List<Component> ublReleaseMDeps = rbUBL.getMDeps();
@@ -257,5 +222,70 @@ public class WorkflowTestBase {
 	
 	protected IProgress getProgress(IAction action) {
 		return new ProgressConsole(action.toString(), ">>> ", "<<< ");
+	}
+
+	private IAction getActionByComp(IAction action, Component comp, int level) {
+		for (IAction nestedAction : action.getChildActions()) {
+			IAction res = getActionByComp(nestedAction, comp, level + 1);
+			if (res != null) {
+				return res;
+			}
+		}
+		if (action.getComp().getName().equals(comp.getName())) {
+			return action;
+		}
+		if (level == 0) {
+			throw new AssertionError("No action for " + comp);
+		}
+		return null;
+	}
+
+	private IAction getActionByComp(IAction action, Component comp) {
+		return getActionByComp(action, comp, 0);
+	}
+
+	protected void assertThat(IAction action, Matcher<? super IAction> matcher, Component... comps) {
+		for (Component comp : comps) {
+			IAction actionForComp = getActionByComp(action, comp);
+			Assert.assertThat("action for " + comp, actionForComp, matcher);
+		}
+	}
+
+	protected void assertIsGoingToForkAll(IAction action) {
+		assertIsGoingToFork(action, compUBL, compUnTillDb, compUnTill);
+	}
+
+	protected void assertIsGoingToFork(IAction action, Component... comps) {
+		assertThat(action, allOf(
+				instanceOf(SCMActionFork.class),
+				hasProperty("mbs", equalTo(BuildStatus.FORK))), comps);
+	}
+
+	protected void assertIsGoingToBuild(IAction action, Component... comps) {
+		assertThat(action, allOf(
+				instanceOf(SCMActionBuild.class),
+				hasProperty("mbs", equalTo(BuildStatus.BUILD))), comps);
+	}
+
+	protected void assertIsGoingToBuild(IAction action, Component comp, BuildStatus mbs) {
+		assertThat(action, allOf(
+				instanceOf(SCMActionBuild.class),
+				hasProperty("mbs", equalTo(mbs))), comp);
+	}
+
+	protected void assertIsGoingToTag(IAction action, Component comp) {
+		assertThat(action, instanceOf(SCMActionTagRelease.class), comp);
+	}
+
+	protected void assertIsGoingToBuildAll(IAction action) {
+		assertIsGoingToBuild(action, compUnTillDb, BuildStatus.BUILD);
+		assertIsGoingToBuild(action, compUnTill, BuildStatus.BUILD_MDEPS);
+		assertIsGoingToBuild(action, compUBL, BuildStatus.BUILD_MDEPS);
+	}
+
+	protected void assertIsGoingToTagAll(IAction action) {
+		assertIsGoingToTag(action, compUnTillDb);
+		assertIsGoingToTag(action, compUnTill);
+		assertIsGoingToTag(action, compUBL);
 	}
 }

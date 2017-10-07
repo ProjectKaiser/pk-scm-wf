@@ -135,6 +135,12 @@ public class CLITest {
 	}
 
 	@Test
+	public void testMainExitCodeERRORStacktrace() throws Exception {
+		exit.expectSystemExitWithStatus(CLI.EXIT_CODE_ERROR);
+		CLI.main(new String[] { "wrong command", UNTILL, Option.STACK_TRACE.getStrValue() });
+	}
+
+	@Test
 	public void testSetOptions() throws Exception {
 		exit.expectSystemExitWithStatus(CLI.EXIT_CODE_ERROR); // no repo url for
 																// unTill

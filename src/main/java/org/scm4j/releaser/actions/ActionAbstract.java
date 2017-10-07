@@ -69,4 +69,9 @@ public abstract class ActionAbstract implements IAction {
 			}
 		}
 	}
+
+	@Override
+	public Component getComp() {
+		return comp;
+	}
 }

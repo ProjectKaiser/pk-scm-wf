@@ -6,11 +6,9 @@ import org.scm4j.releaser.actions.ActionNone;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.branch.ReleaseBranch;
 import org.scm4j.releaser.conf.Component;
-import org.scm4j.releaser.scmactions.SCMActionBuild;
-import org.scm4j.releaser.scmactions.SCMActionFork;
 
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
-
 public class WorkflowBuildTest extends WorkflowTestBase {
 	
 	private final SCMReleaser releaser = new SCMReleaser();
@@ -19,59 +17,47 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 	public void testBuildAllAndTestIGNOREDDev() {
 		// fork unTill
 		IAction action = releaser.getActionTree(UNTILL);
-		Expectations exp = new Expectations();
-		exp.put(UNTILLDB, SCMActionFork.class);
-		exp.put(UNTILL, SCMActionFork.class);
-		exp.put(UBL, SCMActionFork.class);
-		checkChildActionsTypes(action, exp);
+		assertIsGoingToForkAll(action);
 		action.execute(getProgress(action));
 		checkUnTillForked();
 
 		// build unTill
 		action = releaser.getActionTree(UNTILL);
-		exp = new Expectations();
-		exp.put(UNTILLDB, SCMActionBuild.class);
-		exp.put(UNTILL, SCMActionBuild.class);
-		exp.put(UBL, SCMActionBuild.class);
-		checkChildActionsTypes(action, exp);
+		assertIsGoingToBuildAll(action);
 		action.execute(getProgress(action));
 		checkUnTillBuilt();
 		
 		// test IGNORED dev branch state
 		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), LogTag.SCM_IGNORE + " ignored feature commit added");
-		action = releaser.getActionTree(UNTILL);
-		exp = new Expectations();
-		exp.put(UNTILLDB, ActionNone.class);
-		exp.put(UNTILL, ActionNone.class);
-		exp.put(UBL, ActionNone.class);
-		checkChildActionsTypes(action, exp);
 	}
 
 	@Test
 	public void testBuildRootIfNestedIsBuiltAlready() throws Exception {
 		// fork unTillDb 
 		IAction action = releaser.getActionTree(UNTILLDB);
+		assertIsGoingToFork(action, compUnTillDb);
 		action.execute(getProgress(action));
 		
 		// build unTillDb
 		action = releaser.getActionTree(UNTILLDB);
+		assertIsGoingToBuild(action, compUnTillDb);
 		action.execute(getProgress(action));
 		
 		// fork UBL
 		action = releaser.getActionTree(UBL);
-		Expectations exp = new Expectations();
-		exp.put(UBL, SCMActionFork.class);
-		exp.put(UNTILLDB, ActionNone.class);
-		checkChildActionsTypes(action, exp);
+		assertIsGoingToFork(action, compUBL);
+		assertThat(action, allOf(
+				instanceOf(ActionNone.class),
+				hasProperty("mbs", equalTo(BuildStatus.DONE))), compUnTillDb);
 		action.execute(getProgress(action));
 		checkUBLForked();
 		
 		// build UBL
 		action = releaser.getActionTree(UBL);
-		exp = new Expectations();
-		exp.put(UBL, SCMActionBuild.class);
-		exp.put(UNTILLDB, ActionNone.class);
-		checkChildActionsTypes(action, exp);
+		assertIsGoingToBuild(action, compUBL);
+		assertThat(action, allOf(
+				instanceOf(ActionNone.class),
+				hasProperty("mbs", equalTo(BuildStatus.DONE))), compUnTillDb);
 		action.execute(getProgress(action));
 		checkUBLBuilt();
 	}
@@ -80,17 +66,15 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 	public void testBuildRootAndChildIfAllForkedAlready() throws Exception {
 		// fork unTillDb
 		IAction action = releaser.getActionTree(UNTILLDB);
-		Expectations exp = new Expectations();
-		exp.put(UNTILLDB, SCMActionFork.class);
-		checkChildActionsTypes(action, exp);
+		assertIsGoingToFork(action, compUnTillDb);
 		action.execute(getProgress(action));
 		
 		// fork UBL
 		action = releaser.getActionTree(UBL);
-		exp = new Expectations();
-		exp.put(UBL, SCMActionFork.class);
-		exp.put(UNTILLDB, ActionNone.class);
-		checkChildActionsTypes(action, exp);
+		assertIsGoingToFork(action, compUBL);
+		assertThat(action, allOf(
+				instanceOf(ActionNone.class),
+				hasProperty("mbs", nullValue())), compUnTillDb);
 		action.execute(getProgress(action));
 		checkUBLForked();
 		
@@ -98,11 +82,8 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		
 		// build UBL and unTillDb
 		action = releaser.getActionTree(UBL);
-		exp = new Expectations();
-		exp.put(UBL, SCMActionBuild.class);
-		exp.put(UNTILLDB, SCMActionBuild.class);
-		checkChildActionsTypes(action, exp);
-		
+		assertIsGoingToBuild(action, compUnTillDb);
+		assertIsGoingToBuild(action, compUBL, BuildStatus.BUILD_MDEPS);
 		action.execute(getProgress(action));
 		checkUBLBuilt();
 	}
@@ -110,94 +91,78 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 	@Test
 	public void testBuildSingleComponentTwice() throws Exception {
 		// fork unTillDb
-		SCMReleaser releaser = new SCMReleaser();
 		IAction action = releaser.getActionTree(UNTILLDB);
+		assertIsGoingToFork(action, compUnTillDb);
 		action.execute(getProgress(action));
 		checkUnTillDbForked();
 		
 		// build unTillDb
 		action = releaser.getActionTree(UNTILLDB);
-		Expectations exp = new Expectations();
-		exp.put(UNTILLDB, SCMActionBuild.class);
-		checkChildActionsTypes(action, exp);
-		assertTrue(TestBuilder.getBuilders().isEmpty());
+		assertIsGoingToBuild(action, compUnTillDb);
 		action.execute(getProgress(action));
 		checkUnTillDbBuilt();
 		
 		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), "feature commit added");
 		
 		// fork unTillDb next release
-		releaser = new SCMReleaser();
 		action = releaser.getActionTree(UNTILLDB);
+		assertIsGoingToFork(action, compUnTillDb);
 		action.execute(getProgress(action));
 		checkUnTillDbForked(2);
 		
 		// build unTillDb next release
 		action = releaser.getActionTree(UNTILLDB);
-		exp = new Expectations();
-		exp.put(UNTILLDB, SCMActionBuild.class);
-		checkChildActionsTypes(action, exp);
+		assertIsGoingToBuild(action, compUnTillDb);
 		TestBuilder.getBuilders().clear();
 		action.execute(getProgress(action));
 		checkUnTillDbBuilt(2);
-		
 	}
 	
 	@Test
 	public void testSkipBuildsIfParentUnforked() throws Exception {
 		// fork unTillDb
 		IAction action = releaser.getActionTree(UNTILLDB);
+		assertIsGoingToFork(action, compUnTillDb);
 		action.execute(getProgress(action));
 		checkUnTillDbForked();
 
-		ReleaseBranch rbUBL = new ReleaseBranch(compUBL);
-		ReleaseBranch rbUnTillDb = new ReleaseBranch(compUnTillDb);
-		ReleaseBranch rbUnTill = new ReleaseBranch(compUnTill);
-
-		assertFalse(env.getUnTillVCS().getBranches(compUnTill.getVcsRepository().getReleaseBranchPrefix()).contains(rbUnTill.getName()));
-		assertTrue(env.getUnTillDbVCS().getBranches(compUnTillDb.getVcsRepository().getReleaseBranchPrefix()).contains(rbUnTillDb.getName()));
-		assertFalse(env.getUblVCS().getBranches(compUBL.getVcsRepository().getReleaseBranchPrefix()).contains(rbUBL.getName()));
-		
 		// fork unTill. unTillDb build must be skipped
 		action = releaser.getActionTree(UNTILL);
-		Expectations exp = new Expectations();
-		exp.put(UNTILLDB, ActionNone.class);
-		exp.put(UNTILL, SCMActionFork.class);
-		exp.put(UBL, SCMActionFork.class);
-		checkChildActionsTypes(action, exp);
+		assertIsGoingToFork(action, compUnTill, compUBL);
+		assertThat(action, allOf(
+				instanceOf(ActionNone.class),
+				hasProperty("mbs", nullValue())), compUnTillDb);
 		action.execute(getProgress(action));
 		checkUnTillForked();
 		
 		// check all is going to build
 		action = releaser.getActionTree(UNTILL);
-		exp = new Expectations();
-		exp.put(UNTILLDB, SCMActionBuild.class);
-		exp.put(UNTILL, SCMActionBuild.class);
-		exp.put(UBL, SCMActionBuild.class);
-		checkChildActionsTypes(action, exp);
+		assertIsGoingToBuildAll(action);
 	}
 	
 	@Test
 	public void testBuildPatchOnExistingRelease() throws Exception {
 		// fork unTillDb 2.59
 		IAction action = releaser.getActionTree(UNTILLDB);
+		assertIsGoingToFork(action, compUnTillDb);
 		action.execute(getProgress(action));
 		checkUnTillDbForked();
 		
 		// build unTillDb 2.59.0
 		action = releaser.getActionTree(UNTILLDB);
+		assertIsGoingToBuild(action, compUnTillDb);
 		action.execute(getProgress(action));
 		checkUnTillDbBuilt();
 		
 		// fork new unTillDb Release 2.60
 		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), "feature added");
 		action = releaser.getActionTree(UNTILLDB);
-		assertTrue(action instanceof SCMActionFork);
+		assertIsGoingToFork(action, compUnTillDb);
 		action.execute(getProgress(action));
 		
 		// build new unTillDbRelease 2.60.0
 		action = releaser.getActionTree(UNTILLDB);
-		assertTrue(action instanceof SCMActionBuild);
+		assertIsGoingToBuild(action, compUnTillDb);
 		action.execute(getProgress(action));
 		
 		assertEquals(env.getUnTillDbVer().toNextMinor().toRelease(), new ReleaseBranch(compUnTillDb).getVersion());
@@ -209,7 +174,7 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		
 		// build new unTillDb patch
 		action = releaser.getActionTree(comp);
-		assertTrue(action instanceof SCMActionBuild);
+		assertIsGoingToBuild(action, compUnTillDb);
 		action.execute(getProgress(action));
 		assertEquals(dbUnTillDb.getVersion().toPreviousMinor().toPreviousMinor().toNextPatch().toRelease(), new ReleaseBranch(comp, comp.getVersion()).getVersion());
 	}
@@ -218,34 +183,33 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 	public void testSkipBuildsOnFORKActionKind() {
 		// fork all
 		IAction action = releaser.getActionTree(compUnTill);
+		assertIsGoingToForkAll(action);
 		action.execute(getProgress(action));
 		checkUnTillForked();
 
 		// try to build with FORK target action kind. All builds should be skipped
 		action = releaser.getActionTree(compUnTill, ActionKind.FORK);
-		Expectations exp = new Expectations();
-		exp.put(UNTILL, ActionNone.class);
-		exp.put(UNTILLDB, ActionNone.class);
-		exp.put(UBL, ActionNone.class);
-		checkChildActionsTypes(action, exp);
+		assertThat(action, instanceOf(ActionNone.class), compUnTillDb, compUnTill, compUBL);
 	}
 
 	@Test
 	public void testSkipChildForkIfParentGoingToBuild() {
 		// fork UBL
 		IAction action = releaser.getActionTree(UBL);
+		assertIsGoingToFork(action, compUBL);
 		action.execute(getProgress(action));
 		checkUBLForked();
 
 		// build UBL
 		action = releaser.getActionTree(UBL);
+		assertIsGoingToBuild(action, compUBL, BuildStatus.BUILD_MDEPS);
 		action.execute(getProgress(action));
 		checkUBLBuilt();
 
 		// fork next UBL version
 		env.generateFeatureCommit(env.getUblVCS(), compUBL.getVcsRepository().getDevBranch(), "feature added");
 		action = releaser.getActionTree(UBL);
-		assertTrue(action instanceof SCMActionFork);
+		assertIsGoingToFork(action, compUBL);
 		action.execute(getProgress(action));
 
 		//generate unTillDb fork conditions
@@ -253,13 +217,11 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 
 		// ensure UnTillDb is going to fork
 		action = releaser.getActionTree(UNTILLDB);
-		assertTrue(action instanceof SCMActionFork);
+		assertIsGoingToFork(action, compUnTillDb);
 
 		// build UBL. unTillDb fork should be skipped
 		action = releaser.getActionTree(UBL);
-		Expectations exp = new Expectations();
-		exp.put(UBL, SCMActionBuild.class);
-		exp.put(UNTILLDB, ActionNone.class);
-		checkChildActionsTypes(action, exp);
+		assertIsGoingToBuild(action, compUBL);
+		assertThat(action, instanceOf(ActionNone.class), compUnTillDb);
 	}
 }

@@ -1,10 +1,5 @@
 package org.scm4j.releaser.scmactions;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.util.List;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.scm4j.commons.Version;
@@ -15,17 +10,17 @@ import org.scm4j.releaser.SCMReleaser;
 import org.scm4j.releaser.actions.ActionAbstract;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.branch.ReleaseBranch;
-import org.scm4j.releaser.conf.Component;
-import org.scm4j.releaser.conf.DelayedTagsFile;
-import org.scm4j.releaser.conf.MDepsFile;
-import org.scm4j.releaser.conf.Option;
-import org.scm4j.releaser.conf.Options;
-import org.scm4j.releaser.conf.TagDesc;
+import org.scm4j.releaser.conf.*;
 import org.scm4j.releaser.exceptions.ENoBuilder;
 import org.scm4j.releaser.exceptions.EReleaserException;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.vcs.api.VCSTag;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.List;
 
 	
 public class SCMActionBuild extends ActionAbstract {
@@ -148,5 +143,9 @@ public class SCMActionBuild extends ActionAbstract {
 	
 	public ReleaseBranch getReleaseBranch() {
 		return rb;
+	}
+
+	public BuildStatus getMbs() {
+		return mbs;
 	}
 }

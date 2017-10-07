@@ -1,7 +1,5 @@
 package org.scm4j.releaser.scmactions;
 
-import java.util.List;
-
 import org.apache.commons.lang3.StringUtils;
 import org.scm4j.commons.Version;
 import org.scm4j.commons.progress.IProgress;
@@ -17,6 +15,8 @@ import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.MDepsFile;
 import org.scm4j.releaser.exceptions.EReleaserException;
 import org.scm4j.vcs.api.IVCS;
+
+import java.util.List;
 
 public class SCMActionFork extends ActionAbstract {
 	
@@ -115,5 +115,9 @@ public class SCMActionFork extends ActionAbstract {
 	
 	public ReleaseBranch getReleaseBranch() {
 		return rb;
+	}
+
+	public BuildStatus getMbs() {
+		return mbs;
 	}
 }
