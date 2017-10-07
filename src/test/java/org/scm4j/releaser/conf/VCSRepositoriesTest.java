@@ -1,20 +1,14 @@
 package org.scm4j.releaser.conf;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
+import com.google.common.io.Resources;
+import org.junit.Before;
+import org.junit.Test;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.scm4j.releaser.conf.VCSRepositories;
-import org.scm4j.releaser.conf.VCSRepository;
-import org.scm4j.releaser.conf.VCSType;
-
-import com.google.common.io.Resources;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.*;
 
 public class VCSRepositoriesTest {
 	
@@ -74,6 +68,15 @@ public class VCSRepositoriesTest {
 	public void getNull3() {
 		VCSRepositories reps = new VCSRepositories(urlsStr, credsStr);
 		reps.getByCoords(null);
+	}
+
+	@Test
+	public void testGitVCSTypeDetermination() {
+		VCSRepositories reps = new VCSRepositories(urlsStr, credsStr);
+		VCSRepository repo = reps.getByName("git1");
+		assertEquals(VCSType.GIT, repo.getType());
+		repo = reps.getByName("git2");
+		assertEquals(VCSType.GIT, repo.getType());
 	}
 
 }

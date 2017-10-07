@@ -6,6 +6,12 @@
     type: git
     releaseBranchPrefix: B
     devBranch: null
+- git1:
+    url: http://localhost/git/myProj.git
+    type: null
+- git2:
+    url: http://localhost/git/myProj
+    type: null
 - ~:
     url: https://github.com/qwerty/$0
     type: svn
