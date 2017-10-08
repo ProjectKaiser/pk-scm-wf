@@ -17,6 +17,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class VCSRepositories {
+	public static VCSType DEFAULT_VCS_TYPE = VCSType.GIT;
 	public static final String DEFAULT_VCS_WORKSPACE_DIR = new File(SCMReleaser.BASE_WORKING_DIR, "releaser-vcs-workspaces").getPath();
 
 	private Map<?, ?> urls;
@@ -82,7 +83,7 @@ public class VCSRepositories {
 		if (url != null && url.contains(".git")) {
 			return VCSType.GIT;
 		}
-		return VCSType.GIT;
+		return DEFAULT_VCS_TYPE;
 	}
 
 	private Object getPropByName(Map<?, ?> map, String name, Object propName, Object defaultValue) {

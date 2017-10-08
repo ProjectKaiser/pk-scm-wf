@@ -3,6 +3,7 @@ package org.scm4j.releaser.conf;
 import com.google.common.io.Resources;
 import org.junit.Before;
 import org.junit.Test;
+import org.scm4j.releaser.exceptions.EComponentConfig;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -76,7 +77,16 @@ public class VCSRepositoriesTest {
 		VCSRepository repo = reps.getByName("git1");
 		assertEquals(VCSType.GIT, repo.getType());
 		repo = reps.getByName("git2");
-		assertEquals(VCSType.GIT, repo.getType());
+		assertEquals(VCSRepositories.DEFAULT_VCS_TYPE, repo.getType());
 	}
 
+	@Test
+	public void testNullSources() {
+		try {
+			// expecting no NPE
+			new VCSRepositories("", "", null).getByName("any");
+			fail();
+		} catch (EComponentConfig e) {
+		}
+	}
 }
