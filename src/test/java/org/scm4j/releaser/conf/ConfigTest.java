@@ -71,7 +71,6 @@ public class ConfigTest {
 		} catch (EConfig e) {
 			assertNull(e.getCause());
 		}
-		
 	}
 	
 	@Test

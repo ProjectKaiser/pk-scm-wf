@@ -8,8 +8,4 @@ public enum VCSType {
 	VCSType(String strValue) {
 		this.strValue = strValue;
 	}
-	
-	public String getSuffix() {
-		return strValue;
-	}
 }

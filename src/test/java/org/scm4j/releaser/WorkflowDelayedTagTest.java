@@ -22,12 +22,12 @@ import static org.junit.Assert.*;
 public class WorkflowDelayedTagTest extends WorkflowTestBase {
 
 	private final SCMReleaser releaser = new SCMReleaser();
-	private final DelayedTagsFile cf = new DelayedTagsFile();
+	private final DelayedTagsFile dtf = new DelayedTagsFile();
 	
 	@Before
 	@After
 	public void setUpTearDown() {
-		cf.delete();
+		dtf.delete();
 	}
 
 	@Test
@@ -56,9 +56,9 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 		assertTrue(env.getUnTillVCS().getTags().size() == 1);
 		
 		// check Delayed Tags file
-		assertNotNull(cf.getRevisitonByUrl(compUnTillDb.getVcsRepository().getUrl()));
-		assertNotNull(cf.getRevisitonByUrl(compUnTill.getVcsRepository().getUrl()));
-		assertNotNull(cf.getRevisitonByUrl(compUBL.getVcsRepository().getUrl()));
+		assertNotNull(dtf.getRevisitonByUrl(compUnTillDb.getVcsRepository().getUrl()));
+		assertNotNull(dtf.getRevisitonByUrl(compUnTill.getVcsRepository().getUrl()));
+		assertNotNull(dtf.getRevisitonByUrl(compUBL.getVcsRepository().getUrl()));
 
 		// check Delayed Tags are used
 		action = releaser.getActionTree(compUnTill.clone(env.getUnTillVer().toReleaseZeroPatch()));
@@ -89,8 +89,8 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 		// simulate delayed tags are deleted right after action create
 		action = releaser.getTagActionTree(compUnTill);
 		assertIsGoingToTagAll(action);
-		Map<String, String> content = cf.getContent();
-		cf.delete();
+		Map<String, String> content = dtf.getContent();
+		dtf.delete();
 		action.execute(getProgress(action));
 
 		// expect no exceptions and no tags
@@ -98,7 +98,7 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 		assertTrue(env.getUnTillDbVCS().getTags().isEmpty());
 		assertTrue(env.getUblVCS().getTags().isEmpty());
 		for (Map.Entry<String, String> entry : content.entrySet()) {
-			cf.writeUrlRevision(entry.getKey(), entry.getValue());
+			dtf.writeUrlRevision(entry.getKey(), entry.getValue());
 		}
 
 		// create delayed tags
@@ -110,11 +110,11 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 		assertTrue(isPreHeadCommitTaggedWithVersion(compUnTill));
 		
 		// check Dealyed Tags file
-		assertTrue(cf.getContent().isEmpty());
+		assertTrue(dtf.getContent().isEmpty());
 	}
 
 	@Test
-	public void testTagExists() throws InterruptedException {
+	public void testTagExistsOnExecute() throws InterruptedException {
 		Options.setOptions(Collections.singletonList(Option.DELAYED_TAG));
 
 		// fork all
@@ -133,7 +133,7 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 
 		// simulate tag exists already
 		ReleaseBranch rbUnTill = new ReleaseBranch(compUnTill);
-		Map<String, String> content = cf.getContent();
+		Map<String, String> content = dtf.getContent();
 		for (Map.Entry<String, String> entry : content.entrySet()) {
 			if (compUnTill.getVcsRepository().getUrl().equals(entry.getKey())) {
 				Version delayedTagVersion = new Version(env.getUnTillVCS().getFileContent(rbUnTill.getName(), SCMReleaser.VER_FILE_NAME,
@@ -152,8 +152,47 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 		assertTrue(isPreHeadCommitTaggedWithVersion(compUnTill));
 
 		// check Dealyed Tags file
-		assertTrue(cf.getContent().isEmpty());
+		assertTrue(dtf.getContent().isEmpty());
 
+	}
+	
+	@Test
+	public void testActionNoneIfNoDelayedTag() {
+		IAction action = releaser.getTagActionTree(compUnTillDb);
+		assertTrue(action instanceof ActionNone);
+	}
+	
+	@Test
+	public void testTagExistsOnGetActionTree() {
+		Options.setOptions(Collections.singletonList(Option.DELAYED_TAG));
+
+		// fork all
+		IAction action = releaser.getActionTree(compUnTillDb);
+		assertIsGoingToFork(action, compUnTillDb);
+		action.execute(getProgress(action));
+
+		// build all
+		action = releaser.getActionTree(compUnTillDb);
+		assertIsGoingToBuild(action, compUnTillDb);
+		action.execute(getProgress(action));
+		
+		String revisionToTag = dtf.getRevisitonByUrl(compUnTillDb.getVcsRepository().getUrl());
+		ReleaseBranch rbUnTillDb = new ReleaseBranch(compUnTillDb);
+		env.getUnTillDbVCS().createTag(rbUnTillDb.getName(), "other-tag", "other tag message", revisionToTag);
+		
+		// check other tag is bypassed
+		action = releaser.getTagActionTree(compUnTillDb);
+		assertIsGoingToTag(action, compUnTillDb);
+		
+		// simulate tag exists
+		Version delayedTagVersion = new Version(env.getUnTillDbVCS().getFileContent(rbUnTillDb.getName(), SCMReleaser.VER_FILE_NAME,
+				revisionToTag));
+		TagDesc tagDesc = SCMReleaser.getTagDesc(delayedTagVersion.toString());
+		env.getUnTillDbVCS().createTag(rbUnTillDb.getName(), tagDesc.getName(), tagDesc.getMessage(), revisionToTag);
+		
+		// check other tag is bypassed, but version tag is detected -> tagging skipped
+		action = releaser.getTagActionTree(compUnTillDb);
+		assertTrue(action instanceof ActionNone);
 	}
 	
 	private boolean isPreHeadCommitTaggedWithVersion(Component comp) {

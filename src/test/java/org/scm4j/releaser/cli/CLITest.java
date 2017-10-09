@@ -142,8 +142,8 @@ public class CLITest {
 
 	@Test
 	public void testSetOptions() throws Exception {
-		exit.expectSystemExitWithStatus(CLI.EXIT_CODE_ERROR); // no repo url for
-																// unTill
+		exit.expectSystemExitWithStatus(CLI.EXIT_CODE_ERROR); // no repo url for unTill
+		
 		CLI.main(new String[] { "status", UNTILL });
 		assertTrue(Options.getOptions().isEmpty());
 
