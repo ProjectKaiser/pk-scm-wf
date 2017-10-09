@@ -114,7 +114,7 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 	}
 
 	@Test
-	public void testTagExists() {
+	public void testTagExists() throws InterruptedException {
 		Options.setOptions(Collections.singletonList(Option.DELAYED_TAG));
 
 		// fork all
@@ -143,6 +143,7 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 			}
 		}
 
+		Thread.sleep(1000); // FIXME: test fails without sleep
 		action.execute(getProgress(action));
 
 		// check tags
