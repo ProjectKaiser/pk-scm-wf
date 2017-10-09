@@ -1,20 +1,20 @@
 package org.scm4j.releaser.conf;
 
-import org.scm4j.commons.Coords;
-import org.scm4j.releaser.VCSFactory;
-import org.scm4j.releaser.SCMReleaser;
-import org.scm4j.releaser.builders.BuilderFactory;
-import org.scm4j.releaser.exceptions.EComponentConfig;
-import org.scm4j.releaser.exceptions.EConfig;
-import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
-import org.scm4j.vcs.api.workingcopy.VCSWorkspace;
-import org.yaml.snakeyaml.Yaml;
-import org.yaml.snakeyaml.error.YAMLException;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.scm4j.releaser.SCMReleaser;
+import org.scm4j.releaser.VCSFactory;
+import org.scm4j.releaser.builders.BuilderFactory;
+import org.scm4j.releaser.exceptions.EComponentConfig;
+import org.scm4j.releaser.exceptions.EConfig;
+import org.scm4j.releaser.exceptions.EEnvVarConfig;
+import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
+import org.scm4j.vcs.api.workingcopy.VCSWorkspace;
+import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.error.YAMLException;
 
 public class VCSRepositories {
 	public static VCSType DEFAULT_VCS_TYPE = VCSType.GIT;
@@ -71,10 +71,6 @@ public class VCSRepositories {
 				VCSFactory.getVCS(type, credentials, url, ws), BuilderFactory.getBuilder(builder));
 	}
 
-	public VCSRepository getByCoords(String coords) {
-		return getByName(new Coords(coords).getName());
-	}
-
 	private VCSType getVCSType(String type, String url) {
 		if (type != null && type.toLowerCase().contains("git"))
 			return VCSType.GIT;
@@ -123,15 +119,15 @@ public class VCSRepositories {
 
 			String separatedReposUrlsStr = configSource.getReposLocations();
 			if (separatedReposUrlsStr == null) {
-				throw new EConfig(EnvVarsConfigSource.REPOS_LOCATION_ENV_VAR
+				throw new EEnvVarConfig(EnvVarsConfigSource.REPOS_LOCATION_ENV_VAR
+						+ " environment var must contain a valid config path");
+			}
+			String separatedCredsUrlsStr = configSource.getCredentialsLocations();
+			if (separatedCredsUrlsStr == null) {
+				throw new EEnvVarConfig(EnvVarsConfigSource.CREDENTIALS_LOCATION_ENV_VAR
 						+ " environment var must contain a valid config path");
 			}
 			String reposContent = reposLoader.getContentFromUrls(separatedReposUrlsStr);
-			String separatedCredsUrlsStr = configSource.getCredentialsLocations();
-			if (separatedCredsUrlsStr == null) {
-				throw new EConfig(EnvVarsConfigSource.CREDENTIALS_LOCATION_ENV_VAR
-						+ " environment var must contain a valid config path");
-			}
 			String credsContent = reposLoader.getContentFromUrls(separatedCredsUrlsStr);
 			try {
 				return new VCSRepositories(reposContent, credsContent, new VCSWorkspace(DEFAULT_VCS_WORKSPACE_DIR));

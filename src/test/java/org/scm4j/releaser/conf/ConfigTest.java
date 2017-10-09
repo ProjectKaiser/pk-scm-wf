@@ -25,11 +25,13 @@ import org.scm4j.releaser.TestEnvironment;
 public class ConfigTest {
 	
 	private static final String TEST_ENVIRONMENT_DIR = TestEnvironment.TEST_ENVIRONMENT_DIR;
-	private String repos = null;
-	private String creds = null;
+	private String repos;
+	private String creds;
 
 	@Before
 	public void setUp() {
+		repos = null;
+		creds = null;
 		VCSRepositories.setConfigSource(new IConfigSource() {
 			@Override
 			public String getReposLocations() {
@@ -51,7 +53,7 @@ public class ConfigTest {
 	}
 	
 	@Test
-	public void testNoReposEnvVar() {
+	public void testNoEnvVars() {
 		creds = "";
 		try {
 			VCSRepositories.getDefault();
@@ -59,6 +61,17 @@ public class ConfigTest {
 		} catch (EConfig e) {
 			assertNull(e.getCause());
 		}
+		
+		creds = null;
+		repos = "";
+		
+		try {
+			VCSRepositories.getDefault();
+			fail();
+		} catch (EConfig e) {
+			assertNull(e.getCause());
+		}
+		
 	}
 	
 	@Test

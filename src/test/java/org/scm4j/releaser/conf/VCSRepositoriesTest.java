@@ -65,12 +65,6 @@ public class VCSRepositoriesTest {
 		new VCSRepositories(urlsStr, null);
 	}
 
-	@Test(expected = NullPointerException.class)
-	public void getNull3() {
-		VCSRepositories reps = new VCSRepositories(urlsStr, credsStr);
-		reps.getByCoords(null);
-	}
-
 	@Test
 	public void testGitVCSTypeDetermination() {
 		VCSRepositories reps = new VCSRepositories(urlsStr, credsStr);
