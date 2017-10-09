@@ -64,8 +64,7 @@ public class SCMReleaser {
 				rb = new ReleaseBranch(comp);
 				mDeps = new DevelopBranch(comp).getMDeps();
 			}
-			Build mb = new Build(rb);
-			mbs = mb.getStatus(calculatedStatuses);
+			mbs = getBuildStatus(calculatedStatuses, rb);
 			calculatedStatuses.put(comp, new CalculatedResult(rb, mbs, mDeps));
 		}
 		
@@ -86,6 +85,13 @@ public class SCMReleaser {
 		default:
 			throw new IllegalArgumentException("unsupported build status: " + mbs);
 		}
+	}
+
+	protected BuildStatus getBuildStatus(Map<Component, CalculatedResult> calculatedStatuses, ReleaseBranch rb) {
+		BuildStatus mbs;
+		Build mb = new Build(rb);
+		mbs = mb.getStatus(calculatedStatuses);
+		return mbs;
 	}
 
 	

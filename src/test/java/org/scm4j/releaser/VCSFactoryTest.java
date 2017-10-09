@@ -41,4 +41,9 @@ public class VCSFactoryTest {
 		assertTrue(vcs instanceof SVNVCS);
 		assertEquals(URL, vcs.getRepoUrl());
 	}
+	
+	@Test
+	public void testConstructor() {
+		assertNotNull(new VCSFactory());
+	}
 }
