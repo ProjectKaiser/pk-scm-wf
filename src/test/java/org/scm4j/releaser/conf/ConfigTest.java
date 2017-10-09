@@ -43,7 +43,7 @@ public class ConfigTest {
 				return creds;
 			}
 		});
-		//VCSRepositories.resetDefault();
+		VCSRepositories.resetDefault();
 	}
 	
 	@After
@@ -77,7 +77,7 @@ public class ConfigTest {
 	@Test
 	public void testMalformedReposUrl() {
 		repos = "malformed url";
-		
+		creds = "";
 		try {
 			VCSRepositories.getDefault();
 			fail();
@@ -89,6 +89,7 @@ public class ConfigTest {
 	@Test 
 	public void testWrongReposLocation() {
 		repos = "file:///c:/wrong/Location";
+		creds = "";
 		try {
 			VCSRepositories.getDefault();
 			fail();
