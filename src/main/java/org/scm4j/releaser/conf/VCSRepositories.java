@@ -72,11 +72,11 @@ public class VCSRepositories {
 	}
 
 	private VCSType getVCSType(String type, String url) {
-		if (type != null && type.toLowerCase().contains("git"))
+		if (type != null && type.toLowerCase().contains(VCSType.GIT.toString().toLowerCase()))
 			return VCSType.GIT;
-		if (type != null && (type.toLowerCase().contains("svn") || type.toLowerCase().contains("subversion")))
+		if (type != null && (type.toLowerCase().contains(VCSType.SVN.toString().toLowerCase()) || type.toLowerCase().contains("subversion")))
 			return VCSType.SVN;
-		if (url != null && url.contains(".git")) {
+		if (url != null && url.contains(VCSType.GIT.getUrlMark())) {
 			return VCSType.GIT;
 		}
 		return DEFAULT_VCS_TYPE;
