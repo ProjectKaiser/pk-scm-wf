@@ -47,8 +47,6 @@ public class SCMActionBuild extends ActionAbstract {
 
 			progress.reportStatus("target version: " + rb.getVersion());
 			switch(mbs) {
-			// build mdeps must actualize patches first then build, because: untillDb patch is released -> UBL has ACTUALIZE_PATCHES status, untill has BUILD_MDEPS status. UBL must actualize firts then
-			// build, untill must also actualize patches then build. 
 			case BUILD_MDEPS:
 			case ACTUALIZE_PATCHES:
 				actualizePatches(progress);

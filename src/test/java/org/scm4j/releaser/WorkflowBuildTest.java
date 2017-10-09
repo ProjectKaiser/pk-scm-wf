@@ -6,6 +6,7 @@ import org.scm4j.releaser.actions.ActionNone;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.branch.ReleaseBranch;
 import org.scm4j.releaser.conf.Component;
+import org.scm4j.releaser.conf.Options;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;

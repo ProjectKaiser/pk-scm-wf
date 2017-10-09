@@ -53,8 +53,6 @@ public class SCMActionTagRelease extends ActionAbstract {
 			cf.removeRevisionByUrl(comp.getVcsRepository().getUrl());
 
 			addProcessedUrl(comp.getVcsRepository().getUrl());
-		} catch (EReleaserException e) {
-			throw e;
 		} catch (Exception e) {
 			progress.error("execution error: " + e.toString());
 			throw new EReleaserException(e);

@@ -2,6 +2,7 @@ package org.scm4j.releaser;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.util.Arrays;
 import java.util.List;
@@ -12,6 +13,8 @@ import org.scm4j.releaser.branch.ReleaseBranch;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.MDepsFile;
 import org.scm4j.releaser.conf.Options;
+import org.scm4j.releaser.exceptions.ENoReleaseBranchForPatch;
+import org.scm4j.releaser.exceptions.ENoReleases;
 import org.scm4j.releaser.scmactions.SCMActionBuild;
 import org.scm4j.releaser.scmactions.SCMActionFork;
 
@@ -174,5 +177,30 @@ public class BuildTest extends WorkflowTestBase {
 		assertEquals(env.getUnTillDbVer().toReleaseZeroPatch().toNextPatch().toNextPatch(), new ReleaseBranch(compUnTillDb).getVersion());
 		
 		assertEquals(BuildStatus.ACTUALIZE_PATCHES, new Build(compUBL).getStatus());
+	}
+	
+	@Test
+	public void testExceptions() {
+		Options.setIsPatch(true);
+		Component comp = new Component(UNTILLDB + ":2.59.0");
+		ReleaseBranch rb = new ReleaseBranch(comp, comp.getCoords().getVersion());
+		Build b = new Build(rb);
+		try {
+			b.getStatus();
+			fail();
+		} catch (ENoReleaseBranchForPatch e) {
+		}
+		
+		IAction action = new SCMReleaser().getActionTree(UNTILLDB);
+		assertTrue(action instanceof SCMActionFork);
+		action.execute(getProgress(action));
+		
+		Options.setIsPatch(true);
+		try {
+			b.getStatus();
+			fail();
+		} catch (ENoReleases e) {
+		}
+		
 	}
 }

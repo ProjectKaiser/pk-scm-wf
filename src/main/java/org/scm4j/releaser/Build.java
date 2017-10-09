@@ -1,5 +1,9 @@
 package org.scm4j.releaser;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.scm4j.commons.Version;
 import org.scm4j.releaser.branch.DevelopBranch;
 import org.scm4j.releaser.branch.DevelopBranchStatus;
@@ -7,14 +11,12 @@ import org.scm4j.releaser.branch.ReleaseBranch;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.DelayedTagsFile;
 import org.scm4j.releaser.conf.Options;
+import org.scm4j.releaser.exceptions.ENoReleaseBranchForPatch;
+import org.scm4j.releaser.exceptions.ENoReleases;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.vcs.api.VCSTag;
 import org.scm4j.vcs.api.WalkDirection;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 public class Build {
 
@@ -34,12 +36,12 @@ public class Build {
 	public BuildStatus getStatus(Map<Component, CalculatedResult> cr) {
 		if (Options.isPatch()) {
 			if (!rb.exists()) {
-				return BuildStatus.ERROR;
+				throw new ENoReleaseBranchForPatch("Release Branch does not exists for the requested Component version: " + comp);
 			}
 			
-			Version headVersion = rb.getVersion();
-			if (Integer.parseInt(headVersion.getPatch()) < 1) {
-				return BuildStatus.ERROR;
+			Version releaseVersion = rb.getVersion();
+			if (Integer.parseInt(releaseVersion.getPatch()) < 1) {
+				throw new ENoReleases("Release Branch version patch is " + releaseVersion.getPatch() + ". Component release should be created before patch");
 			}
 		} else {
 			if (!comp.getVersion().isExact()) {
