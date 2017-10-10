@@ -18,13 +18,16 @@ import org.yaml.snakeyaml.error.YAMLException;
 
 public class VCSRepositories {
 	public static VCSType DEFAULT_VCS_TYPE = VCSType.GIT;
-	public static final String DEFAULT_VCS_WORKSPACE_DIR = new File(SCMReleaser.BASE_WORKING_DIR, "releaser-vcs-workspaces").getPath();
+	public static final String DEFAULT_VCS_WORKSPACE_DIR = new File(SCMReleaser.BASE_WORKING_DIR,
+			"releaser-vcs-workspaces").getPath();
+
+	private static IConfigSource configSource = new EnvVarsConfigSource();
+
+	private static volatile VCSRepositories instance;
 
 	private Map<?, ?> urls;
 	private Map<?, ?> creds;
 	private final IVCSWorkspace ws;
-
-	private static IConfigSource configSource = new EnvVarsConfigSource();
 
 	public static void setConfigSource(IConfigSource configSource) {
 		VCSRepositories.configSource = configSource;
@@ -74,7 +77,8 @@ public class VCSRepositories {
 	private VCSType getVCSType(String type, String url) {
 		if (type != null && type.toLowerCase().contains(VCSType.GIT.toString().toLowerCase()))
 			return VCSType.GIT;
-		if (type != null && (type.toLowerCase().contains(VCSType.SVN.toString().toLowerCase()) || type.toLowerCase().contains("subversion")))
+		if (type != null && (type.toLowerCase().contains(VCSType.SVN.toString().toLowerCase())
+				|| type.toLowerCase().contains("subversion")))
 			return VCSType.SVN;
 		if (url != null && url.contains(VCSType.GIT.getUrlMark())) {
 			return VCSType.GIT;
@@ -138,8 +142,6 @@ public class VCSRepositories {
 			throw new EConfig("Failed to read config", e);
 		}
 	}
-
-	private static volatile VCSRepositories instance;
 
 	public static VCSRepositories getDefault() {
 		VCSRepositories localInstance = instance;
