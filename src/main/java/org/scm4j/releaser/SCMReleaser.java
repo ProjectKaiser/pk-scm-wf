@@ -57,12 +57,18 @@ public class SCMReleaser {
 			mDeps = cr.getMDeps();
 			mbs = cr.getBuildStatus();
 		} else {
+			
 			if (Options.isPatch()) {
 				rb = new ReleaseBranch(comp, comp.getCoords().getVersion());
 				mDeps = rb.getMDeps();
 			} else {
+				// If we are build, build_mdeps or actualize_patches then we need to use mdeps from release branches to show what versions we are going to build or actualize
 				rb = new ReleaseBranch(comp);
-				mDeps = new DevelopBranch(comp).getMDeps();
+				if (rb.exists()) {
+					mDeps = rb.getMDeps();
+				} else {
+					mDeps = new DevelopBranch(comp).getMDeps();
+				}
 			}
 			mbs = getBuildStatus(calculatedStatuses, rb);
 			calculatedStatuses.put(comp, new CalculatedResult(rb, mbs, mDeps));

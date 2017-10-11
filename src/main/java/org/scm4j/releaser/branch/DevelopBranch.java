@@ -59,7 +59,11 @@ public class DevelopBranch {
 		}
 		String mDepsFileContent = vcs.getFileContent(getName(), SCMReleaser.MDEPS_FILE_NAME, null);
 		MDepsFile mDeps = new MDepsFile(mDepsFileContent);
-		return mDeps.getMDeps();
+		List<Component> res = new ArrayList<>();
+		for (Component mDep : mDeps.getMDeps()) {
+			res.add(mDep.clone(""));
+		}
+		return res;
 	}
 
 	@Override
