@@ -1,19 +1,19 @@
 package org.scm4j.releaser;
 
-import static org.hamcrest.Matchers.allOf;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.hasProperty;
-import static org.hamcrest.Matchers.instanceOf;
-import static org.hamcrest.Matchers.nullValue;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
+import org.junit.Ignore;
 import org.junit.Test;
 import org.scm4j.releaser.actions.ActionKind;
 import org.scm4j.releaser.actions.ActionNone;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.branch.ReleaseBranch;
 import org.scm4j.releaser.conf.Component;
+import org.scm4j.releaser.conf.MDepsFile;
+import org.scm4j.releaser.scmactions.SCMActionBuild;
+
+import java.util.Arrays;
+
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.*;
 public class WorkflowBuildTest extends WorkflowTestBase {
 	
 	private final SCMReleaser releaser = new SCMReleaser();
@@ -228,5 +228,30 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		action = releaser.getActionTree(UBL);
 		assertIsGoingToBuild(action, compUBL);
 		assertThat(action, instanceOf(ActionNone.class), compUnTillDb);
+	}
+
+	@Test
+	@Ignore
+	public void testMDepsFromExistingReleaseBranchUsage() {
+		// fork UBL
+		IAction action = releaser.getActionTree(UBL);
+		assertIsGoingToFork(action, compUBL);
+		action.execute(getProgress(action));
+		checkUBLForked();
+
+		action = releaser.getActionTree(UBL);
+		assertIsGoingToBuild(action, compUBL);
+		// change mdeps in trunk. Ensure mdeps of release branch are used in action tree
+		Component newComp = new Component("new-comp:12.13.14");
+		MDepsFile mdf = new MDepsFile(Arrays.asList(newComp));
+		env.getUblVCS().setFileContent(compUBL.getVcsRepository().getDevBranch(), SCMReleaser.MDEPS_FILE_NAME, mdf.toFileContent(),
+				"using new mdeps in trunk");
+		action = releaser.getActionTree(UBL);
+		assertThat(action, allOf(
+				instanceOf(SCMActionBuild.class),
+				hasProperty("mbs", equalTo(BuildStatus.BUILD_MDEPS))), compUBL);
+		assertThat(action, allOf(
+				instanceOf(SCMActionBuild.class),
+				hasProperty("mbs", equalTo(BuildStatus.BUILD))), compUnTillDb);
 	}
 }
