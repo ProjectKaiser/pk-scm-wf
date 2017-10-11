@@ -1,7 +1,6 @@
 package org.scm4j.releaser.conf;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -118,27 +117,22 @@ public class VCSRepositories {
 	}
 
 	private static VCSRepositories loadVCSRepositories() throws EConfig {
+		URLContentLoader reposLoader = new URLContentLoader();
+		String separatedReposUrlsStr = configSource.getReposLocations();
+		if (separatedReposUrlsStr == null) {
+			throw new EEnvVarConfig(EnvVarsConfigSource.REPOS_LOCATION_ENV_VAR
+					+ " environment var must contain a valid config path");
+		}
+		String separatedCredsUrlsStr = configSource.getCredentialsLocations();
+		if (separatedCredsUrlsStr == null) {
+			throw new EEnvVarConfig(EnvVarsConfigSource.CREDENTIALS_LOCATION_ENV_VAR
+					+ " environment var must contain a valid config path");
+		}
 		try {
-			URLContentLoader reposLoader = new URLContentLoader();
-
-			String separatedReposUrlsStr = configSource.getReposLocations();
-			if (separatedReposUrlsStr == null) {
-				throw new EEnvVarConfig(EnvVarsConfigSource.REPOS_LOCATION_ENV_VAR
-						+ " environment var must contain a valid config path");
-			}
-			String separatedCredsUrlsStr = configSource.getCredentialsLocations();
-			if (separatedCredsUrlsStr == null) {
-				throw new EEnvVarConfig(EnvVarsConfigSource.CREDENTIALS_LOCATION_ENV_VAR
-						+ " environment var must contain a valid config path");
-			}
 			String reposContent = reposLoader.getContentFromUrls(separatedReposUrlsStr);
 			String credsContent = reposLoader.getContentFromUrls(separatedCredsUrlsStr);
-			try {
-				return new VCSRepositories(reposContent, credsContent, new VCSWorkspace(DEFAULT_VCS_WORKSPACE_DIR));
-			} catch (Exception e) {
-				throw new EConfig(e);
-			}
-		} catch (IOException e) {
+			return new VCSRepositories(reposContent, credsContent, new VCSWorkspace(DEFAULT_VCS_WORKSPACE_DIR));
+		} catch (Exception e) {
 			throw new EConfig("Failed to read config", e);
 		}
 	}

@@ -1,7 +1,7 @@
 package org.scm4j.releaser.cli;
 
 import org.junit.Test;
-import org.scm4j.releaser.exceptions.EConfig;
+import org.scm4j.releaser.exceptions.ECommandLine;
 
 import static org.junit.Assert.*;
 
@@ -19,31 +19,31 @@ public class CommandLineTest {
 		try {
 			new CommandLine(null);
 			fail();
-		} catch (EConfig e) {
+		} catch (ECommandLine e) {
 		}
 		
 		try {
 			new CommandLine(new String[] {});
 			fail();
-		} catch (EConfig e) {
+		} catch (ECommandLine e) {
 		}
 		
 		try {
 			new CommandLine(new String[] {"wrong command"});
 			fail();
-		} catch (EConfig e) {
+		} catch (ECommandLine e) {
 		}
 		
 		try {
 			new CommandLine(new String[] {"wrong command", "coords"});
 			fail();
-		} catch (EConfig e) {
+		} catch (ECommandLine e) {
 		}
 		
 		try {
 			new CommandLine(new String[] {CLICommand.STATUS.getStrValue()});
 			fail();
-		} catch (EConfig e) {
+		} catch (ECommandLine e) {
 		}
 	}
 	

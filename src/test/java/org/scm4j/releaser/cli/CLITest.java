@@ -13,7 +13,7 @@ import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.conf.Option;
 import org.scm4j.releaser.conf.Options;
 import org.scm4j.releaser.conf.VCSRepositories;
-import org.scm4j.releaser.exceptions.EConfig;
+import org.scm4j.releaser.exceptions.ECommandLine;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
@@ -153,7 +153,7 @@ public class CLITest {
 		try {
 			CLI.main(new String[] { "status", UNTILL, "wrong option" });
 			fail();
-		} catch (EConfig e) {
+		} catch (ECommandLine e) {
 
 		}
 	}

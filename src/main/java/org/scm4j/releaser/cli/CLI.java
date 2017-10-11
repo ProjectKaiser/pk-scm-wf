@@ -9,7 +9,7 @@ import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.actions.PrintAction;
 import org.scm4j.releaser.conf.Option;
 import org.scm4j.releaser.conf.Options;
-import org.scm4j.releaser.exceptions.EConfig;
+import org.scm4j.releaser.exceptions.ECommandLine;
 
 import java.io.PrintStream;
 
@@ -54,7 +54,7 @@ public class CLI {
 		try {
 			cmd = new CommandLine(args);
 			return exec(new SCMReleaser(), cmd, System.out);
-		} catch (EConfig e) {
+		} catch (ECommandLine e) {
 			printException(args, e);
 			System.out.println(CommandLine.getUsage());
 			return EXIT_CODE_ERROR;

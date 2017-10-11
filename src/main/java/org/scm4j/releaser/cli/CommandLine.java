@@ -1,7 +1,7 @@
 package org.scm4j.releaser.cli;
 
 import org.scm4j.releaser.conf.Option;
-import org.scm4j.releaser.exceptions.EConfig;
+import org.scm4j.releaser.exceptions.ECommandLine;
 
 public class CommandLine {
 
@@ -16,14 +16,14 @@ public class CommandLine {
 		return productCoords;
 	}
 	
-	public CommandLine(String[] args) throws EConfig {
+	public CommandLine(String[] args) throws ECommandLine {
 		if (args == null || args.length < 2) {
-			throw new EConfig ("too less parameters provided");
+			throw new ECommandLine ("too less parameters provided");
 		}
 		
 		command = CLICommand.fromStrValue(args[0]);
 		if (command == null) {
-			throw new EConfig ("unknown command: " + args[0]);
+			throw new ECommandLine ("unknown command: " + args[0]);
 		}
 		
 		productCoords = args[1];

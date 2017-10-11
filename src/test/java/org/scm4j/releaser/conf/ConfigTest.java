@@ -16,11 +16,8 @@ import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.scm4j.releaser.conf.EnvVarsConfigSource;
-import org.scm4j.releaser.conf.IConfigSource;
-import org.scm4j.releaser.conf.VCSRepositories;
-import org.scm4j.releaser.exceptions.EConfig;
 import org.scm4j.releaser.TestEnvironment;
+import org.scm4j.releaser.exceptions.EConfig;
 
 public class ConfigTest {
 	
