@@ -1,6 +1,15 @@
 package org.scm4j.releaser;
 
-import org.junit.Ignore;
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasProperty;
+import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.Matchers.nullValue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.util.Arrays;
+
 import org.junit.Test;
 import org.scm4j.releaser.actions.ActionKind;
 import org.scm4j.releaser.actions.ActionNone;
@@ -9,11 +18,6 @@ import org.scm4j.releaser.branch.ReleaseBranch;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.MDepsFile;
 import org.scm4j.releaser.scmactions.SCMActionBuild;
-
-import java.util.Arrays;
-
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
 public class WorkflowBuildTest extends WorkflowTestBase {
 	
 	private final SCMReleaser releaser = new SCMReleaser();
@@ -231,8 +235,7 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 	}
 
 	@Test
-	@Ignore
-	public void testMDepsFromExistingReleaseBranchUsage() {
+	public void testUseMDepsFromExistingReleaseBranch() {
 		// fork UBL
 		IAction action = releaser.getActionTree(UBL);
 		assertIsGoingToFork(action, compUBL);
@@ -240,7 +243,7 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		checkUBLForked();
 
 		action = releaser.getActionTree(UBL);
-		assertIsGoingToBuild(action, compUBL);
+		assertIsGoingToBuild(action, compUBL, BuildStatus.BUILD_MDEPS);
 		// change mdeps in trunk. Ensure mdeps of release branch are used in action tree
 		Component newComp = new Component("new-comp:12.13.14");
 		MDepsFile mdf = new MDepsFile(Arrays.asList(newComp));
