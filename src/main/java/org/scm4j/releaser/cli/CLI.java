@@ -1,6 +1,9 @@
 package org.scm4j.releaser.cli;
 
+import java.io.PrintStream;
+
 import org.apache.commons.lang3.ArrayUtils;
+import org.fusesource.jansi.AnsiConsole;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.commons.progress.ProgressConsole;
 import org.scm4j.releaser.SCMReleaser;
@@ -10,8 +13,6 @@ import org.scm4j.releaser.actions.PrintAction;
 import org.scm4j.releaser.conf.Option;
 import org.scm4j.releaser.conf.Options;
 import org.scm4j.releaser.exceptions.ECommandLine;
-
-import java.io.PrintStream;
 
 public class CLI {
 	
@@ -73,6 +74,7 @@ public class CLI {
 	}
 	
 	public static void main(String[] args) throws Exception {
+		AnsiConsole.systemInstall();
 		System.exit(new CLI().exec(args));
 	}
 }
