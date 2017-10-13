@@ -12,6 +12,9 @@
 - git2:
     url: http://localhost/git/myProj
     type: null
+- svn1:
+    url: http://localhost/myProj
+    type: subversion
 - ~:
     url: https://github.com/qwerty/$0
     type: svn

@@ -106,7 +106,7 @@ public class SCMReleaser {
 		if (actionKind == ActionKind.FORK) {
 			return new ActionNone(rb, childActions, mbs);
 		}
-		skipAllForks(childActions);
+		// seems we never have situation when root is going to build and child is going to fork.
 		return new SCMActionBuild(rb, childActions, mbs);
 	}
 
@@ -124,18 +124,7 @@ public class SCMReleaser {
 		return new TagDesc(verStr, tagMessage);
 	}
 	
-	private void skipAllForks(List<IAction> childActions) {
-		ListIterator<IAction> li = childActions.listIterator();
-		IAction action;
-		while (li.hasNext()) {
-			action = li.next();
-			skipAllForks(action.getChildActions());
-			if (action instanceof SCMActionFork) {
-				li.set(new ActionNone(((SCMActionFork) action).getReleaseBranch(), action.getChildActions(), null, "fork skipped because not all parent components built"));
-			}
-		}
-	}
-
+		
 	private void skipAllBuilds(List<IAction> childActions) {
 		ListIterator<IAction> li = childActions.listIterator();
 		IAction action;

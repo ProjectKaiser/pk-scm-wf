@@ -113,10 +113,6 @@ public class SCMActionFork extends ActionAbstract {
 		return mbs.toString() + " " + comp.getCoords() + ", " + rb.getVersion();
 	}
 	
-	public ReleaseBranch getReleaseBranch() {
-		return rb;
-	}
-
 	public BuildStatus getMbs() {
 		return mbs;
 	}

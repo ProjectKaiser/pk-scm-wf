@@ -83,4 +83,11 @@ public class VCSRepositoriesTest {
 		} catch (EComponentConfig e) {
 		}
 	}
+	
+	@Test
+	public void testSVNAlternativeDetermination() {
+		VCSRepositories reps = new VCSRepositories(urlsStr, credsStr);
+		VCSRepository repo = reps.getByName("svn1");
+		assertEquals(VCSType.SVN, repo.getType());
+	}
 }

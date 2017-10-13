@@ -221,7 +221,7 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		assertIsGoingToFork(action, compUBL);
 		action.execute(getProgress(action));
 
-		//generate unTillDb fork conditions
+		// generate unTillDb fork conditions
 		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), "feature added");
 
 		// ensure UnTillDb is going to fork
