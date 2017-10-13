@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.scm4j.releaser.exceptions.cmdline.ECmdLine;
-
 public class Options {
 
 	private static List<Option> options = new ArrayList<>();
@@ -27,11 +25,7 @@ public class Options {
 		List<Option> options = new ArrayList<>();
 		String[] optionArgs = Arrays.copyOfRange(args, 2, args.length);
 		for (String optionArg : optionArgs) {
-			Option option = Option.getArgsMap().get(optionArg);
-			if (option == null) {
-				throw new ECmdLine("unknown option: " + optionArg);
-			}
-			options.add(option);
+			options.add(Option.getArgsMap().get(optionArg));
 		}
 		setOptions(options);
 	}
