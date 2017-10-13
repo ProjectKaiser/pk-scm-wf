@@ -1,7 +1,10 @@
 package org.scm4j.releaser.conf;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+
+import org.scm4j.releaser.exceptions.cmdline.ECmdLine;
 
 public class Options {
 
@@ -22,11 +25,13 @@ public class Options {
 
 	public static void setFromArgs(String[] args) {
 		List<Option> options = new ArrayList<>();
-		for (String arg : args) {
-			Option option = Option.getArgsMap().get(arg);
-			if (option != null) {
-				options.add(option);
+		String[] optionArgs = Arrays.copyOfRange(args, 2, args.length);
+		for (String optionArg : optionArgs) {
+			Option option = Option.getArgsMap().get(optionArg);
+			if (option == null) {
+				throw new ECmdLine("unknown option: " + optionArg);
 			}
+			options.add(option);
 		}
 		setOptions(options);
 	}

@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public enum CLICommand {
-	STATUS("status"), FORK("fork"), BUILD("build"), TAG("tag");
+	UNKNOWN(null), STATUS("status"), FORK("fork"), BUILD("build"), TAG("tag");
 	
 	private static final Map<String, CLICommand> map = new HashMap<>();
 	private final String strValue;
@@ -24,6 +24,7 @@ public enum CLICommand {
 	}
 	
 	public static CLICommand fromStrValue(String strValue) {
-		return map.get(strValue);
+		CLICommand res = map.get(strValue);
+		return res == null ? UNKNOWN : res;
 	}
 }

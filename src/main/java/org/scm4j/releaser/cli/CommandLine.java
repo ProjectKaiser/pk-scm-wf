@@ -1,32 +1,25 @@
 package org.scm4j.releaser.cli;
 
 import org.scm4j.releaser.conf.Option;
-import org.scm4j.releaser.exceptions.ECommandLine;
 
 public class CommandLine {
 
-	private final CLICommand command;
-	private final String productCoords;
+	private final String[] args;
 
 	public CLICommand getCommand() {
-		return command;
+		return args.length < 1 ? null : CLICommand.fromStrValue(args[0]);
+	}
+	
+	public String getCommandStr() {
+		return args.length < 1 ? null : args[0]; 
 	}
 
 	public String getProductCoords() {
-		return productCoords;
+		return args.length < 2 ? null : args[1];
 	}
 	
-	public CommandLine(String[] args) throws ECommandLine {
-		if (args == null || args.length < 2) {
-			throw new ECommandLine ("too less parameters provided");
-		}
-		
-		command = CLICommand.fromStrValue(args[0]);
-		if (command == null) {
-			throw new ECommandLine ("unknown command: " + args[0]);
-		}
-		
-		productCoords = args[1];
+	public CommandLine(String[] args) {
+		this.args = args;
 	}
 	
 	private static String printOptions() {
@@ -49,5 +42,9 @@ public class CommandLine {
 				+ "\r\n"
 				+ "If productCoords contains an exact version then this version will be used. Otherwise VCS versions will be used.\r\n"
 				+ "Use " + Option.STACK_TRACE.getStrValue() + " option to get full stack trace in case of any errors";
+	}
+	
+	public String[] getArgs() {
+		return args;
 	}
 }

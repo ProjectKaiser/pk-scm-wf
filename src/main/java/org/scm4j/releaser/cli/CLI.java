@@ -1,6 +1,7 @@
 package org.scm4j.releaser.cli;
 
 import java.io.PrintStream;
+import java.util.Arrays;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.fusesource.jansi.AnsiConsole;
@@ -12,14 +13,34 @@ import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.actions.PrintAction;
 import org.scm4j.releaser.conf.Option;
 import org.scm4j.releaser.conf.Options;
-import org.scm4j.releaser.exceptions.ECommandLine;
+import org.scm4j.releaser.exceptions.cmdline.ECmdLine;
+import org.scm4j.releaser.exceptions.cmdline.ECmdLineNoCommand;
+import org.scm4j.releaser.exceptions.cmdline.ECmdLineNoProduct;
+import org.scm4j.releaser.exceptions.cmdline.ECmdLineUnknownCommand;
+import org.scm4j.releaser.exceptions.cmdline.ECmdLineUnknownOption;
 
 public class CLI {
 	
 	public static final int EXIT_CODE_OK = 0;
 	public static final int EXIT_CODE_ERROR = 1;
 	
-	public int exec(SCMReleaser releaser, CommandLine cmd, PrintStream ps) throws Exception {
+	public void exec(SCMReleaser releaser, CommandLine cmd, PrintStream ps) throws Exception {
+		if (cmd.getArgs().length > 2) {
+			String[] optionArgs = Arrays.copyOfRange(cmd.getArgs(), 2, cmd.getArgs().length);
+			for (String optionArg : optionArgs) {
+				if (!Option.isValid(optionArg)) {
+					throw new ECmdLineUnknownOption(optionArg);
+				}
+			}
+			Options.setFromArgs(cmd.getArgs());
+		} 
+		
+		if (cmd.getCommand() == null) {
+			throw new ECmdLineNoCommand();
+		}
+		if (cmd.getProductCoords() == null) {
+			throw new ECmdLineNoProduct();
+		}
 		IAction action;
 		switch(cmd.getCommand()) {
 		case BUILD:
@@ -45,36 +66,39 @@ public class CLI {
 				action.execute(progress);
 			}
 			break;
+		case UNKNOWN: 
+			throw new ECmdLineUnknownCommand(cmd.getCommandStr());
 		}
-		return EXIT_CODE_OK;
 	}
 	
-	public int exec(String[] args) {
-		Options.setFromArgs(args);
-		CommandLine cmd;
+	public int execFromCmdLine(SCMReleaser releaser, CommandLine cmd, PrintStream ps) throws Exception {
 		try {
-			cmd = new CommandLine(args);
-			return exec(new SCMReleaser(), cmd, System.out);
-		} catch (ECommandLine e) {
-			printException(args, e);
-			System.out.println(CommandLine.getUsage());
+			exec(releaser, cmd, ps);
+			return EXIT_CODE_OK;
+		} catch (ECmdLine e) {
+			printException(cmd.getArgs(), e, ps);
+			ps.println(CommandLine.getUsage());
 			return EXIT_CODE_ERROR;
 		} catch (Exception e) {
-			printException(args, e);
+			printException(cmd.getArgs(), e, ps);
 			return EXIT_CODE_ERROR;
 		}
 	}
+	
+	public int execFromCmdLine(String[] args) throws Exception {
+		return execFromCmdLine(new SCMReleaser(), new CommandLine(args), System.out);
+	}
 
-	private void printException(String[] args, Exception e) {
+	private void printException(String[] args, Exception e, PrintStream ps) {
 		if (ArrayUtils.contains(args, Option.STACK_TRACE.getStrValue())) {
-			e.printStackTrace(System.out);
+			e.printStackTrace(ps);
 		} else {
-			System.out.println(e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage());
+			ps.println(e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage());
 		}
 	}
 	
 	public static void main(String[] args) throws Exception {
 		AnsiConsole.systemInstall();
-		System.exit(new CLI().exec(args));
+		System.exit(new CLI().execFromCmdLine(args));
 	}
 }

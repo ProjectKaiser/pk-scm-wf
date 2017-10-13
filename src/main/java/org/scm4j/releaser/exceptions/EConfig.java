@@ -4,10 +4,6 @@ public class EConfig extends EReleaserException {
 
 	private static final long serialVersionUID = 1L;
 
-	public EConfig(Exception e) {
-		super(e);
-	}
-
 	public EConfig(String message) {
 		super(message);
 	}

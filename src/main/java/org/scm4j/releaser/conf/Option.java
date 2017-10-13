@@ -27,4 +27,8 @@ public enum Option {
 	public String getStrValue() {
 		return strValue;
 	}
+
+	public static boolean isValid(String strValue) {
+		return map.containsKey(strValue);
+	}
 }
