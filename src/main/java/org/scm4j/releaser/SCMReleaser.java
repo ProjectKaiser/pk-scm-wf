@@ -70,7 +70,7 @@ public class SCMReleaser {
 					mDeps = new DevelopBranch(comp).getMDeps();
 				}
 			}
-			mbs = getBuildStatus(calculatedStatuses, rb);
+			mbs = getBuildStatus(rb);
 			calculatedStatuses.put(comp, new CalculatedResult(rb, mbs, mDeps));
 		}
 		
@@ -93,10 +93,10 @@ public class SCMReleaser {
 		}
 	}
 
-	protected BuildStatus getBuildStatus(Map<Component, CalculatedResult> calculatedStatuses, ReleaseBranch rb) {
+	protected BuildStatus getBuildStatus(ReleaseBranch rb) {
 		BuildStatus mbs;
 		Build mb = new Build(rb);
-		mbs = mb.getStatus(calculatedStatuses);
+		mbs = mb.getStatus();
 		return mbs;
 	}
 
