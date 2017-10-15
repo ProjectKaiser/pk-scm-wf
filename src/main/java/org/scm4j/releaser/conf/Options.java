@@ -1,7 +1,6 @@
 package org.scm4j.releaser.conf;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class Options {
@@ -21,11 +20,10 @@ public class Options {
 		Options.options = options;
 	}
 
-	public static void setFromArgs(String[] args) {
+	public static void parse(String[] strs) {
 		List<Option> options = new ArrayList<>();
-		String[] optionArgs = Arrays.copyOfRange(args, 2, args.length);
-		for (String optionArg : optionArgs) {
-			options.add(Option.getArgsMap().get(optionArg));
+		for (String optionStr : strs) {
+			options.add(Option.getArgsMap().get(optionStr));
 		}
 		setOptions(options);
 	}

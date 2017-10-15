@@ -1,8 +1,5 @@
 package org.scm4j.releaser.cli;
 
-import java.io.PrintStream;
-import java.util.Arrays;
-
 import org.apache.commons.lang3.ArrayUtils;
 import org.fusesource.jansi.AnsiConsole;
 import org.scm4j.commons.progress.IProgress;
@@ -13,11 +10,10 @@ import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.actions.PrintAction;
 import org.scm4j.releaser.conf.Option;
 import org.scm4j.releaser.conf.Options;
-import org.scm4j.releaser.exceptions.cmdline.ECmdLine;
-import org.scm4j.releaser.exceptions.cmdline.ECmdLineNoCommand;
-import org.scm4j.releaser.exceptions.cmdline.ECmdLineNoProduct;
-import org.scm4j.releaser.exceptions.cmdline.ECmdLineUnknownCommand;
-import org.scm4j.releaser.exceptions.cmdline.ECmdLineUnknownOption;
+import org.scm4j.releaser.exceptions.cmdline.*;
+
+import java.io.PrintStream;
+import java.util.Arrays;
 
 public class CLI {
 	
@@ -32,7 +28,7 @@ public class CLI {
 					throw new ECmdLineUnknownOption(optionArg);
 				}
 			}
-			Options.setFromArgs(cmd.getArgs());
+			Options.parse(optionArgs);
 		} 
 		
 		if (cmd.getCommand() == null) {
