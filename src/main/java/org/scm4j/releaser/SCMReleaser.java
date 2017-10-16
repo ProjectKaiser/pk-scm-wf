@@ -62,7 +62,6 @@ public class SCMReleaser {
 				mDeps = rb.getMDeps();
 			} else {
 				// If we are build, build_mdeps or actualize_patches then we need to use mdeps from release branches to show what versions we are going to build or actualize
-				// TODO: add test: fork, going to build, changed comonent set in trunk mdeps -> we must build with release mdeps set
 				rb = new ReleaseBranch(comp);
 				if (rb.exists()) {
 					mDeps = rb.getMDeps();
