@@ -42,6 +42,7 @@ public class Build {
 				throw new ENoReleases("Release Branch version patch is " + releaseVersion.getPatch() + ". Component release should be created before patch");
 			}
 		} else {
+			  
 			if (!comp.getVersion().isExact()) {
 				if (isNeedToFork()) {
 					return BuildStatus.FORK;
@@ -51,6 +52,11 @@ public class Build {
 			if (Integer.parseInt(rb.getVersion().getPatch()) > 0) {
 				return BuildStatus.DONE;
 			}
+		}
+		
+		if (!rb.exists()) {
+			// untill release branch exists -> eft driver has an exact version, but eft driver itself is not forked -> got here for eft -> must fork, then untill must freeze mdeps
+			return BuildStatus.FORK;
 		}
 		
 		List<Component> mDeps = rb.getMDeps();

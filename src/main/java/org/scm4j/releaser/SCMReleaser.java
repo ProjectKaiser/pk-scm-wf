@@ -62,6 +62,7 @@ public class SCMReleaser {
 				mDeps = rb.getMDeps();
 			} else {
 				// If we are build, build_mdeps or actualize_patches then we need to use mdeps from release branches to show what versions we are going to build or actualize
+				// TODO: add test: untill is forked, but untillDb has no release branches at all. unTillDb must have FORK, untill - FREEZE (unversion unTillDb before)
 				rb = new ReleaseBranch(comp);
 				if (rb.exists()) {
 					mDeps = rb.getMDeps();
