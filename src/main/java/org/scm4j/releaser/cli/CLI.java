@@ -20,7 +20,7 @@ public class CLI {
 	public static final int EXIT_CODE_OK = 0;
 	public static final int EXIT_CODE_ERROR = 1;
 	
-	public void exec(SCMReleaser releaser, CommandLine cmd, PrintStream ps) throws Exception {
+	public void execInternal(SCMReleaser releaser, CommandLine cmd, PrintStream ps) throws Exception {
 		if (cmd.getArgs().length > 2) {
 			String[] optionArgs = Arrays.copyOfRange(cmd.getArgs(), 2, cmd.getArgs().length);
 			for (String optionArg : optionArgs) {
@@ -67,9 +67,9 @@ public class CLI {
 		}
 	}
 	
-	public int execFromCmdLine(SCMReleaser releaser, CommandLine cmd, PrintStream ps) throws Exception {
+	public int exec(SCMReleaser releaser, CommandLine cmd, PrintStream ps) throws Exception {
 		try {
-			exec(releaser, cmd, ps);
+			execInternal(releaser, cmd, ps);
 			return EXIT_CODE_OK;
 		} catch (ECmdLine e) {
 			printException(cmd.getArgs(), e, ps);
@@ -81,8 +81,8 @@ public class CLI {
 		}
 	}
 	
-	public int execFromCmdLine(String[] args) throws Exception {
-		return execFromCmdLine(new SCMReleaser(), new CommandLine(args), System.out);
+	public int exec(String[] args) throws Exception {
+		return exec(new SCMReleaser(), new CommandLine(args), System.out);
 	}
 
 	private void printException(String[] args, Exception e, PrintStream ps) {
@@ -95,6 +95,6 @@ public class CLI {
 	
 	public static void main(String[] args) throws Exception {
 		AnsiConsole.systemInstall();
-		System.exit(new CLI().execFromCmdLine(args));
+		System.exit(new CLI().exec(args));
 	}
 }

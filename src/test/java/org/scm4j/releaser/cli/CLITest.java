@@ -66,7 +66,7 @@ public class CLITest {
 		doReturn(mockedAction).when(mockedWF).getActionTree(UNTILL);
 		CommandLine cmd = new CommandLine(new String[] { CLICommand.STATUS.getStrValue(), UNTILL });
 
-		assertEquals(CLI.EXIT_CODE_OK, new CLI().execFromCmdLine(mockedWF, cmd, mockedPS));
+		assertEquals(CLI.EXIT_CODE_OK, new CLI().exec(mockedWF, cmd, mockedPS));
 
 		verify(mockedWF).getActionTree(UNTILL);
 		verify(mockedAction, never()).execute(any(IProgress.class));
@@ -78,7 +78,7 @@ public class CLITest {
 		doReturn(mockedAction).when(mockedReleaser).getActionTree(UNTILL, ActionKind.FORK);
 		CommandLine cmd = new CommandLine(new String[] { CLICommand.FORK.getStrValue(), UNTILL });
 
-		assertEquals( CLI.EXIT_CODE_OK, new CLI().execFromCmdLine(mockedReleaser, cmd, mockedPS));
+		assertEquals( CLI.EXIT_CODE_OK, new CLI().exec(mockedReleaser, cmd, mockedPS));
 
 		verify(mockedReleaser).getActionTree(UNTILL, ActionKind.FORK);
 		verify(mockedAction).execute(any(IProgress.class));
@@ -89,7 +89,7 @@ public class CLITest {
 		doReturn(mockedAction).when(mockedReleaser).getActionTree(UNTILL, ActionKind.BUILD);
 		CommandLine cmd = new CommandLine(new String[] { CLICommand.BUILD.getStrValue(), UNTILL });
 
-		assertEquals( CLI.EXIT_CODE_OK, new CLI().execFromCmdLine(mockedReleaser, cmd, mockedPS));
+		assertEquals( CLI.EXIT_CODE_OK, new CLI().exec(mockedReleaser, cmd, mockedPS));
 
 		verify(mockedReleaser).getActionTree(UNTILL, ActionKind.BUILD);
 		verify(mockedAction).execute(any(IProgress.class));
@@ -100,7 +100,7 @@ public class CLITest {
 		doReturn(mockedAction).when(mockedReleaser).getActionTree(UNTILL);
 		CommandLine cmd = new CommandLine(new String[] { CLICommand.TAG.getStrValue(), UNTILL });
 
-		assertEquals(CLI.EXIT_CODE_OK, new CLI().execFromCmdLine(mockedReleaser, cmd, mockedPS));
+		assertEquals(CLI.EXIT_CODE_OK, new CLI().exec(mockedReleaser, cmd, mockedPS));
 
 		verify(mockedReleaser).getActionTree(UNTILL);
 		verify(mockedAction).execute(any(IProgress.class));
@@ -114,7 +114,7 @@ public class CLITest {
 
 		CLI cli = new CLI();
 		try {
-			cli.exec(mockedReleaser, cmd, mockedPS);
+			cli.execInternal(mockedReleaser, cmd, mockedPS);
 			fail();
 		} catch (RuntimeException e) {
 			assertEquals(mockedException, e);
@@ -130,13 +130,13 @@ public class CLITest {
 		String[] args = new String[] { "wrong command", UNTILL };
 		CommandLine cmd = new CommandLine(args);
 		try {
-			new CLI().exec(new SCMReleaser(), cmd, System.out);
+			new CLI().execInternal(new SCMReleaser(), cmd, System.out);
 			fail();
 		} catch (ECmdLineUnknownCommand e) {
 			thrown = e;
 		}
 		
-		assertEquals(CLI.EXIT_CODE_ERROR, new CLI().execFromCmdLine(mockedReleaser, cmd, mockedPS));
+		assertEquals(CLI.EXIT_CODE_ERROR, new CLI().exec(mockedReleaser, cmd, mockedPS));
 		verify(mockedPS).println(thrown.getMessage());
 		verify(mockedPS).println(CommandLine.getUsage());
 		
@@ -150,13 +150,13 @@ public class CLITest {
 		String[] args = new String[0];
 		CommandLine cmd = new CommandLine(args);
 		try {
-			new CLI().exec(new SCMReleaser(), cmd, System.out);
+			new CLI().execInternal(new SCMReleaser(), cmd, System.out);
 			fail();
 		} catch (ECmdLineNoCommand e) {
 			thrown = e;
 		}
 		assertEquals(CLI.EXIT_CODE_ERROR,
-				new CLI().execFromCmdLine(mockedReleaser, cmd, mockedPS));
+				new CLI().exec(mockedReleaser, cmd, mockedPS));
 		verify(mockedPS).println(thrown.getMessage());
 		verify(mockedPS).println(CommandLine.getUsage());
 		
@@ -170,13 +170,13 @@ public class CLITest {
 		String[] args = new String[] {CLICommand.STATUS.getStrValue()};
 		CommandLine cmd = new CommandLine(args);
 		try {
-			new CLI().exec(new SCMReleaser(), cmd, System.out);
+			new CLI().execInternal(new SCMReleaser(), cmd, System.out);
 			fail();
 		} catch (ECmdLineNoProduct e) {
 			thrown = e;
 		}
 		assertEquals(CLI.EXIT_CODE_ERROR,
-				new CLI().execFromCmdLine(mockedReleaser, cmd, mockedPS));
+				new CLI().exec(mockedReleaser, cmd, mockedPS));
 		verify(mockedPS).println(thrown.getMessage());
 		verify(mockedPS).println(CommandLine.getUsage());
 		
@@ -190,13 +190,13 @@ public class CLITest {
 		String[] args = new String[] {CLICommand.STATUS.getStrValue(), TestEnvironment.PRODUCT_UNTILL, "unknown-option"};
 		CommandLine cmd = new CommandLine(args);
 		try {
-			new CLI().exec(new SCMReleaser(), cmd, System.out);
+			new CLI().execInternal(new SCMReleaser(), cmd, System.out);
 			fail();
 		} catch (ECmdLineUnknownOption e) {
 			thrown = e;
 		}
 		assertEquals(CLI.EXIT_CODE_ERROR,
-				new CLI().execFromCmdLine(mockedReleaser, cmd, mockedPS));
+				new CLI().exec(mockedReleaser, cmd, mockedPS));
 		verify(mockedPS).println(thrown.getMessage());
 		verify(mockedPS).println(CommandLine.getUsage());
 		
@@ -210,14 +210,14 @@ public class CLITest {
 		String[] args = new String[] {CLICommand.STATUS.getStrValue(), "unknown component"};
 		CommandLine cmd = new CommandLine(args);
 		try {
-			new CLI().exec(new SCMReleaser(), cmd, System.out);
+			new CLI().execInternal(new SCMReleaser(), cmd, System.out);
 			fail();
 		} catch (IllegalArgumentException e) {
 			thrown = e;
 		}
 		mockedReleaser = spy(new SCMReleaser());
 		assertEquals(CLI.EXIT_CODE_ERROR,
-				new CLI().execFromCmdLine(mockedReleaser, cmd, mockedPS));
+				new CLI().exec(mockedReleaser, cmd, mockedPS));
 		verify(mockedPS).println(thrown.getMessage());
 		verify(mockedPS, never()).println(CommandLine.getUsage());
 		
@@ -232,7 +232,7 @@ public class CLITest {
 		CommandLine cmd = new CommandLine(new String[] { CLICommand.STATUS.getStrValue(), UNTILL, Option.STACK_TRACE.getStrValue() });
 
 		CLI cli = new CLI();
-		assertEquals(CLI.EXIT_CODE_ERROR, cli.execFromCmdLine(mockedReleaser, cmd, mockedPS));
+		assertEquals(CLI.EXIT_CODE_ERROR, cli.exec(mockedReleaser, cmd, mockedPS));
 		verify(mockedReleaser).getActionTree(UNTILL);
 		verify(mockedAction, never()).execute(any(IProgress.class));
 		verify(mockedException).printStackTrace(mockedPS);
@@ -247,7 +247,7 @@ public class CLITest {
 		CommandLine cmd = new CommandLine(new String[] { CLICommand.STATUS.getStrValue(), UNTILL });
 
 		CLI cli = new CLI();
-		assertEquals(CLI.EXIT_CODE_ERROR, cli.execFromCmdLine(mockedReleaser, cmd, mockedPS));
+		assertEquals(CLI.EXIT_CODE_ERROR, cli.exec(mockedReleaser, cmd, mockedPS));
 		verify(mockedPS).println(mockedException.getClass().getSimpleName());
 		verify(mockedReleaser).getActionTree(UNTILL);
 		verify(mockedAction, never()).execute(any(IProgress.class));
@@ -266,10 +266,10 @@ public class CLITest {
 	public void testSetOptions() throws Exception {
 		try (TestEnvironment env = new TestEnvironment()) {
 			env.generateTestEnvironment();
-			assertEquals(CLI.EXIT_CODE_OK, new CLI().execFromCmdLine(new String[] { CLICommand.STATUS.getStrValue(), UNTILL }));
+			assertEquals(CLI.EXIT_CODE_OK, new CLI().exec(new String[] { CLICommand.STATUS.getStrValue(), UNTILL }));
 			assertTrue(Options.getOptions().isEmpty());
 			
-			assertEquals(CLI.EXIT_CODE_OK, new CLI().execFromCmdLine(new String[] { CLICommand.STATUS.getStrValue(), UNTILL, Option.DELAYED_TAG.getStrValue() }));
+			assertEquals(CLI.EXIT_CODE_OK, new CLI().exec(new String[] { CLICommand.STATUS.getStrValue(), UNTILL, Option.DELAYED_TAG.getStrValue() }));
 			assertTrue(Options.hasOption(Option.DELAYED_TAG));
 		}
 	}
