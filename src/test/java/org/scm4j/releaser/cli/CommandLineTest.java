@@ -1,9 +1,8 @@
 package org.scm4j.releaser.cli;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-
 import org.junit.Test;
+
+import static org.junit.Assert.*;
 
 public class CommandLineTest {
 	
@@ -19,5 +18,10 @@ public class CommandLineTest {
 		CommandLine cmd = new CommandLine(new String[] {CLICommand.STATUS.getStrValue(), TEST_COORDS});
 		assertEquals(CLICommand.STATUS, cmd.getCommand());
 		assertEquals(TEST_COORDS, cmd.getProductCoords());
+	}
+
+	@Test
+	public void testPrintUsage() {
+		System.out.println(CommandLine.getUsage())	;
 	}
 }

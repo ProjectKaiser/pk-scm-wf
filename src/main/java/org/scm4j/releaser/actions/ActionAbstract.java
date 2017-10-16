@@ -64,8 +64,10 @@ public abstract class ActionAbstract implements IAction {
 
 	protected void executeChilds(IProgress progress) throws Exception {
 		for (IAction action : childActions) {
-			try (IProgress nestedProgress = progress.createNestedProgress(action.toString())) {
-				action.execute(nestedProgress);
+			if (!(action instanceof ActionNone)) {
+				try (IProgress nestedProgress = progress.createNestedProgress(action.toString())) {
+					action.execute(nestedProgress);
+				}
 			}
 		}
 	}
