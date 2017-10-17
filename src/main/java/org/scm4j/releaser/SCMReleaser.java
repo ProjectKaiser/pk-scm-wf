@@ -60,16 +60,24 @@ public class SCMReleaser {
 			if (Options.isPatch()) {
 				rb = new ReleaseBranch(comp, comp.getCoords().getVersion());
 				mDeps = rb.getMDeps();
+				mbs = getBuildStatus(rb);
 			} else {
 				// If we are build, build_mdeps or actualize_patches then we need to use mdeps from release branches to show what versions we are going to build or actualize
 				rb = new ReleaseBranch(comp);
-				if (rb.exists()) {
-					mDeps = rb.getMDeps();
-				} else {
+				mbs = getBuildStatus(rb);
+				if (mbs == BuildStatus.FORK) {
+					// untill has untilldb, ubl has untilldb. untill is BUILD_MDEPS, UBL has release branch but need to FORK. 
+					// result: regressinon for untill FORK, regiression for UBL is DONE prev version (mdep fro existing UBL RB is used) 
+					// TODO: add test: untill build_mdeps, untill needs to be forked. UBL has release rbanch but has to be forked also. untilldbs must have the same status
 					mDeps = new DevelopBranch(comp).getMDeps();
+				} else {
+					if (rb.exists()) {
+						mDeps = rb.getMDeps();
+					} else {
+						mDeps = new DevelopBranch(comp).getMDeps();
+					}
 				}
 			}
-			mbs = getBuildStatus(rb);
 			calculatedStatuses.put(comp, new CalculatedResult(rb, mbs, mDeps));
 		}
 		
