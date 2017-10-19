@@ -1,15 +1,5 @@
 package org.scm4j.releaser;
 
-import static org.hamcrest.Matchers.allOf;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.hasProperty;
-import static org.hamcrest.Matchers.instanceOf;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
-import java.util.List;
-
 import org.junit.Test;
 import org.scm4j.releaser.actions.ActionKind;
 import org.scm4j.releaser.actions.ActionNone;
@@ -17,6 +7,11 @@ import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.branch.ReleaseBranch;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.scmactions.SCMActionFork;
+
+import java.util.List;
+
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.*;
 
 public class WorkflowForkTest extends WorkflowTestBase {
 	
@@ -59,8 +54,7 @@ public class WorkflowForkTest extends WorkflowTestBase {
 		assertEquals(env.getUblVer().toReleaseZeroPatch().toNextPatch(), rbUBL.getVersion());
 		assertEquals(env.getUnTillVer().toReleaseZeroPatch().toNextMinor(), rbUnTill.getVersion());
 		assertEquals(env.getUnTillDbVer().toReleaseZeroPatch().toNextPatch(), rbUnTillDb.getVersion());
-		//checkUnTillForked();
-		
+
 		// build untill only
 		action = releaser.getActionTree(UNTILL);
 		assertThat(action, allOf(
