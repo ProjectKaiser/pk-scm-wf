@@ -81,7 +81,7 @@ public class SCMActionBuild extends ActionAbstract {
 		Version newVersion;
 		for (Component currentMDep : currentMDepsFile.getMDeps()) {
 			rbMDep = new ReleaseBranch(currentMDep);
-			newVersion = rbMDep.getVersion().toPreviousPatch();
+			newVersion = rbMDep.getVersion().toPreviousPatch(); // TODO: which patch of mdep to actualize on if there are no mdep release branches at all?
 			if (!newVersion.equals(currentMDep.getVersion())) {
 				hasNew = true;
 			}
