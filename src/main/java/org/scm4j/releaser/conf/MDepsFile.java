@@ -4,10 +4,11 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.ListIterator;
 
 public class MDepsFile {
 	
-	private final List<Object> mDeps = new ArrayList<>();
+	private final List<Object> lines = new ArrayList<>();
 	
 	public MDepsFile(String content) {
 		if (content == null || content.isEmpty()) {
@@ -16,9 +17,9 @@ public class MDepsFile {
 		String[] strs = content.split("\\r?\\n", -1);
 		for (String str: strs) {
 			if (isLineValueable(str)) {
-				mDeps.add(new Component(str));
+				lines.add(new Component(str));
 			} else {
-				mDeps.add(str);
+				lines.add(str);
 			}
 		}
 	}
@@ -32,18 +33,16 @@ public class MDepsFile {
 	}
 	
 	public void replaceMDep(Component newMDep) {
-		int indexToReplace = -1;
-		for (Object obj : mDeps) {
+		ListIterator<Object> it = lines.listIterator();
+		Object obj;
+		while (it.hasNext()) {
+			obj = it.next();
 			if (obj instanceof Component) {
-				if (((Component) obj).getName().equals(newMDep.getName())) {
-					indexToReplace = mDeps.lastIndexOf(obj);
-					break;
+				if (((Component) obj).getCoordsNoVersion().equals(newMDep.getCoordsNoVersion())) {
+					it.set(newMDep);
+					return;
 				}
 			}
-		}
-		
-		if (indexToReplace > -1) {
-			mDeps.set(indexToReplace, newMDep);
 		}
 	}
 
@@ -52,18 +51,18 @@ public class MDepsFile {
 			return;
 		}
 		for (Object mDep : mDeps) {
-			this.mDeps.add(mDep);
+			this.lines.add(mDep);
 		}
 	}
 
 	public String toFileContent() {
 		StringWriter sw = new StringWriter();
 		PrintWriter pw = new PrintWriter(sw);
-		for (int i = 0; i < mDeps.size(); i++) {
-			if (i == mDeps.size() - 1) {
-				pw.print(mDeps.get(i).toString());
+		for (int i = 0; i < lines.size(); i++) {
+			if (i == lines.size() - 1) {
+				pw.print(lines.get(i).toString());
 			} else {
-				pw.println(mDeps.get(i).toString());
+				pw.println(lines.get(i).toString());
 			}
 			
 		}
@@ -72,7 +71,7 @@ public class MDepsFile {
 	
 	public List<Component> getMDeps() {
 		List<Component> res = new ArrayList<>();
-		for (Object obj : mDeps) {
+		for (Object obj : lines) {
 			if (obj instanceof Component) {
 				res.add((Component) obj);
 			}
@@ -82,11 +81,11 @@ public class MDepsFile {
 
 	@Override
 	public String toString() {
-		return "MDepsFile [mDeps=" + mDeps + "]";
+		return "MDepsFile [mDeps=" + lines + "]";
 	}
 
 	public boolean hasMDeps() {
-		for (Object obj : mDeps) {
+		for (Object obj : lines) {
 			if (obj instanceof Component) {
 				return true;
 			}

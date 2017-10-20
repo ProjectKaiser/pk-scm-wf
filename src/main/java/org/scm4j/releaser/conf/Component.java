@@ -23,6 +23,10 @@ public class Component {
 	public Coords getCoords() {
 		return coords;
 	}
+	
+	public String getCoordsNoVersion() {
+		return coords.toString("");
+	}
 
 	public String getName() {
 		return coords.getName();

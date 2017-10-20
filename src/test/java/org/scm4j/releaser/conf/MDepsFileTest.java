@@ -1,14 +1,17 @@
 package org.scm4j.releaser.conf;
 
-import org.junit.Test;
-import org.scm4j.releaser.TestEnvironment;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.junit.Assert.*;
+import org.junit.Test;
+import org.scm4j.releaser.TestEnvironment;
 
 public class MDepsFileTest {
 
@@ -56,28 +59,48 @@ public class MDepsFileTest {
 		assertTrue(mdf.getMDeps().size() == 1);
 		assertTrue(mdf.getMDeps().contains(modifiedComp));
 	}
-
+	
 	@Test
-	public void testFormatSavingOnReplace() {
+	public void testComponentReplaceAndFromatSaving() {
+		Component comp1 = new Component("eu.untill:TPAPIJavaProxy::tests # tpapiTests");
+		Component comp2 = new Component("eu.untill:TPAPIJavaProxy: #tpapiTests");
+		Component comp3 = new Component("          eu.untill.utils:UntillWD:@zip # thirdParty");
+		Component comp4 = new Component("eu.untill.utils:UntillWD::sources@zip # thirdPartyLib");
+		
 		StringWriter sw = new StringWriter();
 		PrintWriter pw = new PrintWriter(sw);
 		pw.println();
 		pw.println("        # my cool comment ");
 		pw.println();
-		pw.println("    " + TestEnvironment.PRODUCT_UNTILL + " # product comment ");
+		pw.println(comp1.toString());
+		pw.println(comp2.toString());
+		pw.println(comp3.toString());
+		pw.println(comp4.toString());
 		pw.print("  ");
-		String content = sw.toString();
-		MDepsFile mdf = new MDepsFile(content);
-		assertTrue(mdf.hasMDeps());
-		List<Component> mDeps = mdf.getMDeps();
-		assertTrue(mDeps.size() == 1);
-		assertEquals(new Component(TestEnvironment.PRODUCT_UNTILL), mDeps.get(0));
+		
+		MDepsFile mdf = new MDepsFile(sw.toString());
+		assertTrue(mdf.getMDeps().size() == 4);
+		mdf.getMDeps().contains(comp2);
+		assertTrue(mdf.getMDeps().containsAll(Arrays.asList(comp1, comp2, comp3, comp4)));
+		assertEquals(sw.toString(), mdf.toFileContent());
+		
+		Component comp1Versioned = comp1.clone("12.13");
+		Component comp2Versioned = comp2.clone("12.14");
+		Component comp3Versioned = comp3.clone("12.15");
+		Component comp4Versioned = comp4.clone("12.16");
 
-		Component initialComp = new Component("    " + TestEnvironment.PRODUCT_UNTILL + " # product comment ");
-		Component versionedComp = initialComp.clone("12.13.14");
-		mdf.replaceMDep(versionedComp);
-
-		assertEquals(content.replace(TestEnvironment.PRODUCT_UNTILL, TestEnvironment.PRODUCT_UNTILL + ":12.13.14"), mdf.toFileContent());
+		mdf.replaceMDep(comp1Versioned);
+		mdf.replaceMDep(comp2Versioned);
+		mdf.replaceMDep(comp3Versioned);
+		mdf.replaceMDep(comp4Versioned);
+		
+		assertTrue(mdf.getMDeps().size() == 4);
+		assertTrue(mdf.getMDeps().containsAll(Arrays.asList(comp1Versioned, comp2Versioned, comp3Versioned, comp4Versioned)));
+		assertEquals(sw.toString()
+				.replace(comp1.toString(), comp1Versioned.toString())
+				.replace(comp2.toString(), comp2Versioned.toString())
+				.replace(comp3.toString(), comp3Versioned.toString())
+				.replace(comp4.toString(), comp4Versioned.toString()), mdf.toFileContent());
 	}
 	
 	@Test
