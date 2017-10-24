@@ -1,17 +1,14 @@
 package org.scm4j.releaser.conf;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import org.junit.Test;
+import org.scm4j.releaser.TestEnvironment;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Arrays;
 import java.util.List;
 
-import org.junit.Test;
-import org.scm4j.releaser.TestEnvironment;
+import static org.junit.Assert.*;
 
 public class MDepsFileTest {
 
@@ -61,7 +58,7 @@ public class MDepsFileTest {
 	}
 	
 	@Test
-	public void testComponentReplaceAndFromatSaving() {
+	public void testComponentReplaceAndFormatSaving() {
 		Component comp1 = new Component("eu.untill:TPAPIJavaProxy::tests # tpapiTests");
 		Component comp2 = new Component("eu.untill:TPAPIJavaProxy: #tpapiTests");
 		Component comp3 = new Component("          eu.untill.utils:UntillWD:@zip # thirdParty");
@@ -80,7 +77,6 @@ public class MDepsFileTest {
 		
 		MDepsFile mdf = new MDepsFile(sw.toString());
 		assertTrue(mdf.getMDeps().size() == 4);
-		mdf.getMDeps().contains(comp2);
 		assertTrue(mdf.getMDeps().containsAll(Arrays.asList(comp1, comp2, comp3, comp4)));
 		assertEquals(sw.toString(), mdf.toFileContent());
 		
