@@ -127,7 +127,7 @@ public class SCMActionBuild extends ActionAbstract {
 		Version nextPatchVersion = rb.getVersion().toNextPatch();
 		vcs.setFileContent(rb.getName(), SCMReleaser.VER_FILE_NAME, nextPatchVersion.toString(),
 				LogTag.SCM_VER + " " + nextPatchVersion);
-		progress.reportStatus("patch version is raised in release branch: " + nextPatchVersion);
+		progress.reportStatus("patch version is bumped in release branch: " + nextPatchVersion);
 	}
 
 	@Override
