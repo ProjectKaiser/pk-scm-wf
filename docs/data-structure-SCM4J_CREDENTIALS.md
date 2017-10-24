@@ -28,4 +28,4 @@ Yaml file consists of number of rules which are applied in order of appearance, 
     password: guest
 ```
 
-https://github.com/settings/tokens
+Not that for github you better use tokens rather than passwords: https://github.com/settings/tokens
