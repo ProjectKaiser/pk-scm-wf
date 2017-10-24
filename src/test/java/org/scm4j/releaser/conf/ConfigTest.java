@@ -9,7 +9,6 @@ import static org.junit.Assert.fail;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.nio.charset.StandardCharsets;
 
 import org.apache.commons.io.FileUtils;
@@ -70,21 +69,9 @@ public class ConfigTest {
 		}
 	}
 	
-	@Test
-	public void testMalformedReposUrl() {
-		repos = "malformed url";
-		creds = "";
-		try {
-			VCSRepositories.getDefault();
-			fail();
-		} catch (EConfig e) {
-			assertThat(e.getCause(), instanceOf(MalformedURLException.class));
-		}
-	}
-	
 	@Test 
 	public void testWrongReposLocation() {
-		repos = "file:///c:/wrong/Location";
+		repos = "c:/wrong/Location";
 		creds = "";
 		try {
 			VCSRepositories.getDefault();

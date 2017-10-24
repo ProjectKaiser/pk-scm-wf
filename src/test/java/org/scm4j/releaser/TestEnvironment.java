@@ -72,12 +72,12 @@ public class TestEnvironment implements AutoCloseable {
 		VCSRepositories.setConfigSource(new IConfigSource() {
 			@Override
 			public String getReposLocations() {
-				return getReposFile().toURI().toString();
+				return getReposFile().toString().replace("\\", "/");
 			}
 
 			@Override
 			public String getCredentialsLocations() {
-				return getCredsFile().toURI().toString();
+				return getCredsFile().toString().replace("\\", "/");
 			}
 		});
 	}

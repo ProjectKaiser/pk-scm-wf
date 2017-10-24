@@ -3,8 +3,9 @@ Variable lists files which maps artifact coordinates to repositories parameters.
 Example of variable (";" - separated): 
 
 ```
-SCM4J_VCS_REPOS=file:///c:/workspace/my-repos.yaml;http://mycompany.com/repos/project1-repos.yaml`
+SCM4J_VCS_REPOS=c:/workspace/my-repos.yaml;http://mycompany.com/repos/project1-repos.yaml`
 ```
+Default protocol is file:///
 
 Yaml file consists of number of rules which are applied in order of appearance, first one which matches is used.
 
@@ -14,7 +15,7 @@ Yaml file consists of number of rules which are applied in order of appearance, 
 
 !!omap
 
-# Just a component. Note that  ident of attribute specification must be at least three spaces
+# Just a component. Note that ident of attribute specification must be at least three spaces
 
 - mycompany:component1: 
    url: http://mycompany.com/repos/component1
@@ -23,7 +24,7 @@ Yaml file consists of number of rules which are applied in order of appearance, 
 
 - component1|component2:
    url: http://mycompany.com/repos/components
-  
+
 # Coordinates which matches `my.*`. Repository name is constructed from coorinates name using regular expression
 
 - my(.*):

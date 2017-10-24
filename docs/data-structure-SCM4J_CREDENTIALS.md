@@ -1,8 +1,9 @@
 Example of variable (";" - separated): 
 
 ```
-SCM4J_CREDENTIALS=file:///c:/workspace/credentials.yaml;http://company.com/repos/credentials.yaml
+SCM4J_CREDENTIALS=c:/workspace/credentials.yaml;http://company.com/repos/credentials.yaml
 ```
+Default protocol is file:///
 
 Yaml file consists of number of rules which are applied in order of appearance, first one which matches is used.
 
