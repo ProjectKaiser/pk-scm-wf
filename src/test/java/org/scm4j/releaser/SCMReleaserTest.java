@@ -21,7 +21,7 @@ public class SCMReleaserTest extends WorkflowTestBase {
 		doReturn(BuildStatus.ERROR).when(releaser).getBuildStatus(any(ReleaseBranch.class));
 
 		try {
-			releaser.getActionTree(TestEnvironment.PRODUCT_UNTILL, ActionKind.AUTO);
+			releaser.getActionTree(TestEnvironment.PRODUCT_UNTILL, ActionKind.ALL);
 			fail();
 		} catch (IllegalArgumentException e) {
 
@@ -30,20 +30,14 @@ public class SCMReleaserTest extends WorkflowTestBase {
 	
 	@Test
 	public void testGetActionTreeUsingActionKind() throws Exception {
-		IAction action = releaser.getActionTree(UNTILLDB, ActionKind.AUTO);
+		IAction action = releaser.getActionTree(UNTILLDB, ActionKind.ALL);
 		assertIsGoingToFork(action, compUnTillDb);
-		
-		action = releaser.getActionTree(UNTILLDB, ActionKind.BUILD);
-		assertTrue(action instanceof ActionNone);
 		
 		action = releaser.getActionTree(UNTILLDB, ActionKind.FORK);
 		assertIsGoingToFork(action, compUnTillDb);
 		action.execute(getProgress(action));
 		
-		action = releaser.getActionTree(UNTILLDB, ActionKind.AUTO);
-		assertIsGoingToBuild(action, compUnTillDb);
-		
-		action = releaser.getActionTree(UNTILLDB, ActionKind.BUILD);
+		action = releaser.getActionTree(UNTILLDB, ActionKind.ALL);
 		assertIsGoingToBuild(action, compUnTillDb);
 		
 		action = releaser.getActionTree(UNTILLDB, ActionKind.FORK);

@@ -86,12 +86,12 @@ public class CLITest {
 
 	@Test
 	public void testCommandBUILD() throws Exception {
-		doReturn(mockedAction).when(mockedReleaser).getActionTree(UNTILL, ActionKind.BUILD);
+		doReturn(mockedAction).when(mockedReleaser).getActionTree(UNTILL, ActionKind.ALL);
 		CommandLine cmd = new CommandLine(new String[] { CLICommand.BUILD.getStrValue(), UNTILL });
 
 		assertEquals( CLI.EXIT_CODE_OK, new CLI().exec(mockedReleaser, cmd, mockedPS));
 
-		verify(mockedReleaser).getActionTree(UNTILL, ActionKind.BUILD);
+		verify(mockedReleaser).getActionTree(UNTILL, ActionKind.ALL);
 		verify(mockedAction).execute(any(IProgress.class));
 	}
 

@@ -1,17 +1,21 @@
 package org.scm4j.releaser;
 
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasProperty;
+import static org.hamcrest.Matchers.instanceOf;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
+import java.util.List;
+
 import org.junit.Test;
-import org.scm4j.releaser.actions.ActionKind;
 import org.scm4j.releaser.actions.ActionNone;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.branch.ReleaseBranch;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.scmactions.SCMActionFork;
-
-import java.util.List;
-
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
 
 public class WorkflowForkTest extends WorkflowTestBase {
 	
@@ -166,15 +170,6 @@ public class WorkflowForkTest extends WorkflowTestBase {
 		}
 	}
 	
-	@Test
-	public void testSkipForksOnBUILDActionKind() throws Exception {
-		//try to fork all with BUILD target action kind. All forks should be skipped
-		IAction action = releaser.getActionTree(compUnTill, ActionKind.BUILD);
-		assertThat(action, allOf(
-				instanceOf(ActionNone.class),
-				hasProperty("mbs", equalTo(BuildStatus.FORK))), compUnTillDb, compUBL, compUnTill);
-	}
-
 	@Test
 	public void testSkipChildBuildIfParentGoingToFork() throws Exception {
 		// fork UBL

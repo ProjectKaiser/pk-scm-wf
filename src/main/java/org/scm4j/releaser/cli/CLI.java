@@ -40,7 +40,7 @@ public class CLI {
 		IAction action;
 		switch(cmd.getCommand()) {
 		case BUILD:
-			action = releaser.getActionTree(cmd.getProductCoords(), ActionKind.BUILD);
+			action = releaser.getActionTree(cmd.getProductCoords(), ActionKind.ALL);
 			try (IProgress progress = new ProgressConsole(action.toString(), ">>> ", "<<< ")) {
 				action.execute(progress);
 			}

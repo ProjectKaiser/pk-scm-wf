@@ -37,7 +37,7 @@ public class SCMReleaser {
 	}
 	
 	public IAction getActionTree(Component comp) throws Exception {
-		return getActionTree(comp, ActionKind.AUTO);
+		return getActionTree(comp, ActionKind.ALL);
 		
 	}
 	
@@ -115,7 +115,6 @@ public class SCMReleaser {
 			return mbs;
 		}
 	}
-
 	
 	private IAction getBuildOrSkipAction(ReleaseBranch rb, List<IAction> childActions, BuildStatus mbs,
 			ActionKind actionKind) {
@@ -128,9 +127,6 @@ public class SCMReleaser {
 
 	private IAction getForkOrSkipAction(ReleaseBranch rb, List<IAction> childActions, BuildStatus mbs,
 			ActionKind actionKind) {
-		if (actionKind == ActionKind.BUILD) {
-			return new ActionNone(rb, childActions, mbs);
-		}
 		skipAllBuilds(childActions);
 		return new SCMActionFork(rb, childActions, mbs);
 	}
