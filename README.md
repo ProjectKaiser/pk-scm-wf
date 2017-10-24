@@ -24,7 +24,7 @@ For version definitions ref. [semantic Versioning 2.0.0](http://semver.org/).
 
 1. Install groovy, download [run.grovy](https://raw.githubusercontent.com/scm4j/scm4j-releaser/release/10/run.groovy) and execute `groovy run.groovy`, it will list available commands
 
-2. Add `version` file, optinally `mdeps`, configure `SCM4J_VCS_REPOS` and `SCM4J_CREDENTIALS` variables. Ref. [data-structure](docs/data-structure.md) for more details
+2. Add `version` file to your repository, optinally `mdeps`, configure `SCM4J_VCS_REPOS` and `SCM4J_CREDENTIALS` environment variables. Ref. [data-structure](docs/data-structure.md) for more details
 
 # Data Structure
 
