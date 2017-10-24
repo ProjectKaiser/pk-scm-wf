@@ -52,7 +52,7 @@ Yaml file consists of number of rules which are applied in order of appearance, 
 # Component with `afterTag` hook (ref. issue #8)
 
 - mycompany:component5:
-   builder: gradlew.bat build
-   afterTag: gradlew.bat afterTag
+   builder: cmd /c gradlew.bat build
+   afterTag: cmd /c gradlew.bat afterTag
 
 ```
