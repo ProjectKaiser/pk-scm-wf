@@ -27,3 +27,5 @@ Yaml file consists of number of rules which are applied in order of appearance, 
     name: guest
     password: guest
 ```
+
+https://github.com/settings/tokens
