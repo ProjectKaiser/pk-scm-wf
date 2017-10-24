@@ -67,4 +67,8 @@ public class Component {
 	public void setRepo(VCSRepository repo) {
 		this.repo = repo;
 	}
+
+	public String getCoordsNoComment() {
+		return coords.toStringNoComment();
+	}
 }

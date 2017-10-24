@@ -43,7 +43,7 @@ public class ReleaseBranchTest extends WorkflowTestBase {
 	}
 
 	@Test
-	public void testGetMDeps() {
+	public void testGetMDeps() throws Exception {
 		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), "feature added");
 		env.generateFeatureCommit(env.getUnTillVCS(), compUnTill.getVcsRepository().getDevBranch(), "feature added");
 		env.generateFeatureCommit(env.getUblVCS(), compUBL.getVcsRepository().getDevBranch(), "feature added");
@@ -59,7 +59,7 @@ public class ReleaseBranchTest extends WorkflowTestBase {
 	}
 
 	@Test
-	public void testVersionSelect() {
+	public void testVersionSelect() throws Exception {
 		assertEquals(env.getUnTillDbVer().toPreviousMinor().toReleaseZeroPatch(), new ReleaseBranch(compUnTillDb).getVersion());
 		Version testVer = new Version("11.12");
 		assertEquals(testVer, new ReleaseBranch(compUnTillDb, testVer).getVersion());

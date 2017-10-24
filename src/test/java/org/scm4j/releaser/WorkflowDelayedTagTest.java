@@ -1,5 +1,16 @@
 package org.scm4j.releaser;
 
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasProperty;
+import static org.hamcrest.Matchers.instanceOf;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -7,17 +18,13 @@ import org.scm4j.commons.Version;
 import org.scm4j.releaser.actions.ActionNone;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.branch.ReleaseBranch;
-import org.scm4j.releaser.conf.*;
+import org.scm4j.releaser.conf.Component;
+import org.scm4j.releaser.conf.DelayedTagsFile;
+import org.scm4j.releaser.conf.Option;
+import org.scm4j.releaser.conf.Options;
+import org.scm4j.releaser.conf.TagDesc;
 import org.scm4j.vcs.api.VCSTag;
 import org.scm4j.vcs.api.WalkDirection;
-
-import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
 
 public class WorkflowDelayedTagTest extends WorkflowTestBase {
 
@@ -31,7 +38,7 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 	}
 
 	@Test
-	public void testBuildWithDelayedTag() throws IOException {
+	public void testBuildWithDelayedTag() throws Exception {
 		// fork all
 		IAction action = releaser.getActionTree(compUnTill);
 		assertIsGoingToForkAll(action);
@@ -68,7 +75,7 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 	}
 	
 	@Test
-	public void testTagDelayed() throws IOException {
+	public void testTagDelayed() throws Exception {
 		Options.setOptions(Collections.singletonList(Option.DELAYED_TAG));
 		
 		// fork all
@@ -114,7 +121,7 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 	}
 
 	@Test
-	public void testTagExistsOnExecute() throws InterruptedException {
+	public void testTagExistsOnExecute() throws Exception {
 		Options.setOptions(Collections.singletonList(Option.DELAYED_TAG));
 
 		// fork all
@@ -163,7 +170,7 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 	}
 	
 	@Test
-	public void testTagExistsOnGetActionTree() {
+	public void testTagExistsOnGetActionTree() throws Exception {
 		Options.setOptions(Collections.singletonList(Option.DELAYED_TAG));
 
 		// fork all

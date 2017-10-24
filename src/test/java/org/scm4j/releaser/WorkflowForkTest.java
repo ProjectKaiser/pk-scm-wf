@@ -167,7 +167,7 @@ public class WorkflowForkTest extends WorkflowTestBase {
 	}
 	
 	@Test
-	public void testSkipForksOnBUILDActionKind() {
+	public void testSkipForksOnBUILDActionKind() throws Exception {
 		//try to fork all with BUILD target action kind. All forks should be skipped
 		IAction action = releaser.getActionTree(compUnTill, ActionKind.BUILD);
 		assertThat(action, allOf(
@@ -176,7 +176,7 @@ public class WorkflowForkTest extends WorkflowTestBase {
 	}
 
 	@Test
-	public void testSkipChildBuildIfParentGoingToFork() {
+	public void testSkipChildBuildIfParentGoingToFork() throws Exception {
 		// fork UBL
 		IAction action = releaser.getActionTree(UBL);
 		assertIsGoingToFork(action, compUBL, compUnTillDb);

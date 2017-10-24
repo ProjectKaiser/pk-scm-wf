@@ -1,6 +1,15 @@
 package org.scm4j.releaser;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
+
 import org.scm4j.commons.Version;
+import org.scm4j.commons.progress.IProgress;
+import org.scm4j.commons.progress.SingleLineProgressConsole;
 import org.scm4j.releaser.actions.ActionKind;
 import org.scm4j.releaser.actions.ActionNone;
 import org.scm4j.releaser.actions.IAction;
@@ -16,9 +25,6 @@ import org.scm4j.releaser.scmactions.SCMActionTagRelease;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSTag;
 
-import java.io.File;
-import java.util.*;
-
 public class SCMReleaser {
 
 	public static final String MDEPS_FILE_NAME = "mdeps";
@@ -26,27 +32,27 @@ public class SCMReleaser {
 	public static final String DELAYED_TAGS_FILE_NAME = "delayed-tags.yml";
 	public static final File BASE_WORKING_DIR = new File(System.getProperty("user.home"), ".scm4j");
 
-	public IAction getActionTree(String coords) {
+	public IAction getActionTree(String coords) throws Exception {
 		return getActionTree(new Component(coords));
 	}
 	
-	public IAction getActionTree(Component comp) {
+	public IAction getActionTree(Component comp) throws Exception {
 		return getActionTree(comp, ActionKind.AUTO);
 		
 	}
 	
-	public IAction getActionTree(String coords, ActionKind actionKind) {
+	public IAction getActionTree(String coords, ActionKind actionKind) throws Exception {
 		Component comp = new Component(coords);
 		Options.setIsPatch(comp.getVersion().isExact());
 		return getActionTree(new Component(coords), actionKind, new HashMap<Component, CalculatedResult>());
 	}
 	
-	public IAction getActionTree(Component comp, ActionKind actionKind) {
+	public IAction getActionTree(Component comp, ActionKind actionKind) throws Exception {
 		Options.setIsPatch(comp.getVersion().isExact());
 		return getActionTree(comp, actionKind, new HashMap<Component, CalculatedResult>());
 	}
 
-	public IAction getActionTree(Component comp, ActionKind actionKind, Map<Component, CalculatedResult> calculatedStatuses) {
+	public IAction getActionTree(Component comp, ActionKind actionKind, Map<Component, CalculatedResult> calculatedStatuses) throws Exception {
 		List<IAction> childActions = new ArrayList<>();
 		List<Component> mDeps;
 		ReleaseBranch rb;
@@ -63,7 +69,9 @@ public class SCMReleaser {
 				mbs = getBuildStatus(rb);
 			} else {
 				// If we are build, build_mdeps or actualize_patches then we need to use mdeps from release branches to show what versions we are going to build or actualize
-				rb = new ReleaseBranch(comp);
+				try (IProgress trace = new SingleLineProgressConsole("calculating release branch version for " + comp.getCoordsNoComment() + "...", "done")) {
+					rb = new ReleaseBranch(comp);
+				}
 				mbs = getBuildStatus(rb);
 				if (mbs == BuildStatus.FORK) {
 					// untill has untilldb, ubl has untilldb. untill is BUILD_MDEPS, UBL has release branch but need to FORK. 
@@ -100,11 +108,12 @@ public class SCMReleaser {
 		}
 	}
 
-	protected BuildStatus getBuildStatus(ReleaseBranch rb) {
-		BuildStatus mbs;
+	protected BuildStatus getBuildStatus(ReleaseBranch rb) throws Exception {
 		Build mb = new Build(rb);
-		mbs = mb.getStatus();
-		return mbs;
+		try (IProgress trace = new SingleLineProgressConsole("calculating status for " + rb.getComponent().getName() + "...", "done")) {
+			BuildStatus mbs = mb.getStatus();
+			return mbs;
+		}
 	}
 
 	

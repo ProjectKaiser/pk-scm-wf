@@ -23,7 +23,7 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 	private final SCMReleaser releaser = new SCMReleaser();
 	
 	@Test
-	public void testBuildAllAndTestIGNOREDDev() {
+	public void testBuildAllAndTestIGNOREDDev() throws Exception {
 		// fork unTill
 		IAction action = releaser.getActionTree(UNTILL);
 		assertIsGoingToForkAll(action);
@@ -189,7 +189,7 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 	}
 
 	@Test
-	public void testSkipBuildsOnFORKActionKind() {
+	public void testSkipBuildsOnFORKActionKind() throws Exception {
 		// fork all
 		IAction action = releaser.getActionTree(compUnTill);
 		assertIsGoingToForkAll(action);
@@ -202,7 +202,7 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 	}
 
 	@Test
-	public void testSkipChildForkIfParentGoingToBuild() {
+	public void testSkipChildForkIfParentGoingToBuild() throws Exception {
 		// fork UBL
 		IAction action = releaser.getActionTree(UBL);
 		assertIsGoingToFork(action, compUBL);
@@ -235,7 +235,7 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 	}
 
 	@Test
-	public void testUseMDepsFromExistingReleaseBranch() {
+	public void testUseMDepsFromExistingReleaseBranch() throws Exception {
 		// fork UBL
 		IAction action = releaser.getActionTree(UBL);
 		assertIsGoingToFork(action, compUBL);

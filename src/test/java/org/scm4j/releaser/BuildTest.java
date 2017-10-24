@@ -28,7 +28,7 @@ public class BuildTest extends WorkflowTestBase {
 	}
 	
 	@Test
-	public void testFORKIfDevelopModifiedSinceLastBuild() {
+	public void testFORKIfDevelopModifiedSinceLastBuild() throws Exception {
 		// fork unTillDb
 		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), "feature added");
 		
@@ -52,7 +52,7 @@ public class BuildTest extends WorkflowTestBase {
 	
 	
 	@Test
-	public void testFORKIfMDepFORK() {
+	public void testFORKIfMDepFORK() throws Exception {
 		// fork UBL
 		env.generateFeatureCommit(env.getUblVCS(), compUBL.getVcsRepository().getDevBranch(), "ubl feature added");
 		
@@ -72,7 +72,7 @@ public class BuildTest extends WorkflowTestBase {
 	}
 	
 	@Test
-	public void testFORKIfMDepsHasNewerMinors() {
+	public void testFORKIfMDepsHasNewerMinors() throws Exception {
 		// release UBL
 		// fork UBL
 		env.generateFeatureCommit(env.getUblVCS(), compUBL.getVcsRepository().getDevBranch(), "ubl feature added");
@@ -103,7 +103,7 @@ public class BuildTest extends WorkflowTestBase {
 	}
 	
 	@Test
-	public void testNONEIfJustBuilt() {
+	public void testNONEIfJustBuilt() throws Exception {
 		// fork unTillDb
 		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), "feature added");
 		
@@ -121,7 +121,7 @@ public class BuildTest extends WorkflowTestBase {
 	}
 	
 	@Test
-	public void testBUILDIfNoReleasesOnExistingReleaseBranch() {
+	public void testBUILDIfNoReleasesOnExistingReleaseBranch() throws Exception {
 		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), "feature added");
 		
 		SCMReleaser releaser = new SCMReleaser();
@@ -133,7 +133,7 @@ public class BuildTest extends WorkflowTestBase {
 	}
 	
 	@Test
-	public void testFREEZEIfMDepsNotFrozen() {
+	public void testFREEZEIfMDepsNotFrozen() throws Exception {
 		// fork UBL
 		env.generateFeatureCommit(env.getUblVCS(), compUBL.getVcsRepository().getDevBranch(), "ubl feature added");
 		
@@ -153,7 +153,7 @@ public class BuildTest extends WorkflowTestBase {
 	}
 	
 	@Test
-	public void testACTUALIZE_PATCHESIfHasNewPatches() {
+	public void testACTUALIZE_PATCHESIfHasNewPatches() throws Exception {
 		// fork UBL
 		env.generateFeatureCommit(env.getUblVCS(), compUBL.getVcsRepository().getDevBranch(), "ubl feature added");
 		
@@ -180,7 +180,7 @@ public class BuildTest extends WorkflowTestBase {
 	}
 	
 	@Test
-	public void testExceptions() {
+	public void testExceptions() throws Exception {
 		Options.setIsPatch(true);
 		Component comp = new Component(UNTILLDB + ":2.59.0");
 		ReleaseBranch rb = new ReleaseBranch(comp, comp.getCoords().getVersion());

@@ -16,7 +16,7 @@ public class SCMReleaserTest extends WorkflowTestBase {
 	private final SCMReleaser releaser = new SCMReleaser();
 
 	@Test
-	public void testUnsupportedBuildStatus() {
+	public void testUnsupportedBuildStatus() throws Exception {
 		SCMReleaser releaser = spy(new SCMReleaser());
 		doReturn(BuildStatus.ERROR).when(releaser).getBuildStatus(any(ReleaseBranch.class));
 
@@ -29,7 +29,7 @@ public class SCMReleaserTest extends WorkflowTestBase {
 	}
 	
 	@Test
-	public void testGetActionTreeUsingActionKind() {
+	public void testGetActionTreeUsingActionKind() throws Exception {
 		IAction action = releaser.getActionTree(UNTILLDB, ActionKind.AUTO);
 		assertIsGoingToFork(action, compUnTillDb);
 		
