@@ -24,7 +24,7 @@ For version definitions ref. [semantic Versioning 2.0.0](http://semver.org/).
 
 1. Add `version` file to your repository, optinally `mdeps`, configure `SCM4J_VCS_REPOS` and `SCM4J_CREDENTIALS` environment variables. Ref. [data-structure](docs/data-structure.md) for more details
 1. Install groovy
-1. Download [run.grovy](https://github.com/scm4j/scm4j-releaser/blob/master/run.groovy)
+1. Download [run.grovy](https://raw.githubusercontent.com/scm4j/scm4j-releaser/master/run.groovy)
 1. Run `groovy run.groovy status com.mycompany:my-root-component` to view status of your project
 1. Run `groovy run.groovy build com.mycompany:my-root-component` to build your project (and all mdeps)
 
