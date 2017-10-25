@@ -1,7 +1,11 @@
 package org.scm4j.releaser.scmactions;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.List;
+
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.scm4j.commons.Version;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.releaser.BuildStatus;
@@ -10,17 +14,16 @@ import org.scm4j.releaser.SCMReleaser;
 import org.scm4j.releaser.actions.ActionAbstract;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.branch.ReleaseBranch;
-import org.scm4j.releaser.conf.*;
+import org.scm4j.releaser.conf.Component;
+import org.scm4j.releaser.conf.DelayedTagsFile;
+import org.scm4j.releaser.conf.MDepsFile;
+import org.scm4j.releaser.conf.Option;
+import org.scm4j.releaser.conf.Options;
+import org.scm4j.releaser.conf.TagDesc;
 import org.scm4j.releaser.exceptions.ENoBuilder;
 import org.scm4j.releaser.exceptions.EReleaserException;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSCommit;
-import org.scm4j.vcs.api.VCSTag;
-
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.util.List;
 
 	
 public class SCMActionBuild extends ActionAbstract {
@@ -74,13 +77,17 @@ public class SCMActionBuild extends ActionAbstract {
 	}
 
 	protected void actualizePatches(IProgress progress) throws Exception {
+		progress.startTrace("reading mdeps to actualize patches...");
 		MDepsFile currentMDepsFile = rb.getMDepsFile();
+		progress.endTrace("done");
 		StringBuilder sb = new StringBuilder();
 		boolean hasNew = false;
 		ReleaseBranch rbMDep;
 		Version newVersion;
 		for (Component currentMDep : currentMDepsFile.getMDeps()) {
+			progress.startTrace("determining Release Branch version for mdep " + currentMDep + "...");
 			rbMDep = new ReleaseBranch(currentMDep);
+			progress.endTrace("done");
 			newVersion = rbMDep.getVersion().toPreviousPatch(); // TODO: which patch of mdep to actualize on if there are no mdep release branches at all?
 			if (!newVersion.equals(currentMDep.getVersion())) {
 				hasNew = true;
@@ -92,8 +99,9 @@ public class SCMActionBuild extends ActionAbstract {
 			currentMDepsFile.replaceMDep(currentMDep.clone(newVersion));
 		}
 		if (hasNew) {
+			progress.startTrace("actualizing mdeps" + (sb.length() == 0 ? "" : ":\r\n" + sb.toString()));
 			vcs.setFileContent(rb.getName(), SCMReleaser.MDEPS_FILE_NAME, currentMDepsFile.toFileContent(), LogTag.SCM_MDEPS);
-			progress.reportStatus("mdeps actualized" + (sb.length() == 0 ? "" : ":\r\n" + StringUtils.removeEnd(sb.toString(), "\r\n")));
+			progress.endTrace("done");
 		} else {
 			progress.reportStatus("mdeps are actual already");
 		}
@@ -105,8 +113,9 @@ public class SCMActionBuild extends ActionAbstract {
 			FileUtils.deleteDirectory(buildDir);
 		}
 		Files.createDirectories(buildDir.toPath());		
-		progress.reportStatus(String.format("checking out %s on revision %s into %s", getName(), headCommit.getRevision(), buildDir.getPath()));
+		progress.startTrace(String.format("checking out %s on revision %s into %s", getName(), headCommit.getRevision(), buildDir.getPath()));
 		vcs.checkout(rb.getName(), buildDir.getPath(), headCommit.getRevision());
+		progress.endTrace("done");
 		comp.getVcsRepository().getBuilder().build(comp, buildDir, progress);
 	}
 
@@ -118,16 +127,18 @@ public class SCMActionBuild extends ActionAbstract {
 		} else {
 			String releaseBranchName = rb.getName();
 			TagDesc tagDesc = SCMReleaser.getTagDesc(rb.getVersion().toString());
-			VCSTag tag = vcs.createTag(releaseBranchName, tagDesc.getName(), tagDesc.getMessage(), headCommit.getRevision());
-			progress.reportStatus("head of \"" + releaseBranchName + "\" tagged: " + tag.toString());
+			progress.startTrace("tagging head of \"" + releaseBranchName + "\":" + tagDesc.getName());
+			vcs.createTag(releaseBranchName, tagDesc.getName(), tagDesc.getMessage(), headCommit.getRevision());
+			progress.endTrace("done");
 		}
 	}
 
 	private void raisePatchVersion(IProgress progress) {
 		Version nextPatchVersion = rb.getVersion().toNextPatch();
+		progress.startTrace("bumping patch version in release branch: " + nextPatchVersion);
 		vcs.setFileContent(rb.getName(), SCMReleaser.VER_FILE_NAME, nextPatchVersion.toString(),
 				LogTag.SCM_VER + " " + nextPatchVersion);
-		progress.reportStatus("patch version is bumped in release branch: " + nextPatchVersion);
+		progress.endTrace("done");
 	}
 
 	@Override

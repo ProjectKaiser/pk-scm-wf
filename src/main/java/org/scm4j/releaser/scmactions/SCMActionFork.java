@@ -1,6 +1,7 @@
 package org.scm4j.releaser.scmactions;
 
-import org.apache.commons.lang3.StringUtils;
+import java.util.List;
+
 import org.scm4j.commons.Version;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.releaser.Build;
@@ -15,8 +16,6 @@ import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.MDepsFile;
 import org.scm4j.releaser.exceptions.EReleaserException;
 import org.scm4j.vcs.api.IVCS;
-
-import java.util.List;
 
 public class SCMActionFork extends ActionAbstract {
 	
@@ -62,14 +61,17 @@ public class SCMActionFork extends ActionAbstract {
 		}
 	}
 	
-	private void createBranch(IProgress progress) {
+	private void createBranch(IProgress progress) throws Exception {
 		String newBranchName = rb.getName();
+		progress.startTrace("Creating branch " + newBranchName + "...");
 		vcs.createBranch(db.getName(), newBranchName, "release branch created");
-		progress.reportStatus("branch " + newBranchName + " created");
+		progress.endTrace("done");
 	}
 	
 	protected void freezeMDeps(IProgress progress) throws Exception {
+		progress.startTrace("reading mdeps to freeze...");
 		MDepsFile currentMDepsFile = rb.getMDepsFile();
+		progress.endTrace("done");
 		if (!currentMDepsFile.hasMDeps()) {
 			progress.reportStatus("no mdeps to freeze");
 			return;
@@ -79,7 +81,9 @@ public class SCMActionFork extends ActionAbstract {
 		Version newVersion;
 		boolean hasChanges = false;
 		for (Component currentMDep : currentMDepsFile.getMDeps()) {
+			progress.startTrace("determining Release Branch version for mdep " + currentMDep + "...");
 			rbMDep = new ReleaseBranch(currentMDep);
+			progress.endTrace("done");
 			// untilldb is built -> rbMDep.getVersion is 2.59.1, but we need 2.59.0
 			newVersion = rbMDep.getVersion();
 			if (!newVersion.getPatch().equals(Build.ZERO_PATCH)) {
@@ -90,22 +94,26 @@ public class SCMActionFork extends ActionAbstract {
 			hasChanges = true;
 		}
 		if (hasChanges) {
+			progress.startTrace("freezing mdpes" + (sb.length() == 0 ? "" : ":\r\n" + sb.toString() + "..."));
 			vcs.setFileContent(rb.getName(), SCMReleaser.MDEPS_FILE_NAME, currentMDepsFile.toFileContent(), LogTag.SCM_MDEPS);
-			progress.reportStatus("mdeps frozen" + (sb.length() == 0 ? "" : ":\r\n" + StringUtils.removeEnd(sb.toString(), "\r\n")));
+			progress.endTrace("done");
+			//progress.reportStatus("mdeps frozen" + (sb.length() == 0 ? "" : ":\r\n" + StringUtils.removeEnd(sb.toString(), "\r\n")));
 		}
 	}
 
-	private void truncateSnapshotReleaseVersion(IProgress progress) {
+	private void truncateSnapshotReleaseVersion(IProgress progress) throws Exception {
 		String noSnapshotVersion = rb.getVersion().toString();
 		String newBranchName = rb.getName();
+		progress.startTrace("truncating snapshot: " + noSnapshotVersion + " in branch " + newBranchName + "...");
 		getVCS().setFileContent(newBranchName, SCMReleaser.VER_FILE_NAME, noSnapshotVersion, LogTag.SCM_VER + " " + noSnapshotVersion);
-		progress.reportStatus("truncated snapshot: " + noSnapshotVersion + " in branch " + newBranchName);
+		progress.endTrace("done");
 	}
 
 	private void raiseTrunkMinorVersion(IProgress progress) {
 		Version newMinorVersion = db.getVersion().toNextMinor();
+		progress.startTrace("changing to version " + newMinorVersion + " in trunk...");
 		getVCS().setFileContent(db.getName(), SCMReleaser.VER_FILE_NAME, newMinorVersion.toString(), LogTag.SCM_VER + " " + newMinorVersion);
-		progress.reportStatus("change to version " + newMinorVersion + " in trunk");
+		progress.endTrace("done");
 	}
 
 	@Override

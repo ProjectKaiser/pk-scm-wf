@@ -44,8 +44,9 @@ public class SCMActionTagRelease extends ActionAbstract {
 			TagDesc tagDesc = SCMReleaser.getTagDesc(delayedTagVersion.toString());
 
 			try {
+				progress.startTrace(String.format("tagging revision %s of %s: %s", revisionToTag, rb.getName(), delayedTagVersion.toReleaseString()));
 				vcs.createTag(rb.getName(), tagDesc.getName(), tagDesc.getMessage(), revisionToTag);
-				progress.reportStatus(String.format("%s of %s tagged: %s", "commit " + revisionToTag, rb.getName(), delayedTagVersion.toReleaseString()));
+				progress.endTrace("done");
 			} catch (EVCSTagExists e) {
 				progress.reportStatus(String.format("revision %s is already tagged with %s tag", revisionToTag, tagDesc.getName()));
 			}

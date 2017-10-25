@@ -89,7 +89,7 @@ public class ConfigTest {
 		FileUtils.writeStringToFile(vcsRepos, "wrong content", StandardCharsets.UTF_8);
 		repos = "file:///" + vcsRepos.getAbsolutePath().replace("\\", "/");
 		creds = "file:///" + vcsRepos.getAbsolutePath().replace("\\", "/");
-		try { 
+		try {
 			VCSRepositories.getDefault();
 			fail();
 		} catch (EConfig e) {

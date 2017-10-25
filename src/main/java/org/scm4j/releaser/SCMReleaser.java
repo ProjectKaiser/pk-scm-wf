@@ -9,7 +9,7 @@ import java.util.Map;
 
 import org.scm4j.commons.Version;
 import org.scm4j.commons.progress.IProgress;
-import org.scm4j.commons.progress.SingleLineProgressConsole;
+import org.scm4j.commons.progress.ProgressConsole;
 import org.scm4j.releaser.actions.ActionKind;
 import org.scm4j.releaser.actions.ActionNone;
 import org.scm4j.releaser.actions.IAction;
@@ -54,6 +54,7 @@ public class SCMReleaser {
 
 	public IAction getActionTree(Component comp, ActionKind actionKind, Map<Component, CalculatedResult> calculatedStatuses) throws Exception {
 		List<IAction> childActions = new ArrayList<>();
+		IProgress progress = new ProgressConsole();
 		List<Component> mDeps;
 		ReleaseBranch rb;
 		BuildStatus mbs;
@@ -69,20 +70,26 @@ public class SCMReleaser {
 				mbs = getBuildStatus(rb);
 			} else {
 				// If we are build, build_mdeps or actualize_patches then we need to use mdeps from release branches to show what versions we are going to build or actualize
-				try (IProgress trace = new SingleLineProgressConsole("calculating release branch version for " + comp.getCoordsNoComment() + "...", "done")) {
-					rb = new ReleaseBranch(comp);
-				}
+				progress.startTrace("determining release branch version for " + comp.getCoordsNoComment() + "...");
+				rb = new ReleaseBranch(comp);
+				progress.endTrace("done");
 				mbs = getBuildStatus(rb);
 				if (mbs == BuildStatus.FORK) {
 					// untill has untilldb, ubl has untilldb. untill is BUILD_MDEPS, UBL has release branch but need to FORK. 
 					// result: regressinon for untill FORK, regiression for UBL is DONE prev version (mdep fro existing UBL RB is used) 
 					// TODO: add test: untill build_mdeps, untill needs to be forked. UBL has release rbanch but has to be forked also. untilldbs must have the same status
+					progress.startTrace("reading mdeps from dev branch...");
 					mDeps = new DevelopBranch(comp).getMDeps();
+					progress.endTrace("done");
 				} else {
 					if (rb.exists()) {
+						progress.startTrace("reading mdeps from release branch " + rb.getName() + "...");
 						mDeps = rb.getMDeps();
+						progress.endTrace("done");
 					} else {
+						progress.startTrace("reading mdeps from dev branch");
 						mDeps = new DevelopBranch(comp).getMDeps();
+						progress.endTrace("done");
 					}
 				}
 			}
@@ -92,6 +99,8 @@ public class SCMReleaser {
 		for (Component mDep : mDeps) {
 			childActions.add(getActionTree(mDep, actionKind, calculatedStatuses));
 		}
+		
+		progress.close();
 		
 		switch (mbs) {
 		case FORK:
@@ -106,14 +115,17 @@ public class SCMReleaser {
 		default:
 			throw new IllegalArgumentException("unsupported build status: " + mbs);
 		}
+		
 	}
 
 	protected BuildStatus getBuildStatus(ReleaseBranch rb) throws Exception {
 		Build mb = new Build(rb);
-		try (IProgress trace = new SingleLineProgressConsole("calculating status for " + rb.getComponent().getName() + "...", "done")) {
-			BuildStatus mbs = mb.getStatus();
-			return mbs;
-		}
+		IProgress progress = new ProgressConsole();
+		progress.startTrace("calculating status for " + rb.getComponent().getName() + "...");
+		BuildStatus mbs = mb.getStatus();
+		progress.endTrace("done");
+		progress.close();
+		return mbs;
 	}
 	
 	private IAction getBuildOrSkipAction(ReleaseBranch rb, List<IAction> childActions, BuildStatus mbs,
