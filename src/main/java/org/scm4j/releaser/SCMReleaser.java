@@ -105,7 +105,7 @@ public class SCMReleaser {
 		switch (mbs) {
 		case FORK:
 		case FREEZE:
-			return getForkOrSkipAction(rb, childActions, mbs, actionKind);
+			return getForkAction(rb, childActions, mbs, actionKind);
 		case BUILD_MDEPS:	
 		case ACTUALIZE_PATCHES:
 		case BUILD:
@@ -137,7 +137,7 @@ public class SCMReleaser {
 		return new SCMActionBuild(rb, childActions, mbs);
 	}
 
-	private IAction getForkOrSkipAction(ReleaseBranch rb, List<IAction> childActions, BuildStatus mbs,
+	private IAction getForkAction(ReleaseBranch rb, List<IAction> childActions, BuildStatus mbs,
 			ActionKind actionKind) {
 		skipAllBuilds(childActions);
 		return new SCMActionFork(rb, childActions, mbs);
