@@ -3,7 +3,7 @@ Variable lists files which maps artifact coordinates to repositories parameters.
 Example of variable (";" - separated): 
 
 ```
-SCM4J_VCS_REPOS=c:/workspace/my-repos.yaml;http://mycompany.com/repos/project1-repos.yaml`
+SCM4J_VCS_REPOS=c:/workspace/my-repos.yml;http://mycompany.com/repos/project1-repos.yml`
 ```
 Default protocol is file:///
 
@@ -15,10 +15,11 @@ Yaml file consists of number of rules which are applied in order of appearance, 
 
 !!omap
 
-# Just a component. Note that ident of attribute specification must be at least three spaces
+# Just a component. Note that `releaseCommand` (deprecated: `builder`) is a must and ident of attribute specification must be at least three spaces
 
 - mycompany:component1: 
    url: http://mycompany.com/repos/component1
+   releaseCommand: cmd /c gradlew.bat upload
 
 # Two components in the same repository
 
@@ -44,7 +45,7 @@ Yaml file consists of number of rules which are applied in order of appearance, 
    url: http://mycompany.com/repos/component4
    type: svn
    releaseBranchPrefix: B
-   devBranch: branches/develop
+   developBranch: branches/develop
 
 # All repos will have `rel` as a `release` branch prefix by default, if not specified above
 - ~:
@@ -53,7 +54,6 @@ Yaml file consists of number of rules which are applied in order of appearance, 
 # Component with `afterTag` hook (ref. issue #8)
 
 - mycompany:component5:
-   builder: cmd /c gradlew.bat build
    afterTag: cmd /c gradlew.bat afterTag
 
 ```
