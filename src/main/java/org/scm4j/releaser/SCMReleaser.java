@@ -44,21 +44,21 @@ public class SCMReleaser {
 	public IAction getActionTree(String coords, ActionKind actionKind) throws Exception {
 		Component comp = new Component(coords);
 		Options.setIsPatch(comp.getVersion().isExact());
-		return getActionTree(new Component(coords), actionKind, new HashMap<Component, CalculatedResult>());
+		return getActionTree(new Component(coords), actionKind, new HashMap<String, CalculatedResult>());
 	}
 	
 	public IAction getActionTree(Component comp, ActionKind actionKind) throws Exception {
 		Options.setIsPatch(comp.getVersion().isExact());
-		return getActionTree(comp, actionKind, new HashMap<Component, CalculatedResult>());
+		return getActionTree(comp, actionKind, new HashMap<String, CalculatedResult>());
 	}
 
-	public IAction getActionTree(Component comp, ActionKind actionKind, Map<Component, CalculatedResult> calculatedStatuses) throws Exception {
+	public IAction getActionTree(Component comp, ActionKind actionKind, Map<String, CalculatedResult> calculatedStatuses) throws Exception {
 		List<IAction> childActions = new ArrayList<>();
 		IProgress progress = new ProgressConsole();
 		List<Component> mDeps;
 		ReleaseBranch rb;
 		BuildStatus mbs;
-		CalculatedResult cr = calculatedStatuses.get(comp);
+		CalculatedResult cr = calculatedStatuses.get(comp.getVcsRepository().getUrl());
 		if (cr != null) {
 			rb = cr.getReleaseBranch();
 			mDeps = cr.getMDeps();
@@ -93,7 +93,7 @@ public class SCMReleaser {
 					}
 				}
 			}
-			calculatedStatuses.put(comp, new CalculatedResult(rb, mbs, mDeps));
+			calculatedStatuses.put(comp.getVcsRepository().getUrl(), new CalculatedResult(rb, mbs, mDeps));
 		}
 		
 		for (Component mDep : mDeps) {
