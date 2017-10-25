@@ -19,7 +19,7 @@ Yaml file consists of number of rules which are applied in order of appearance, 
 
 - mycompany:component1: 
    url: http://mycompany.com/repos/component1
-   releaseCommand: cmd /c gradlew.bat uploadArchives   
+   releaseCommand: cmd /c gradlew.bat upload
 
 # Two components in the same repository
 
@@ -45,7 +45,7 @@ Yaml file consists of number of rules which are applied in order of appearance, 
    url: http://mycompany.com/repos/component4
    type: svn
    releaseBranchPrefix: B
-   devBranch: branches/develop
+   developBranch: branches/develop
 
 # All repos will have `rel` as a `release` branch prefix by default, if not specified above
 - ~:
