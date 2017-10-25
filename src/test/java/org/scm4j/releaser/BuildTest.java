@@ -22,7 +22,7 @@ public class BuildTest extends WorkflowTestBase {
 	
 	@Test
 	public void testFORKIfNoPreviousReleaseBranch() {
-		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), "feature added");
+		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevelopBranch(), "feature added");
 		Build mb = new Build(compUnTillDb);
 		assertEquals(BuildStatus.FORK, mb.getStatus());
 	}
@@ -30,7 +30,7 @@ public class BuildTest extends WorkflowTestBase {
 	@Test
 	public void testFORKIfDevelopModifiedSinceLastBuild() throws Exception {
 		// fork unTillDb
-		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), "feature added");
+		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevelopBranch(), "feature added");
 		
 		SCMReleaser releaser = new SCMReleaser();
 		IAction action = releaser.getActionTree(compUnTillDb);
@@ -43,7 +43,7 @@ public class BuildTest extends WorkflowTestBase {
 		action.execute(getProgress(action));
 		
 		// make Develop modified
-		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), "more feature added");
+		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevelopBranch(), "more feature added");
 		
 		Build md = new Build(compUnTillDb);
 		assertEquals(BuildStatus.FORK, md.getStatus());
@@ -54,7 +54,7 @@ public class BuildTest extends WorkflowTestBase {
 	@Test
 	public void testFORKIfMDepFORK() throws Exception {
 		// fork UBL
-		env.generateFeatureCommit(env.getUblVCS(), compUBL.getVcsRepository().getDevBranch(), "ubl feature added");
+		env.generateFeatureCommit(env.getUblVCS(), compUBL.getVcsRepository().getDevelopBranch(), "ubl feature added");
 		
 		SCMReleaser releaser = new SCMReleaser();
 		IAction action = releaser.getActionTree(compUBL);
@@ -66,7 +66,7 @@ public class BuildTest extends WorkflowTestBase {
 		assertTrue(action instanceof SCMActionBuild);
 		action.execute(getProgress(action));
 		
-		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), "unTillDb feature added");
+		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevelopBranch(), "unTillDb feature added");
 		Build mb = new Build(compUBL);
 		assertEquals(BuildStatus.FORK, mb.getStatus());
 	}
@@ -75,7 +75,7 @@ public class BuildTest extends WorkflowTestBase {
 	public void testFORKIfMDepsHasNewerMinors() throws Exception {
 		// release UBL
 		// fork UBL
-		env.generateFeatureCommit(env.getUblVCS(), compUBL.getVcsRepository().getDevBranch(), "ubl feature added");
+		env.generateFeatureCommit(env.getUblVCS(), compUBL.getVcsRepository().getDevelopBranch(), "ubl feature added");
 		SCMReleaser releaser = new SCMReleaser();
 		IAction action = releaser.getActionTree(compUBL); 
 		assertTrue(action instanceof SCMActionFork); // test unTillDb will be forked also because there are no release branches at all
@@ -88,7 +88,7 @@ public class BuildTest extends WorkflowTestBase {
 		
 		// release a new version of unTillDb
 		// fork unTillDb
-		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), "feature added");
+		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevelopBranch(), "feature added");
 		action = releaser.getActionTree(compUnTillDb);
 		assertTrue(action instanceof SCMActionFork);
 		action.execute(getProgress(action));
@@ -105,7 +105,7 @@ public class BuildTest extends WorkflowTestBase {
 	@Test
 	public void testNONEIfJustBuilt() throws Exception {
 		// fork unTillDb
-		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), "feature added");
+		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevelopBranch(), "feature added");
 		
 		SCMReleaser releaser = new SCMReleaser();
 		IAction action = releaser.getActionTree(compUnTillDb);
@@ -122,7 +122,7 @@ public class BuildTest extends WorkflowTestBase {
 	
 	@Test
 	public void testBUILDIfNoReleasesOnExistingReleaseBranch() throws Exception {
-		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), "feature added");
+		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevelopBranch(), "feature added");
 		
 		SCMReleaser releaser = new SCMReleaser();
 		IAction action = releaser.getActionTree(compUnTillDb);
@@ -135,7 +135,7 @@ public class BuildTest extends WorkflowTestBase {
 	@Test
 	public void testFREEZEIfMDepsNotFrozen() throws Exception {
 		// fork UBL
-		env.generateFeatureCommit(env.getUblVCS(), compUBL.getVcsRepository().getDevBranch(), "ubl feature added");
+		env.generateFeatureCommit(env.getUblVCS(), compUBL.getVcsRepository().getDevelopBranch(), "ubl feature added");
 		
 		SCMReleaser releaser = new SCMReleaser();
 		IAction action = releaser.getActionTree(compUBL); 
@@ -155,7 +155,7 @@ public class BuildTest extends WorkflowTestBase {
 	@Test
 	public void testACTUALIZE_PATCHESIfHasNewPatches() throws Exception {
 		// fork UBL
-		env.generateFeatureCommit(env.getUblVCS(), compUBL.getVcsRepository().getDevBranch(), "ubl feature added");
+		env.generateFeatureCommit(env.getUblVCS(), compUBL.getVcsRepository().getDevelopBranch(), "ubl feature added");
 		
 		SCMReleaser releaser = new SCMReleaser();
 		IAction action = releaser.getActionTree(compUBL); 

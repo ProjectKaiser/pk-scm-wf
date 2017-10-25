@@ -65,11 +65,11 @@ public class VCSRepositories {
 			credentials = new Credentials(null, null, false);
 		}
 		VCSType type = getVCSType((String) getPropByName(urls, componentName, "type", null), url);
-		String devBranch = (String) getPropByName(urls, componentName, "devBranch", VCSRepository.DEFAULT_DEV_BRANCH);
+		String developBranch = (String) getPropByName(urls, componentName, "developBranch", VCSRepository.DEFAULT_DEVELOP_BRANCH);
 		String releaseBranchPrefix = (String) getPropByName(urls, componentName, "releaseBranchPrefix",
 				VCSRepository.DEFAULT_RELEASE_BRANCH_PREFIX);
 		String builder = (String) getPropByName(urls, componentName, "builder", null);
-		return new VCSRepository(componentName, url, credentials, type, devBranch, releaseBranchPrefix,
+		return new VCSRepository(componentName, url, credentials, type, developBranch, releaseBranchPrefix,
 				VCSFactory.getVCS(type, credentials, url, ws), BuilderFactory.getBuilder(builder));
 	}
 

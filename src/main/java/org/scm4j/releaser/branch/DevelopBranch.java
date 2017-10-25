@@ -23,15 +23,15 @@ public class DevelopBranch {
 	}
 	
 	public Version getVersion() {
-		if (vcs.fileExists(comp.getVcsRepository().getDevBranch(), SCMReleaser.VER_FILE_NAME)) {
-			String verFileContent = vcs.getFileContent(comp.getVcsRepository().getDevBranch(), SCMReleaser.VER_FILE_NAME, null);
+		if (vcs.fileExists(comp.getVcsRepository().getDevelopBranch(), SCMReleaser.VER_FILE_NAME)) {
+			String verFileContent = vcs.getFileContent(comp.getVcsRepository().getDevelopBranch(), SCMReleaser.VER_FILE_NAME, null);
 			return new Version(verFileContent.trim());
 		}
-		throw new EComponentConfig(SCMReleaser.VER_FILE_NAME + " file is missing in dev branch of " + comp);
+		throw new EComponentConfig(SCMReleaser.VER_FILE_NAME + " file is missing in develop branch of " + comp);
 	}
 	
 	public DevelopBranchStatus getStatus() {
-		List<VCSCommit> log = vcs.log(comp.getVcsRepository().getDevBranch(), 1);
+		List<VCSCommit> log = vcs.log(comp.getVcsRepository().getDevelopBranch(), 1);
 		if (log.isEmpty()) {
 			return DevelopBranchStatus.IGNORED;
 		}
@@ -46,11 +46,11 @@ public class DevelopBranch {
 	}
 	
 	public boolean hasVersionFile() {
-		return vcs.fileExists(comp.getVcsRepository().getDevBranch(), SCMReleaser.VER_FILE_NAME);
+		return vcs.fileExists(comp.getVcsRepository().getDevelopBranch(), SCMReleaser.VER_FILE_NAME);
 	}
 	
 	public String getName() {
-		return comp.getVcsRepository().getDevBranch();
+		return comp.getVcsRepository().getDevelopBranch();
 	}
 	
 	public List<Component> getMDeps() {

@@ -5,7 +5,7 @@
     url: http://localhost/git/myProj$1
     type: git
     releaseBranchPrefix: B
-    devBranch: null
+    developBranch: null
 - git1:
     url: http://localhost/git/myProj.git
     type: null
@@ -18,4 +18,4 @@
 - ~:
     url: https://github.com/qwerty/$0
     type: svn
-    devBranch: branches/
+    developBranch: branches/

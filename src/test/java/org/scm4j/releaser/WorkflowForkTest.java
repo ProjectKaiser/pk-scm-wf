@@ -43,7 +43,7 @@ public class WorkflowForkTest extends WorkflowTestBase {
 		action.execute(getProgress(action));
 		checkUnTillBuilt();
 		
-		env.generateFeatureCommit(env.getUnTillVCS(), compUnTill.getVcsRepository().getDevBranch(), "feature added");
+		env.generateFeatureCommit(env.getUnTillVCS(), compUnTill.getVcsRepository().getDevelopBranch(), "feature added");
 		// fork untill only
 		action = releaser.getActionTree(UNTILL);
 		assertThat(action, allOf(
@@ -186,14 +186,14 @@ public class WorkflowForkTest extends WorkflowTestBase {
 		checkUBLBuilt();
 
 		// fork next unTillDb version
-		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), "feature added");
+		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevelopBranch(), "feature added");
 		action = releaser.getActionTree(UNTILLDB);
 		assertIsGoingToFork(action, compUnTillDb);
 		assertTrue(action instanceof SCMActionFork);
 		action.execute(getProgress(action));
 
 		// generate UBL fork conditions
-		env.generateFeatureCommit(env.getUblVCS(), compUBL.getVcsRepository().getDevBranch(), "feature added");
+		env.generateFeatureCommit(env.getUblVCS(), compUBL.getVcsRepository().getDevelopBranch(), "feature added");
 
 		// ensure UnTillDb is going to build
 		action = releaser.getActionTree(UNTILLDB);

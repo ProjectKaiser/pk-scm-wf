@@ -78,7 +78,7 @@ public class SCMReleaser {
 					// untill has untilldb, ubl has untilldb. untill is BUILD_MDEPS, UBL has release branch but need to FORK. 
 					// result: regressinon for untill FORK, regiression for UBL is DONE prev version (mdep fro existing UBL RB is used) 
 					// TODO: add test: untill build_mdeps, untill needs to be forked. UBL has release rbanch but has to be forked also. untilldbs must have the same status
-					progress.startTrace("reading mdeps from dev branch...");
+					progress.startTrace("reading mdeps from develop branch...");
 					mDeps = new DevelopBranch(comp).getMDeps();
 					progress.endTrace("done");
 				} else {
@@ -87,7 +87,7 @@ public class SCMReleaser {
 						mDeps = rb.getMDeps();
 						progress.endTrace("done");
 					} else {
-						progress.startTrace("reading mdeps from dev branch");
+						progress.startTrace("reading mdeps from develop branch");
 						mDeps = new DevelopBranch(comp).getMDeps();
 						progress.endTrace("done");
 					}

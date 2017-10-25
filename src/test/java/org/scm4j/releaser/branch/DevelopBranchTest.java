@@ -60,7 +60,7 @@ public class DevelopBranchTest extends WorkflowTestBase {
 	
 	@Test
 	public void testExceptionIfNoVersionFile() {
-		env.getUnTillVCS().removeFile(compUnTill.getVcsRepository().getDevBranch(), SCMReleaser.VER_FILE_NAME, "version file deleted");
+		env.getUnTillVCS().removeFile(compUnTill.getVcsRepository().getDevelopBranch(), SCMReleaser.VER_FILE_NAME, "version file deleted");
 		try {
 			new DevelopBranch(compUnTill).getVersion();
 			fail();
@@ -71,7 +71,7 @@ public class DevelopBranchTest extends WorkflowTestBase {
 	@Test
 	public void testHasVersionFile() {
 		assertTrue(new DevelopBranch(compUnTill).hasVersionFile());
-		env.getUnTillVCS().removeFile(compUnTill.getVcsRepository().getDevBranch(), SCMReleaser.VER_FILE_NAME, "version file removed");
+		env.getUnTillVCS().removeFile(compUnTill.getVcsRepository().getDevelopBranch(), SCMReleaser.VER_FILE_NAME, "version file removed");
 		assertFalse(new DevelopBranch(compUnTill).hasVersionFile());
 	}
 
@@ -79,7 +79,7 @@ public class DevelopBranchTest extends WorkflowTestBase {
 	public void testGetMDeps() {
 		Component compUnTillDbVersioned = new Component(UNTILL + ":12.13.14");
 		MDepsFile mdf = new MDepsFile(Arrays.asList(compUnTillDbVersioned));
-		env.getUblVCS().setFileContent(compUBL.getVcsRepository().getDevBranch(), SCMReleaser.MDEPS_FILE_NAME, mdf.toFileContent(),
+		env.getUblVCS().setFileContent(compUBL.getVcsRepository().getDevelopBranch(), SCMReleaser.MDEPS_FILE_NAME, mdf.toFileContent(),
 				"mdeps versioned");
 		assertTrue(new DevelopBranch(compUBL).getMDeps().get(0).getVersion().isEmpty());
 	}

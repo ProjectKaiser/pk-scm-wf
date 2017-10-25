@@ -53,7 +53,7 @@ public class ReleaseBranch {
 	}
 	
 	private static Version getDevVersion(Component comp) {
-		return new Version(comp.getVCS().getFileContent(comp.getVcsRepository().getDevBranch(), SCMReleaser.VER_FILE_NAME, null));
+		return new Version(comp.getVCS().getFileContent(comp.getVcsRepository().getDevelopBranch(), SCMReleaser.VER_FILE_NAME, null));
 	}
 
 	private static boolean exists(Component comp, Version forVersion) {

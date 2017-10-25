@@ -6,13 +6,13 @@ import org.scm4j.vcs.api.IVCS;
 public class VCSRepository {
 	
 	public static final String DEFAULT_RELEASE_BRANCH_PREFIX = "release/";
-	public static final String DEFAULT_DEV_BRANCH = null;
+	public static final String DEFAULT_DEVELOP_BRANCH = null;
 	
 	private final String name;
 	private final String url;
 	private final Credentials credentials;
 	private final VCSType type;
-	private final String devBranch;
+	private final String developBranch;
 	private final String releaseBranchPrefix;
 	private final IVCS vcs;
 	private final IBuilder builder;
@@ -46,8 +46,8 @@ public class VCSRepository {
 		return releaseBranchPrefix;
 	}
 
-	public String getDevBranch() {
-		return devBranch;
+	public String getDevelopBranch() {
+		return developBranch;
 	}
 	
 	public String getUrl() {
@@ -68,12 +68,12 @@ public class VCSRepository {
 	}
 	
 	public VCSRepository(String name, String url, Credentials credentials,
-						 VCSType type, String devBranch, String releaseBranchPrefix, IVCS vcs, IBuilder builder) {
+						 VCSType type, String developBranch, String releaseBranchPrefix, IVCS vcs, IBuilder builder) {
 		this.name = name;
 		this.url = url;
 		this.credentials = credentials;
 		this.type = type;
-		this.devBranch = devBranch;
+		this.developBranch = developBranch;
 		this.vcs = vcs;
 		this.releaseBranchPrefix = releaseBranchPrefix;
 		this.builder = builder;

@@ -37,7 +37,7 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		checkUnTillBuilt();
 		
 		// test IGNORED dev branch state
-		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), LogTag.SCM_IGNORE + " ignored feature commit added");
+		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevelopBranch(), LogTag.SCM_IGNORE + " ignored feature commit added");
 	}
 
 	@Test
@@ -111,7 +111,7 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		action.execute(getProgress(action));
 		checkUnTillDbBuilt();
 		
-		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), "feature commit added");
+		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevelopBranch(), "feature commit added");
 		
 		// fork unTillDb next release
 		action = releaser.getActionTree(UNTILLDB);
@@ -164,7 +164,7 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		checkUnTillDbBuilt();
 		
 		// fork new unTillDb Release 2.60
-		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), "feature added");
+		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevelopBranch(), "feature added");
 		action = releaser.getActionTree(UNTILLDB);
 		assertIsGoingToFork(action, compUnTillDb);
 		action.execute(getProgress(action));
@@ -216,13 +216,13 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		checkUBLBuilt();
 
 		// fork next UBL version
-		env.generateFeatureCommit(env.getUblVCS(), compUBL.getVcsRepository().getDevBranch(), "feature added");
+		env.generateFeatureCommit(env.getUblVCS(), compUBL.getVcsRepository().getDevelopBranch(), "feature added");
 		action = releaser.getActionTree(UBL);
 		assertIsGoingToFork(action, compUBL);
 		action.execute(getProgress(action));
 
 		// generate unTillDb fork conditions
-		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), "feature added");
+		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevelopBranch(), "feature added");
 
 		// ensure UnTillDb is going to fork
 		action = releaser.getActionTree(UNTILLDB);
@@ -247,7 +247,7 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		// change mdeps in trunk. Ensure mdeps of release branch are used in action tree
 		Component newComp = new Component("new-comp:12.13.14");
 		MDepsFile mdf = new MDepsFile(Arrays.asList(newComp));
-		env.getUblVCS().setFileContent(compUBL.getVcsRepository().getDevBranch(), SCMReleaser.MDEPS_FILE_NAME, mdf.toFileContent(),
+		env.getUblVCS().setFileContent(compUBL.getVcsRepository().getDevelopBranch(), SCMReleaser.MDEPS_FILE_NAME, mdf.toFileContent(),
 				"using new mdeps in trunk");
 		action = releaser.getActionTree(UBL);
 		assertThat(action, allOf(

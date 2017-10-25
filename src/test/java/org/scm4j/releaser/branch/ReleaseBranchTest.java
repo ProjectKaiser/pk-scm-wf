@@ -30,7 +30,7 @@ public class ReleaseBranchTest extends WorkflowTestBase {
 		ReleaseBranch rb = new ReleaseBranch(compUnTillDb);
 		assertFalse(rb.exists());
 
-		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(),
+		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevelopBranch(),
 				"feature added");
 		SCMReleaser releaser = new SCMReleaser();
 		IAction action = releaser.getActionTree(compUnTillDb);
@@ -44,9 +44,9 @@ public class ReleaseBranchTest extends WorkflowTestBase {
 
 	@Test
 	public void testGetMDeps() throws Exception {
-		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), "feature added");
-		env.generateFeatureCommit(env.getUnTillVCS(), compUnTill.getVcsRepository().getDevBranch(), "feature added");
-		env.generateFeatureCommit(env.getUblVCS(), compUBL.getVcsRepository().getDevBranch(), "feature added");
+		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevelopBranch(), "feature added");
+		env.generateFeatureCommit(env.getUnTillVCS(), compUnTill.getVcsRepository().getDevelopBranch(), "feature added");
+		env.generateFeatureCommit(env.getUblVCS(), compUBL.getVcsRepository().getDevelopBranch(), "feature added");
 		SCMReleaser releaser = new SCMReleaser();
 		IAction action = releaser.getActionTree(compUnTill);
 		action.execute(getProgress(action));
@@ -64,7 +64,7 @@ public class ReleaseBranchTest extends WorkflowTestBase {
 		Version testVer = new Version("11.12");
 		assertEquals(testVer, new ReleaseBranch(compUnTillDb, testVer).getVersion());
 
-		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevBranch(), "feature added");
+		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevelopBranch(), "feature added");
 		SCMReleaser releaser = new SCMReleaser();
 		IAction action = releaser.getActionTree(compUnTill);
 		assertTrue(action instanceof SCMActionFork);
