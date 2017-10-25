@@ -15,7 +15,7 @@ Yaml file consists of number of rules which are applied in order of appearance, 
 
 !!omap
 
-# Just a component. Note that releaseCommand (deprecated: `builder`) is a must and ident of attribute specification must be at least three spaces
+# Just a component. Note that `releaseCommand` (deprecated: `builder`) is a must and ident of attribute specification must be at least three spaces
 
 - mycompany:component1: 
    url: http://mycompany.com/repos/component1
