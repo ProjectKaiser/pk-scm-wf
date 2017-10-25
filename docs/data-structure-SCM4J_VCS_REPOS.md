@@ -15,10 +15,11 @@ Yaml file consists of number of rules which are applied in order of appearance, 
 
 !!omap
 
-# Just a component. Note that ident of attribute specification must be at least three spaces
+# Just a component. Note that releaseCommand (deprecated: `builder`) is a must and ident of attribute specification must be at least three spaces
 
 - mycompany:component1: 
    url: http://mycompany.com/repos/component1
+   releaseCommand: cmd /c gradlew.bat uploadArchives   
 
 # Two components in the same repository
 
@@ -53,7 +54,6 @@ Yaml file consists of number of rules which are applied in order of appearance, 
 # Component with `afterTag` hook (ref. issue #8)
 
 - mycompany:component5:
-   builder: cmd /c gradlew.bat build
    afterTag: cmd /c gradlew.bat afterTag
 
 ```
