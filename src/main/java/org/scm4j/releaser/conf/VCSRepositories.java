@@ -68,9 +68,9 @@ public class VCSRepositories {
 		String developBranch = (String) getPropByName(urls, componentName, "developBranch", VCSRepository.DEFAULT_DEVELOP_BRANCH);
 		String releaseBranchPrefix = (String) getPropByName(urls, componentName, "releaseBranchPrefix",
 				VCSRepository.DEFAULT_RELEASE_BRANCH_PREFIX);
-		String builder = (String) getPropByName(urls, componentName, "builder", null);
+		String releaseCommand = (String) getPropByName(urls, componentName, "releaseCommand", null);
 		return new VCSRepository(componentName, url, credentials, type, developBranch, releaseBranchPrefix,
-				VCSFactory.getVCS(type, credentials, url, ws), BuilderFactory.getBuilder(builder));
+				VCSFactory.getVCS(type, credentials, url, ws), BuilderFactory.getBuilder(releaseCommand));
 	}
 
 	private VCSType getVCSType(String type, String url) {

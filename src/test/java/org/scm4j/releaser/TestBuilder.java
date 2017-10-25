@@ -24,4 +24,9 @@ public class TestBuilder implements IBuilder {
 	public void build(Component comp, File workingFolder, IProgress progress ) throws EBuilder {
 		builders.put(comp.getName(), this);
 	}
+
+	@Override
+	public String getCommand() {
+		return null;
+	}
 }

@@ -7,4 +7,5 @@ import org.scm4j.releaser.conf.Component;
 
 public interface IBuilder {
 	void build(Component comp, File workingFolder, IProgress progress) throws Exception;
+	String getCommand();
 }

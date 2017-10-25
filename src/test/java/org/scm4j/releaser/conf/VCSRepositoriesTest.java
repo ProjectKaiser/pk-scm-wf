@@ -30,7 +30,8 @@ public class VCSRepositoriesTest {
 		assertEquals("http://localhost/git/myProjDiskFormatter", rep.getUrl());
 		assertEquals(VCSType.GIT, rep.getType());
 		assertEquals("B", rep.getReleaseBranchPrefix());
-		assertNull(rep.getDevelopBranch());
+		assertEquals("gradlew", rep.getBuilder().getCommand());
+		assertEquals("dev", rep.getDevelopBranch());
 		assertEquals(null, rep.getCredentials().getName());
 		assertEquals(null, rep.getCredentials().getPassword());
 	}

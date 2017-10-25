@@ -4,16 +4,16 @@ public class BuilderFactory {
 	
 	public static final String SCM4J_BUILDER_CLASS_STRING = "scm4j-builder-class:";
 
-	public static IBuilder getBuilder(String builder) {
+	public static IBuilder getBuilder(String releaseCommand) {
 		try { 
-			if (builder == null) {
+			if (releaseCommand == null) {
 				return null;
 			}
-			if (builder.startsWith(SCM4J_BUILDER_CLASS_STRING)) {
-				Class<?> builderClass = Class.forName(builder.replace(SCM4J_BUILDER_CLASS_STRING, "").trim());
+			if (releaseCommand.startsWith(SCM4J_BUILDER_CLASS_STRING)) {
+				Class<?> builderClass = Class.forName(releaseCommand.replace(SCM4J_BUILDER_CLASS_STRING, "").trim());
 				return (IBuilder) builderClass.newInstance(); 
 			}
-			return new CmdLineBuilder(builder);
+			return new CmdLineBuilder(releaseCommand);
 		} catch(Exception e) {
 			throw new RuntimeException(e);
 		}

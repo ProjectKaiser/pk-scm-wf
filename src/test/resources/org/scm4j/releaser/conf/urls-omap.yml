@@ -5,7 +5,8 @@
     url: http://localhost/git/myProj$1
     type: git
     releaseBranchPrefix: B
-    developBranch: null
+    developBranch: dev
+    releaseCommand: gradlew
 - git1:
     url: http://localhost/git/myProj.git
     type: null

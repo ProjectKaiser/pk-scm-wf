@@ -93,7 +93,7 @@ public class TestEnvironment implements AutoCloseable {
 				"!!omap", 
 				"- eu.untill:(.*):", 
 				"   url: " + url,
-				"   builder: " + BuilderFactory.SCM4J_BUILDER_CLASS_STRING + TestBuilder.class.getName(),
+				"   releaseCommand: " + BuilderFactory.SCM4J_BUILDER_CLASS_STRING + TestBuilder.class.getName(),
 				"   type: " + TESTING_VCS.toString().toLowerCase(),
 				"   releaseBranchPrefix: release/B"));
 	}

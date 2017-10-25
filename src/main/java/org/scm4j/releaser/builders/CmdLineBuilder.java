@@ -56,4 +56,9 @@ public class CmdLineBuilder implements IBuilder {
 	public ProcessBuilder getProcessBuilder() {
 		return pb;
 	}
+
+	@Override
+	public String getCommand() {
+		return cmdLine;
+	}
 }
