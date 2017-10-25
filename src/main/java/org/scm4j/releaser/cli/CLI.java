@@ -10,6 +10,7 @@ import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.actions.PrintAction;
 import org.scm4j.releaser.conf.Option;
 import org.scm4j.releaser.conf.Options;
+import org.scm4j.releaser.exceptions.EReleaserException;
 import org.scm4j.releaser.exceptions.cmdline.*;
 
 import java.io.PrintStream;
@@ -89,7 +90,11 @@ public class CLI {
 		if (ArrayUtils.contains(args, Option.STACK_TRACE.getStrValue())) {
 			e.printStackTrace(ps);
 		} else {
-			ps.println(e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage());
+			if (e instanceof EReleaserException) {
+				ps.println(e.getMessage() + (e.getCause() != null ? ": " + e.getCause().toString() : "")); 
+			} else {
+				ps.println(e.toString());
+			} 
 		}
 	}
 	

@@ -218,7 +218,7 @@ public class CLITest {
 		mockedReleaser = spy(new SCMReleaser());
 		assertEquals(CLI.EXIT_CODE_ERROR,
 				new CLI().exec(mockedReleaser, cmd, mockedPS));
-		verify(mockedPS).println(thrown.getMessage());
+		verify(mockedPS).println(thrown.toString());
 		verify(mockedPS, never()).println(CommandLine.getUsage());
 		
 		exit.expectSystemExitWithStatus(CLI.EXIT_CODE_ERROR);
@@ -248,7 +248,7 @@ public class CLITest {
 
 		CLI cli = new CLI();
 		assertEquals(CLI.EXIT_CODE_ERROR, cli.exec(mockedReleaser, cmd, mockedPS));
-		verify(mockedPS).println(mockedException.getClass().getSimpleName());
+		verify(mockedPS).println(mockedException.toString());
 		verify(mockedReleaser).getActionTree(UNTILL);
 		verify(mockedAction, never()).execute(any(IProgress.class));
 	}
