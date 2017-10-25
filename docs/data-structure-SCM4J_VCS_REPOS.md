@@ -3,7 +3,7 @@ Variable lists files which maps artifact coordinates to repositories parameters.
 Example of variable (";" - separated): 
 
 ```
-SCM4J_VCS_REPOS=c:/workspace/my-repos.yaml;http://mycompany.com/repos/project1-repos.yaml`
+SCM4J_VCS_REPOS=c:/workspace/my-repos.yml;http://mycompany.com/repos/project1-repos.yml`
 ```
 Default protocol is file:///
 
