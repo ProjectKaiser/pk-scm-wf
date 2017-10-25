@@ -1,12 +1,5 @@
 package org.scm4j.releaser;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.Map;
-
 import org.scm4j.commons.Version;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.commons.progress.ProgressConsole;
@@ -24,6 +17,9 @@ import org.scm4j.releaser.scmactions.SCMActionFork;
 import org.scm4j.releaser.scmactions.SCMActionTagRelease;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSTag;
+
+import java.io.File;
+import java.util.*;
 
 public class SCMReleaser {
 
@@ -87,7 +83,7 @@ public class SCMReleaser {
 						mDeps = rb.getMDeps();
 						progress.endTrace("done");
 					} else {
-						progress.startTrace("reading mdeps from develop branch");
+						progress.startTrace("reading mdeps from develop branch...");
 						mDeps = new DevelopBranch(comp).getMDeps();
 						progress.endTrace("done");
 					}
