@@ -19,6 +19,7 @@ import java.util.List;
 public class Build {
 
 	public static final String ZERO_PATCH = "0";
+	private static final int COMMITS_RANGE_LIMIT = 10;
 	private final Component comp;
 	private final ReleaseBranch rb;
 
@@ -26,9 +27,10 @@ public class Build {
 		comp = rb.getComponent();
 		this.rb = rb;
 	}
-	
+
 	public Build(Component comp) {
-		this(new ReleaseBranch(comp));
+		this.comp = comp;
+		this.rb = new ReleaseBranch(comp);
 	}
 
 	public BuildStatus getStatus() {
@@ -93,8 +95,9 @@ public class Build {
 		
 		DelayedTagsFile dtf = new DelayedTagsFile();
 		String delayedTagRevision = dtf.getRevisitonByUrl(comp.getVcsRepository().getUrl());
-		while (true) {
-			List<VCSCommit> commits = vcs.getCommitsRange(rb.getName(), startingFromRevision, WalkDirection.DESC, 10);
+		List<VCSCommit> commits;
+		do {
+			commits = vcs.getCommitsRange(rb.getName(), startingFromRevision, WalkDirection.DESC, COMMITS_RANGE_LIMIT);
 			for (VCSCommit commit : commits) {
 				if (commit.getRevision().equals(delayedTagRevision)) {
 					return true;
@@ -108,10 +111,8 @@ public class Build {
 				}
 				startingFromRevision = commit.getRevision();
 			}
-			if (commits.size() < 10) {
-				return true;
-			}
-		}
+		} while (commits.size() >= COMMITS_RANGE_LIMIT);
+		return true;
 	}
 
 	private boolean areMDepsPatchesActual(List<Component> mDeps) {
@@ -162,18 +163,13 @@ public class Build {
 			return false;
 
 		}
-		ReleaseBranch mDeprb;
+		ReleaseBranch mDepRB;
 		for (Component mDep : mDeps) {
-			mDeprb = new ReleaseBranch(mDep);
-			Version mDeprbHeadVersion = mDeprb.getVersion();
-			if (mDeprbHeadVersion.getPatch().equals(ZERO_PATCH)) {
-				if (!mDeprbHeadVersion.equals(mDep.getVersion())) {
-					return true;
-				}
-			} else {
-				if (!mDeprbHeadVersion.toPreviousPatch().equals(mDep.getVersion())) {
-					return true;
-				}
+			mDepRB = new ReleaseBranch(mDep);
+			Version mDepRBHeadVersion = mDepRB.getVersion();
+			// zero patch is checked above
+			if (!mDepRBHeadVersion.toPreviousPatch().equals(mDep.getVersion())) {
+				return true;
 			}
 		}
 

@@ -1,16 +1,15 @@
 package org.scm4j.releaser.actions;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
-import java.util.ArrayList;
-
 import org.junit.Test;
 import org.scm4j.releaser.BuildStatus;
 import org.scm4j.releaser.TestEnvironment;
 import org.scm4j.releaser.WorkflowTestBase;
 import org.scm4j.releaser.branch.ReleaseBranch;
 import org.scm4j.releaser.conf.Component;
+
+import java.util.ArrayList;
+
+import static org.junit.Assert.*;
 
 
 public class ActionNoneTest extends WorkflowTestBase {
@@ -38,6 +37,13 @@ public class ActionNoneTest extends WorkflowTestBase {
 		String toString = action.toString();
 		assertTrue(toString.contains(comp.getCoords().toString()));
 		assertTrue(toString.contains(BuildStatus.BUILD.toString()));
+	}
+
+	@Test
+	public void testExecute() {
+		Component comp = new Component(TestEnvironment.PRODUCT_UNTILL);
+		ActionNone action = new ActionNone(new ReleaseBranch(comp), new ArrayList<IAction>(), null, null);
+		action.execute(null);
 	}
 
 }

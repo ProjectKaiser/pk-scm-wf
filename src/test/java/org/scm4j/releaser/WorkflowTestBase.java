@@ -63,6 +63,7 @@ public class WorkflowTestBase {
 		}
 		TestBuilder.setBuilders(null);
 		Options.setOptions(new ArrayList<Option>());
+		Options.setIsPatch(false);
 		FileUtils.deleteDirectory(ReleaseBranch.RELEASES_DIR);
 	}
 	

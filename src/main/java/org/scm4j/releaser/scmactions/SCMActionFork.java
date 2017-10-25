@@ -1,7 +1,5 @@
 package org.scm4j.releaser.scmactions;
 
-import java.util.List;
-
 import org.scm4j.commons.Version;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.releaser.Build;
@@ -16,6 +14,8 @@ import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.MDepsFile;
 import org.scm4j.releaser.exceptions.EReleaserException;
 import org.scm4j.vcs.api.IVCS;
+
+import java.util.List;
 
 public class SCMActionFork extends ActionAbstract {
 	
@@ -97,7 +97,6 @@ public class SCMActionFork extends ActionAbstract {
 			progress.startTrace("freezing mdpes" + (sb.length() == 0 ? "" : ":\r\n" + sb.toString() + "..."));
 			vcs.setFileContent(rb.getName(), SCMReleaser.MDEPS_FILE_NAME, currentMDepsFile.toFileContent(), LogTag.SCM_MDEPS);
 			progress.endTrace("done");
-			//progress.reportStatus("mdeps frozen" + (sb.length() == 0 ? "" : ":\r\n" + StringUtils.removeEnd(sb.toString(), "\r\n")));
 		}
 	}
 

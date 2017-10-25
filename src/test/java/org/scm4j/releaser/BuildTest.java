@@ -1,12 +1,5 @@
 package org.scm4j.releaser;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
-import java.util.Arrays;
-import java.util.List;
-
 import org.junit.Test;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.branch.ReleaseBranch;
@@ -17,12 +10,21 @@ import org.scm4j.releaser.exceptions.ENoReleaseBranchForPatch;
 import org.scm4j.releaser.exceptions.ENoReleases;
 import org.scm4j.releaser.scmactions.SCMActionBuild;
 import org.scm4j.releaser.scmactions.SCMActionFork;
+import org.scm4j.vcs.api.IVCS;
+import org.scm4j.vcs.api.VCSCommit;
+import org.scm4j.vcs.api.WalkDirection;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
 public class BuildTest extends WorkflowTestBase {
 	
 	@Test
 	public void testFORKIfNoPreviousReleaseBranch() {
-		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevelopBranch(), "feature added");
 		Build mb = new Build(compUnTillDb);
 		assertEquals(BuildStatus.FORK, mb.getStatus());
 	}
@@ -30,17 +32,18 @@ public class BuildTest extends WorkflowTestBase {
 	@Test
 	public void testFORKIfDevelopModifiedSinceLastBuild() throws Exception {
 		// fork unTillDb
-		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevelopBranch(), "feature added");
-		
 		SCMReleaser releaser = new SCMReleaser();
 		IAction action = releaser.getActionTree(compUnTillDb);
 		assertTrue(action instanceof SCMActionFork);
 		action.execute(getProgress(action));
-		
+
 		// build unTillDb
 		action = releaser.getActionTree(compUnTillDb);
 		assertTrue(action instanceof SCMActionBuild);
 		action.execute(getProgress(action));
+
+		Build mb = new Build(compUnTillDb);
+		assertEquals(BuildStatus.DONE, mb.getStatus());
 		
 		// make Develop modified
 		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevelopBranch(), "more feature added");
@@ -48,14 +51,9 @@ public class BuildTest extends WorkflowTestBase {
 		Build md = new Build(compUnTillDb);
 		assertEquals(BuildStatus.FORK, md.getStatus());
 	}
-	
-	
-	
+
 	@Test
 	public void testFORKIfMDepFORK() throws Exception {
-		// fork UBL
-		env.generateFeatureCommit(env.getUblVCS(), compUBL.getVcsRepository().getDevelopBranch(), "ubl feature added");
-		
 		SCMReleaser releaser = new SCMReleaser();
 		IAction action = releaser.getActionTree(compUBL);
 		assertTrue(action instanceof SCMActionFork);
@@ -65,28 +63,28 @@ public class BuildTest extends WorkflowTestBase {
 		action = releaser.getActionTree(compUBL);
 		assertTrue(action instanceof SCMActionBuild);
 		action.execute(getProgress(action));
+
+		Build mb = new Build(compUBL);
+		assertEquals(BuildStatus.DONE, mb.getStatus());
 		
 		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevelopBranch(), "unTillDb feature added");
-		Build mb = new Build(compUBL);
+		mb = new Build(compUBL);
 		assertEquals(BuildStatus.FORK, mb.getStatus());
 	}
 	
 	@Test
 	public void testFORKIfMDepsHasNewerMinors() throws Exception {
-		// release UBL
 		// fork UBL
-		env.generateFeatureCommit(env.getUblVCS(), compUBL.getVcsRepository().getDevelopBranch(), "ubl feature added");
 		SCMReleaser releaser = new SCMReleaser();
 		IAction action = releaser.getActionTree(compUBL); 
-		assertTrue(action instanceof SCMActionFork); // test unTillDb will be forked also because there are no release branches at all
-		action.execute(getProgress(action)); // fork 2.59.0 untilldb
+		assertTrue(action instanceof SCMActionFork);
+		action.execute(getProgress(action));
 		
-		// build UBL to avoid skip forking due of rb.version.patch == 0 (fork needed? -> 2-nd line -> no)
+		// build UBL
 		action = releaser.getActionTree(compUBL);
 		assertTrue(action instanceof SCMActionBuild);
-		action.execute(getProgress(action)); // build 2.59.0 untilldb
+		action.execute(getProgress(action));
 		
-		// release a new version of unTillDb
 		// fork unTillDb
 		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevelopBranch(), "feature added");
 		action = releaser.getActionTree(compUnTillDb);
@@ -103,10 +101,8 @@ public class BuildTest extends WorkflowTestBase {
 	}
 	
 	@Test
-	public void testNONEIfJustBuilt() throws Exception {
+	public void testDONEIfJustBuilt() throws Exception {
 		// fork unTillDb
-		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevelopBranch(), "feature added");
-		
 		SCMReleaser releaser = new SCMReleaser();
 		IAction action = releaser.getActionTree(compUnTillDb);
 		assertTrue(action instanceof SCMActionFork);
@@ -122,8 +118,6 @@ public class BuildTest extends WorkflowTestBase {
 	
 	@Test
 	public void testBUILDIfNoReleasesOnExistingReleaseBranch() throws Exception {
-		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevelopBranch(), "feature added");
-		
 		SCMReleaser releaser = new SCMReleaser();
 		IAction action = releaser.getActionTree(compUnTillDb);
 		action.execute(getProgress(action));
@@ -135,11 +129,9 @@ public class BuildTest extends WorkflowTestBase {
 	@Test
 	public void testFREEZEIfMDepsNotFrozen() throws Exception {
 		// fork UBL
-		env.generateFeatureCommit(env.getUblVCS(), compUBL.getVcsRepository().getDevelopBranch(), "ubl feature added");
-		
 		SCMReleaser releaser = new SCMReleaser();
 		IAction action = releaser.getActionTree(compUBL); 
-		assertTrue(action instanceof SCMActionFork); // test unTillDb will be forked too because there are no release branches at all
+		assertTrue(action instanceof SCMActionFork);
 		action.execute(getProgress(action));
 		
 		// simulate mdeps not frozen
@@ -155,15 +147,13 @@ public class BuildTest extends WorkflowTestBase {
 	@Test
 	public void testACTUALIZE_PATCHESIfHasNewPatches() throws Exception {
 		// fork UBL
-		env.generateFeatureCommit(env.getUblVCS(), compUBL.getVcsRepository().getDevelopBranch(), "ubl feature added");
-		
 		SCMReleaser releaser = new SCMReleaser();
 		IAction action = releaser.getActionTree(compUBL); 
-		assertTrue(action instanceof SCMActionFork); // test unTillDb will be forked too because there are no release branches at all
+		assertTrue(action instanceof SCMActionFork);
 		action.execute(getProgress(action));
 		
-		// build unTillDb
-		action = releaser.getActionTree(compUnTillDb);
+		// build UBL
+		action = releaser.getActionTree(compUBL);
 		assertTrue(action instanceof SCMActionBuild);
 		action.execute(getProgress(action));
 		
@@ -171,12 +161,58 @@ public class BuildTest extends WorkflowTestBase {
 		ReleaseBranch rbUnTillDb = new ReleaseBranch(compUnTillDb);
 		env.generateFeatureCommit(env.getUnTillDbVCS(), rbUnTillDb.getName(), "patch feature merged");
 		action = releaser.getActionTree(compUnTillDb.clone(env.getUnTillDbVer().toRelease()));
-		Options.setIsPatch(false);
 		assertTrue(action instanceof SCMActionBuild);
 		action.execute(getProgress(action));
 		assertEquals(env.getUnTillDbVer().toReleaseZeroPatch().toNextPatch().toNextPatch(), new ReleaseBranch(compUnTillDb).getVersion());
 		
 		assertEquals(BuildStatus.ACTUALIZE_PATCHES, new Build(compUBL).getStatus());
+	}
+
+	@Test
+	public void testPatchDONEIfLastCommitTagged() throws Exception {
+		// fork unTillDb
+		SCMReleaser releaser = new SCMReleaser();
+		IAction action = releaser.getActionTree(compUnTillDb);
+		assertTrue(action instanceof SCMActionFork);
+		action.execute(getProgress(action));
+
+		// build unTillDb
+		action = releaser.getActionTree(compUnTillDb);
+		assertTrue(action instanceof SCMActionBuild);
+		action.execute(getProgress(action));
+
+		// add an igonored feature and tag it
+		ReleaseBranch rbUnTillDb = new ReleaseBranch(compUnTillDb);
+		env.generateFeatureCommit(env.getUnTillDbVCS(), rbUnTillDb.getName(), LogTag.SCM_IGNORE + " feature megred");
+		env.getUnTillDbVCS().createTag(rbUnTillDb.getName(), "tag", "tag", null);
+
+		Options.setIsPatch(true);
+		Build b = new Build(compUnTillDb);
+		assertEquals(BuildStatus.DONE, b.getStatus());
+	}
+
+	@Test
+	public void testNoValueableCommitsAfterLastTagInterruption() throws Exception {
+		// fork unTillDb
+		SCMReleaser releaser = new SCMReleaser();
+		IAction action = releaser.getActionTree(compUnTillDb);
+		assertTrue(action instanceof SCMActionFork);
+		action.execute(getProgress(action));
+
+		// build unTillDb
+		action = releaser.getActionTree(compUnTillDb);
+		assertTrue(action instanceof SCMActionBuild);
+		action.execute(getProgress(action));
+
+		Component mockedComp = spy(compUnTillDb);
+		IVCS mockedVCS = spy(env.getUnTillDbVCS());
+		doReturn(mockedVCS).when(mockedComp).getVCS();
+		doReturn(new ArrayList<VCSCommit>()).when(mockedVCS)
+				.getCommitsRange(anyString(), (String) isNull(), any(WalkDirection.class), anyInt());
+
+		Options.setIsPatch(true);
+		Build b = new Build(mockedComp);
+		assertEquals(BuildStatus.DONE, b.getStatus());
 	}
 	
 	@Test

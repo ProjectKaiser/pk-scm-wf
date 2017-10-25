@@ -4,6 +4,8 @@ import org.scm4j.commons.Coords;
 import org.scm4j.commons.Version;
 import org.scm4j.vcs.api.IVCS;
 
+import java.util.Objects;
+
 public class Component {
 	private final Coords coords;
 	private VCSRepository repo = null;
@@ -56,12 +58,12 @@ public class Component {
 
 		Component component = (Component) o;
 
-		return coords.equals(component.coords);
+		return Objects.equals(coords, component.coords);
 	}
 
 	@Override
 	public int hashCode() {
-		return coords.hashCode();
+		return coords == null ? 0 : coords.hashCode();
 	}
 
 	public void setRepo(VCSRepository repo) {

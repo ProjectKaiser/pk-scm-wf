@@ -15,6 +15,7 @@ public class MDepsFileTest {
 	@Test
 	public void testHasMDeps() {
 		assertFalse(new MDepsFile("").hasMDeps());
+		assertFalse(new MDepsFile("# non-component").hasMDeps());
 		assertFalse(new MDepsFile((String) null).hasMDeps());
 		assertFalse(new MDepsFile((List<Component>) null).hasMDeps());
 		assertTrue(new MDepsFile(TestEnvironment.PRODUCT_UNTILL).hasMDeps());
