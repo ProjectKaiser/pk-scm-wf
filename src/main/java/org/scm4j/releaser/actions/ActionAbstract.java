@@ -59,11 +59,6 @@ public abstract class ActionAbstract implements IAction {
 		return childActions;
 	}
 
-	@Override
-	public String getName() {
-		return comp.getName();
-	}
-
 	@SneakyThrows
 	protected void executeChilds(IProgress progress) {
 		for (IAction action : childActions) {
@@ -99,5 +94,5 @@ public abstract class ActionAbstract implements IAction {
 		}
 	}
 	
-	protected abstract void executeAction(IProgress progress);
+	protected abstract void executeAction(IProgress progress) throws Exception;
 }

@@ -120,8 +120,11 @@ public class WorkflowTestBase {
 		assertEquals(commits.get(1), tag.getRelatedCommit());
 	}
 
-
 	public void checkUBLForked() {
+		checkUBLForked(1);
+	}
+
+	public void checkUBLForked(int times) {
 		ReleaseBranch rbUBL = new ReleaseBranch(compUBL);
 		// check branches
 		assertTrue(env.getUblVCS().getBranches(compUBL.getVcsRepository().getReleaseBranchPrefix()).contains(rbUBL.getName()));
@@ -129,8 +132,14 @@ public class WorkflowTestBase {
 		// check versions
 		Version verTrunk = dbUBL.getVersion();
 		Version verRelease = rbUBL.getVersion();
-		assertEquals(env.getUblVer().toNextMinor(),verTrunk);
-		assertEquals(env.getUblVer().toReleaseZeroPatch(), verRelease);
+		Version expectedTrunkVer = env.getUblVer();
+		Version expectedReleaseVer = env.getUblVer().toReleaseZeroPatch().toPreviousMinor();
+		for (int i = 0; i < times; i++) {
+			expectedTrunkVer = expectedTrunkVer.toNextMinor();
+			expectedReleaseVer = expectedReleaseVer.toNextMinor();
+		}
+		assertEquals(expectedTrunkVer, verTrunk);
+		assertEquals(expectedReleaseVer, verRelease);
 
 		// check mDeps
 		List<Component> ublReleaseMDeps = rbUBL.getMDeps();
@@ -163,10 +172,7 @@ public class WorkflowTestBase {
 		checkUnTillDbForked(1);
 	}
 
-	public void checkUnTillForked() {
-		checkUnTillDbForked();
-		checkUBLForked();
-
+	public void checkUnTillOnlyForked(int times) {
 		ReleaseBranch rbUnTill = new ReleaseBranch(compUnTill);
 
 		// check branches
@@ -175,8 +181,14 @@ public class WorkflowTestBase {
 		// check versions
 		Version verTrunk = dbUnTill.getVersion();
 		Version verRelease = rbUnTill.getVersion();
-		assertEquals(env.getUnTillVer().toNextMinor(), verTrunk);
-		assertEquals(env.getUnTillVer().toReleaseZeroPatch(), verRelease);
+		Version expectedTrunkVer = env.getUnTillVer();
+		Version expectedReleaseVer = env.getUnTillVer().toReleaseZeroPatch().toPreviousMinor();
+		for (int i = 0; i < times; i++) {
+			expectedTrunkVer = expectedTrunkVer.toNextMinor();
+			expectedReleaseVer = expectedReleaseVer.toNextMinor();
+		}
+		assertEquals(expectedTrunkVer, verTrunk);
+		assertEquals(expectedReleaseVer, verRelease);
 
 		// check mDeps
 		List<Component> unTillReleaseMDeps = rbUnTill.getMDeps();
@@ -190,7 +202,32 @@ public class WorkflowTestBase {
 				fail();
 			}
 		}
+	}
 
+	public void checkUnTillForked() {
+		checkUnTillDbForked();
+		checkUBLForked();
+		checkUnTillOnlyForked(1);
+	}
+
+	public void checkUBLNotBuilt() {
+		checkUnTillDbNotBuilt();
+		ReleaseBranch rb = new ReleaseBranch(compUnTillDb);
+		assertEquals("0", rb.getVersion().getPatch());
+		assertTrue(env.getUblVCS().getTags().isEmpty());
+	}
+
+	public void checkUnTillDbNotBuilt() {
+		ReleaseBranch rb = new ReleaseBranch(compUnTillDb);
+		assertEquals("0", rb.getVersion().getPatch());
+		assertTrue(env.getUnTillDbVCS().getTags().isEmpty());
+	}
+
+	public void checkUnTillNotBuilt() {
+		checkUBLNotBuilt();
+		ReleaseBranch rb = new ReleaseBranch(compUnTill);
+		assertEquals("0", rb.getVersion().getPatch());
+		assertTrue(env.getUnTillVCS().getTags().isEmpty());
 	}
 
 	public void checkUnTillBuilt() {

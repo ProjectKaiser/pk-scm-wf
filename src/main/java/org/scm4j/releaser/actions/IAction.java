@@ -11,8 +11,6 @@ public interface IAction {
 
 	List<IAction> getChildActions();
 
-	String getName();
-
 	void setParent(IAction parent);
 
 	void addProcessedUrl(String url);
