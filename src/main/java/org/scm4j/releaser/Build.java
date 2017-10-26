@@ -22,15 +22,18 @@ public class Build {
 	private static final int COMMITS_RANGE_LIMIT = 10;
 	private final Component comp;
 	private final ReleaseBranch rb;
+	private final DevelopBranch db;
 
 	public Build(ReleaseBranch rb) {
 		comp = rb.getComponent();
 		this.rb = rb;
+		db = new DevelopBranch(comp);
 	}
 
 	public Build(Component comp) {
 		this.comp = comp;
 		this.rb = new ReleaseBranch(comp);
+		this.db = new DevelopBranch(comp);
 	}
 
 	public BuildStatus getStatus() {
@@ -145,7 +148,6 @@ public class Build {
 			return false;
 		}
 
-		DevelopBranch db = new DevelopBranch(comp);
 		if (db.getStatus() == DevelopBranchStatus.MODIFIED) {
 			return true;
 		}

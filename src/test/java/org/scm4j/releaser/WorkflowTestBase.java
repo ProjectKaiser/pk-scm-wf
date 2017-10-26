@@ -15,8 +15,7 @@ import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.DelayedTagsFile;
 import org.scm4j.releaser.conf.Option;
 import org.scm4j.releaser.conf.Options;
-import org.scm4j.releaser.scmactions.SCMActionBuild;
-import org.scm4j.releaser.scmactions.SCMActionFork;
+import org.scm4j.releaser.scmactions.SCMAction;
 import org.scm4j.releaser.scmactions.SCMActionTagRelease;
 import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.vcs.api.VCSTag;
@@ -121,8 +120,11 @@ public class WorkflowTestBase {
 		assertEquals(commits.get(1), tag.getRelatedCommit());
 	}
 
-
 	public void checkUBLForked() {
+		checkUBLForked(1);
+	}
+
+	public void checkUBLForked(int times) {
 		ReleaseBranch rbUBL = new ReleaseBranch(compUBL);
 		// check branches
 		assertTrue(env.getUblVCS().getBranches(compUBL.getVcsRepository().getReleaseBranchPrefix()).contains(rbUBL.getName()));
@@ -130,8 +132,14 @@ public class WorkflowTestBase {
 		// check versions
 		Version verTrunk = dbUBL.getVersion();
 		Version verRelease = rbUBL.getVersion();
-		assertEquals(env.getUblVer().toNextMinor(),verTrunk);
-		assertEquals(env.getUblVer().toReleaseZeroPatch(), verRelease);
+		Version expectedTrunkVer = env.getUblVer();
+		Version expectedReleaseVer = env.getUblVer().toReleaseZeroPatch().toPreviousMinor();
+		for (int i = 0; i < times; i++) {
+			expectedTrunkVer = expectedTrunkVer.toNextMinor();
+			expectedReleaseVer = expectedReleaseVer.toNextMinor();
+		}
+		assertEquals(expectedTrunkVer, verTrunk);
+		assertEquals(expectedReleaseVer, verRelease);
 
 		// check mDeps
 		List<Component> ublReleaseMDeps = rbUBL.getMDeps();
@@ -164,10 +172,7 @@ public class WorkflowTestBase {
 		checkUnTillDbForked(1);
 	}
 
-	public void checkUnTillForked() {
-		checkUnTillDbForked();
-		checkUBLForked();
-
+	public void checkUnTillOnlyForked(int times) {
 		ReleaseBranch rbUnTill = new ReleaseBranch(compUnTill);
 
 		// check branches
@@ -176,8 +181,14 @@ public class WorkflowTestBase {
 		// check versions
 		Version verTrunk = dbUnTill.getVersion();
 		Version verRelease = rbUnTill.getVersion();
-		assertEquals(env.getUnTillVer().toNextMinor(), verTrunk);
-		assertEquals(env.getUnTillVer().toReleaseZeroPatch(), verRelease);
+		Version expectedTrunkVer = env.getUnTillVer();
+		Version expectedReleaseVer = env.getUnTillVer().toReleaseZeroPatch().toPreviousMinor();
+		for (int i = 0; i < times; i++) {
+			expectedTrunkVer = expectedTrunkVer.toNextMinor();
+			expectedReleaseVer = expectedReleaseVer.toNextMinor();
+		}
+		assertEquals(expectedTrunkVer, verTrunk);
+		assertEquals(expectedReleaseVer, verRelease);
 
 		// check mDeps
 		List<Component> unTillReleaseMDeps = rbUnTill.getMDeps();
@@ -191,7 +202,32 @@ public class WorkflowTestBase {
 				fail();
 			}
 		}
+	}
 
+	public void checkUnTillForked() {
+		checkUnTillDbForked();
+		checkUBLForked();
+		checkUnTillOnlyForked(1);
+	}
+
+	public void checkUBLNotBuilt() {
+		checkUnTillDbNotBuilt();
+		ReleaseBranch rb = new ReleaseBranch(compUnTillDb);
+		assertEquals("0", rb.getVersion().getPatch());
+		assertTrue(env.getUblVCS().getTags().isEmpty());
+	}
+
+	public void checkUnTillDbNotBuilt() {
+		ReleaseBranch rb = new ReleaseBranch(compUnTillDb);
+		assertEquals("0", rb.getVersion().getPatch());
+		assertTrue(env.getUnTillDbVCS().getTags().isEmpty());
+	}
+
+	public void checkUnTillNotBuilt() {
+		checkUBLNotBuilt();
+		ReleaseBranch rb = new ReleaseBranch(compUnTill);
+		assertEquals("0", rb.getVersion().getPatch());
+		assertTrue(env.getUnTillVCS().getTags().isEmpty());
 	}
 
 	public void checkUnTillBuilt() {
@@ -222,7 +258,7 @@ public class WorkflowTestBase {
 	}
 	
 	protected IProgress getProgress(IAction action) {
-		return new ProgressConsole(action.toString(), ">>> ", "<<< ");
+		return new ProgressConsole(action.toStringAction(), ">>> ", "<<< ");
 	}
 
 	private IAction getActionByComp(IAction action, Component comp, int level) {
@@ -256,22 +292,49 @@ public class WorkflowTestBase {
 		assertIsGoingToFork(action, compUBL, compUnTillDb, compUnTill);
 	}
 
-	protected void assertIsGoingToFork(IAction action, Component... comps) {
-		assertThat(action, allOf(
-				instanceOf(SCMActionFork.class),
-				hasProperty("mbs", equalTo(BuildStatus.FORK))), comps);
+	protected void assertIsGoingToForkAndBuildAll(IAction action) {
+		assertIsGoingToForkAndBuild(action, compUBL, compUnTillDb, compUnTill);
 	}
 
-	protected void assertIsGoingToBuild(IAction action, Component... comps) {
+	protected void assertIsGoingToFork(IAction action, Component... comps) {
 		assertThat(action, allOf(
-				instanceOf(SCMActionBuild.class),
-				hasProperty("mbs", equalTo(BuildStatus.BUILD))), comps);
+				instanceOf(SCMAction.class),
+				hasProperty("bsFrom", equalTo(BuildStatus.FORK)), 
+				hasProperty("bsTo", equalTo(BuildStatus.FREEZE))), comps);
+	}
+
+	protected void assertIsGoingToForkAndBuild(IAction action, Component... comps) {
+		assertTrue(comps.length > 0);
+		assertThat(action, allOf(
+				instanceOf(SCMAction.class),
+				hasProperty("bsFrom", equalTo(BuildStatus.FORK)),
+				hasProperty("bsTo", equalTo(BuildStatus.BUILD))), comps);
 	}
 
 	protected void assertIsGoingToBuild(IAction action, Component comp, BuildStatus mbs) {
 		assertThat(action, allOf(
-				instanceOf(SCMActionBuild.class),
-				hasProperty("mbs", equalTo(mbs))), comp);
+				instanceOf(SCMAction.class),
+				hasProperty("bsFrom", equalTo(mbs)),
+				hasProperty("bsTo", equalTo(BuildStatus.BUILD))), comp);
+	}
+	
+	protected void assertIsGoingToBuild(IAction action, Component... comps) {
+		assertThat(action, allOf(
+				instanceOf(SCMAction.class),
+				hasProperty("bsFrom", equalTo(BuildStatus.BUILD)), 
+				hasProperty("bsTo", equalTo(BuildStatus.BUILD))), comps);
+	}
+
+	protected void assertIsGoingToDoNothing(IAction action, BuildStatus bsFrom, BuildStatus bsTo, Component... comps) {
+		assertThat(action, allOf(
+				instanceOf(SCMAction.class),
+				hasProperty("bsFrom", equalTo(bsFrom)),
+				hasProperty("bsTo", equalTo(bsTo)),
+				hasProperty("procs", empty())), comps);
+	}
+
+	protected void assertIsGoingToDoNothing(IAction action, Component... comps) {
+		assertIsGoingToDoNothing(action, BuildStatus.DONE, null, comps);
 	}
 
 	protected void assertIsGoingToTag(IAction action, Component comp) {
