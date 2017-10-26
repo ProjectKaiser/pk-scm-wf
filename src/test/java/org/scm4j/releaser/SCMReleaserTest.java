@@ -1,14 +1,14 @@
 package org.scm4j.releaser;
 
-import static org.junit.Assert.fail;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.spy;
-
 import org.junit.Test;
 import org.scm4j.releaser.actions.ActionKind;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.branch.ReleaseBranch;
+
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.spy;
 
 public class SCMReleaserTest extends WorkflowTestBase {
 	
@@ -40,6 +40,6 @@ public class SCMReleaserTest extends WorkflowTestBase {
 		assertIsGoingToBuild(action, compUnTillDb);
 		
 		action = releaser.getActionTree(UNTILLDB, ActionKind.FORK_ONLY);
-		assertIsGoingToDoNothing(action, compUnTillDb);
+		assertIsGoingToDoNothing(action, BuildStatus.BUILD, null, compUnTillDb);
 	}
 }

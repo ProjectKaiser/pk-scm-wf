@@ -1,14 +1,13 @@
 package org.scm4j.releaser.actions;
 
-import java.util.ArrayList;
-import java.util.List;
-
+import lombok.SneakyThrows;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.exceptions.EReleaserException;
 import org.scm4j.vcs.api.IVCS;
 
-import lombok.SneakyThrows;
+import java.util.ArrayList;
+import java.util.List;
 
 public abstract class ActionAbstract implements IAction {
 
@@ -90,7 +89,6 @@ public abstract class ActionAbstract implements IAction {
 		
 		try {
 			executeAction(progress);
-
 			addProcessedUrl(comp.getVcsRepository().getUrl());
 		} catch (Exception e) {
 			progress.error("execution error: " + e.toString());

@@ -1,16 +1,15 @@
 package org.scm4j.releaser;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
-import java.util.Arrays;
-
 import org.junit.Test;
 import org.scm4j.releaser.actions.ActionKind;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.branch.ReleaseBranch;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.MDepsFile;
+
+import java.util.Arrays;
+
+import static org.junit.Assert.*;
 public class WorkflowBuildTest extends WorkflowTestBase {
 	
 	private final SCMReleaser releaser = new SCMReleaser();
@@ -38,6 +37,7 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		// fork UBL
 		action = releaser.getActionTree(UBL);
 		assertIsGoingToForkAndBuild(action, compUBL);
+		assertIsGoingToDoNothing(action, compUnTillDb);
 		action.execute(getProgress(action));
 		checkUBLBuilt();
 	}
@@ -53,7 +53,7 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		// fork UBL
 		action = releaser.getActionTree(UBL, ActionKind.FORK_ONLY);
 		assertIsGoingToFork(action, compUBL);
-		assertIsGoingToDoNothing(action, compUnTillDb);
+		assertIsGoingToDoNothing(action, BuildStatus.BUILD, null, compUnTillDb);
 		action.execute(getProgress(action));
 		checkUBLForked();
 		
@@ -95,7 +95,7 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		// unTillDb - skip, unTill and UBl - fork only
 		action = releaser.getActionTree(UNTILL, ActionKind.FORK_ONLY);
 		assertIsGoingToFork(action, compUnTill, compUBL);
-		assertIsGoingToDoNothing(action, compUnTillDb);
+		assertIsGoingToDoNothing(action, BuildStatus.BUILD, null, compUnTillDb);
 		
 		// unTillDb - build, unTill and UBl - fork and build
 		action = releaser.getActionTree(UNTILL);
@@ -144,7 +144,8 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 
 		// try to build with FORK target action kind. All builds should be skipped
 		action = releaser.getActionTree(compUnTill, ActionKind.FORK_ONLY);
-		assertIsGoingToDoNothing(action, compUnTillDb, compUnTill, compUBL);
+		assertIsGoingToDoNothing(action, BuildStatus.BUILD_MDEPS, null, compUnTill, compUBL);
+		assertIsGoingToDoNothing(action, BuildStatus.BUILD, null, compUnTillDb);
 	}
 
 	@Test

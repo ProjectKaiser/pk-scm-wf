@@ -1,19 +1,5 @@
 package org.scm4j.releaser;
 
-import static org.hamcrest.Matchers.allOf;
-import static org.hamcrest.Matchers.empty;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.hasProperty;
-import static org.hamcrest.Matchers.instanceOf;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-
 import org.apache.commons.io.FileUtils;
 import org.hamcrest.Matcher;
 import org.junit.After;
@@ -34,6 +20,13 @@ import org.scm4j.releaser.scmactions.SCMActionTagRelease;
 import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.vcs.api.VCSTag;
 import org.scm4j.vcs.api.WalkDirection;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.*;
 
 public class WorkflowTestBase {
 	protected TestEnvironment env;
@@ -262,6 +255,10 @@ public class WorkflowTestBase {
 		assertIsGoingToFork(action, compUBL, compUnTillDb, compUnTill);
 	}
 
+	protected void assertIsGoingToForkAndBuildAll(IAction action) {
+		assertIsGoingToForkAndBuild(action, compUBL, compUnTillDb, compUnTill);
+	}
+
 	protected void assertIsGoingToFork(IAction action, Component... comps) {
 		assertThat(action, allOf(
 				instanceOf(SCMAction.class),
@@ -290,11 +287,17 @@ public class WorkflowTestBase {
 				hasProperty("bsFrom", equalTo(BuildStatus.BUILD)), 
 				hasProperty("bsTo", equalTo(BuildStatus.BUILD))), comps);
 	}
-	
-	protected void assertIsGoingToDoNothing(IAction action, Component... comps) {
+
+	protected void assertIsGoingToDoNothing(IAction action, BuildStatus bsFrom, BuildStatus bsTo, Component... comps) {
 		assertThat(action, allOf(
 				instanceOf(SCMAction.class),
+				hasProperty("bsFrom", equalTo(bsFrom)),
+				hasProperty("bsTo", equalTo(bsTo)),
 				hasProperty("procs", empty())), comps);
+	}
+
+	protected void assertIsGoingToDoNothing(IAction action, Component... comps) {
+		assertIsGoingToDoNothing(action, BuildStatus.DONE, null, comps);
 	}
 
 	protected void assertIsGoingToTag(IAction action, Component comp) {
