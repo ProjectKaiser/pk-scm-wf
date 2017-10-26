@@ -11,9 +11,9 @@ import org.junit.Test;
 import org.scm4j.commons.Version;
 import org.scm4j.releaser.SCMReleaser;
 import org.scm4j.releaser.WorkflowTestBase;
+import org.scm4j.releaser.actions.ActionKind;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.conf.Component;
-import org.scm4j.releaser.scmactions.SCMActionFork;
 
 public class ReleaseBranchTest extends WorkflowTestBase {
 
@@ -44,11 +44,11 @@ public class ReleaseBranchTest extends WorkflowTestBase {
 
 	@Test
 	public void testGetMDeps() throws Exception {
-		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevelopBranch(), "feature added");
-		env.generateFeatureCommit(env.getUnTillVCS(), compUnTill.getVcsRepository().getDevelopBranch(), "feature added");
-		env.generateFeatureCommit(env.getUblVCS(), compUBL.getVcsRepository().getDevelopBranch(), "feature added");
+//		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevelopBranch(), "feature added");
+//		env.generateFeatureCommit(env.getUnTillVCS(), compUnTill.getVcsRepository().getDevelopBranch(), "feature added");
+//		env.generateFeatureCommit(env.getUblVCS(), compUBL.getVcsRepository().getDevelopBranch(), "feature added");
 		SCMReleaser releaser = new SCMReleaser();
-		IAction action = releaser.getActionTree(compUnTill);
+		IAction action = releaser.getActionTree(compUnTill, ActionKind.FORK_ONLY);
 		action.execute(getProgress(action));
 		
 		ReleaseBranch rb = new ReleaseBranch(compUnTill);
@@ -66,8 +66,8 @@ public class ReleaseBranchTest extends WorkflowTestBase {
 
 		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevelopBranch(), "feature added");
 		SCMReleaser releaser = new SCMReleaser();
-		IAction action = releaser.getActionTree(compUnTill);
-		assertTrue(action instanceof SCMActionFork);
+		IAction action = releaser.getActionTree(compUnTill, ActionKind.FORK_ONLY);
+		assertIsGoingToForkAll(action);
 		action.execute(getProgress(action));
 
 		assertEquals(env.getUnTillDbVer().toReleaseZeroPatch(), new ReleaseBranch(compUnTillDb).getVersion());

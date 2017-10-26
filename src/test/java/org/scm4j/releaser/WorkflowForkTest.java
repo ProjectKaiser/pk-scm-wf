@@ -64,7 +64,7 @@ public class WorkflowForkTest extends WorkflowTestBase {
 		assertThat(action, allOf(
 				instanceOf(ActionNone.class),
 				hasProperty("mbs", equalTo(BuildStatus.DONE))), compUnTillDb, compUBL);
-		assertIsGoingToBuild(action, compUnTill);
+		assertIsGoingToForkAndBuild(action, compUnTill);
 		action.execute(getProgress(action));
 		rbUBL = new ReleaseBranch(compUBL);
 		rbUnTill = new ReleaseBranch(compUnTill);
@@ -87,7 +87,7 @@ public class WorkflowForkTest extends WorkflowTestBase {
 		
 		// build unTillDb
 		action = releaser.getActionTree(UNTILLDB);
-		assertIsGoingToBuild(action, compUnTillDb);
+		assertIsGoingToForkAndBuild(action, compUnTillDb);
 		action.execute(getProgress(action));
 		checkUnTillDbBuilt();
 		
@@ -102,7 +102,7 @@ public class WorkflowForkTest extends WorkflowTestBase {
 
 		// build UBL
 		action = releaser.getActionTree(UBL);
-		assertIsGoingToBuild(action, compUBL);
+		assertIsGoingToForkAndBuild(action, compUBL);
 		assertThat(action, allOf(
 				instanceOf(ActionNone.class),
 				hasProperty("mbs", equalTo(BuildStatus.DONE))), compUnTillDb);
@@ -139,7 +139,7 @@ public class WorkflowForkTest extends WorkflowTestBase {
 		// build unTillDb patch
 		Component compUnTillDbPatch = new Component(UNTILLDB + ":" + env.getUnTillDbVer().toRelease());
 		action = releaser.getActionTree(compUnTillDbPatch);
-		assertIsGoingToBuild(action, compUnTillDb);
+		assertIsGoingToForkAndBuild(action, compUnTillDb);
 		action.execute(getProgress(action));
 		ReleaseBranch rbUnTillDbPatch = new ReleaseBranch(compUnTillDbPatch);
 		assertEquals(env.getUnTillDbVer().toReleaseZeroPatch().toNextPatch().toNextPatch(),
@@ -181,7 +181,7 @@ public class WorkflowForkTest extends WorkflowTestBase {
 		// build UBL
 		action = releaser.getActionTree(UBL);
 		assertIsGoingToBuild(action, compUBL, BuildStatus.BUILD_MDEPS);
-		assertIsGoingToBuild(action, compUnTillDb);
+		assertIsGoingToForkAndBuild(action, compUnTillDb);
 		action.execute(getProgress(action));
 		checkUBLBuilt();
 
@@ -197,7 +197,7 @@ public class WorkflowForkTest extends WorkflowTestBase {
 
 		// ensure UnTillDb is going to build
 		action = releaser.getActionTree(UNTILLDB);
-		assertIsGoingToBuild(action, compUnTillDb);
+		assertIsGoingToForkAndBuild(action, compUnTillDb);
 
 		// fork UBL. unTillDb build should be skipped
 		action = releaser.getActionTree(UBL);

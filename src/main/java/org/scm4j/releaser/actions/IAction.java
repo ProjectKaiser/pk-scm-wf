@@ -20,4 +20,6 @@ public interface IAction {
 	boolean isUrlProcessed(String url);
 
 	Component getComp();
+
+	String toStringAction();
 }

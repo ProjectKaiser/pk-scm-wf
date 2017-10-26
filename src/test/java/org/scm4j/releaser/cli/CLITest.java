@@ -75,23 +75,23 @@ public class CLITest {
 
 	@Test
 	public void testCommandFORK() throws Exception {
-		doReturn(mockedAction).when(mockedReleaser).getActionTree(UNTILL, ActionKind.FORK);
+		doReturn(mockedAction).when(mockedReleaser).getActionTree(UNTILL, ActionKind.FORK_ONLY);
 		CommandLine cmd = new CommandLine(new String[] { CLICommand.FORK.getStrValue(), UNTILL });
 
 		assertEquals( CLI.EXIT_CODE_OK, new CLI().exec(mockedReleaser, cmd, mockedPS));
 
-		verify(mockedReleaser).getActionTree(UNTILL, ActionKind.FORK);
+		verify(mockedReleaser).getActionTree(UNTILL, ActionKind.FORK_ONLY);
 		verify(mockedAction).execute(any(IProgress.class));
 	}
 
 	@Test
 	public void testCommandBUILD() throws Exception {
-		doReturn(mockedAction).when(mockedReleaser).getActionTree(UNTILL, ActionKind.ALL);
+		doReturn(mockedAction).when(mockedReleaser).getActionTree(UNTILL, ActionKind.FULL);
 		CommandLine cmd = new CommandLine(new String[] { CLICommand.BUILD.getStrValue(), UNTILL });
 
 		assertEquals( CLI.EXIT_CODE_OK, new CLI().exec(mockedReleaser, cmd, mockedPS));
 
-		verify(mockedReleaser).getActionTree(UNTILL, ActionKind.ALL);
+		verify(mockedReleaser).getActionTree(UNTILL, ActionKind.FULL);
 		verify(mockedAction).execute(any(IProgress.class));
 	}
 

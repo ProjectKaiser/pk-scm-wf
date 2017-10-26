@@ -1,5 +1,19 @@
 package org.scm4j.releaser;
 
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasProperty;
+import static org.hamcrest.Matchers.instanceOf;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
 import org.apache.commons.io.FileUtils;
 import org.hamcrest.Matcher;
 import org.junit.After;
@@ -15,19 +29,11 @@ import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.DelayedTagsFile;
 import org.scm4j.releaser.conf.Option;
 import org.scm4j.releaser.conf.Options;
-import org.scm4j.releaser.scmactions.SCMActionBuild;
-import org.scm4j.releaser.scmactions.SCMActionFork;
+import org.scm4j.releaser.scmactions.SCMAction;
 import org.scm4j.releaser.scmactions.SCMActionTagRelease;
 import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.vcs.api.VCSTag;
 import org.scm4j.vcs.api.WalkDirection;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
 
 public class WorkflowTestBase {
 	protected TestEnvironment env;
@@ -222,7 +228,7 @@ public class WorkflowTestBase {
 	}
 	
 	protected IProgress getProgress(IAction action) {
-		return new ProgressConsole(action.toString(), ">>> ", "<<< ");
+		return new ProgressConsole(action.toStringAction(), ">>> ", "<<< ");
 	}
 
 	private IAction getActionByComp(IAction action, Component comp, int level) {
@@ -258,20 +264,37 @@ public class WorkflowTestBase {
 
 	protected void assertIsGoingToFork(IAction action, Component... comps) {
 		assertThat(action, allOf(
-				instanceOf(SCMActionFork.class),
-				hasProperty("mbs", equalTo(BuildStatus.FORK))), comps);
+				instanceOf(SCMAction.class),
+				hasProperty("bsFrom", equalTo(BuildStatus.FORK)), 
+				hasProperty("bsTo", equalTo(BuildStatus.FREEZE))), comps);
 	}
 
-	protected void assertIsGoingToBuild(IAction action, Component... comps) {
+	protected void assertIsGoingToForkAndBuild(IAction action, Component... comps) {
+		assertTrue(comps.length > 0);
 		assertThat(action, allOf(
-				instanceOf(SCMActionBuild.class),
-				hasProperty("mbs", equalTo(BuildStatus.BUILD))), comps);
+				instanceOf(SCMAction.class),
+				hasProperty("bsFrom", equalTo(BuildStatus.FORK)),
+				hasProperty("bsTo", equalTo(BuildStatus.BUILD))), comps);
 	}
 
 	protected void assertIsGoingToBuild(IAction action, Component comp, BuildStatus mbs) {
 		assertThat(action, allOf(
-				instanceOf(SCMActionBuild.class),
-				hasProperty("mbs", equalTo(mbs))), comp);
+				instanceOf(SCMAction.class),
+				hasProperty("bsFrom", equalTo(mbs)),
+				hasProperty("bsTo", equalTo(BuildStatus.BUILD))), comp);
+	}
+	
+	protected void assertIsGoingToBuild(IAction action, Component... comps) {
+		assertThat(action, allOf(
+				instanceOf(SCMAction.class),
+				hasProperty("bsFrom", equalTo(BuildStatus.BUILD)), 
+				hasProperty("bsTo", equalTo(BuildStatus.BUILD))), comps);
+	}
+	
+	protected void assertIsGoingToDoNothing(IAction action, Component... comps) {
+		assertThat(action, allOf(
+				instanceOf(SCMAction.class),
+				hasProperty("procs", empty())), comps);
 	}
 
 	protected void assertIsGoingToTag(IAction action, Component comp) {

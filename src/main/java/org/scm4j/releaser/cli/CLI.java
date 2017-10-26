@@ -41,14 +41,14 @@ public class CLI {
 		IAction action;
 		switch(cmd.getCommand()) {
 		case BUILD:
-			action = releaser.getActionTree(cmd.getProductCoords(), ActionKind.ALL);
-			try (IProgress progress = new ProgressConsole(action.toString(), ">>> ", "<<< ")) {
+			action = releaser.getActionTree(cmd.getProductCoords(), ActionKind.FULL);
+			try (IProgress progress = new ProgressConsole(action.toStringAction(), ">>> ", "<<< ")) {
 				action.execute(progress);
 			}
 			break;
 		case FORK:
-			action = releaser.getActionTree(cmd.getProductCoords(), ActionKind.FORK);
-			try (IProgress progress = new ProgressConsole(action.toString(), ">>> ", "<<< ")) {
+			action = releaser.getActionTree(cmd.getProductCoords(), ActionKind.FORK_ONLY);
+			try (IProgress progress = new ProgressConsole(action.toStringAction(), ">>> ", "<<< ")) {
 				action.execute(progress);
 			}
 			break;
@@ -99,7 +99,9 @@ public class CLI {
 	}
 	
 	public static void main(String[] args) throws Exception {
-		AnsiConsole.systemInstall();
+		if (System.console() != null) {
+			AnsiConsole.systemInstall();
+		}
 		System.exit(new CLI().exec(args));
 	}
 }

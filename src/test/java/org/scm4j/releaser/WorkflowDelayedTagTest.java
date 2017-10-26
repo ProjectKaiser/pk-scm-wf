@@ -180,7 +180,7 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 
 		// build all
 		action = releaser.getActionTree(compUnTillDb);
-		assertIsGoingToBuild(action, compUnTillDb);
+		assertIsGoingToForkAndBuild(action, compUnTillDb);
 		action.execute(getProgress(action));
 		
 		String revisionToTag = dtf.getRevisitonByUrl(compUnTillDb.getVcsRepository().getUrl());

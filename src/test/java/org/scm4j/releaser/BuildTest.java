@@ -1,6 +1,20 @@
 package org.scm4j.releaser;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyInt;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.isNull;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.spy;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import org.junit.Test;
+import org.scm4j.releaser.actions.ActionKind;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.branch.ReleaseBranch;
 import org.scm4j.releaser.conf.Component;
@@ -8,18 +22,9 @@ import org.scm4j.releaser.conf.MDepsFile;
 import org.scm4j.releaser.conf.Options;
 import org.scm4j.releaser.exceptions.ENoReleaseBranchForPatch;
 import org.scm4j.releaser.exceptions.ENoReleases;
-import org.scm4j.releaser.scmactions.SCMActionBuild;
-import org.scm4j.releaser.scmactions.SCMActionFork;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.vcs.api.WalkDirection;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
 
 public class BuildTest extends WorkflowTestBase {
 	
@@ -34,12 +39,7 @@ public class BuildTest extends WorkflowTestBase {
 		// fork unTillDb
 		SCMReleaser releaser = new SCMReleaser();
 		IAction action = releaser.getActionTree(compUnTillDb);
-		assertTrue(action instanceof SCMActionFork);
-		action.execute(getProgress(action));
-
-		// build unTillDb
-		action = releaser.getActionTree(compUnTillDb);
-		assertTrue(action instanceof SCMActionBuild);
+		assertIsGoingToForkAndBuild(action, compUnTillDb);
 		action.execute(getProgress(action));
 
 		Build mb = new Build(compUnTillDb);
@@ -56,14 +56,9 @@ public class BuildTest extends WorkflowTestBase {
 	public void testFORKIfMDepFORK() throws Exception {
 		SCMReleaser releaser = new SCMReleaser();
 		IAction action = releaser.getActionTree(compUBL);
-		assertTrue(action instanceof SCMActionFork);
+		assertIsGoingToForkAndBuild(action, compUBL);
 		action.execute(getProgress(action));
 		
-		// build UBL
-		action = releaser.getActionTree(compUBL);
-		assertTrue(action instanceof SCMActionBuild);
-		action.execute(getProgress(action));
-
 		Build mb = new Build(compUBL);
 		assertEquals(BuildStatus.DONE, mb.getStatus());
 		
@@ -77,23 +72,13 @@ public class BuildTest extends WorkflowTestBase {
 		// fork UBL
 		SCMReleaser releaser = new SCMReleaser();
 		IAction action = releaser.getActionTree(compUBL); 
-		assertTrue(action instanceof SCMActionFork);
-		action.execute(getProgress(action));
-		
-		// build UBL
-		action = releaser.getActionTree(compUBL);
-		assertTrue(action instanceof SCMActionBuild);
+		assertIsGoingToForkAndBuild(action, compUBL);
 		action.execute(getProgress(action));
 		
 		// fork unTillDb
 		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevelopBranch(), "feature added");
 		action = releaser.getActionTree(compUnTillDb);
-		assertTrue(action instanceof SCMActionFork);
-		action.execute(getProgress(action));
-		
-		// build unTillDb
-		action = releaser.getActionTree(compUnTillDb);
-		assertTrue(action instanceof SCMActionBuild);
+		assertIsGoingToForkAndBuild(action, compUnTillDb);
 		action.execute(getProgress(action));
 		
 		// now UBL should be forked because there is a new minor release of unTillDb which is not used by UBL current release
@@ -105,12 +90,7 @@ public class BuildTest extends WorkflowTestBase {
 		// fork unTillDb
 		SCMReleaser releaser = new SCMReleaser();
 		IAction action = releaser.getActionTree(compUnTillDb);
-		assertTrue(action instanceof SCMActionFork);
-		action.execute(getProgress(action));
-		
-		// build unTillDb
-		action = releaser.getActionTree(compUnTillDb);
-		assertTrue(action instanceof SCMActionBuild);
+		assertIsGoingToForkAndBuild(action, compUnTillDb);
 		action.execute(getProgress(action));
 		
 		assertEquals(BuildStatus.DONE, new Build(compUnTillDb).getStatus());
@@ -119,7 +99,7 @@ public class BuildTest extends WorkflowTestBase {
 	@Test
 	public void testBUILDIfNoReleasesOnExistingReleaseBranch() throws Exception {
 		SCMReleaser releaser = new SCMReleaser();
-		IAction action = releaser.getActionTree(compUnTillDb);
+		IAction action = releaser.getActionTree(compUnTillDb, ActionKind.FORK_ONLY);
 		action.execute(getProgress(action));
 		
 		Build md = new Build(compUnTillDb);
@@ -130,8 +110,8 @@ public class BuildTest extends WorkflowTestBase {
 	public void testFREEZEIfMDepsNotFrozen() throws Exception {
 		// fork UBL
 		SCMReleaser releaser = new SCMReleaser();
-		IAction action = releaser.getActionTree(compUBL); 
-		assertTrue(action instanceof SCMActionFork);
+		IAction action = releaser.getActionTree(compUBL, ActionKind.FORK_ONLY); 
+		assertIsGoingToFork(action, compUBL);
 		action.execute(getProgress(action));
 		
 		// simulate mdeps not frozen
@@ -149,19 +129,14 @@ public class BuildTest extends WorkflowTestBase {
 		// fork UBL
 		SCMReleaser releaser = new SCMReleaser();
 		IAction action = releaser.getActionTree(compUBL); 
-		assertTrue(action instanceof SCMActionFork);
-		action.execute(getProgress(action));
-		
-		// build UBL
-		action = releaser.getActionTree(compUBL);
-		assertTrue(action instanceof SCMActionBuild);
+		assertIsGoingToForkAndBuild(action, compUBL);
 		action.execute(getProgress(action));
 		
 		// build unTillDb patch
 		ReleaseBranch rbUnTillDb = new ReleaseBranch(compUnTillDb);
 		env.generateFeatureCommit(env.getUnTillDbVCS(), rbUnTillDb.getName(), "patch feature merged");
 		action = releaser.getActionTree(compUnTillDb.clone(env.getUnTillDbVer().toRelease()));
-		assertTrue(action instanceof SCMActionBuild);
+		assertIsGoingToBuild(action, compUnTillDb);
 		action.execute(getProgress(action));
 		assertEquals(env.getUnTillDbVer().toReleaseZeroPatch().toNextPatch().toNextPatch(), new ReleaseBranch(compUnTillDb).getVersion());
 		
@@ -173,12 +148,7 @@ public class BuildTest extends WorkflowTestBase {
 		// fork unTillDb
 		SCMReleaser releaser = new SCMReleaser();
 		IAction action = releaser.getActionTree(compUnTillDb);
-		assertTrue(action instanceof SCMActionFork);
-		action.execute(getProgress(action));
-
-		// build unTillDb
-		action = releaser.getActionTree(compUnTillDb);
-		assertTrue(action instanceof SCMActionBuild);
+		assertIsGoingToForkAndBuild(action, compUnTillDb);
 		action.execute(getProgress(action));
 
 		// add an igonored feature and tag it
@@ -196,12 +166,7 @@ public class BuildTest extends WorkflowTestBase {
 		// fork unTillDb
 		SCMReleaser releaser = new SCMReleaser();
 		IAction action = releaser.getActionTree(compUnTillDb);
-		assertTrue(action instanceof SCMActionFork);
-		action.execute(getProgress(action));
-
-		// build unTillDb
-		action = releaser.getActionTree(compUnTillDb);
-		assertTrue(action instanceof SCMActionBuild);
+		assertIsGoingToForkAndBuild(action, compUnTillDb);
 		action.execute(getProgress(action));
 
 		Component mockedComp = spy(compUnTillDb);
@@ -228,7 +193,7 @@ public class BuildTest extends WorkflowTestBase {
 		}
 		
 		IAction action = new SCMReleaser().getActionTree(UNTILLDB);
-		assertTrue(action instanceof SCMActionFork);
+		assertIsGoingToForkAndBuild(action, compUnTillDb);
 		action.execute(getProgress(action));
 		
 		Options.setIsPatch(true);
