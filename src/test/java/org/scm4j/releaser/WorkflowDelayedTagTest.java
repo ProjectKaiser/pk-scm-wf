@@ -102,7 +102,6 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 		// simulate delayed tags file is deleted right after action create
 		action = releaser.getTagActionTree(compUnTill);
 		assertIsGoingToTagAll(action);
-		Map<String, String> content = dtf.getContent();
 		dtf.delete();
 		action.execute(getProgress(action));
 

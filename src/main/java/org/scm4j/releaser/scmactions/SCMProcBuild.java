@@ -14,6 +14,7 @@ import org.scm4j.releaser.conf.DelayedTagsFile;
 import org.scm4j.releaser.conf.Option;
 import org.scm4j.releaser.conf.Options;
 import org.scm4j.releaser.conf.TagDesc;
+import org.scm4j.releaser.exceptions.EReleaserException;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSCommit;
 
@@ -34,6 +35,9 @@ public class SCMProcBuild implements ISCMProc {
 	@Override
 	public void execute(IProgress progress) {
 		VCSCommit headCommit = vcs.getHeadCommit(rb.getName());
+		if (headCommit == null) {
+			throw new EReleaserException("branch does not exist: " + rb.getName());
+		}
 		
 		build(progress, headCommit);
 		

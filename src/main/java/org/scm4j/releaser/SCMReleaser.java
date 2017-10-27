@@ -95,30 +95,7 @@ public class SCMReleaser {
 		
 		progress.close();
 		
-//		if (bs == BuildStatus.DONE) {
-//			return new ActionNone(rb, childActions, bs);
-//		} else {
-			return new SCMAction(rb, childActions, actionKind, bs);
-		//}
-		
-//		switch (bs) {
-//		
-//		case FORK:
-//		case FREEZE:
-//			skipAllBuilds(childActions);
-//			
-//			//return getForkAction(rb, childActions, mbs, actionKind);
-//		case BUILD_MDEPS:	
-//		case ACTUALIZE_PATCHES:
-//		case BUILD:
-//			return getBuildOrSkipAction(rb, childActions, bs, actionKind);
-//		case DONE:
-//			return new ActionNone(rb, childActions, bs);
-//		case 
-//		default:
-//			throw new IllegalArgumentException("unsupported build status: " + bs);
-//		}
-		
+		return new SCMAction(rb, childActions, actionKind, bs);
 	}
 
 	protected BuildStatus getBuildStatus(ReleaseBranch rb) throws Exception {
@@ -131,39 +108,10 @@ public class SCMReleaser {
 		return mbs;
 	}
 	
-//	private IAction getBuildOrSkipAction(ReleaseBranch rb, List<IAction> childActions, BuildStatus mbs,
-//			ActionSet actionKind) {
-//		if (actionKind == ActionSet.FORK_ONLY) {
-//			return new ActionNone(rb, childActions, mbs);
-//		}
-//		// seems we never have situation when root is going to build and child is going to fork.
-//		return new SCMActionBuild(rb, childActions, mbs);
-//	}
-//
-//	private IAction getForkAction(ReleaseBranch rb, List<IAction> childActions, BuildStatus mbs,
-//			ActionSet actionKind) {
-//		skipAllBuilds(childActions);
-//		return new SCMActionFork(rb, childActions, mbs);
-//	}
-
 	public static TagDesc getTagDesc(String verStr) {
 		String tagMessage = verStr + " release";
 		return new TagDesc(verStr, tagMessage);
 	}
-	
-		
-//	private void skipAllBuilds(List<IAction> childActions) {
-//		ListIterator<IAction> li = childActions.listIterator();
-//		IAction action;
-//		while (li.hasNext()) {
-//			action = li.next();
-//			skipAllBuilds(action.getChildActions());
-//			if (action instanceof SCMActionBuild) {
-//				li.set(new ActionNone(((SCMActionBuild) action).getReleaseBranch(), action.getChildActions(), null, ((SCMActionBuild) action).getVersion() +
-//						" build skipped because not all parent components forked"));
-//			}
-//		}
-//	}
 	
 	public IAction getTagActionTree(Component comp) {
 		List<IAction> childActions = new ArrayList<>();
