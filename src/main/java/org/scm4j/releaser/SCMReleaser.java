@@ -63,7 +63,7 @@ public class SCMReleaser {
 				bs = getBuildStatus(rb);
 			} else {
 				// If we are build, build_mdeps or actualize_patches then we need to use mdeps from release branches to show what versions we are going to build or actualize
-				progress.startTrace("determining release branch version for " + comp.getCoordsNoComment() + "...");
+				progress.startTrace("determining release branch version for " + comp.getCoordsNoComment() + "... ");
 				rb = new ReleaseBranch(comp);
 				progress.endTrace("done");
 				bs = getBuildStatus(rb);
@@ -71,16 +71,16 @@ public class SCMReleaser {
 					// untill has untilldb, ubl has untilldb. untill is BUILD_MDEPS, UBL has release branch but need to FORK. 
 					// result: regressinon for untill FORK, regiression for UBL is DONE prev version (mdep fro existing UBL RB is used) 
 					// TODO: add test: untill build_mdeps, untill needs to be forked. UBL has release rbanch but has to be forked also. untilldbs must have the same status
-					progress.startTrace("reading mdeps from develop branch...");
+					progress.startTrace("reading mdeps from develop branch... ");
 					mDeps = new DevelopBranch(comp).getMDeps();
 					progress.endTrace("done");
 				} else {
 					if (rb.exists()) {
-						progress.startTrace("reading mdeps from release branch " + rb.getName() + "...");
+						progress.startTrace("reading mdeps from release branch " + rb.getName() + "... ");
 						mDeps = rb.getMDeps();
 						progress.endTrace("done");
 					} else {
-						progress.startTrace("reading mdeps from develop branch...");
+						progress.startTrace("reading mdeps from develop branch... ");
 						mDeps = new DevelopBranch(comp).getMDeps();
 						progress.endTrace("done");
 					}
@@ -101,7 +101,7 @@ public class SCMReleaser {
 	protected BuildStatus getBuildStatus(ReleaseBranch rb) throws Exception {
 		Build mb = new Build(rb);
 		IProgress progress = new ProgressConsole();
-		progress.startTrace("calculating status for " + rb.getComponent().getName() + "...");
+		progress.startTrace("calculating status for " + rb.getComponent().getName() + "... ");
 		BuildStatus mbs = mb.getStatus();
 		progress.endTrace("done");
 		progress.close();
