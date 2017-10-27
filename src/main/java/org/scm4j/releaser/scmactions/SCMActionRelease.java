@@ -1,23 +1,24 @@
 package org.scm4j.releaser.scmactions;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.releaser.BuildStatus;
 import org.scm4j.releaser.actions.ActionAbstract;
 import org.scm4j.releaser.actions.ActionKind;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.branch.ReleaseBranch;
+import org.scm4j.releaser.scmactions.procs.*;
 
-public class SCMAction extends ActionAbstract {
+import java.util.ArrayList;
+import java.util.List;
+
+public class SCMActionRelease extends ActionAbstract {
 
 	private final List<ISCMProc> procs = new ArrayList<>();
 	private final BuildStatus bsFrom;
 	private final BuildStatus bsTo;
 	private final ReleaseBranch targetRB;
 
-	public SCMAction(ReleaseBranch rb, List<IAction> childActions, ActionKind actionSet, BuildStatus bs) {
+	public SCMActionRelease(ReleaseBranch rb, List<IAction> childActions, ActionKind actionSet, BuildStatus bs) {
 		super(rb.getComponent(), childActions);
 		this.bsFrom = bs;
 		BuildStatus bsTo = null;

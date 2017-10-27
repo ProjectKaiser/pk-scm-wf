@@ -15,7 +15,7 @@ public class SCMActionTagReleaseTest extends SCMActionTestBase {
 	public void testExceptions() throws Exception {
 		comp = spy(comp);
 		ReleaseBranch rb = spy(new ReleaseBranch(comp));
-		SCMActionTagRelease action = spy(new SCMActionTagRelease(rb, new ArrayList<IAction>()));
+		SCMActionTag action = spy(new SCMActionTag(rb, new ArrayList<IAction>()));
 		when(comp.getVcsRepository()).thenCallRealMethod().thenReturn(null);
 		
 		testExceptionThrowing(action, NullPointerException.class);

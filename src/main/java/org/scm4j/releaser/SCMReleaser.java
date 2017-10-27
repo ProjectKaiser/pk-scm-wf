@@ -1,11 +1,5 @@
 package org.scm4j.releaser;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.commons.progress.ProgressConsole;
 import org.scm4j.releaser.actions.ActionKind;
@@ -15,8 +9,14 @@ import org.scm4j.releaser.branch.ReleaseBranch;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.Options;
 import org.scm4j.releaser.conf.TagDesc;
-import org.scm4j.releaser.scmactions.SCMAction;
-import org.scm4j.releaser.scmactions.SCMActionTagRelease;
+import org.scm4j.releaser.scmactions.SCMActionRelease;
+import org.scm4j.releaser.scmactions.SCMActionTag;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class SCMReleaser {
 
@@ -95,7 +95,7 @@ public class SCMReleaser {
 		
 		progress.close();
 		
-		return new SCMAction(rb, childActions, actionKind, bs);
+		return new SCMActionRelease(rb, childActions, actionKind, bs);
 	}
 
 	protected BuildStatus getBuildStatus(ReleaseBranch rb) throws Exception {
@@ -121,6 +121,6 @@ public class SCMReleaser {
 		for (Component mDep : mDeps) {
 			childActions.add(getTagActionTree(mDep));
 		}
-		return new SCMActionTagRelease(new ReleaseBranch(comp), childActions);
+		return new SCMActionTag(new ReleaseBranch(comp), childActions);
 	}
 }

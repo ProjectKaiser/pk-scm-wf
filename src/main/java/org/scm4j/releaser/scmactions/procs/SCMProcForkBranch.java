@@ -1,4 +1,4 @@
-package org.scm4j.releaser.scmactions;
+package org.scm4j.releaser.scmactions.procs;
 
 import org.scm4j.commons.Version;
 import org.scm4j.commons.progress.IProgress;

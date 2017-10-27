@@ -1,4 +1,4 @@
-package org.scm4j.releaser.scmactions;
+package org.scm4j.releaser.scmactions.procs;
 
 import java.io.File;
 import java.nio.file.Files;

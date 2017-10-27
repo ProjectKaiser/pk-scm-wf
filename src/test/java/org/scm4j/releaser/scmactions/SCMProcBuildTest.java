@@ -16,6 +16,8 @@ import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.VCSRepository;
 import org.scm4j.releaser.exceptions.ENoBuilder;
 import org.scm4j.releaser.exceptions.EReleaserException;
+import org.scm4j.releaser.scmactions.procs.ISCMProc;
+import org.scm4j.releaser.scmactions.procs.SCMProcBuild;
 
 public class SCMProcBuildTest extends WorkflowTestBase {
 	

@@ -15,8 +15,8 @@ import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.DelayedTagsFile;
 import org.scm4j.releaser.conf.Option;
 import org.scm4j.releaser.conf.Options;
-import org.scm4j.releaser.scmactions.SCMAction;
-import org.scm4j.releaser.scmactions.SCMActionTagRelease;
+import org.scm4j.releaser.scmactions.SCMActionRelease;
+import org.scm4j.releaser.scmactions.SCMActionTag;
 import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.vcs.api.VCSTag;
 import org.scm4j.vcs.api.WalkDirection;
@@ -298,7 +298,7 @@ public class WorkflowTestBase {
 
 	protected void assertIsGoingToFork(IAction action, Component... comps) {
 		assertThat(action, allOf(
-				instanceOf(SCMAction.class),
+				instanceOf(SCMActionRelease.class),
 				hasProperty("bsFrom", equalTo(BuildStatus.FORK)), 
 				hasProperty("bsTo", equalTo(BuildStatus.FREEZE))), comps);
 	}
@@ -306,28 +306,28 @@ public class WorkflowTestBase {
 	protected void assertIsGoingToForkAndBuild(IAction action, Component... comps) {
 		assertTrue(comps.length > 0);
 		assertThat(action, allOf(
-				instanceOf(SCMAction.class),
+				instanceOf(SCMActionRelease.class),
 				hasProperty("bsFrom", equalTo(BuildStatus.FORK)),
 				hasProperty("bsTo", equalTo(BuildStatus.BUILD))), comps);
 	}
 
 	protected void assertIsGoingToBuild(IAction action, Component comp, BuildStatus mbs) {
 		assertThat(action, allOf(
-				instanceOf(SCMAction.class),
+				instanceOf(SCMActionRelease.class),
 				hasProperty("bsFrom", equalTo(mbs)),
 				hasProperty("bsTo", equalTo(BuildStatus.BUILD))), comp);
 	}
 	
 	protected void assertIsGoingToBuild(IAction action, Component... comps) {
 		assertThat(action, allOf(
-				instanceOf(SCMAction.class),
+				instanceOf(SCMActionRelease.class),
 				hasProperty("bsFrom", equalTo(BuildStatus.BUILD)), 
 				hasProperty("bsTo", equalTo(BuildStatus.BUILD))), comps);
 	}
 
 	protected void assertIsGoingToDoNothing(IAction action, BuildStatus bsFrom, BuildStatus bsTo, Component... comps) {
 		assertThat(action, allOf(
-				instanceOf(SCMAction.class),
+				instanceOf(SCMActionRelease.class),
 				hasProperty("bsFrom", equalTo(bsFrom)),
 				hasProperty("bsTo", equalTo(bsTo)),
 				hasProperty("procs", empty())), comps);
@@ -338,7 +338,7 @@ public class WorkflowTestBase {
 	}
 
 	protected void assertIsGoingToTag(IAction action, Component comp) {
-		assertThat(action, instanceOf(SCMActionTagRelease.class), comp);
+		assertThat(action, instanceOf(SCMActionTag.class), comp);
 	}
 
 	protected void assertIsGoingToBuildAll(IAction action) {
