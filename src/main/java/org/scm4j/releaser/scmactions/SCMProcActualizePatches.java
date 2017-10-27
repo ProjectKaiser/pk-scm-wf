@@ -21,7 +21,7 @@ public class SCMProcActualizePatches implements ISCMProc {
 
 	@Override
 	public void execute(IProgress progress) {
-		progress.startTrace("reading mdeps to actualize patches...");
+		progress.startTrace("reading mdeps to actualize patches... ");
 		MDepsFile currentMDepsFile = rb.getMDepsFile();
 		progress.endTrace("done");
 		StringBuilder sb = new StringBuilder();
@@ -29,7 +29,7 @@ public class SCMProcActualizePatches implements ISCMProc {
 		ReleaseBranch rbMDep;
 		Version newVersion;
 		for (Component currentMDep : currentMDepsFile.getMDeps()) {
-			progress.startTrace("determining Release Branch version for mdep " + currentMDep + "...");
+			progress.startTrace("determining Release Branch version for mdep " + currentMDep + "... ");
 			rbMDep = new ReleaseBranch(currentMDep);
 			progress.endTrace("done");
 			newVersion = rbMDep.getVersion().toPreviousPatch(); // TODO: which patch of mdep to actualize on if there are no mdep release branches at all?
@@ -45,7 +45,7 @@ public class SCMProcActualizePatches implements ISCMProc {
 		if (hasNew) {
 			sb.setLength(sb.length() - 2);
 			progress.reportStatus("patches to actualize:\r\n" + sb.toString());
-			progress.startTrace("actualizing patches...");
+			progress.startTrace("actualizing patches... ");
 			vcs.setFileContent(rb.getName(), SCMReleaser.MDEPS_FILE_NAME, currentMDepsFile.toFileContent(), LogTag.SCM_MDEPS);
 			progress.endTrace("done");
 		} else {

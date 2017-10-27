@@ -22,7 +22,7 @@ public class SCMProcFreezeMDeps implements ISCMProc {
 
 	@Override
 	public void execute(IProgress progress) {
-		progress.startTrace("reading mdeps to freeze...");
+		progress.startTrace("reading mdeps to freeze... ");
 		MDepsFile currentMDepsFile = rb.getMDepsFile();
 		progress.endTrace("done");
 		if (!currentMDepsFile.hasMDeps()) {
@@ -34,7 +34,7 @@ public class SCMProcFreezeMDeps implements ISCMProc {
 		Version newVersion;
 		boolean hasChanges = false;
 		for (Component currentMDep : currentMDepsFile.getMDeps()) {
-			progress.startTrace("determining Release Branch version for mdep " + currentMDep + "...");
+			progress.startTrace("determining Release Branch version for mdep " + currentMDep + "... ");
 			rbMDep = new ReleaseBranch(currentMDep);
 			progress.endTrace("done");
 			// untilldb is built -> rbMDep.getVersion is 2.59.1, but we need 2.59.0
@@ -51,7 +51,7 @@ public class SCMProcFreezeMDeps implements ISCMProc {
 		}
 		if (hasChanges) {
 			progress.reportStatus("mdeps to freeze:\r\n" + sb.toString());
-			progress.startTrace("freezing...");
+			progress.startTrace("freezing... ");
 			vcs.setFileContent(rb.getName(), SCMReleaser.MDEPS_FILE_NAME, currentMDepsFile.toFileContent(), LogTag.SCM_MDEPS);
 			progress.endTrace("done");
 		}
