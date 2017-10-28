@@ -2,13 +2,13 @@ package org.scm4j.releaser.conf;
 
 import org.scm4j.commons.Version;
 import org.scm4j.commons.coords.CoordsGradle;
-import org.scm4j.commons.coords.ICoords;
+import org.scm4j.commons.Coords;
 import org.scm4j.vcs.api.IVCS;
 
 import java.util.Objects;
 
 public class Component {
-	private final ICoords coords;
+	private final Coords coords;
 	private VCSRepository repo = null;
 	
 	public VCSRepository getVcsRepository() {
@@ -23,7 +23,7 @@ public class Component {
 		return getVcsRepository().getVcs();
 	}
 	
-	public ICoords getCoords() {
+	public Coords getCoords() {
 		return coords;
 	}
 	
