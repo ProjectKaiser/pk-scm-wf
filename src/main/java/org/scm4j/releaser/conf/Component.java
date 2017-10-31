@@ -1,8 +1,8 @@
 package org.scm4j.releaser.conf;
 
 import org.scm4j.commons.Version;
+import org.scm4j.commons.coords.Coords;
 import org.scm4j.commons.coords.CoordsGradle;
-import org.scm4j.commons.Coords;
 import org.scm4j.vcs.api.IVCS;
 
 import java.util.Objects;
