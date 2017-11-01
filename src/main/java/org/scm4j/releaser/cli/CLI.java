@@ -90,6 +90,7 @@ public class CLI {
 	}
 
 	private void printException(String[] args, Exception e, PrintStream ps) {
+		ps.println(ansi().fg(RED).a("test").reset().toString());
 		ps.println(ansi().fg(RED).toString());
 		if (ArrayUtils.contains(args, Option.STACK_TRACE.getStrValue())) {
 			e.printStackTrace(ps);
