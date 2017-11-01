@@ -16,6 +16,9 @@ import org.scm4j.releaser.exceptions.cmdline.*;
 import java.io.PrintStream;
 import java.util.Arrays;
 
+import static org.fusesource.jansi.Ansi.Color.RED;
+import static org.fusesource.jansi.Ansi.ansi;
+
 public class CLI {
 	
 	public static final int EXIT_CODE_OK = 0;
@@ -87,6 +90,7 @@ public class CLI {
 	}
 
 	private void printException(String[] args, Exception e, PrintStream ps) {
+		ps.println(ansi().fg(RED).toString());
 		if (ArrayUtils.contains(args, Option.STACK_TRACE.getStrValue())) {
 			e.printStackTrace(ps);
 		} else {
@@ -96,6 +100,7 @@ public class CLI {
 				ps.println(e.toString());
 			} 
 		}
+		ps.println(ansi().reset().toString());
 	}
 	
 	public static void main(String[] args) throws Exception {
