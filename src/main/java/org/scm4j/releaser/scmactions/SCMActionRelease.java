@@ -65,13 +65,14 @@ public class SCMActionRelease extends ActionAbstract {
 
 	@Override
 	public String toStringAction() {
-		return (getProcs().isEmpty() && getBsFrom() != BuildStatus.DONE ? "skip " : "" ) + getBsFrom() + (getBsTo() != null && getBsTo() != getBsFrom() ? " -> " + getBsTo() : "") + " " + comp.getCoords().toString()
-				+ ", target version: " + targetRB.getVersion().toString();
+		String skipStr = getProcs().isEmpty() && getBsFrom() != BuildStatus.DONE ? "skip " : ""; 
+		String bsToStr = getBsTo() != null && getBsTo() != getBsFrom() ? " -> " + getBsTo() : "";
+		return String.format("%s%s%s %s, target version %s, target branch: %s", skipStr, getBsFrom(), bsToStr , comp.getCoords(), targetRB.getVersion(), targetRB.getName());
 	}
 
 	@Override
 	public String toString() {
-		return getBsFrom() + " " + comp.getCoords().toString() + ", target version: " + targetRB.getVersion().toString();
+		return String.format("%s %s, target version: %s", getBsFrom(), comp.getCoords(), targetRB.getVersion());
 	}
 
 	public BuildStatus getBsFrom() {
