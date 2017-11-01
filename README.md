@@ -45,3 +45,6 @@ For version definitions ref. [semantic Versioning 2.0.0](http://semver.org/).
 # See also
 
 [Historical version](https://github.com/scm4j/scm4j-releaser/blob/d540cb00674d485846117dbd68df19bdad306e56/README.md)
+
+# Problems
+- So far subversion is slow on VMs if Network type is `NAT`. `Bridge` type gives  much faster perfomance. See similar problem  [here](https://blog.inventic.eu/2012/08/very-slow-svn-updates-from-virtual-machines-vmware/)
