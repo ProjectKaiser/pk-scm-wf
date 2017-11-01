@@ -104,8 +104,11 @@ public class CLI {
 	}
 	
 	public static void main(String[] args) throws Exception {
+		System.out.println(System.console() != null ? "has console" : "no console");
 		if (System.console() != null) {
+
 			AnsiConsole.systemInstall();
+
 		}
 		System.exit(new CLI().exec(args));
 	}
