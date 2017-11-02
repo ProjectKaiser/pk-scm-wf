@@ -67,7 +67,7 @@ public class SCMReleaser {
 				progress.startTrace("determining release branch version for " + comp.getCoordsNoComment() + "... ");
 				rb = new ReleaseBranch(comp);
 				progress.endTrace("done");
-				bs = getBuildStatus(rb);
+				bs = getBuildStatus(rb);	
 				if (bs == BuildStatus.FORK) {
 					// untill has untilldb, ubl has untilldb. untill is BUILD_MDEPS, UBL has release branch but need to FORK. 
 					// result: regressinon for untill FORK, regiression for UBL is DONE prev version (mdep fro existing UBL RB is used) 
