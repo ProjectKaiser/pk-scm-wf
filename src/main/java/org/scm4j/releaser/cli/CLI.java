@@ -90,9 +90,6 @@ public class CLI {
 	}
 
 	private void printException(String[] args, Exception e, PrintStream ps) {
-		ps.println();
-		ps.println(ansi().fg(RED).a("test").reset().toString());
-		ps.println(ansi().fg(RED).toString());
 		if (ArrayUtils.contains(args, Option.STACK_TRACE.getStrValue())) {
 			e.printStackTrace(ps);
 		} else {
@@ -106,11 +103,8 @@ public class CLI {
 	}
 	
 	public static void main(String[] args) throws Exception {
-		System.out.println(System.console() != null ? "has console" : "no console");
 		if (System.console() != null) {
-
 			AnsiConsole.systemInstall();
-
 		}
 		System.exit(new CLI().exec(args));
 	}
