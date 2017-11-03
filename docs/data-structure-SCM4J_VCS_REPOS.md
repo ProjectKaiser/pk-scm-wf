@@ -11,49 +11,45 @@ Yaml file consists of number of rules which are applied in order of appearance, 
 
 ```yaml
 
-# omap is a must since it defines the order
-
-!!omap
-
 # Just a component. Note that `releaseCommand` (deprecated: `builder`) is a must and ident of attribute specification must be at least three spaces
 
-- mycompany:component1: 
-   url: http://mycompany.com/repos/component1
-   releaseCommand: cmd /c gradlew.bat upload
+mycompany:component1: 
+ url: http://mycompany.com/repos/component1
+ releaseCommand: cmd /c gradlew.bat upload
 
 # Two components in the same repository
 
-- component1|component2:
-   url: http://mycompany.com/repos/components
+component1|component2:
+ url: http://mycompany.com/repos/components
 
 # Coordinates which matches `my.*`. Repository name is constructed from coorinates name using regular expression
 
-- my(.*):
-   url: http://mycompany.com/git/myProj$1
+my(.*):
+ url: http://mycompany.com/git/myProj$1
   
 # `svn` type repository (`git` is default)
 
-- mycompany:component3:
-   url: http://mycompany.com/repos/component3
-   type: svn
+mycompany:component3:
+ url: http://mycompany.com/repos/component3
+ type: svn
   
 # Repository where 
 # a) `release` branches are prefixed with `B` (default is `release/`) 
 # b) `develop` branch is named `branches/develop` (by default it is `trunk` or `master` according to the repository type).
 
-- mycompany:component4:
-   url: http://mycompany.com/repos/component4
-   type: svn
-   releaseBranchPrefix: B
-   developBranch: branches/develop
+mycompany:component4:
+ url: http://mycompany.com/repos/component4
+ type: svn
+ releaseBranchPrefix: B
+ developBranch: branches/develop
 
 # All repos will have `rel` as a `release` branch prefix by default, if not specified above
-- ~:
-   releaseBranchPrefix: rel/
+~:
+ releaseBranchPrefix: rel/
 
 # Component with `afterTag` hook (ref. issue #8)
 
-- mycompany:component5:
-   afterTag: cmd /c gradlew.bat afterTag
+mycompany:component5:
+ afterTag: cmd /c gradlew.bat afterTag
 
 ```
