@@ -45,13 +45,13 @@ com.mycompany:component-three:-SNAPSHOT
 
 `release` branch:
 
+Actual versions in `release` branch are "freezed" automatically during `fork` operation.
+
 ```
 com.mycompany:component-one:4.2.0
 com.mycompany:component-two:1.56.0
 com.mycompany:component-three:2.1.0
 ```
-
-versions in `release` branch are relaced automatically during `fork` operation.
 
 # comment tags
 
