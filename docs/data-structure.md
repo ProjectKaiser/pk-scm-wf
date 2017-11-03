@@ -3,10 +3,10 @@
 - [component configuration files](#component-configuration-files)
   - [`version` file](#version-file)
   - [`mdeps` file](#mdeps-file)
-- [comment tags](#comment-tags)
 - environment vars
   - [SCM4J_VCS_REPOS](data-structure-SCM4J_VCS_REPOS.md): list of yaml files which map artifact coordinates to repositories URLs
   - [SCM4J_CREDENTIALS](data-structure-SCM4J_CREDENTIALS.md): list of yaml files which defines credentials
+- [comment tags](#comment-tags)
 - [working files](#working-files)
 
 # component configuration files
