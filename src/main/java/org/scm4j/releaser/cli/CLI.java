@@ -1,7 +1,9 @@
 package org.scm4j.releaser.cli;
 
+import java.io.PrintStream;
+import java.util.Arrays;
+
 import org.apache.commons.lang3.ArrayUtils;
-import org.fusesource.jansi.AnsiConsole;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.commons.progress.ProgressConsole;
 import org.scm4j.releaser.SCMReleaser;
@@ -11,13 +13,11 @@ import org.scm4j.releaser.actions.PrintAction;
 import org.scm4j.releaser.conf.Option;
 import org.scm4j.releaser.conf.Options;
 import org.scm4j.releaser.exceptions.EReleaserException;
-import org.scm4j.releaser.exceptions.cmdline.*;
-
-import java.io.PrintStream;
-import java.util.Arrays;
-
-import static org.fusesource.jansi.Ansi.Color.RED;
-import static org.fusesource.jansi.Ansi.ansi;
+import org.scm4j.releaser.exceptions.cmdline.ECmdLine;
+import org.scm4j.releaser.exceptions.cmdline.ECmdLineNoCommand;
+import org.scm4j.releaser.exceptions.cmdline.ECmdLineNoProduct;
+import org.scm4j.releaser.exceptions.cmdline.ECmdLineUnknownCommand;
+import org.scm4j.releaser.exceptions.cmdline.ECmdLineUnknownOption;
 
 public class CLI {
 	
@@ -99,13 +99,9 @@ public class CLI {
 				ps.println(e.toString());
 			} 
 		}
-		ps.println(ansi().reset().toString());
 	}
 	
 	public static void main(String[] args) throws Exception {
-		if (System.console() != null) {
-			AnsiConsole.systemInstall();
-		}
 		System.exit(new CLI().exec(args));
 	}
 }
