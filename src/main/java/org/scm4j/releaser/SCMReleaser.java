@@ -1,5 +1,11 @@
 package org.scm4j.releaser;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.commons.progress.ProgressConsole;
 import org.scm4j.releaser.actions.ActionKind;
@@ -11,12 +17,6 @@ import org.scm4j.releaser.conf.Options;
 import org.scm4j.releaser.conf.TagDesc;
 import org.scm4j.releaser.scmactions.SCMActionRelease;
 import org.scm4j.releaser.scmactions.SCMActionTag;
-
-import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 public class SCMReleaser {
 
@@ -45,58 +45,64 @@ public class SCMReleaser {
 		return getActionTree(comp, actionKind, new HashMap<String, CalculatedResult>());
 	}
 
-	public IAction getActionTree(Component comp, ActionKind actionKind, Map<String, CalculatedResult> calculatedStatuses) throws Exception {
+	public IAction getActionTree(Component comp, final ActionKind actionKind, final Map<String, CalculatedResult> calculatedStatuses) throws Exception {
 		List<IAction> childActions = new ArrayList<>();
-		IProgress progress = new ProgressConsole();
-		List<Component> mDeps;
-		ReleaseBranch rb;
-		BuildStatus bs;
-		CalculatedResult cr = calculatedStatuses.get(comp.getVcsRepository().getUrl());
-		if (cr != null) {
-			rb = cr.getReleaseBranch();
-			mDeps = cr.getMDeps();
-			bs = cr.getBuildStatus();
-		} else {
-			if (Options.isPatch()) {
-				rb = new ReleaseBranch(comp, comp.getCoords().getVersion());
-				mDeps = rb.getMDeps();
-				bs = getBuildStatus(rb);
-			} else {
-				// If we are build, build_mdeps or actualize_patches then we need to use mdeps from release branches to show what versions we are going to build or actualize
-				progress.startTrace(String.format("analyzing %s, url %s:\r\n", comp, comp.getVcsRepository().getUrl()));
-				progress.startTrace("determining release branch version for " + comp.getCoordsNoComment() + "... ");
-				rb = new ReleaseBranch(comp);
-				progress.endTrace("done");
-				bs = getBuildStatus(rb);	
-				if (bs == BuildStatus.FORK) {
-					// untill has untilldb, ubl has untilldb. untill is BUILD_MDEPS, UBL has release branch but need to FORK. 
-					// result: regressinon for untill FORK, regiression for UBL is DONE prev version (mdep fro existing UBL RB is used) 
-					// TODO: add test: untill build_mdeps, untill needs to be forked. UBL has release rbanch but has to be forked also. untilldbs must have the same status
-					progress.startTrace("reading mdeps from develop branch... ");
-					mDeps = new DevelopBranch(comp).getMDeps();
-					progress.endTrace("done");
-				} else {
-					if (rb.exists()) {
-						progress.startTrace("reading mdeps from release branch " + rb.getName() + "... ");
-						mDeps = rb.getMDeps();
-						progress.endTrace("done");
-					} else {
-						progress.startTrace("reading mdeps from develop branch... ");
-						mDeps = new DevelopBranch(comp).getMDeps();
-						progress.endTrace("done");
-					}
-				}
-			}
-			calculatedStatuses.put(comp.getVcsRepository().getUrl(), new CalculatedResult(rb, bs, mDeps));
-		}
+		CalculatedResult cr = getCalculatedResult(comp, calculatedStatuses);
 		
-		for (Component mDep : mDeps) {
+		for (Component mDep : cr.getMDeps()) {
 			childActions.add(getActionTree(mDep, actionKind, calculatedStatuses));
 		}
 		
-		progress.close();
+		return new SCMActionRelease(cr.getReleaseBranch(), childActions, actionKind, cr.getBuildStatus());
+	}
+
+	private CalculatedResult getCalculatedResult(Component comp, Map<String, CalculatedResult> calculatedStatuses) throws Exception {
+		CalculatedResult cr = calculatedStatuses.get(comp.getVcsRepository().getUrl());
+		if (cr != null) {
+			return cr;
+		}
 		
-		return new SCMActionRelease(rb, childActions, actionKind, bs);
+		List<Component> mDeps;
+		ReleaseBranch rb;
+		BuildStatus bs;
+		if (Options.isPatch()) {
+			rb = new ReleaseBranch(comp, comp.getCoords().getVersion());
+			mDeps = rb.getMDeps();
+			bs = getBuildStatus(rb);
+			cr = new CalculatedResult(rb, bs, mDeps);
+			calculatedStatuses.put(comp.getVcsRepository().getUrl(), cr);
+			return cr;
+		}
+		
+		IProgress progress = new ProgressConsole();
+		// If we are build, build_mdeps or actualize_patches then we need to use mdeps from release branches to show what versions we are going to build or actualize
+		progress.startTrace(String.format("analyzing %s, url %s:\r\n", comp, comp.getVcsRepository().getUrl()));
+		progress.startTrace("determining release branch version for " + comp.getCoordsNoComment() + "... ");
+		rb = new ReleaseBranch(comp);
+		progress.endTrace("done");
+		bs = getBuildStatus(rb);	
+		if (bs == BuildStatus.FORK) {
+			// untill has untilldb, ubl has untilldb. untill is BUILD_MDEPS, UBL has release branch but need to FORK. 
+			// result: regressinon for untill FORK, regiression for UBL is DONE prev version (mdep fro existing UBL RB is used) 
+			// TODO: add test: untill build_mdeps, untill needs to be forked. UBL has release rbanch but has to be forked also. untilldbs must have the same status
+			progress.startTrace("reading mdeps from develop branch... ");
+			mDeps = new DevelopBranch(comp).getMDeps();
+			progress.endTrace("done");
+		} else {
+			if (rb.exists()) {
+				progress.startTrace("reading mdeps from release branch " + rb.getName() + "... ");
+				mDeps = rb.getMDeps();
+				progress.endTrace("done");
+			} else {
+				progress.startTrace("reading mdeps from develop branch... ");
+				mDeps = new DevelopBranch(comp).getMDeps();
+				progress.endTrace("done");
+			}
+		}
+		cr = new CalculatedResult(rb, bs, mDeps);
+		calculatedStatuses.put(comp.getVcsRepository().getUrl(), cr);
+		progress.close();
+		return cr;
 	}
 
 	protected BuildStatus getBuildStatus(ReleaseBranch rb) throws Exception {
