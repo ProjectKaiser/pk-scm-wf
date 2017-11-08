@@ -10,6 +10,14 @@ import static org.junit.Assert.*;
 public class WorkflowForkTest extends WorkflowTestBase {
 	
 	private final SCMReleaser releaser = new SCMReleaser();
+	
+	@Test
+	public void testForkAll() throws Exception {
+		IAction action = releaser.getActionTree(UNTILL);
+		assertIsGoingToForkAndBuildAll(action);
+		action.execute(getProgress(action));
+		checkUnTillBuilt();
+	}
 
 	@Test
 	public void testForkRootOnly() throws Exception {
