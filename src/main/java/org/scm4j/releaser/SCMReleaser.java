@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ForkJoinPool;
+import java.util.function.Supplier;
 
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.commons.progress.ProgressConsole;
@@ -64,7 +65,6 @@ public class SCMReleaser {
 		
 		myPool.shutdown();
 		
-		
 		for (Component mdep : cr.getMDeps()) {
 			if (res.get(mdep) instanceof Exception) {
 				throw (Exception) res.get(mdep);
@@ -75,7 +75,7 @@ public class SCMReleaser {
 		
 		return new SCMActionRelease(cr.getReleaseBranch(), childActions, actionKind, cr.getBuildStatus());
 	}
-
+	
 	private CalculatedResult getCalculatedResult(Component comp, Map<String, CalculatedResult> calculatedStatuses) throws Exception {
 		CalculatedResult cr = calculatedStatuses.get(comp.getVcsRepository().getUrl());
 		if (cr != null) {
@@ -96,41 +96,41 @@ public class SCMReleaser {
 		
 		IProgress progress = new ProgressConsole();
 		// If we are build, build_mdeps or actualize_patches then we need to use mdeps from release branches to show what versions we are going to build or actualize
-		progress.startTrace(String.format("analyzing %s, url %s:\r\n", comp, comp.getVcsRepository().getUrl()));
-		progress.startTrace("determining release branch version for " + comp.getCoordsNoComment() + "... ");
-		rb = new ReleaseBranch(comp);
-		progress.endTrace("done");
+		rb = reportDuration(() -> new ReleaseBranch(comp), "release branch version calculation", comp, progress);
 		bs = getBuildStatus(rb);	
-		if (bs == BuildStatus.FORK) {
+		if (bs != BuildStatus.FORK && rb.exists()) {
 			// untill has untilldb, ubl has untilldb. untill is BUILD_MDEPS, UBL has release branch but need to FORK. 
 			// result: regressinon for untill FORK, regiression for UBL is DONE prev version (mdep fro existing UBL RB is used) 
 			// TODO: add test: untill build_mdeps, untill needs to be forked. UBL has release rbanch but has to be forked also. untilldbs must have the same status
-			progress.startTrace("reading mdeps from develop branch... ");
-			mDeps = new DevelopBranch(comp).getMDeps();
-			progress.endTrace("done");
+			mDeps = reportDuration(() -> rb.getMDeps(), "read mdeps from release branch", comp, progress); 
 		} else {
-			if (rb.exists()) {
-				progress.startTrace("reading mdeps from release branch " + rb.getName() + "... ");
-				mDeps = rb.getMDeps();
-				progress.endTrace("done");
-			} else {
-				progress.startTrace("reading mdeps from develop branch... ");
-				mDeps = new DevelopBranch(comp).getMDeps();
-				progress.endTrace("done");
-			}
+			mDeps = reportDuration(() -> new DevelopBranch(comp).getMDeps(), "read mdeps from develop branch", comp, progress); 
 		}
+		
 		cr = new CalculatedResult(rb, bs, mDeps);
 		calculatedStatuses.put(comp.getVcsRepository().getUrl(), cr);
 		progress.close();
 		return cr;
 	}
 
+	public static <T> T reportDuration(Supplier<T> sup, String message, Component comp, IProgress progress) {
+		long start = System.currentTimeMillis();
+		T res = sup.get();
+		progress.reportStatus(message + ": " + (comp == null ? "" : comp.getCoordsNoComment() + " ") + "in " + (System.currentTimeMillis() - start) + "ms");
+		return res;
+	}
+	
+	public static <T> void reportDuration(Runnable run, String message, Component comp, IProgress progress) {
+		reportDuration(() -> {
+			run.run();
+			return null;
+		}, message, comp, progress);
+	}
+
 	protected BuildStatus getBuildStatus(ReleaseBranch rb) throws Exception {
 		Build mb = new Build(rb);
 		IProgress progress = new ProgressConsole();
-		progress.startTrace("calculating status for " + rb.getComponent().getName() + "... ");
-		BuildStatus mbs = mb.getStatus();
-		progress.endTrace("done");
+		BuildStatus mbs = reportDuration(() ->  mb.getStatus(), "status calculation", rb.getComponent(), progress);
 		progress.close();
 		return mbs;
 	}

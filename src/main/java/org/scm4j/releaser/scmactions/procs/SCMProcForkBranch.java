@@ -31,23 +31,20 @@ public class SCMProcForkBranch implements ISCMProc {
 	
 	private void createBranch(IProgress progress) {
 		String newBranchName = rb.getName();
-		progress.startTrace("Creating branch " + newBranchName + "... ");
-		vcs.createBranch(db.getName(), newBranchName, "release branch created");
-		progress.endTrace("done");
+		SCMReleaser.reportDuration(() -> vcs.createBranch(db.getName(), newBranchName, "release branch created"),
+				"create branch " + newBranchName, null, progress);
 	}
 	
 	private void truncateSnapshotReleaseVersion(IProgress progress) {
 		String noSnapshotVersion = rb.getVersion().toString();
 		String newBranchName = rb.getName();
-		progress.startTrace("truncating snapshot: " + noSnapshotVersion + " in branch " + newBranchName + "... ");
-		vcs.setFileContent(newBranchName, SCMReleaser.VER_FILE_NAME, noSnapshotVersion, LogTag.SCM_VER + " " + noSnapshotVersion);
-		progress.endTrace("done");
+		SCMReleaser.reportDuration(() -> vcs.setFileContent(newBranchName, SCMReleaser.VER_FILE_NAME, noSnapshotVersion, LogTag.SCM_VER + " " + noSnapshotVersion),
+				"truncate snapshot: " + noSnapshotVersion + " in branch " + newBranchName, null, progress);
 	}
 	
 	private void bumpTrunkMinorVersion(IProgress progress) {
 		Version newMinorVersion = db.getVersion().toNextMinor();
-		progress.startTrace("changing to version " + newMinorVersion + " in trunk... ");
-		vcs.setFileContent(db.getName(), SCMReleaser.VER_FILE_NAME, newMinorVersion.toString(), LogTag.SCM_VER + " " + newMinorVersion);
-		progress.endTrace("done");
+		SCMReleaser.reportDuration(() -> vcs.setFileContent(db.getName(), SCMReleaser.VER_FILE_NAME, newMinorVersion.toString(), LogTag.SCM_VER + " " + newMinorVersion),
+				"change to version " + newMinorVersion + " in trunk", null, progress);
 	}
 }

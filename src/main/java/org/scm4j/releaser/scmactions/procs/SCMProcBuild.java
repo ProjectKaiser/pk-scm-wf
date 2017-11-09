@@ -61,9 +61,8 @@ public class SCMProcBuild implements ISCMProc {
 			FileUtils.deleteDirectory(buildDir);
 		}
 		Files.createDirectories(buildDir.toPath());		
-		progress.startTrace(String.format("checking out %s on revision %s into %s... ", comp.getName(), headCommit.getRevision(), buildDir.getPath()));
-		vcs.checkout(rb.getName(), buildDir.getPath(), headCommit.getRevision());
-		progress.endTrace("done");
+		SCMReleaser.reportDuration(() -> vcs.checkout(rb.getName(), buildDir.getPath(), headCommit.getRevision()), 
+				String.format("check out %s on revision %s into %s", comp.getName(), headCommit.getRevision(), buildDir.getPath()), null, progress);
 		comp.getVcsRepository().getBuilder().build(comp, buildDir, progress);
 	}
 
@@ -76,18 +75,16 @@ public class SCMProcBuild implements ISCMProc {
 		} else {
 			String releaseBranchName = rb.getName();
 			TagDesc tagDesc = SCMReleaser.getTagDesc(rb.getVersion().toString());
-			progress.startTrace(String.format("tagging head of %s: %s... ", releaseBranchName, tagDesc.getName()));
-			vcs.createTag(releaseBranchName, tagDesc.getName(), tagDesc.getMessage(), headCommit.getRevision());
-			progress.endTrace("done");
+			SCMReleaser.reportDuration(() -> vcs.createTag(releaseBranchName, tagDesc.getName(), tagDesc.getMessage(), headCommit.getRevision()),
+					String.format("tag head of %s: %s", releaseBranchName, tagDesc.getName()), null, progress);
 		}
 	}
 
 	private void raisePatchVersion(IProgress progress) {
 		Version nextPatchVersion = rb.getVersion().toNextPatch();
-		progress.startTrace("bumping patch version in release branch: " + nextPatchVersion +"... ");
-		vcs.setFileContent(rb.getName(), SCMReleaser.VER_FILE_NAME, nextPatchVersion.toString(),
-				LogTag.SCM_VER + " " + nextPatchVersion);
-		progress.endTrace("done");
+		SCMReleaser.reportDuration(() -> vcs.setFileContent(rb.getName(), SCMReleaser.VER_FILE_NAME, nextPatchVersion.toString(),
+				LogTag.SCM_VER + " " + nextPatchVersion),
+				"bump patch version in release branch: " + nextPatchVersion, null, progress);
 	}
 
 }
