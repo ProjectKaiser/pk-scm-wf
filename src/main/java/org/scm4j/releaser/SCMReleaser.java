@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ForkJoinPool;
 
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.commons.progress.ProgressConsole;
@@ -50,13 +51,19 @@ public class SCMReleaser {
 		CalculatedResult cr = getCalculatedResult(comp, calculatedStatuses);
 		
 		Map<Component, Object> res = new ConcurrentHashMap<>();
-		cr.getMDeps().parallelStream().forEach((mdep) -> {
-			try {
-				res.put(mdep, getActionTree(mdep, actionKind, calculatedStatuses) );
-			} catch (Exception e) {
-				res.put(mdep,  e);
-			}
-		});
+		ForkJoinPool myPool = new ForkJoinPool(8);
+		myPool.submit(() ->
+			cr.getMDeps().parallelStream().forEach((mdep) -> {
+				try {
+					res.put(mdep, getActionTree(mdep, actionKind, calculatedStatuses) );
+				} catch (Exception e) {
+					res.put(mdep,  e);
+				}
+			})
+		).get();
+		
+		myPool.shutdown();
+		
 		
 		for (Component mdep : cr.getMDeps()) {
 			if (res.get(mdep) instanceof Exception) {
