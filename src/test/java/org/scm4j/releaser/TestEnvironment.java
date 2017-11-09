@@ -230,7 +230,7 @@ public class TestEnvironment implements AutoCloseable {
 	@Override
 	public void close() throws Exception {
 		if (envDir != null && envDir.exists()) {
-			FileUtils.deleteDirectory(envDir);
+			WorkflowTestBase.waitForDeleteDir(envDir);
 		}
 		VCSRepositories.setConfigSource(new EnvVarsConfigSource());
 		VCSRepositories.resetDefault();

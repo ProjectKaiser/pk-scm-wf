@@ -21,6 +21,7 @@ import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.vcs.api.VCSTag;
 import org.scm4j.vcs.api.WalkDirection;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -52,7 +53,7 @@ public class WorkflowTestBase {
 		dbUBL = new DevelopBranch(compUBL);
 		TestBuilder.setBuilders(new HashMap<String, TestBuilder>());
 		new DelayedTagsFile().delete();
-		FileUtils.deleteDirectory(ReleaseBranch.RELEASES_DIR);
+		waitForDeleteDir(ReleaseBranch.RELEASES_DIR);
 	}
 
 	@After
@@ -63,7 +64,18 @@ public class WorkflowTestBase {
 		TestBuilder.setBuilders(null);
 		Options.setOptions(new ArrayList<Option>());
 		Options.setIsPatch(false);
-		FileUtils.deleteDirectory(ReleaseBranch.RELEASES_DIR);
+		waitForDeleteDir(ReleaseBranch.RELEASES_DIR);
+	}
+
+	public static void waitForDeleteDir(File dir) throws InterruptedException {
+		for (Integer i = 1; i <= 10; i++) {
+			try {
+				FileUtils.deleteDirectory(dir);
+				break;
+			} catch (Exception e) {
+				Thread.sleep(100);
+			}
+		}
 	}
 	
 	public void checkUnTillDbBuilt(int times) {

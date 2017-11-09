@@ -2,9 +2,9 @@ package org.scm4j.releaser;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.commons.progress.ProgressConsole;
@@ -37,20 +37,33 @@ public class SCMReleaser {
 	public IAction getActionTree(String coords, ActionKind actionKind) throws Exception {
 		Component comp = new Component(coords);
 		Options.setIsPatch(comp.getVersion().isExact());
-		return getActionTree(new Component(coords), actionKind, new HashMap<String, CalculatedResult>());
+		return getActionTree(new Component(coords), actionKind, new ConcurrentHashMap<String, CalculatedResult>());
 	}
 	
 	public IAction getActionTree(Component comp, ActionKind actionKind) throws Exception {
 		Options.setIsPatch(comp.getVersion().isExact());
-		return getActionTree(comp, actionKind, new HashMap<String, CalculatedResult>());
+		return getActionTree(comp, actionKind, new ConcurrentHashMap<String, CalculatedResult>());
 	}
 
-	public IAction getActionTree(Component comp, final ActionKind actionKind, final Map<String, CalculatedResult> calculatedStatuses) throws Exception {
+	public IAction getActionTree(Component comp, final ActionKind actionKind, final ConcurrentHashMap<String, CalculatedResult> calculatedStatuses) throws Exception {
 		List<IAction> childActions = new ArrayList<>();
 		CalculatedResult cr = getCalculatedResult(comp, calculatedStatuses);
 		
-		for (Component mDep : cr.getMDeps()) {
-			childActions.add(getActionTree(mDep, actionKind, calculatedStatuses));
+		Map<Component, Object> res = new ConcurrentHashMap<>();
+		cr.getMDeps().parallelStream().forEach((mdep) -> {
+			try {
+				res.put(mdep, getActionTree(mdep, actionKind, calculatedStatuses) );
+			} catch (Exception e) {
+				res.put(mdep,  e);
+			}
+		});
+		
+		for (Component mdep : cr.getMDeps()) {
+			if (res.get(mdep) instanceof Exception) {
+				throw (Exception) res.get(mdep);
+			} else {
+				childActions.add((IAction) res.get(mdep));
+			}
 		}
 		
 		return new SCMActionRelease(cr.getReleaseBranch(), childActions, actionKind, cr.getBuildStatus());
