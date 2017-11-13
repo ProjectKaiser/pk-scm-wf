@@ -1,5 +1,5 @@
 @GrabResolver(name='jitpack', root='https://jitpack.io')
-@Grab('com.github.scm4j:scm4j-releaser:+')
+@Grab('com.github.scm4j:scm4j-releaser:13.0')
 
 import org.scm4j.releaser.cli.CLI;
 

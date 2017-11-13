@@ -6,6 +6,7 @@ import static org.junit.Assert.fail;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.scm4j.commons.progress.ProgressConsole;
+import org.scm4j.releaser.CalculatedResult;
 import org.scm4j.releaser.SCMReleaser;
 import org.scm4j.releaser.TestEnvironment;
 import org.scm4j.releaser.WorkflowTestBase;
@@ -24,7 +25,7 @@ public class SCMProcBuildTest extends WorkflowTestBase {
 	@Test
 	public void testNoReleaseBranch() {
 		ReleaseBranch rb = new ReleaseBranch(compUBL);
-		ISCMProc proc = new SCMProcBuild(rb);
+		ISCMProc proc = new SCMProcBuild(rb, compUBL, new CalculatedResult());
 		try {
 			proc.execute(new ProgressConsole());
 			fail();
@@ -41,7 +42,7 @@ public class SCMProcBuildTest extends WorkflowTestBase {
 		Mockito.when(mockedRepo.getBuilder()).thenReturn(null);
 		IAction action = new SCMReleaser().getActionTree(mockedComp, ActionKind.FORK_ONLY);
 		action.execute(new ProgressConsole());
-		ISCMProc proc = new SCMProcBuild(new ReleaseBranch(mockedComp));
+		ISCMProc proc = new SCMProcBuild(new ReleaseBranch(mockedComp), mockedComp, new CalculatedResult());
 		try {
 			proc.execute(new ProgressConsole());
 			fail();

@@ -6,6 +6,7 @@ import org.scm4j.releaser.SCMReleaser;
 import org.scm4j.releaser.actions.ActionAbstract;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.branch.ReleaseBranch;
+import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.DelayedTagsFile;
 import org.scm4j.releaser.conf.TagDesc;
 import org.scm4j.vcs.api.IVCS;
@@ -17,8 +18,8 @@ public class SCMActionTag extends ActionAbstract {
 
 	private final ReleaseBranch rb;
 
-	public SCMActionTag(ReleaseBranch rb, List<IAction> childActions) {
-		super(rb.getComponent(), childActions);
+	public SCMActionTag(ReleaseBranch rb, Component comp, List<IAction> childActions) {
+		super(comp, childActions);
 		this.rb = rb;
 	}
 	

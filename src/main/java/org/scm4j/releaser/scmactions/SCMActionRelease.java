@@ -1,15 +1,21 @@
 package org.scm4j.releaser.scmactions;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.releaser.BuildStatus;
+import org.scm4j.releaser.CalculatedResult;
 import org.scm4j.releaser.actions.ActionAbstract;
 import org.scm4j.releaser.actions.ActionKind;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.branch.ReleaseBranch;
-import org.scm4j.releaser.scmactions.procs.*;
-
-import java.util.ArrayList;
-import java.util.List;
+import org.scm4j.releaser.conf.Component;
+import org.scm4j.releaser.scmactions.procs.ISCMProc;
+import org.scm4j.releaser.scmactions.procs.SCMProcActualizePatches;
+import org.scm4j.releaser.scmactions.procs.SCMProcBuild;
+import org.scm4j.releaser.scmactions.procs.SCMProcForkBranch;
+import org.scm4j.releaser.scmactions.procs.SCMProcFreezeMDeps;
 
 public class SCMActionRelease extends ActionAbstract {
 
@@ -18,8 +24,8 @@ public class SCMActionRelease extends ActionAbstract {
 	private final BuildStatus bsTo;
 	private final ReleaseBranch targetRB;
 
-	public SCMActionRelease(ReleaseBranch rb, List<IAction> childActions, ActionKind actionSet, BuildStatus bs) {
-		super(rb.getComponent(), childActions);
+	public SCMActionRelease(ReleaseBranch rb, Component comp, List<IAction> childActions, ActionKind actionSet, BuildStatus bs, CalculatedResult calculatedResult) {
+		super(comp, childActions);
 		this.bsFrom = bs;
 		BuildStatus bsTo = null;
 		if (bs.ordinal() > BuildStatus.FREEZE.ordinal()) {
@@ -29,9 +35,9 @@ public class SCMActionRelease extends ActionAbstract {
 		}
 		switch (bs) {
 		case FORK:
-			getProcs().add(new SCMProcForkBranch(targetRB));
+			getProcs().add(new SCMProcForkBranch(targetRB, comp, calculatedResult));
 		case FREEZE:
-			getProcs().add(new SCMProcFreezeMDeps(targetRB));
+			getProcs().add(new SCMProcFreezeMDeps(targetRB, comp, calculatedResult));
 			bsTo = BuildStatus.FREEZE;
 			if (actionSet == ActionKind.FORK_ONLY) {
 				break;
@@ -39,13 +45,12 @@ public class SCMActionRelease extends ActionAbstract {
 		case BUILD_MDEPS:
 		case ACTUALIZE_PATCHES:
 			if (bs.ordinal() > BuildStatus.FREEZE.ordinal() && actionSet == ActionKind.FULL) {
-				getProcs().add(new SCMProcActualizePatches(targetRB));
+				getProcs().add(new SCMProcActualizePatches(targetRB, comp, calculatedResult));
 			}
 		case BUILD:
 			if (actionSet == ActionKind.FULL) {
-				getProcs().add(new SCMProcBuild(targetRB));
+				getProcs().add(new SCMProcBuild(targetRB, comp, calculatedResult));
 				bsTo = BuildStatus.BUILD;
-				
 			}
 			break;
 		case DONE: 

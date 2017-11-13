@@ -181,21 +181,27 @@ public class BuildTest extends WorkflowTestBase {
 	}
 	
 	@Test
-	public void testExceptions() throws Exception {
+	public void testNoReleaseBranchForPatch() throws Exception {
 		Options.setIsPatch(true);
 		Component comp = new Component(UNTILLDB + ":2.59.0");
 		ReleaseBranch rb = new ReleaseBranch(comp, comp.getCoords().getVersion());
-		Build b = new Build(rb);
+		Build b = new Build(rb, comp);
 		try {
 			b.getStatus();
 			fail();
 		} catch (ENoReleaseBranchForPatch e) {
 		}
-		
-		IAction action = new SCMReleaser().getActionTree(UNTILLDB);
-		assertIsGoingToForkAndBuild(action, compUnTillDb);
+	}
+	
+	@Test
+	public void testNoReleasesForPatch() throws Exception {
+		IAction action = new SCMReleaser().getActionTree(UNTILLDB, ActionKind.FORK_ONLY);
+		assertIsGoingToFork(action, compUnTillDb);
 		action.execute(getProgress(action));
 		
+		Component comp = new Component(UNTILLDB + ":2.59.0");
+		ReleaseBranch rb = new ReleaseBranch(comp, comp.getCoords().getVersion());
+		Build b = new Build(rb, comp);
 		Options.setIsPatch(true);
 		try {
 			b.getStatus();

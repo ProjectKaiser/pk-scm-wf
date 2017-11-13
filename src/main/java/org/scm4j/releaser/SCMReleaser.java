@@ -3,9 +3,6 @@ package org.scm4j.releaser;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ForkJoinPool;
 import java.util.function.Supplier;
 
 import org.scm4j.commons.progress.IProgress;
@@ -39,80 +36,67 @@ public class SCMReleaser {
 	public IAction getActionTree(String coords, ActionKind actionKind) throws Exception {
 		Component comp = new Component(coords);
 		Options.setIsPatch(comp.getVersion().isExact());
-		return getActionTree(new Component(coords), actionKind, new ConcurrentHashMap<String, CalculatedResult>());
+		return getActionTree(new Component(coords), actionKind, new CalculatedResult());
 	}
 	
 	public IAction getActionTree(Component comp, ActionKind actionKind) throws Exception {
 		Options.setIsPatch(comp.getVersion().isExact());
-		return getActionTree(comp, actionKind, new ConcurrentHashMap<String, CalculatedResult>());
+		return getActionTree(comp, actionKind, new CalculatedResult());
 	}
 
-	public IAction getActionTree(Component comp, final ActionKind actionKind, final ConcurrentHashMap<String, CalculatedResult> calculatedStatuses) throws Exception {
+	public IAction getActionTree(Component comp, ActionKind actionKind, CalculatedResult calculatedResult) throws Exception {
 		List<IAction> childActions = new ArrayList<>();
-		CalculatedResult cr = getCalculatedResult(comp, calculatedStatuses);
+		IProgress progress = new ProgressConsole();
+		calculateResultNoStatus(comp, calculatedResult, progress);
 		
-		Map<Component, Object> res = new ConcurrentHashMap<>();
-		ForkJoinPool myPool = new ForkJoinPool(8);
-		myPool.submit(() ->
-			cr.getMDeps().parallelStream().forEach((mdep) -> {
-				try {
-					res.put(mdep, getActionTree(mdep, actionKind, calculatedStatuses) );
-				} catch (Exception e) {
-					res.put(mdep,  e);
-				}
-			})
-		).get();
-		
-		myPool.shutdown();
-		
-		for (Component mdep : cr.getMDeps()) {
-			if (res.get(mdep) instanceof Exception) {
-				throw (Exception) res.get(mdep);
-			} else {
-				childActions.add((IAction) res.get(mdep));
-			}
+		for (Component mdep : calculatedResult.getMDeps(comp)) {
+			childActions.add(getActionTree(mdep, actionKind, calculatedResult));
 		}
 		
-		return new SCMActionRelease(cr.getReleaseBranch(), childActions, actionKind, cr.getBuildStatus());
+		calculatedResult.setBuildStatus(comp, (Supplier<BuildStatus>) () -> {
+			return getBuildStatus(comp, calculatedResult, progress);
+		});
+		
+		progress.close();
+		return new SCMActionRelease(calculatedResult.getReleaseBranch(comp), comp, childActions, actionKind, calculatedResult.getBuildStatus(comp), calculatedResult);
+	}
+
+	protected BuildStatus getBuildStatus(Component comp, CalculatedResult calculatedResult, IProgress progress) {
+		Build mb = new Build(calculatedResult.getReleaseBranch(comp), comp, calculatedResult);
+		return reportDuration(() ->  mb.getStatus(), "status calculation", comp, progress);
 	}
 	
-	private CalculatedResult getCalculatedResult(Component comp, Map<String, CalculatedResult> calculatedStatuses) throws Exception {
-		CalculatedResult cr = calculatedStatuses.get(comp.getVcsRepository().getUrl());
-		if (cr != null) {
-			return cr;
-		}
+	private void calculateResultNoStatus(Component comp, CalculatedResult calculatedResult, IProgress progress) throws Exception {
 		
-		List<Component> mDeps;
-		ReleaseBranch rb;
-		BuildStatus bs;
 		if (Options.isPatch()) {
-			rb = new ReleaseBranch(comp, comp.getCoords().getVersion());
-			mDeps = rb.getMDeps();
-			bs = getBuildStatus(rb);
-			cr = new CalculatedResult(rb, bs, mDeps);
-			calculatedStatuses.put(comp.getVcsRepository().getUrl(), cr);
-			return cr;
+			ReleaseBranch rb = calculatedResult.setReleaseBranch(comp, () -> {
+				return new ReleaseBranch(comp, comp.getCoords().getVersion());
+			});
+			calculatedResult.setMDeps(comp, () -> {
+				return rb.getMDeps();
+			});
+			calculatedResult.setNeedsToFork(comp, () -> false);
+			return;
 		}
 		
-		IProgress progress = new ProgressConsole();
-		// If we are build, build_mdeps or actualize_patches then we need to use mdeps from release branches to show what versions we are going to build or actualize
-		rb = reportDuration(() -> new ReleaseBranch(comp), "release branch version calculation", comp, progress);
-		bs = getBuildStatus(rb);	
-		if (bs != BuildStatus.FORK && rb.exists()) {
+		ReleaseBranch rb = calculatedResult.setReleaseBranch(comp, () -> {
+			return reportDuration(() -> new ReleaseBranch(comp), "release branch version calculation", comp, progress);
+		});
+		if (calculatedResult.getMDeps(comp) == null) {
+			boolean needToUseReleaseBranch = (comp.getVersion().isExact() || (!comp.getVersion().isExact() && !calculatedResult.setNeedsToFork(comp, () -> {
+				Build mb = new Build(rb, comp, calculatedResult);
+				return reportDuration(() ->  mb.isNeedToFork(), "need to fork calculation", comp, progress);
+			}))) && rb.exists();
 			// untill has untilldb, ubl has untilldb. untill is BUILD_MDEPS, UBL has release branch but need to FORK. 
-			// result: regressinon for untill FORK, regiression for UBL is DONE prev version (mdep fro existing UBL RB is used) 
+			// result: db for untill FORK, db for UBL is DONE prev version (mdep fro existing UBL RB is used) 
 			// TODO: add test: untill build_mdeps, untill needs to be forked. UBL has release rbanch but has to be forked also. untilldbs must have the same status
-			mDeps = reportDuration(() -> rb.getMDeps(), "read mdeps from release branch", comp, progress); 
-		} else {
-			mDeps = reportDuration(() -> new DevelopBranch(comp).getMDeps(), "read mdeps from develop branch", comp, progress); 
+			calculatedResult.setMDeps(comp, () -> {
+				return reportDuration(() -> needToUseReleaseBranch ? rb.getMDeps() : new DevelopBranch(comp).getMDeps(), 
+						String.format("read mdeps from %s branch", needToUseReleaseBranch ? "release" : "develop"), comp, progress); 
+			});
 		}
-		
-		cr = new CalculatedResult(rb, bs, mDeps);
-		calculatedStatuses.put(comp.getVcsRepository().getUrl(), cr);
-		progress.close();
-		return cr;
 	}
-
+	
 	public static <T> T reportDuration(Supplier<T> sup, String message, Component comp, IProgress progress) {
 		long start = System.currentTimeMillis();
 		T res = sup.get();
@@ -127,14 +111,6 @@ public class SCMReleaser {
 		}, message, comp, progress);
 	}
 
-	protected BuildStatus getBuildStatus(ReleaseBranch rb) throws Exception {
-		Build mb = new Build(rb);
-		IProgress progress = new ProgressConsole();
-		BuildStatus mbs = reportDuration(() ->  mb.getStatus(), "status calculation", rb.getComponent(), progress);
-		progress.close();
-		return mbs;
-	}
-	
 	public static TagDesc getTagDesc(String verStr) {
 		String tagMessage = verStr + " release";
 		return new TagDesc(verStr, tagMessage);
@@ -148,6 +124,6 @@ public class SCMReleaser {
 		for (Component mDep : mDeps) {
 			childActions.add(getTagActionTree(mDep));
 		}
-		return new SCMActionTag(new ReleaseBranch(comp), childActions);
+		return new SCMActionTag(new ReleaseBranch(comp), comp, childActions);
 	}
 }

@@ -1,21 +1,23 @@
 package org.scm4j.releaser.branch;
 
+import java.io.File;
+import java.util.List;
+
 import org.scm4j.commons.Version;
 import org.scm4j.releaser.SCMReleaser;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.MDepsFile;
 import org.scm4j.vcs.api.IVCS;
+import org.scm4j.vcs.api.exceptions.EVCSBranchNotFound;
 import org.scm4j.vcs.api.exceptions.EVCSFileNotFound;
-
-import java.io.File;
-import java.util.List;
 
 public class ReleaseBranch {
 	public static final File RELEASES_DIR = new File(System.getProperty("user.dir"), "releases");
-	private final Component comp;
-	private final IVCS vcs;
 	private final Version version; // exists ? head version : db.version.minor-1.zeroPatch
 	private final String name;
+	private final boolean exists;
+	private final String url;
+	private final IVCS vcs;
 
 	public Version getVersion() {
 		return version;
@@ -26,42 +28,55 @@ public class ReleaseBranch {
 	}
 	
 	public ReleaseBranch(Component comp) {
-		this.comp = comp;
-		vcs = comp.getVCS();
+		this.url = comp.getVcsRepository().getUrl();
+		this.vcs = comp.getVCS();
 		Version candidateVer = getDevVersion(comp).toPreviousMinor().toReleaseZeroPatch();
-		if (exists(comp, candidateVer)) {
-			version = new Version(comp.getVCS().getFileContent(getName(comp, candidateVer), SCMReleaser.VER_FILE_NAME, null)).toRelease();
-		} else {
+		Version version;
+		boolean exists;
+		try {
+			version = new Version(vcs.getFileContent(getName(comp, candidateVer), SCMReleaser.VER_FILE_NAME, null)).toRelease();
+			exists = true;
+		} catch (EVCSBranchNotFound | EVCSFileNotFound e) {
+			exists = false;
 			version = candidateVer;
 		}
+		this.exists = exists;
+		this.version = version;
+		
 		name = getName(comp, version);
+	}
+	
+	public ReleaseBranch(Component comp, Version exactVersion, Boolean exists) {
+		this.url = comp.getVcsRepository().getUrl();
+		this.vcs = comp.getVCS();
+		name = getName(comp, exactVersion);
+		this.version = exactVersion;
+		this.exists = exists;
 	}
 
 	public ReleaseBranch(Component comp, Version exactVersion) {
-		this.comp = comp;
-		vcs = comp.getVCS();
+		this.url = comp.getVcsRepository().getUrl();
+		this.vcs = comp.getVCS();
 		name = getName(comp, exactVersion);
-		if (exists(comp, exactVersion)) {
+		Version version;
+		boolean exists;
+		try {
 			version = new Version(comp.getVCS().getFileContent(name, SCMReleaser.VER_FILE_NAME, null));
-		} else {
+			exists = true;
+		} catch (EVCSBranchNotFound | EVCSFileNotFound e) {
+			exists = false;
 			version = exactVersion;
 		}
+		this.version = version;
+		this.exists = exists;
 	}
 
-	public Component getComponent() {
-		return comp;
-	}
-	
 	private static Version getDevVersion(Component comp) {
 		return new Version(comp.getVCS().getFileContent(comp.getVcsRepository().getDevelopBranch(), SCMReleaser.VER_FILE_NAME, null));
 	}
 
-	private static boolean exists(Component comp, Version forVersion) {
-		return comp.getVCS().getBranches(comp.getVcsRepository().getReleaseBranchPrefix()).contains(getName(comp, forVersion));
-	}
-
 	public boolean exists() {
-		return vcs.getBranches(comp.getVcsRepository().getReleaseBranchPrefix()).contains(name);
+		return exists;
 	}
 	
 	public List<Component> getMDeps() {
@@ -70,7 +85,7 @@ public class ReleaseBranch {
 
 	public MDepsFile getMDepsFile() {
 		try {
-			String mDepsFileContent = comp.getVCS().getFileContent(name, SCMReleaser.MDEPS_FILE_NAME, null);
+			String mDepsFileContent = vcs.getFileContent(name, SCMReleaser.MDEPS_FILE_NAME, null);
 			return new MDepsFile(mDepsFileContent);
 		} catch (EVCSFileNotFound e) {
 			return new MDepsFile("");
@@ -83,12 +98,16 @@ public class ReleaseBranch {
 	
 	@Override
 	public String toString() {
-		return "ReleaseBranch [comp=" + comp + ", version=" + version.toReleaseString() + ", name=" + name + "]";
+		return "ReleaseBranch [url=" + url + ", version=" + version.toReleaseString() + ", name=" + name + "]";
 	}
 	
 	public File getBuildDir() {
-		File buildDir = new File(RELEASES_DIR, comp.getVcsRepository().getUrl().replaceAll("[^a-zA-Z0-9.-]", "_"));
+		File buildDir = new File(RELEASES_DIR, url.replaceAll("[^a-zA-Z0-9.-]", "_"));
 		buildDir = new File(buildDir, getName().replaceAll("[^a-zA-Z0-9.-]", "_"));
 		return buildDir;
+	}
+
+	public String getUrl() {
+		return url;
 	}
 }

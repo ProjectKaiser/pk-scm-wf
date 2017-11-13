@@ -3,6 +3,7 @@ package org.scm4j.releaser.scmactions.procs;
 import org.scm4j.commons.Version;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.releaser.Build;
+import org.scm4j.releaser.CalculatedResult;
 import org.scm4j.releaser.LogTag;
 import org.scm4j.releaser.SCMReleaser;
 import org.scm4j.releaser.branch.ReleaseBranch;
@@ -14,15 +15,21 @@ public class SCMProcFreezeMDeps implements ISCMProc {
 	
 	private final ReleaseBranch rb;
 	private final IVCS vcs;
+	private final CalculatedResult calculatedResult;
+	private final Component comp;
  
-	public SCMProcFreezeMDeps(ReleaseBranch rb) {
+	public SCMProcFreezeMDeps(ReleaseBranch rb, Component comp, CalculatedResult calculatedResult) {
 		this.rb = rb;
-		vcs = rb.getComponent().getVCS();
+		this.calculatedResult = calculatedResult;
+		this.comp = comp;
+		vcs = comp.getVCS();
 	}
 
 	@Override
 	public void execute(IProgress progress) {
-		MDepsFile currentMDepsFile = SCMReleaser.reportDuration(() -> rb.getMDepsFile(), "read mdeps to freeze" , null, progress);
+		MDepsFile currentMDepsFile = new MDepsFile(calculatedResult.setMDeps(comp, () -> {
+			return SCMReleaser.reportDuration(() -> rb.getMDeps(), "read mdeps to freeze" , null, progress);
+		}));
 		if (!currentMDepsFile.hasMDeps()) {
 			progress.reportStatus("no mdeps to freeze");
 			return;
@@ -32,7 +39,9 @@ public class SCMProcFreezeMDeps implements ISCMProc {
 		Version newVersion;
 		boolean hasChanges = false;
 		for (Component currentMDep : currentMDepsFile.getMDeps()) {
-			rbMDep = SCMReleaser.reportDuration(() ->  new ReleaseBranch(currentMDep), "Release Branch version calculation" , currentMDep, progress);
+			rbMDep = calculatedResult.setReleaseBranch(currentMDep, () -> {
+				return SCMReleaser.reportDuration(() ->  new ReleaseBranch(currentMDep), "Release Branch version calculation" , currentMDep, progress);
+			});
 			// untilldb is built -> rbMDep.getVersion is 2.59.1, but we need 2.59.0
 			newVersion = rbMDep.getVersion();
 			if (!newVersion.getPatch().equals(Build.ZERO_PATCH)) {

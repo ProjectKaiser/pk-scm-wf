@@ -1,14 +1,14 @@
 package org.scm4j.releaser;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+
+import java.util.List;
+
 import org.junit.Test;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.branch.ReleaseBranch;
 import org.scm4j.releaser.conf.Component;
-
-import java.util.List;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 
 public class WorkflowPatchesTest extends WorkflowTestBase {
 
@@ -35,6 +35,7 @@ public class WorkflowPatchesTest extends WorkflowTestBase {
 				rbUnTillDbPatch.getVersion());
 		assertEquals(BuildStatus.DONE, new Build(compUnTillDbPatch).getStatus());
 
+		//Thread.sleep(1000);
 		// Existing unTill and UBL release branches should actualize its mdeps
 		action = releaser.getActionTree(compUnTill.clone(env.getUnTillVer().toRelease()));
 		assertIsGoingToBuild(action, compUBL, BuildStatus.ACTUALIZE_PATCHES);

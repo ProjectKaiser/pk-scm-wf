@@ -1,14 +1,15 @@
 package org.scm4j.releaser;
 
-import org.junit.Test;
-import org.scm4j.releaser.actions.ActionKind;
-import org.scm4j.releaser.actions.IAction;
-import org.scm4j.releaser.branch.ReleaseBranch;
-
-import static org.junit.Assert.*;
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
+
+import org.junit.Test;
+import org.scm4j.commons.progress.IProgress;
+import org.scm4j.releaser.actions.ActionKind;
+import org.scm4j.releaser.actions.IAction;
+import org.scm4j.releaser.conf.Component;
 
 public class SCMReleaserTest extends WorkflowTestBase {
 	
@@ -17,7 +18,7 @@ public class SCMReleaserTest extends WorkflowTestBase {
 	@Test
 	public void testUnsupportedBuildStatus() throws Exception {
 		SCMReleaser releaser = spy(new SCMReleaser());
-		doReturn(BuildStatus.ERROR).when(releaser).getBuildStatus(any(ReleaseBranch.class));
+		doReturn(BuildStatus.ERROR).when(releaser).getBuildStatus(any(Component.class), any(CalculatedResult.class), any(IProgress.class));
 
 		try {
 			releaser.getActionTree(TestEnvironment.PRODUCT_UNTILL, ActionKind.FULL);

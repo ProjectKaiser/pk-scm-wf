@@ -22,7 +22,7 @@ public class ReleaseBranchTest extends WorkflowTestBase {
 	@Test
 	public void testCreate() {
 		ReleaseBranch rb = new ReleaseBranch(compUnTillDb);
-		assertEquals(compUnTillDb, rb.getComponent());
+		assertEquals(compUnTillDb.getVcsRepository().getUrl(), rb.getUrl());
 		assertEquals(compUnTillDb.getVcsRepository().getReleaseBranchPrefix()
 				+ env.getUnTillDbVer().toPreviousMinor().getReleaseNoPatchString(), rb.getName());
 	}

@@ -1,5 +1,20 @@
 package org.scm4j.releaser;
 
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasProperty;
+import static org.hamcrest.Matchers.instanceOf;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
 import org.apache.commons.io.FileUtils;
 import org.hamcrest.Matcher;
 import org.junit.After;
@@ -20,14 +35,6 @@ import org.scm4j.releaser.scmactions.SCMActionTag;
 import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.vcs.api.VCSTag;
 import org.scm4j.vcs.api.WalkDirection;
-
-import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
 
 public class WorkflowTestBase {
 	protected TestEnvironment env;
@@ -67,7 +74,7 @@ public class WorkflowTestBase {
 		waitForDeleteDir(ReleaseBranch.RELEASES_DIR);
 	}
 
-	public static void waitForDeleteDir(File dir) throws InterruptedException {
+	public static void waitForDeleteDir(File dir) throws Exception {
 		for (Integer i = 1; i <= 10; i++) {
 			try {
 				FileUtils.deleteDirectory(dir);
@@ -75,6 +82,9 @@ public class WorkflowTestBase {
 			} catch (Exception e) {
 				Thread.sleep(100);
 			}
+		}
+		if (dir.exists()) {
+			throw new Exception("failed to delete " + dir);
 		}
 	}
 	
@@ -245,7 +255,6 @@ public class WorkflowTestBase {
 	public void checkUnTillBuilt() {
 		checkUBLBuilt();
 		ReleaseBranch rbUnTill= new ReleaseBranch(compUnTill);
-		
 		assertTrue(rbUnTill.getBuildDir().exists());
 		
 		// check versions

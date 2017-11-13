@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import org.apache.commons.io.FileUtils;
 import org.scm4j.commons.Version;
 import org.scm4j.commons.progress.IProgress;
+import org.scm4j.releaser.CalculatedResult;
 import org.scm4j.releaser.LogTag;
 import org.scm4j.releaser.SCMReleaser;
 import org.scm4j.releaser.branch.ReleaseBranch;
@@ -26,11 +27,13 @@ public class SCMProcBuild implements ISCMProc {
 	private final ReleaseBranch rb;
 	private final IVCS vcs;
 	private final Component comp;
+	private final CalculatedResult calculatedResult;
  
-	public SCMProcBuild(ReleaseBranch rb) {
+	public SCMProcBuild(ReleaseBranch rb, Component comp, CalculatedResult calculatedResult) {
 		this.rb = rb;
-		comp = rb.getComponent();
-		vcs = rb.getComponent().getVCS();
+		this.comp = comp;
+		this.calculatedResult = calculatedResult;
+		vcs = comp.getVCS();
 	}
 
 	@Override
@@ -48,7 +51,9 @@ public class SCMProcBuild implements ISCMProc {
 		
 		tagBuild(progress, headCommit);
 		
-		raisePatchVersion(progress);
+		Version newVersion = raisePatchVersion(progress);
+		
+		calculatedResult.replaceReleaseBranch(comp, new ReleaseBranch(comp, newVersion, true));
 		
 		progress.reportStatus(comp.getName() + " " + rb.getVersion().toString() + " is built in " + rb.getName());
 
@@ -80,11 +85,12 @@ public class SCMProcBuild implements ISCMProc {
 		}
 	}
 
-	private void raisePatchVersion(IProgress progress) {
+	private Version raisePatchVersion(IProgress progress) {
 		Version nextPatchVersion = rb.getVersion().toNextPatch();
 		SCMReleaser.reportDuration(() -> vcs.setFileContent(rb.getName(), SCMReleaser.VER_FILE_NAME, nextPatchVersion.toString(),
 				LogTag.SCM_VER + " " + nextPatchVersion),
 				"bump patch version in release branch: " + nextPatchVersion, null, progress);
+		return nextPatchVersion;
 	}
 
 }

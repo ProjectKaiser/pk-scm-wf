@@ -169,10 +169,10 @@ public class TestEnvironment implements AutoCloseable {
 		}
 	}
 
-	private void createTestEnvironmentFolder() throws IOException {
+	private void createTestEnvironmentFolder() throws Exception {
 		envDir = new File(TEST_ENVIRONMENT_DIR);
 		if (envDir.exists()) {
-			FileUtils.deleteDirectory(envDir);
+			WorkflowTestBase.waitForDeleteDir(envDir);
 		}
 		envDir.mkdirs();
 	}

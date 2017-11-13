@@ -42,6 +42,7 @@ public class CLI {
 			throw new ECmdLineNoProduct();
 		}
 		IAction action;
+		long startMS = System.currentTimeMillis();
 		switch(cmd.getCommand()) {
 		case BUILD:
 			action = releaser.getActionTree(cmd.getProductCoords(), ActionKind.FULL);
@@ -69,6 +70,7 @@ public class CLI {
 		case UNKNOWN: 
 			throw new ECmdLineUnknownCommand(cmd.getCommandStr());
 		}
+		System.out.println("elapsed time: " + (System.currentTimeMillis() - startMS));
 	}
 	
 	public int exec(SCMReleaser releaser, CommandLine cmd, PrintStream ps) throws Exception {

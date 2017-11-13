@@ -2,10 +2,12 @@ package org.scm4j.releaser.scmactions.procs;
 
 import org.scm4j.commons.Version;
 import org.scm4j.commons.progress.IProgress;
+import org.scm4j.releaser.CalculatedResult;
 import org.scm4j.releaser.LogTag;
 import org.scm4j.releaser.SCMReleaser;
 import org.scm4j.releaser.branch.DevelopBranch;
 import org.scm4j.releaser.branch.ReleaseBranch;
+import org.scm4j.releaser.conf.Component;
 import org.scm4j.vcs.api.IVCS;
 
 public class SCMProcForkBranch implements ISCMProc {
@@ -13,11 +15,15 @@ public class SCMProcForkBranch implements ISCMProc {
 	private final ReleaseBranch rb;
 	private final DevelopBranch db;
 	private final IVCS vcs;
+	private final CalculatedResult calculatedResult;
+	private final Component comp;
  
-	public SCMProcForkBranch(ReleaseBranch rb) {
+	public SCMProcForkBranch(ReleaseBranch rb, Component comp, CalculatedResult calculatedResult) {
 		this.rb = rb;
-		db = new DevelopBranch(rb.getComponent());
-		vcs = rb.getComponent().getVCS();
+		this.calculatedResult = calculatedResult;
+		this.comp = comp;
+		db = new DevelopBranch(comp);
+		vcs = comp.getVCS();
 	}
 	
 	@Override
@@ -26,7 +32,9 @@ public class SCMProcForkBranch implements ISCMProc {
 		
 		truncateSnapshotReleaseVersion(progress);
 		
-		bumpTrunkMinorVersion(progress);
+		Version newTrunkVersion = bumpTrunkMinorVersion(progress);
+		
+		calculatedResult.replaceReleaseBranch(comp, new ReleaseBranch(comp, newTrunkVersion.toPreviousMinor().toReleaseZeroPatch(), true));
 	}
 	
 	private void createBranch(IProgress progress) {
@@ -42,9 +50,10 @@ public class SCMProcForkBranch implements ISCMProc {
 				"truncate snapshot: " + noSnapshotVersion + " in branch " + newBranchName, null, progress);
 	}
 	
-	private void bumpTrunkMinorVersion(IProgress progress) {
+	private Version bumpTrunkMinorVersion(IProgress progress) {
 		Version newMinorVersion = db.getVersion().toNextMinor();
 		SCMReleaser.reportDuration(() -> vcs.setFileContent(db.getName(), SCMReleaser.VER_FILE_NAME, newMinorVersion.toString(), LogTag.SCM_VER + " " + newMinorVersion),
 				"change to version " + newMinorVersion + " in trunk", null, progress);
+		return newMinorVersion;
 	}
 }

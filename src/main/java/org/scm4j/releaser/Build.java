@@ -1,5 +1,7 @@
 package org.scm4j.releaser;
 
+import java.util.List;
+
 import org.scm4j.commons.Version;
 import org.scm4j.releaser.branch.DevelopBranch;
 import org.scm4j.releaser.branch.DevelopBranchStatus;
@@ -14,8 +16,6 @@ import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.vcs.api.VCSTag;
 import org.scm4j.vcs.api.WalkDirection;
 
-import java.util.List;
-
 public class Build {
 
 	public static final String ZERO_PATCH = "0";
@@ -23,17 +23,28 @@ public class Build {
 	private final Component comp;
 	private final ReleaseBranch rb;
 	private final DevelopBranch db;
+	private final CalculatedResult calculatedResult;
 
-	public Build(ReleaseBranch rb) {
-		comp = rb.getComponent();
+	public Build(ReleaseBranch rb, Component comp, CalculatedResult calculatedResult) {
+		this.comp = comp;
 		this.rb = rb;
 		db = new DevelopBranch(comp);
+		this.calculatedResult = calculatedResult;
 	}
 
-	public Build(Component comp) {
+	public Build(Component comp, CalculatedResult calculatedResult) {
 		this.comp = comp;
 		this.rb = new ReleaseBranch(comp);
 		this.db = new DevelopBranch(comp);
+		this.calculatedResult = calculatedResult;
+	}
+	
+	public Build(Component comp) {
+		this(comp, new CalculatedResult());
+	}
+
+	public Build(ReleaseBranch rb, Component comp) {
+		this(rb, comp, new CalculatedResult());
 	}
 
 	public BuildStatus getStatus() {
@@ -58,7 +69,10 @@ public class Build {
 			}
 		}
 		
-		List<Component> mDeps = rb.getMDeps();
+		List<Component> mDeps = calculatedResult.setMDeps(comp, () -> {
+			return rb.getMDeps();
+		});
+		
 		if (!areMDepsFrozen(mDeps)) {
 			return BuildStatus.FREEZE;
 		}
@@ -80,12 +94,23 @@ public class Build {
 
 	private boolean hasMDepsNotInDONEStatus(List<Component> mDeps) {
 		for (Component mDep : mDeps) {
-			ReleaseBranch rbMDep = new ReleaseBranch(mDep);
-			if (hasMDepsNotInDONEStatus(rbMDep.getMDeps())) {
+			// probably need to store mdeps for each release branch
+			ReleaseBranch rbMDep = calculatedResult.setReleaseBranch(mDep, () -> {
+				return new ReleaseBranch(mDep);
+			});
+			
+			List<Component> rbMDeps = calculatedResult.setMDeps(mDep, () -> {
+				return rbMDep.getMDeps();
+			});
+			
+			if (hasMDepsNotInDONEStatus(rbMDeps)) {
 				return true;
 			}
-			Build bMDep = new Build(mDep);
-			if (bMDep.getStatus() != BuildStatus.DONE) {
+			
+			BuildStatus bs = calculatedResult.setBuildStatus(mDep, () -> {
+				return new Build(mDep, calculatedResult).getStatus();
+			});
+			if (bs != BuildStatus.DONE) {
 				return true;
 			}
 		}
@@ -120,7 +145,7 @@ public class Build {
 
 	private boolean areMDepsPatchesActual(List<Component> mDeps) {
 		for (Component mDep : mDeps) {
-			ReleaseBranch rbMDep = new ReleaseBranch(mDep);
+			ReleaseBranch rbMDep = calculatedResult.getReleaseBranch(mDep); // already created above
 			// mdep 2.59.0, rb 2.59.1 - all is ok. not need to build 2.59.1 because if so BUILD_MDEPS will be result before
 			if (!rbMDep.getVersion().equals(mDep.getVersion().toNextPatch())) { 
 				return false;
@@ -139,6 +164,7 @@ public class Build {
 	}
 
 	public boolean isNeedToFork() {
+		
 		if (!rb.exists()) {
 			return true;
 		}
@@ -152,23 +178,21 @@ public class Build {
 			return true;
 		}
 
-		List<Component> mDeps = db.getMDeps();
+		List<Component> mDeps = rb.getMDeps();
+		ReleaseBranch mDepRB;
+		Version mDepRBHeadVersion;
 		for (Component mDep : mDeps) {
-			Build mbMDep = new Build(mDep);
-			if (mbMDep.isNeedToFork()) {
+			Boolean isNeedToForkMDep = calculatedResult.setNeedsToFork(mDep, () -> {
+				return new Build(mDep).isNeedToFork(); 
+			});
+			if (isNeedToForkMDep) {
 				return true;
 			}
-		}
-
-		mDeps = rb.getMDeps();
-		if (mDeps.isEmpty()) {
-			return false;
-
-		}
-		ReleaseBranch mDepRB;
-		for (Component mDep : mDeps) {
-			mDepRB = new ReleaseBranch(mDep);
-			Version mDepRBHeadVersion = mDepRB.getVersion();
+			
+			mDepRB = calculatedResult.setReleaseBranch(mDep, () -> {
+				return new ReleaseBranch(mDep);
+			});
+			mDepRBHeadVersion = mDepRB.getVersion();
 			// zero patch is checked above
 			if (!mDepRBHeadVersion.toPreviousPatch().equals(mDep.getVersion())) {
 				return true;
