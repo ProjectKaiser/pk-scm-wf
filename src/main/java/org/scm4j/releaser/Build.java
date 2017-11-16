@@ -1,7 +1,5 @@
 package org.scm4j.releaser;
 
-import java.util.List;
-
 import org.scm4j.commons.Version;
 import org.scm4j.releaser.branch.DevelopBranch;
 import org.scm4j.releaser.branch.DevelopBranchStatus;
@@ -15,6 +13,8 @@ import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.vcs.api.VCSTag;
 import org.scm4j.vcs.api.WalkDirection;
+
+import java.util.List;
 
 public class Build {
 
@@ -69,9 +69,7 @@ public class Build {
 			}
 		}
 		
-		List<Component> mDeps = calculatedResult.setMDeps(comp, () -> {
-			return rb.getMDeps();
-		});
+		List<Component> mDeps = calculatedResult.setMDeps(comp, rb::getMDeps);
 		
 		if (!areMDepsFrozen(mDeps)) {
 			return BuildStatus.FREEZE;
@@ -95,21 +93,15 @@ public class Build {
 	private boolean hasMDepsNotInDONEStatus(List<Component> mDeps) {
 		for (Component mDep : mDeps) {
 			// probably need to store mdeps for each release branch
-			ReleaseBranch rbMDep = calculatedResult.setReleaseBranch(mDep, () -> {
-				return new ReleaseBranch(mDep);
-			});
+			ReleaseBranch rbMDep = calculatedResult.setReleaseBranch(mDep, () -> new ReleaseBranch(mDep));
 			
-			List<Component> rbMDeps = calculatedResult.setMDeps(mDep, () -> {
-				return rbMDep.getMDeps();
-			});
+			List<Component> rbMDeps = calculatedResult.setMDeps(mDep, rbMDep::getMDeps);
 			
 			if (hasMDepsNotInDONEStatus(rbMDeps)) {
 				return true;
 			}
 			
-			BuildStatus bs = calculatedResult.setBuildStatus(mDep, () -> {
-				return new Build(mDep, calculatedResult).getStatus();
-			});
+			BuildStatus bs = calculatedResult.setBuildStatus(mDep, () -> new Build(mDep, calculatedResult).getStatus());
 			if (bs != BuildStatus.DONE) {
 				return true;
 			}
@@ -182,16 +174,12 @@ public class Build {
 		ReleaseBranch mDepRB;
 		Version mDepRBHeadVersion;
 		for (Component mDep : mDeps) {
-			Boolean isNeedToForkMDep = calculatedResult.setNeedsToFork(mDep, () -> {
-				return new Build(mDep).isNeedToFork(); 
-			});
+			Boolean isNeedToForkMDep = calculatedResult.setNeedsToFork(mDep, () -> new Build(mDep).isNeedToFork());
 			if (isNeedToForkMDep) {
 				return true;
 			}
 			
-			mDepRB = calculatedResult.setReleaseBranch(mDep, () -> {
-				return new ReleaseBranch(mDep);
-			});
+			mDepRB = calculatedResult.setReleaseBranch(mDep, () -> new ReleaseBranch(mDep));
 			mDepRBHeadVersion = mDepRB.getVersion();
 			// zero patch is checked above
 			if (!mDepRBHeadVersion.toPreviousPatch().equals(mDep.getVersion())) {

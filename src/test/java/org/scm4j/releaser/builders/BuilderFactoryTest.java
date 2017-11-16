@@ -25,5 +25,4 @@ public class BuilderFactoryTest {
 	public void testConstructor() {
 		assertNotNull(new BuilderFactory());
 	}
-
 }

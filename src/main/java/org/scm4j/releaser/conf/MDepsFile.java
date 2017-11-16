@@ -44,9 +44,7 @@ public class MDepsFile {
 		if (mDeps == null) {
 			return;
 		}
-		for (Object mDep : mDeps) {
-			this.lines.add(mDep);
-		}
+		lines.addAll(mDeps);
 	}
 
 	public String toFileContent() {

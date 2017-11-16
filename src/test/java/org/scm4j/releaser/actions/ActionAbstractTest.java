@@ -19,7 +19,7 @@ public class ActionAbstractTest extends WorkflowTestBase {
 	@Test
 	public void testExceptions() throws Exception {
 		Component comp = new Component(TestEnvironment.PRODUCT_UNTILL);
-		ActionAbstract aa = spy(new ActionAbstract(comp, new ArrayList<IAction>()) {
+		ActionAbstract aa = spy(new ActionAbstract(comp, new ArrayList<>()) {
 			@Override
 			protected void executeAction(IProgress progress) throws Exception {
 
@@ -45,5 +45,4 @@ public class ActionAbstractTest extends WorkflowTestBase {
 			assertNull(e.getCause());
 		}
 	}
-
 }

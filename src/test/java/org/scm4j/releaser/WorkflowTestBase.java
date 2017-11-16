@@ -1,20 +1,5 @@
 package org.scm4j.releaser;
 
-import static org.hamcrest.Matchers.allOf;
-import static org.hamcrest.Matchers.empty;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.hasProperty;
-import static org.hamcrest.Matchers.instanceOf;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
-import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-
 import org.apache.commons.io.FileUtils;
 import org.hamcrest.Matcher;
 import org.junit.After;
@@ -28,13 +13,20 @@ import org.scm4j.releaser.branch.DevelopBranch;
 import org.scm4j.releaser.branch.ReleaseBranch;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.DelayedTagsFile;
-import org.scm4j.releaser.conf.Option;
 import org.scm4j.releaser.conf.Options;
 import org.scm4j.releaser.scmactions.SCMActionRelease;
 import org.scm4j.releaser.scmactions.SCMActionTag;
 import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.vcs.api.VCSTag;
 import org.scm4j.vcs.api.WalkDirection;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.*;
 
 public class WorkflowTestBase {
 	protected TestEnvironment env;
@@ -58,7 +50,7 @@ public class WorkflowTestBase {
 		dbUnTill = new DevelopBranch(compUnTill);
 		dbUnTillDb = new DevelopBranch(compUnTillDb);
 		dbUBL = new DevelopBranch(compUBL);
-		TestBuilder.setBuilders(new HashMap<String, TestBuilder>());
+		TestBuilder.setBuilders(new HashMap<>());
 		new DelayedTagsFile().delete();
 		waitForDeleteDir(ReleaseBranch.RELEASES_DIR);
 	}
@@ -69,7 +61,7 @@ public class WorkflowTestBase {
 			env.close();
 		}
 		TestBuilder.setBuilders(null);
-		Options.setOptions(new ArrayList<Option>());
+		Options.setOptions(new ArrayList<>());
 		Options.setIsPatch(false);
 		waitForDeleteDir(ReleaseBranch.RELEASES_DIR);
 	}
@@ -115,7 +107,7 @@ public class WorkflowTestBase {
 		checkUnTillDbBuilt(1);
 	}
 
-	public void checkUBLBuilt() {
+	protected void checkUBLBuilt() {
 		checkUnTillDbBuilt();
 		ReleaseBranch rbUBL = new ReleaseBranch(compUBL);
 		assertNotNull(TestBuilder.getBuilders());
@@ -142,7 +134,7 @@ public class WorkflowTestBase {
 		assertEquals(commits.get(1), tag.getRelatedCommit());
 	}
 
-	public void checkUBLForked() {
+	protected void checkUBLForked() {
 		checkUBLForked(1);
 	}
 

@@ -8,6 +8,8 @@ import org.scm4j.releaser.conf.MDepsFile;
 import org.scm4j.releaser.exceptions.EComponentConfig;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSCommit;
+import org.scm4j.vcs.api.exceptions.EVCSBranchNotFound;
+import org.scm4j.vcs.api.exceptions.EVCSFileNotFound;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -54,10 +56,12 @@ public class DevelopBranch {
 	}
 	
 	public List<Component> getMDeps() {
-		if (!comp.getVCS().fileExists(getName(), SCMReleaser.MDEPS_FILE_NAME)) {
+		String mDepsFileContent;
+		try {
+			mDepsFileContent = vcs.getFileContent(getName(), SCMReleaser.MDEPS_FILE_NAME, null);
+		} catch (EVCSBranchNotFound | EVCSFileNotFound e) {
 			return new ArrayList<>();
 		}
-		String mDepsFileContent = vcs.getFileContent(getName(), SCMReleaser.MDEPS_FILE_NAME, null);
 		MDepsFile mDeps = new MDepsFile(mDepsFileContent);
 		List<Component> res = new ArrayList<>();
 		for (Component mDep : mDeps.getMDeps()) {

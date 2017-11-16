@@ -1,13 +1,12 @@
 package org.scm4j.releaser.scmactions;
 
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.when;
+import org.junit.Test;
+import org.scm4j.releaser.branch.ReleaseBranch;
 
 import java.util.ArrayList;
 
-import org.junit.Test;
-import org.scm4j.releaser.actions.IAction;
-import org.scm4j.releaser.branch.ReleaseBranch;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
 
 public class SCMActionTagReleaseTest extends SCMActionTestBase {
 	
@@ -15,7 +14,7 @@ public class SCMActionTagReleaseTest extends SCMActionTestBase {
 	public void testExceptions() throws Exception {
 		comp = spy(comp);
 		ReleaseBranch rb = spy(new ReleaseBranch(comp));
-		SCMActionTag action = spy(new SCMActionTag(rb, comp, new ArrayList<IAction>()));
+		SCMActionTag action = spy(new SCMActionTag(rb, comp, new ArrayList<>()));
 		when(comp.getVcsRepository()).thenCallRealMethod().thenReturn(null);
 		
 		testExceptionThrowing(action, NullPointerException.class);

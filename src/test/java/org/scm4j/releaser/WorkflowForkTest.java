@@ -17,6 +17,7 @@ public class WorkflowForkTest extends WorkflowTestBase {
 		assertIsGoingToForkAndBuildAll(action);
 		action.execute(getProgress(action));
 		checkUnTillBuilt();
+		assertFalse(action.getClass().getMethod("toString").getDeclaringClass().equals(Object.class));
 	}
 
 	@Test

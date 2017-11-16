@@ -30,17 +30,7 @@ public class SCMActionTestBase {
 		progress = mock(IProgress.class);
 	}
 
-	protected void testExceptionThrowing(IAction action, Exception testException) {
-		try {
-			action.execute(progress);
-			fail();
-		} catch (EReleaserException e) {
-			assertEquals(testException, e.getCause() == null ? e : e.getCause());
-			verify(progress, atLeast(1)).error(anyString());
-		}
-	}
-
-	protected void testExceptionThrowing(IAction action, Class<?> exceptionClass) {
+	protected void testExceptionThrowing(IAction action, Class<? extends Exception> exceptionClass) {
 		try {
 			action.execute(progress);
 			fail();

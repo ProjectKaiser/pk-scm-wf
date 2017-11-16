@@ -26,15 +26,13 @@ public class SCMProcActualizePatches implements ISCMProc {
 
 	@Override
 	public void execute(IProgress progress) {
-		MDepsFile currentMDepsFile = new MDepsFile(SCMReleaser.reportDuration(() -> rb.getMDeps(), "mdeps read to actualize patches", null, progress));
+		MDepsFile currentMDepsFile = new MDepsFile(SCMReleaser.reportDuration(rb::getMDeps, "mdeps read to actualize patches", null, progress));
 		StringBuilder sb = new StringBuilder();
 		boolean hasNew = false;
 		ReleaseBranch rbMDep;
 		Version newVersion;
 		for (Component currentMDep : currentMDepsFile.getMDeps()) {
-			rbMDep = calculatedResult.setReleaseBranch(currentMDep, () -> {
-				return SCMReleaser.reportDuration(() -> new ReleaseBranch(currentMDep), "release branch version calculation", currentMDep, progress);
-			});
+			rbMDep = calculatedResult.setReleaseBranch(currentMDep, () -> SCMReleaser.reportDuration(() -> new ReleaseBranch(currentMDep), "release branch version calculation", currentMDep, progress));
 			newVersion = rbMDep.getVersion().toPreviousPatch(); // TODO: which patch of mdep to actualize on if there are no mdep release branches at all?
 			if (!newVersion.equals(currentMDep.getVersion())) {
 				hasNew = true;

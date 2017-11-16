@@ -25,7 +25,7 @@ public class CommandLine {
 	private static String printOptions() {
 		StringBuilder sb = new StringBuilder();
 		for (Option opt : Option.values()) {
-			sb.append("[" + opt.getStrValue() + "] ");
+			sb.append("[").append(opt.getStrValue()).append("] ");
 		}
 		sb.deleteCharAt(sb.length() - 1);
 		return sb.toString();

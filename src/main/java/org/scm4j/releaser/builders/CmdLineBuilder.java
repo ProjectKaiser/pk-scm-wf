@@ -18,7 +18,7 @@ import java.util.regex.Pattern;
 public class CmdLineBuilder implements IBuilder {
 
 	private final String cmdLine;
-	private ProcessBuilder pb;
+	private final ProcessBuilder pb;
 	private static final Pattern CMD_LINE_PATTERN = Pattern.compile("([^\"]\\S*|\".+?\")\\s*");
 
 	public CmdLineBuilder(String cmdLine) {

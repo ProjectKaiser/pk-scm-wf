@@ -1,19 +1,19 @@
 package org.scm4j.releaser;
 
+import org.scm4j.releaser.branch.ReleaseBranch;
+import org.scm4j.releaser.conf.Component;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
-import org.scm4j.releaser.branch.ReleaseBranch;
-import org.scm4j.releaser.conf.Component;
-
 public class CalculatedResult {
 
-	private Map<String, BuildStatus> buildStatuses = new HashMap<>();
-	private Map<String, List<Component>> mDeps = new HashMap<>();
-	private Map<String, Boolean> needesToFork = new HashMap<>();
-	private Map<String, ReleaseBranch> releaseBranches = new HashMap<>();
+	private final Map<String, BuildStatus> buildStatuses = new HashMap<>();
+	private final Map<String, List<Component>> mDeps = new HashMap<>();
+	private final Map<String, Boolean> needesToFork = new HashMap<>();
+	private final Map<String, ReleaseBranch> releaseBranches = new HashMap<>();
 	
 	private <T> T get(Component comp, Map<String, T> cache) {
 		return cache.get(getKey(comp));
