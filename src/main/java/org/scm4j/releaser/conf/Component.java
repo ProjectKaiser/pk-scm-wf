@@ -12,7 +12,10 @@ public class Component {
 	private VCSRepository repo = null;
 	
 	public VCSRepository getVcsRepository() {
-		return repo == null ? VCSRepositories.getDefault().getByName(coords.getName()) : repo;
+		if (repo == null) {
+			repo = VCSRepositories.getDefault().getByName(coords.getName());
+		}
+		return repo;
 	}
 
 	public Component(String coordsStr) {
