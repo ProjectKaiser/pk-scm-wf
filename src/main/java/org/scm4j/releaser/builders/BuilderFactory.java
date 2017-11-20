@@ -1,10 +1,5 @@
 package org.scm4j.releaser.builders;
 
-import static com.almondtools.conmatch.conventions.UtilityClassMatcher.isUtilityClass;
-import static org.junit.Assert.assertThat;
-
-import org.junit.Test;
-
 public final class BuilderFactory {
 	
 	public static final String SCM4J_BUILDER_CLASS_STRING = "scm4j-builder-class:";
@@ -24,8 +19,6 @@ public final class BuilderFactory {
 		}
 	}
 	
-	@Test
-	public void testIsUtilityClass() {
-		assertThat(BuilderFactory.class, isUtilityClass());
+	private BuilderFactory() {
 	}
 }
