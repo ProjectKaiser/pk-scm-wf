@@ -7,7 +7,7 @@ import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
 import org.scm4j.vcs.svn.SVNVCS;
 
-public class VCSFactory {
+public final class VCSFactory {
 
 	public static IVCS getVCS(VCSType type, Credentials creds, String url, IVCSWorkspace ws) {
 		IVCS vcs = null;
@@ -29,5 +29,8 @@ public class VCSFactory {
 		}
 		}
 		return vcs;
+	}
+	
+	private VCSFactory() {
 	}
 }

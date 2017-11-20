@@ -56,19 +56,19 @@ public class VCSRepositories {
 		}
 
 		Credentials credentials;
-		String user = (String) getPropByName(creds, url, "name", null);
+		String user = getPropByName(creds, url, "name", null);
 		if (user != null) {
-			String pass = (String) getPropByName(creds, url, "password", null);
-			Boolean isDefault = (Boolean) getPropByName(creds, url, "isDefault", false);
+			String pass = getPropByName(creds, url, "password", null);
+			Boolean isDefault = getPropByName(creds, url, "isDefault", false);
 			credentials = new Credentials(user, pass, isDefault);
 		} else {
 			credentials = new Credentials(null, null, false);
 		}
-		VCSType type = getVCSType((String) getPropByName(urls, componentName, "type", null), url);
-		String developBranch = (String) getPropByName(urls, componentName, "developBranch", VCSRepository.DEFAULT_DEVELOP_BRANCH);
+		VCSType type = getVCSType(getPropByName(urls, componentName, "type", null), url);
+		String developBranch = getPropByName(urls, componentName, "developBranch", VCSRepository.DEFAULT_DEVELOP_BRANCH);
 		String releaseBranchPrefix = (String) getPropByName(urls, componentName, "releaseBranchPrefix",
 				VCSRepository.DEFAULT_RELEASE_BRANCH_PREFIX);
-		String releaseCommand = (String) getPropByName(urls, componentName, "releaseCommand", null);
+		String releaseCommand = getPropByName(urls, componentName, "releaseCommand", null);
 		return new VCSRepository(componentName, url, credentials, type, developBranch, releaseBranchPrefix,
 				VCSFactory.getVCS(type, credentials, url, ws), BuilderFactory.getBuilder(releaseCommand));
 	}
@@ -85,13 +85,14 @@ public class VCSRepositories {
 		return DEFAULT_VCS_TYPE;
 	}
 
-	private Object getPropByName(Map<?, ?> map, String name, Object propName, Object defaultValue) {
+	@SuppressWarnings("unchecked")
+	private <T> T getPropByName(Map<?, ?> map, String name, Object propName, T defaultValue) {
 		if (map != null) {
 			for (Object key : map.keySet()) {
 				if (key == null || name.matches((String) key)) {
 					Map<?, ?> props = (Map<?, ?>) map.get(key);
 					if (props.containsKey(propName))
-						return props.get(propName);
+						return (T) props.get(propName);
 				}
 			}
 		}

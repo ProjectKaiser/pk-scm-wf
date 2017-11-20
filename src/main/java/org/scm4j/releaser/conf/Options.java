@@ -3,10 +3,13 @@ package org.scm4j.releaser.conf;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Options {
+public final class Options {
 
 	private static List<Option> options = new ArrayList<>();
 	private static boolean isPatch;
+	
+	private Options() {
+	}
 
 	public static synchronized List<Option> getOptions() {
 		return options;

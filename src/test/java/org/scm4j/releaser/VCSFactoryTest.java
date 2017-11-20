@@ -1,5 +1,6 @@
 package org.scm4j.releaser;
 
+import static com.almondtools.conmatch.conventions.UtilityClassMatcher.isUtilityClass;
 import static org.junit.Assert.*;
 
 import org.junit.Test;
@@ -43,7 +44,7 @@ public class VCSFactoryTest {
 	}
 	
 	@Test
-	public void testConstructor() {
-		assertNotNull(new VCSFactory());
+	public void testIsUtilityClass() {
+		assertThat(VCSFactory.class, isUtilityClass());
 	}
 }

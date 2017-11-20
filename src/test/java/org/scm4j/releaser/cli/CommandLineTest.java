@@ -9,11 +9,6 @@ public class CommandLineTest {
 	private static final String TEST_COORDS = "coords";
 
 	@Test
-	public void testGetUsage() {
-		assertFalse(CommandLine.getUsage().isEmpty());
-	}
-	
-	@Test
 	public void testCommandLineParams() {
 		CommandLine cmd = new CommandLine(new String[] {CLICommand.STATUS.getStrValue(), TEST_COORDS});
 		assertEquals(CLICommand.STATUS, cmd.getCommand());

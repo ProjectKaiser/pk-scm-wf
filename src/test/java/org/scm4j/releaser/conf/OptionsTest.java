@@ -1,14 +1,14 @@
 package org.scm4j.releaser.conf;
 
-import org.junit.Test;
+import static org.junit.Assert.assertThat;
+import static com.almondtools.conmatch.conventions.UtilityClassMatcher.*;
 
-import static org.junit.Assert.assertNotNull;
+import org.junit.Test;
 
 public class OptionsTest {
 
 	@Test
-	public void testConstructor() {
-		assertNotNull(new Options());
+	public void testIsUtilityClass() {
+		assertThat(Options.class, isUtilityClass());
 	}
-
 }
