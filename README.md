@@ -41,6 +41,12 @@ For version definitions ref. [semantic Versioning 2.0.0](http://semver.org/).
 - [exact versions in `develop`/`mdeps`](/../../issues/4)
 - [postTag hooks](/../../issues/8)
 
+# Solution Overview
+
+`CLI` uses `SCMReleaser` to create  action tree, then this tree is "executed" using IAction.execute.
+
+- Build: 
+
 
 # See also
 
