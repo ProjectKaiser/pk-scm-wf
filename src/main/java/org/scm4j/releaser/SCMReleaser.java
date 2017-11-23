@@ -75,15 +75,18 @@ public class SCMReleaser {
 		
 		ReleaseBranch rb = calculatedResult.setReleaseBranch(comp, () -> reportDuration(() -> new ReleaseBranch(comp), "release branch version calculation", comp, progress));
 		if (calculatedResult.getMDeps(comp) == null) {
-			boolean needToUseReleaseBranch = (comp.getVersion().isExact() || (!comp.getVersion().isExact() && !calculatedResult.setNeedsToFork(comp, () -> {
-				Build mb = new Build(rb, comp, calculatedResult);
-				return reportDuration(mb::isNeedToFork, "need to fork calculation", comp, progress);
-			}))) && rb.exists();
-			// untill has untilldb, ubl has untilldb. untill is BUILD_MDEPS, UBL has release branch but need to FORK. 
-			// result: db for untill FORK, db for UBL is DONE prev version (mdep fro existing UBL RB is used) 
-			// TODO: add test: untill build_mdeps, untill needs to be forked. UBL has release rbanch but has to be forked also. untilldbs must have the same status
-			calculatedResult.setMDeps(comp, () -> reportDuration(() -> needToUseReleaseBranch ? rb.getMDeps() : new DevelopBranch(comp).getMDeps(),
-					String.format("read mdeps from %s branch", needToUseReleaseBranch ? "release" : "develop"), comp, progress));
+			boolean needToUseDevelopBranch;
+			if (comp.getVersion().isExact()) {
+				needToUseDevelopBranch = false;
+			} else {
+				needToUseDevelopBranch = calculatedResult.setNeedsToFork(comp, () -> {
+					Build mb = new Build(rb, comp, calculatedResult);
+					return reportDuration(mb::isNeedToFork, "need to fork calculation", comp, progress);
+				});
+			}
+			
+			calculatedResult.setMDeps(comp, () -> reportDuration(() -> needToUseDevelopBranch ? new DevelopBranch(comp).getMDeps() : rb.getMDeps(),
+					String.format("read mdeps from %s branch", needToUseDevelopBranch ? "develop" : "release"), comp, progress));
 		}
 	}
 	
