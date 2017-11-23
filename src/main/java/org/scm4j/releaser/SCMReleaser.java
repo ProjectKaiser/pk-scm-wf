@@ -15,7 +15,6 @@ import org.scm4j.releaser.scmactions.SCMActionTag;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Supplier;
 
 public class SCMReleaser {
 
@@ -30,7 +29,6 @@ public class SCMReleaser {
 	
 	public IAction getActionTree(Component comp) throws Exception {
 		return getActionTree(comp, ActionKind.FULL);
-		
 	}
 	
 	public IAction getActionTree(String coords, ActionKind actionKind) throws Exception {
@@ -53,15 +51,15 @@ public class SCMReleaser {
 			childActions.add(getActionTree(mdep, actionKind, calculatedResult));
 		}
 		
-		calculatedResult.setBuildStatus(comp, () -> getBuildStatus(comp, calculatedResult, progress));
+		calculatedResult.setBuildStatus(comp, () -> getBuildStatus(comp, calculatedResult), progress);
 		
 		progress.close();
 		return new SCMActionRelease(calculatedResult.getReleaseBranch(comp), comp, childActions, actionKind, calculatedResult.getBuildStatus(comp), calculatedResult);
 	}
 
-	protected BuildStatus getBuildStatus(Component comp, CalculatedResult calculatedResult, IProgress progress) {
+	protected BuildStatus getBuildStatus(Component comp, CalculatedResult calculatedResult) {
 		Build mb = new Build(calculatedResult.getReleaseBranch(comp), comp, calculatedResult);
-		return reportDuration(mb::getStatus, "status calculation", comp, progress);
+		return mb.getStatus();
 	}
 	
 	private void calculateResultNoStatus(Component comp, CalculatedResult calculatedResult, IProgress progress) {
@@ -73,7 +71,7 @@ public class SCMReleaser {
 			return;
 		}
 		
-		ReleaseBranch rb = calculatedResult.setReleaseBranch(comp, () -> reportDuration(() -> new ReleaseBranch(comp), "release branch version calculation", comp, progress));
+		ReleaseBranch rb = calculatedResult.setReleaseBranch(comp, () -> new ReleaseBranch(comp), progress);
 		if (calculatedResult.getMDeps(comp) == null) {
 			boolean needToUseDevelopBranch;
 			if (comp.getVersion().isExact()) {
@@ -81,29 +79,15 @@ public class SCMReleaser {
 			} else {
 				needToUseDevelopBranch = calculatedResult.setNeedsToFork(comp, () -> {
 					Build mb = new Build(rb, comp, calculatedResult);
-					return reportDuration(mb::isNeedToFork, "need to fork calculation", comp, progress);
-				});
+					return mb.isNeedToFork();
+				}, progress);
 			}
 			
-			calculatedResult.setMDeps(comp, () -> reportDuration(() -> needToUseDevelopBranch ? new DevelopBranch(comp).getMDeps() : rb.getMDeps(),
-					String.format("read mdeps from %s branch", needToUseDevelopBranch ? "develop" : "release"), comp, progress));
+			calculatedResult.setMDeps(comp,
+					() -> needToUseDevelopBranch ? new DevelopBranch(comp).getMDeps() : rb.getMDeps(), progress);
 		}
 	}
 	
-	public static <T> T reportDuration(Supplier<T> sup, String message, Component comp, IProgress progress) {
-		long start = System.currentTimeMillis();
-		T res = sup.get();
-		progress.reportStatus(message + ": " + (comp == null ? "" : comp.getCoordsNoComment() + " ") + "in " + (System.currentTimeMillis() - start) + "ms");
-		return res;
-	}
-	
-	public static <T> void reportDuration(Runnable run, String message, Component comp, IProgress progress) {
-		reportDuration(() -> {
-			run.run();
-			return null;
-		}, message, comp, progress);
-	}
-
 	public static TagDesc getTagDesc(String verStr) {
 		String tagMessage = verStr + " release";
 		return new TagDesc(verStr, tagMessage);
