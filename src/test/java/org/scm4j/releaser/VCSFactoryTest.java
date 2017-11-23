@@ -1,11 +1,7 @@
 package org.scm4j.releaser;
 
-import static com.almondtools.conmatch.conventions.UtilityClassMatcher.isUtilityClass;
-import static org.junit.Assert.*;
-
 import org.junit.Test;
 import org.mockito.Mockito;
-import org.scm4j.releaser.VCSFactory;
 import org.scm4j.releaser.conf.Credentials;
 import org.scm4j.releaser.conf.VCSType;
 import org.scm4j.vcs.GitVCS;
@@ -13,6 +9,9 @@ import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.workingcopy.IVCSRepositoryWorkspace;
 import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
 import org.scm4j.vcs.svn.SVNVCS;
+
+import static org.junit.Assert.*;
+import static org.scm4j.releaser.UtilityClassMatcher.isUtilityClass;
 
 public class VCSFactoryTest {
 	

@@ -1,5 +1,6 @@
 package org.scm4j.releaser;
 
+import org.scm4j.commons.progress.IProgress;
 import org.scm4j.releaser.branch.ReleaseBranch;
 import org.scm4j.releaser.conf.Component;
 
@@ -32,28 +33,40 @@ public class CalculatedResult {
 		return get(comp, buildStatuses);
 	}
 	
-	public synchronized BuildStatus setBuildStatus(Component comp, Supplier<BuildStatus> sup) {
-		return getOrSet(comp, buildStatuses, sup);
+	public synchronized BuildStatus setBuildStatus(Component comp, Supplier<BuildStatus> sup, IProgress progress) {
+		return Utils.reportDuration(() -> getOrSet(comp, buildStatuses, sup), "build status", comp, progress);
 	}
 	
 	public synchronized List<Component> getMDeps(Component comp) {
 		return get(comp, mDeps);
 	}
 	
+	public synchronized List<Component> setMDeps(Component comp, Supplier<List<Component>> sup, IProgress progress) {
+		return Utils.reportDuration(() -> getOrSet(comp, mDeps, sup), "mdeps retrieve", comp, progress);
+	}
+
 	public synchronized List<Component> setMDeps(Component comp, Supplier<List<Component>> sup) {
-		return getOrSet(comp, mDeps, sup);
+		return setMDeps(comp, sup, null);
 	}
 	
+	public synchronized Boolean setNeedsToFork(Component comp, Supplier<Boolean> sup, IProgress progress) {
+		return Utils.reportDuration(() -> getOrSet(comp, needesToFork, sup), "need to fork", comp, progress);
+	}
+
 	public synchronized Boolean setNeedsToFork(Component comp, Supplier<Boolean> sup) {
-		return getOrSet(comp, needesToFork, sup);
+		return setNeedsToFork(comp, sup, null);
 	}
 	
 	public synchronized ReleaseBranch getReleaseBranch(Component comp) {
 		return get(comp, releaseBranches);
 	}
 	
-	public synchronized ReleaseBranch setReleaseBranch(Component comp, Supplier<ReleaseBranch> sup) {
-		return getOrSet(comp, releaseBranches, sup);
+	public synchronized ReleaseBranch setReleaseBranch(Component comp, Supplier<ReleaseBranch> sup, IProgress progress) {
+		return Utils.reportDuration(() -> getOrSet(comp, releaseBranches, sup), "release branch", comp, progress);
+	}
+
+	public ReleaseBranch setReleaseBranch(Component comp,  Supplier<ReleaseBranch> sup) {
+		return setReleaseBranch(comp, sup, null);
 	}
 
 	public synchronized void replaceReleaseBranch(Component comp, ReleaseBranch rb) {

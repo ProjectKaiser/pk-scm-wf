@@ -3,8 +3,8 @@ package org.scm4j.releaser.builders;
 import org.junit.Test;
 import org.scm4j.releaser.TestBuilder;
 
-import static com.almondtools.conmatch.conventions.UtilityClassMatcher.isUtilityClass;
 import static org.junit.Assert.*;
+import static org.scm4j.releaser.UtilityClassMatcher.isUtilityClass;
 
 public class BuilderFactoryTest {
 	

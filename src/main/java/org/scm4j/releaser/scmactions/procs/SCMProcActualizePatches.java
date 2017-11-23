@@ -5,6 +5,7 @@ import org.scm4j.commons.progress.IProgress;
 import org.scm4j.releaser.CalculatedResult;
 import org.scm4j.releaser.LogTag;
 import org.scm4j.releaser.SCMReleaser;
+import org.scm4j.releaser.Utils;
 import org.scm4j.releaser.branch.ReleaseBranch;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.MDepsFile;
@@ -26,13 +27,13 @@ public class SCMProcActualizePatches implements ISCMProc {
 
 	@Override
 	public void execute(IProgress progress) {
-		MDepsFile currentMDepsFile = new MDepsFile(SCMReleaser.reportDuration(rb::getMDeps, "mdeps read to actualize patches", null, progress));
+		MDepsFile currentMDepsFile = new MDepsFile(Utils.reportDuration(rb::getMDeps, "mdeps read to actualize patches", null, progress));
 		StringBuilder sb = new StringBuilder();
 		boolean hasNew = false;
 		ReleaseBranch rbMDep;
 		Version newVersion;
 		for (Component currentMDep : currentMDepsFile.getMDeps()) {
-			rbMDep = calculatedResult.setReleaseBranch(currentMDep, () -> SCMReleaser.reportDuration(() -> new ReleaseBranch(currentMDep), "release branch version calculation", currentMDep, progress));
+			rbMDep = calculatedResult.setReleaseBranch(currentMDep, () -> new ReleaseBranch(currentMDep), progress);
 			newVersion = rbMDep.getVersion().toPreviousPatch(); // TODO: which patch of mdep to actualize on if there are no mdep release branches at all?
 			if (!newVersion.equals(currentMDep.getVersion())) {
 				hasNew = true;
@@ -47,7 +48,7 @@ public class SCMProcActualizePatches implements ISCMProc {
 		if (hasNew) {
 			sb.setLength(sb.length() - 2);
 			progress.reportStatus("patches to actualize:\r\n" + sb.toString());
-			SCMReleaser.reportDuration(() -> vcs.setFileContent(rb.getName(), SCMReleaser.MDEPS_FILE_NAME, currentMDepsFile.toFileContent(), LogTag.SCM_MDEPS), 
+			Utils.reportDuration(() -> vcs.setFileContent(rb.getName(), SCMReleaser.MDEPS_FILE_NAME, currentMDepsFile.toFileContent(), LogTag.SCM_MDEPS),
 					"writting mdeps", null, progress);
 		} else {
 			progress.reportStatus("mdeps patches are actual already");

@@ -1,26 +1,22 @@
 package org.scm4j.releaser.scmactions.procs;
 
-import java.io.File;
-import java.nio.file.Files;
-
+import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
 import org.scm4j.commons.Version;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.releaser.CalculatedResult;
 import org.scm4j.releaser.LogTag;
 import org.scm4j.releaser.SCMReleaser;
+import org.scm4j.releaser.Utils;
 import org.scm4j.releaser.branch.ReleaseBranch;
-import org.scm4j.releaser.conf.Component;
-import org.scm4j.releaser.conf.DelayedTagsFile;
-import org.scm4j.releaser.conf.Option;
-import org.scm4j.releaser.conf.Options;
-import org.scm4j.releaser.conf.TagDesc;
+import org.scm4j.releaser.conf.*;
 import org.scm4j.releaser.exceptions.ENoBuilder;
 import org.scm4j.releaser.exceptions.EReleaserException;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSCommit;
 
-import lombok.SneakyThrows;
+import java.io.File;
+import java.nio.file.Files;
 
 public class SCMProcBuild implements ISCMProc {
 	
@@ -66,7 +62,7 @@ public class SCMProcBuild implements ISCMProc {
 			FileUtils.deleteDirectory(buildDir);
 		}
 		Files.createDirectories(buildDir.toPath());		
-		SCMReleaser.reportDuration(() -> vcs.checkout(rb.getName(), buildDir.getPath(), headCommit.getRevision()), 
+		Utils.reportDuration(() -> vcs.checkout(rb.getName(), buildDir.getPath(), headCommit.getRevision()),
 				String.format("check out %s on revision %s into %s", comp.getName(), headCommit.getRevision(), buildDir.getPath()), null, progress);
 		comp.getVcsRepository().getBuilder().build(comp, buildDir, progress);
 	}
@@ -80,14 +76,14 @@ public class SCMProcBuild implements ISCMProc {
 		} else {
 			String releaseBranchName = rb.getName();
 			TagDesc tagDesc = SCMReleaser.getTagDesc(rb.getVersion().toString());
-			SCMReleaser.reportDuration(() -> vcs.createTag(releaseBranchName, tagDesc.getName(), tagDesc.getMessage(), headCommit.getRevision()),
+			Utils.reportDuration(() -> vcs.createTag(releaseBranchName, tagDesc.getName(), tagDesc.getMessage(), headCommit.getRevision()),
 					String.format("tag head of %s: %s", releaseBranchName, tagDesc.getName()), null, progress);
 		}
 	}
 
 	private Version raisePatchVersion(IProgress progress) {
 		Version nextPatchVersion = rb.getVersion().toNextPatch();
-		SCMReleaser.reportDuration(() -> vcs.setFileContent(rb.getName(), SCMReleaser.VER_FILE_NAME, nextPatchVersion.toString(),
+		Utils.reportDuration(() -> vcs.setFileContent(rb.getName(), SCMReleaser.VER_FILE_NAME, nextPatchVersion.toString(),
 				LogTag.SCM_VER + " " + nextPatchVersion),
 				"bump patch version in release branch: " + nextPatchVersion, null, progress);
 		return nextPatchVersion;

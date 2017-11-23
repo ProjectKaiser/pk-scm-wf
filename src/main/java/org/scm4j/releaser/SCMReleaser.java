@@ -15,7 +15,6 @@ import org.scm4j.releaser.scmactions.SCMActionTag;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Supplier;
 
 public class SCMReleaser {
 
@@ -53,15 +52,15 @@ public class SCMReleaser {
 			childActions.add(getActionTree(mdep, actionKind, calculatedResult));
 		}
 		
-		calculatedResult.setBuildStatus(comp, () -> getBuildStatus(comp, calculatedResult, progress));
+		calculatedResult.setBuildStatus(comp, () -> getBuildStatus(comp, calculatedResult), progress);
 		
 		progress.close();
 		return new SCMActionRelease(calculatedResult.getReleaseBranch(comp), comp, childActions, actionKind, calculatedResult.getBuildStatus(comp), calculatedResult);
 	}
 
-	protected BuildStatus getBuildStatus(Component comp, CalculatedResult calculatedResult, IProgress progress) {
+	protected BuildStatus getBuildStatus(Component comp, CalculatedResult calculatedResult) {
 		Build mb = new Build(calculatedResult.getReleaseBranch(comp), comp, calculatedResult);
-		return reportDuration(mb::getStatus, "status calculation", comp, progress);
+		return mb.getStatus();
 	}
 	
 	private void calculateResultNoStatus(Component comp, CalculatedResult calculatedResult, IProgress progress) {
@@ -73,34 +72,19 @@ public class SCMReleaser {
 			return;
 		}
 		
-		ReleaseBranch rb = calculatedResult.setReleaseBranch(comp, () -> reportDuration(() -> new ReleaseBranch(comp), "release branch version calculation", comp, progress));
+		ReleaseBranch rb = calculatedResult.setReleaseBranch(comp, () -> new ReleaseBranch(comp), progress);
 		if (calculatedResult.getMDeps(comp) == null) {
 			boolean needToUseReleaseBranch = (comp.getVersion().isExact() || (!comp.getVersion().isExact() && !calculatedResult.setNeedsToFork(comp, () -> {
 				Build mb = new Build(rb, comp, calculatedResult);
-				return reportDuration(mb::isNeedToFork, "need to fork calculation", comp, progress);
-			}))) && rb.exists();
+				return mb.isNeedToFork();
+			}, progress))) && rb.exists();
 			// untill has untilldb, ubl has untilldb. untill is BUILD_MDEPS, UBL has release branch but need to FORK. 
 			// result: db for untill FORK, db for UBL is DONE prev version (mdep fro existing UBL RB is used) 
 			// TODO: add test: untill build_mdeps, untill needs to be forked. UBL has release rbanch but has to be forked also. untilldbs must have the same status
-			calculatedResult.setMDeps(comp, () -> reportDuration(() -> needToUseReleaseBranch ? rb.getMDeps() : new DevelopBranch(comp).getMDeps(),
-					String.format("read mdeps from %s branch", needToUseReleaseBranch ? "release" : "develop"), comp, progress));
+			calculatedResult.setMDeps(comp, () -> needToUseReleaseBranch ? rb.getMDeps() : new DevelopBranch(comp).getMDeps(), progress);
 		}
 	}
 	
-	public static <T> T reportDuration(Supplier<T> sup, String message, Component comp, IProgress progress) {
-		long start = System.currentTimeMillis();
-		T res = sup.get();
-		progress.reportStatus(message + ": " + (comp == null ? "" : comp.getCoordsNoComment() + " ") + "in " + (System.currentTimeMillis() - start) + "ms");
-		return res;
-	}
-	
-	public static <T> void reportDuration(Runnable run, String message, Component comp, IProgress progress) {
-		reportDuration(() -> {
-			run.run();
-			return null;
-		}, message, comp, progress);
-	}
-
 	public static TagDesc getTagDesc(String verStr) {
 		String tagMessage = verStr + " release";
 		return new TagDesc(verStr, tagMessage);

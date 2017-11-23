@@ -3,6 +3,7 @@ package org.scm4j.releaser.scmactions;
 import org.scm4j.commons.Version;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.releaser.SCMReleaser;
+import org.scm4j.releaser.Utils;
 import org.scm4j.releaser.actions.ActionAbstract;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.branch.ReleaseBranch;
@@ -37,7 +38,7 @@ public class SCMActionTag extends ActionAbstract {
 		TagDesc tagDesc = SCMReleaser.getTagDesc(delayedTagVersion.toString());
 
 		try {
-			SCMReleaser.reportDuration(() -> vcs.createTag(rb.getName(), tagDesc.getName(), tagDesc.getMessage(), revisionToTag),
+			Utils.reportDuration(() -> vcs.createTag(rb.getName(), tagDesc.getName(), tagDesc.getMessage(), revisionToTag),
 					String.format("tag revision %s of %s: %s", revisionToTag, rb.getName(), delayedTagVersion.toReleaseString()), null, progress);
 		} catch (EVCSTagExists e) {
 			progress.reportStatus(String.format("revision %s is already tagged with %s tag", revisionToTag, tagDesc.getName()));

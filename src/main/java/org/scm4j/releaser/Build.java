@@ -1,6 +1,8 @@
 package org.scm4j.releaser;
 
 import org.scm4j.commons.Version;
+import org.scm4j.commons.progress.IProgress;
+import org.scm4j.commons.progress.ProgressConsole;
 import org.scm4j.releaser.branch.DevelopBranch;
 import org.scm4j.releaser.branch.DevelopBranchStatus;
 import org.scm4j.releaser.branch.ReleaseBranch;
@@ -24,23 +26,26 @@ public class Build {
 	private final ReleaseBranch rb;
 	private final DevelopBranch db;
 	private final CalculatedResult calculatedResult;
+	private final IProgress progress;
 
 	public Build(ReleaseBranch rb, Component comp, CalculatedResult calculatedResult) {
 		this.comp = comp;
 		this.rb = rb;
 		db = new DevelopBranch(comp);
 		this.calculatedResult = calculatedResult;
+		progress = new ProgressConsole();
 	}
 
-	public Build(Component comp, CalculatedResult calculatedResult) {
+	public Build(Component comp, CalculatedResult calculatedResult, IProgress progress) {
 		this.comp = comp;
 		this.rb = new ReleaseBranch(comp);
 		this.db = new DevelopBranch(comp);
 		this.calculatedResult = calculatedResult;
+		this.progress = progress;
 	}
 	
 	public Build(Component comp) {
-		this(comp, new CalculatedResult());
+		this(comp, new CalculatedResult(), new ProgressConsole());
 	}
 
 	public Build(ReleaseBranch rb, Component comp) {
@@ -69,7 +74,7 @@ public class Build {
 			}
 		}
 		
-		List<Component> mDeps = calculatedResult.setMDeps(comp, rb::getMDeps);
+		List<Component> mDeps = calculatedResult.setMDeps(comp, rb::getMDeps, progress);
 		
 		if (!areMDepsFrozen(mDeps)) {
 			return BuildStatus.FREEZE;
@@ -93,15 +98,16 @@ public class Build {
 	private boolean hasMDepsNotInDONEStatus(List<Component> mDeps) {
 		for (Component mDep : mDeps) {
 			// probably need to store mdeps for each release branch
-			ReleaseBranch rbMDep = calculatedResult.setReleaseBranch(mDep, () -> new ReleaseBranch(mDep));
+			ReleaseBranch rbMDep = calculatedResult.setReleaseBranch(mDep, () -> new ReleaseBranch(mDep), progress);
 			
-			List<Component> rbMDeps = calculatedResult.setMDeps(mDep, rbMDep::getMDeps);
+			List<Component> rbMDeps = calculatedResult.setMDeps(mDep, rbMDep::getMDeps, progress);
 			
 			if (hasMDepsNotInDONEStatus(rbMDeps)) {
 				return true;
 			}
 			
-			BuildStatus bs = calculatedResult.setBuildStatus(mDep, () -> new Build(mDep, calculatedResult).getStatus());
+			BuildStatus bs = calculatedResult.setBuildStatus(mDep, () -> new Build(mDep, calculatedResult, progress).getStatus(),
+					progress);
 			if (bs != BuildStatus.DONE) {
 				return true;
 			}
@@ -174,12 +180,13 @@ public class Build {
 		ReleaseBranch mDepRB;
 		Version mDepRBHeadVersion;
 		for (Component mDep : mDeps) {
-			Boolean isNeedToForkMDep = calculatedResult.setNeedsToFork(mDep, () -> new Build(mDep).isNeedToFork());
+			Boolean isNeedToForkMDep = calculatedResult.setNeedsToFork(mDep, () -> new Build(mDep, calculatedResult, progress).isNeedToFork(),
+					progress);
 			if (isNeedToForkMDep) {
 				return true;
 			}
 			
-			mDepRB = calculatedResult.setReleaseBranch(mDep, () -> new ReleaseBranch(mDep));
+			mDepRB = calculatedResult.setReleaseBranch(mDep, () -> new ReleaseBranch(mDep), progress);
 			mDepRBHeadVersion = mDepRB.getVersion();
 			// zero patch is checked above
 			if (!mDepRBHeadVersion.toPreviousPatch().equals(mDep.getVersion())) {
