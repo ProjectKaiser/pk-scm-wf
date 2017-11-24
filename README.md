@@ -43,9 +43,23 @@ For version definitions ref. [semantic Versioning 2.0.0](http://semver.org/).
 
 # How It Works
 
-`CLI` uses `SCMReleaser` to create  action tree, then this tree is "executed" using IAction.execute.
 
-- Build: 
+*Overview*
+
+- `CLI` calls `ExtendedStatusTreeBuilder`
+- `ActionTreeBuilder` converts ExtendedStatusTree to ActionTree
+
+*Overview*
+
+
+
+
+ExtendedStatusTreeNode:
+  - Status
+  - latestVersion
+  - Map<Coords, ExtendedStatusTreeNode> subComponents
+  
+
 
 
 # See also
