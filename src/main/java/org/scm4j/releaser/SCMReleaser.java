@@ -43,6 +43,8 @@ public class SCMReleaser {
 	}
 
 	public IAction getActionTree(Component comp, ActionKind actionKind, CalculatedResult calculatedResult) throws Exception {
+		
+		ExtendedStatusTree statusTree = getExtendedStatusTree(comp, actionKind, ExtendedStatusTreeNode)
 		List<IAction> childActions = new ArrayList<>();
 		IProgress progress = new ProgressConsole();
 		calculateResultNoStatus(comp, calculatedResult, progress);
