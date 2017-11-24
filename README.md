@@ -44,21 +44,20 @@ For version definitions ref. [semantic Versioning 2.0.0](http://semver.org/).
 # How It Works
 
 
-*Overview*
+__Overview__
 
-- `CLI` calls `ExtendedStatusTreeBuilder`
-- `ActionTreeBuilder` converts ExtendedStatusTree to ActionTree
+- `CLI` gets ExtendedStatusTree using `ExtendedStatusTreeBuilder` class 
+- `ActionTreeBuilder` converts ExtendedStatusTree to ActionTree (IAction)
 
-**Overview**
+__ExtendedStatusTreeNode__
 
-
-
-
-ExtendedStatusTreeNode:
   - Status
   - latestVersion
   - Map<Coords, ExtendedStatusTreeNode> subComponents
-  
+
+__Caching__
+
+To avoid double status calculation all extended statuses are kept and taken from cache Map<Coords, ExtendedStatusTreeNode>  
 
 
 
