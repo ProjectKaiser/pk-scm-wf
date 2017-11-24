@@ -29,27 +29,12 @@ For version definitions ref. [semantic Versioning 2.0.0](http://semver.org/).
 1. Run `groovy run.groovy status com.mycompany:my-root-component` to view status of your project
 1. Run `groovy run.groovy build com.mycompany:my-root-component` to build your project (and all mdeps)
 
-
-# Data Structure
-
-- [data-structure](docs/data-structure.md)
-- [release statuses](/../../issues/10)
-
-# Features
-
-- [delayed tagging](/../../issues/2)
-- [exact versions in `develop`/`mdeps`](/../../issues/4)
-- [postTag hooks](/../../issues/8)
-
 # How It Works
-
 
 __Overview__
 
 - `CLI` gets ExtendedStatusTree using `ExtendedStatusTreeBuilder` class 
 - `ActionTreeBuilder` converts ExtendedStatusTree to ActionTree (IAction)
-
-
 
 __ExtendedStatusTreeNode__
 
@@ -61,7 +46,16 @@ __Caching__
 
 To avoid double status calculation all extended statuses are kept and taken from cache Map<Coords, ExtendedStatusTreeNode>  
 
+# Data Structure
 
+- [data-structure](docs/data-structure.md)
+- [release statuses](/../../issues/10)
+
+# Features
+
+- [delayed tagging](/../../issues/2)
+- [exact versions in `develop`/`mdeps`](/../../issues/4)
+- [postTag hooks](/../../issues/8)
 
 # See also
 
