@@ -35,16 +35,15 @@ __Overview__
 
 - `CLI` gets ExtendedStatusTree using `ExtendedStatusTreeBuilder` class 
 - `ActionTreeBuilder` converts ExtendedStatusTree to ActionTree (IAction)
+- IAction is executed
+
+To avoid double status calculation all extended statuses are kept and taken from cache Map<Coords, ExtendedStatusTreeNode>  
 
 __ExtendedStatusTreeNode__
 
   - Status
   - latestVersion
   - Map<Coords, ExtendedStatusTreeNode> subComponents
-
-__Caching__
-
-To avoid double status calculation all extended statuses are kept and taken from cache Map<Coords, ExtendedStatusTreeNode>  
 
 # Data Structure
 
