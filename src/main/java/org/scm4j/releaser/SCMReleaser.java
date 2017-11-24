@@ -62,6 +62,12 @@ public class SCMReleaser {
 		return mb.getStatus();
 	}
 	
+	/**
+	 * 
+	 * Where to take mdeps from?
+		<li> (Version is not known) Fork needed => from Develop Branch
+		<li> From RB (existance is checked above)
+	 */
 	private void calculateResultNoStatus(Component comp, CalculatedResult calculatedResult, IProgress progress) {
 		
 		if (Options.isPatch()) {
