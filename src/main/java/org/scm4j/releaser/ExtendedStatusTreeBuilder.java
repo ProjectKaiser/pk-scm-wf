@@ -1,15 +1,13 @@
 package org.scm4j.releaser;
 
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
-import org.scm4j.commons.coords.Coords;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.commons.progress.ProgressConsole;
-import org.scm4j.releaser.branch.ReleaseBranch;
+import org.scm4j.releaser.actions.ActionKind;
+import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.conf.Component;
-import org.scm4j.releaser.conf.Options;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class ExtendedStatusTreeBuilder {
 	
@@ -18,36 +16,23 @@ public class ExtendedStatusTreeBuilder {
 	public ExtendedStatusTreeBuilder(CalculatedResult calculatedResult) {
 		this.calculatedResult = calculatedResult;
 	}
-	
-	public Map<Coords, ExtendedStatusTreeNode> getStatusTree(Component comp) {
+
+	public ExtendedStatus getExtendedStatusTree(Component comp, ActionKind actionKind, CalculatedResult calculatedResult)
+			throws Exception {
+
+		List<IAction> childActions = new ArrayList<>();
 		IProgress progress = new ProgressConsole();
-		Map<Coords, ExtendedStatusTreeNode> res = new ConcurrentHashMap<>();
-		
-		List<Component> mdeps;
-		Utils.async(mdeps, (mdep) -> {
-			res.
-		})
-		for (Component mdep : mdeps) {
-			
+		calculateResultNoStatus(comp, calculatedResult, progress);
+
+		for (Component mdep : calculatedResult.getMDeps(comp)) {
+			childActions.add(getActionTree(mdep, actionKind, calculatedResult));
 		}
-		
-		
+
+		calculatedResult.setBuildStatus(comp, () -> getBuildStatus(comp, calculatedResult), progress);
+
+		progress.close();
+		return new ExtendedStatus
 	}
 	
-	public Map<Coords, ExtendedStatusTreeNode> getStatusTree(Component comp) {
-		
-		/*
-		 * получим
-		 */
-		
-		if (Options.isPatch()) {
-			ReleaseBranch rb = calculatedResult.setReleaseBranch(comp, () -> new ReleaseBranch(comp, comp.getCoords().getVersion()));
-			calculatedResult.setMDeps(comp, rb::getMDeps);
-			calculatedResult.setNeedsToFork(comp, () -> false);
-			return;
-		}
-		
-		
-	}
 
 }

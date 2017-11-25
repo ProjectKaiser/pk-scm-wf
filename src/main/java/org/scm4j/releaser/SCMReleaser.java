@@ -59,6 +59,7 @@ public class SCMReleaser {
 		return new SCMActionRelease(calculatedResult.getReleaseBranch(comp), comp, childActions, actionKind, calculatedResult.getBuildStatus(comp), calculatedResult);
 	}
 
+
 	protected BuildStatus getBuildStatus(Component comp, CalculatedResult calculatedResult) {
 		Build mb = new Build(calculatedResult.getReleaseBranch(comp), comp, calculatedResult);
 		return mb.getStatus();
