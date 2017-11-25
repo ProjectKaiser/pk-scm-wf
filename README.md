@@ -33,17 +33,30 @@ For version definitions ref. [semantic Versioning 2.0.0](http://semver.org/).
 
 __Overview__
 
-- `CLI` gets ExtendedStatusTree using `ExtendedStatusTreeBuilder` class 
-- `ActionTreeBuilder` converts ExtendedStatusTree to ActionTree (IAction)
+- `CLI` gets ExtendedStatus using `ExtendedStatusBuilder` class
+  - determine mdeps source
+    - ROOT COMP CRB does not exists => develop branch
+    - ROOT COMP CRB.version.patch == 0 => release branch (is so? why?)
+    - ROOT COMP develop branch has valuable commits => develop branch (because will be forked with new mdeps versions)
+    - source for any sub-mdep (taken from dev) is develop branch => develop branch (means that ROOT COMP will be forked with new mdeps versions)
+    - => release branch
+    - cache calculated state? parallel?
+  - determine latest version
+    - mdeps source is develop -> ROOT COMP CRB.version.minor.inc(1) (latest version means FUTURE VERSION)
+    - mdeps source is release -> ROOT COMP RB.version
+  - calculate ROOT COMP status
+    - parallel?
+  
+- `ActionBuilder` converts ExtendedStatus to Action (IAction)
 - IAction is executed
 
 To avoid double status calculation all extended statuses are kept and taken from cache Map<Coords, ExtendedStatusTreeNode>  
 
-__ExtendedStatusTreeNode__
+__ExtendedStatus__
 
   - Status
   - latestVersion
-  - Map<Coords, ExtendedStatusTreeNode> subComponents
+  - Map<Coords, ExtendedStatus> subComponents
 
 # Data Structure
 
