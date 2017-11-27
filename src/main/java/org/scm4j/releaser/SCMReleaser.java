@@ -44,7 +44,6 @@ public class SCMReleaser {
 
 	public IAction getActionTree(Component comp, ActionKind actionKind, CalculatedResult calculatedResult) throws Exception {
 		
-		ExtendedStatusTree statusTree = getExtendedStatusTree(comp, actionKind, ExtendedStatusTreeNode)
 		List<IAction> childActions = new ArrayList<>();
 		IProgress progress = new ProgressConsole();
 		calculateResultNoStatus(comp, calculatedResult, progress);
@@ -58,6 +57,27 @@ public class SCMReleaser {
 		progress.close();
 		return new SCMActionRelease(calculatedResult.getReleaseBranch(comp), comp, childActions, actionKind, calculatedResult.getBuildStatus(comp), calculatedResult);
 	}
+	
+	public ExtendedStatus getExtendedStatus(Component comp, ActionKind actionKind, CalculatedResult calculatedResult) throws Exception {
+		List<IAction> childActions = new ArrayList<>();
+		IProgress progress = new ProgressConsole();
+		// сначала надо получить список mdeps
+		
+		calculateResultNoStatus(comp, calculatedResult, progress);
+		
+		for (Component mdep : calculatedResult.getMDeps(comp)) {
+			childActions.add(getActionTree(mdep, actionKind, calculatedResult));
+		}
+		
+		
+		
+		calculatedResult.setBuildStatus(comp, () -> getBuildStatus(comp, calculatedResult), progress);
+		
+		progress.close();
+		return new ExtendedStatus();
+	}
+	
+	
 
 	protected BuildStatus getBuildStatus(Component comp, CalculatedResult calculatedResult) {
 		Build mb = new Build(calculatedResult.getReleaseBranch(comp), comp, calculatedResult);
