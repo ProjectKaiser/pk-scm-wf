@@ -41,8 +41,9 @@ To avoid double status calculation all extended statuses are kept and taken from
 
 __ExtendedStatusTreeNode__
 
+  - Coords
   - Status
-  - latestVersion
+  - latestVersion. If Coords includes version latest version is taken from correspondent release branch, otherwise `develop` is used
   - Map<Coords, ExtendedStatusTreeNode> subComponents
 
 # Data Structure
