@@ -39,6 +39,8 @@ Status denotes next action which should be undertaken to finish patch build: {AC
 
 # EXTENDED STATUS 
 
+Extended status calculation is introduced as a way to avoid multiple visits of subcomponents repositories. Every subcomponent repository is visitied only once, each visit gets all info needed for all calculations.
+
   - Coords
   - Status
   - latestVersion. If Coords includes version latest version is taken from correspondent RB, otherwise CRB is used
