@@ -43,5 +43,5 @@ Extended status calculation is introduced as a way to avoid multiple visits of s
 
   - Coords
   - Status
-  - latestVersion. If Coords includes version latest version is taken from correspondent RB, otherwise CRB is used
+  - latestVersion. If Coords includes version latest version is taken from correspondent `RB`, otherwise `CRB` is used
   - Map<Coords, ExtendedStatusTreeNode> subComponents
