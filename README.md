@@ -43,7 +43,7 @@ __ExtendedStatusTreeNode__
 
   - Coords
   - Status
-  - latestVersion. If Coords includes version latest version is taken from correspondent release branch, otherwise `develop` is used
+  - latestVersion. If Coords includes version latest version is taken from correspondent release branch, otherwise latest release branch is used
   - Map<Coords, ExtendedStatusTreeNode> subComponents
 
 # Data Structure
