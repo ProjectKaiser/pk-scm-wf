@@ -49,7 +49,7 @@ __ExtendedStatusTreeNode__
 # Data Structure
 
 - [data-structure](docs/data-structure.md)
-- [release statuses](/../../issues/10)
+- [release statuses](docs/minor-release-status.md)
 
 # Features
 
