@@ -33,11 +33,9 @@ For version definitions ref. [semantic Versioning 2.0.0](http://semver.org/).
 
 __Overview__
 
-- `CLI` gets ExtendedStatusTree using `ExtendedStatusTreeBuilder` class 
+- `CLI` gets ExtendedStatusTree using `ExtendedStatusTreeBuilder` class (ref. [release statuses](docs/minor-release-status.md))
 - `ActionTreeBuilder` converts ExtendedStatusTree to ActionTree (IAction)
 - IAction is executed
-
-To avoid double status calculation all extended statuses are kept and taken from cache Map<Coords, ExtendedStatusTreeNode>  
 
 __ExtendedStatusTreeNode__
 
