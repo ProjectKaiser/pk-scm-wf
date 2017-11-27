@@ -79,6 +79,7 @@ public class SCMReleaser {
 	
 	
 
+
 	protected BuildStatus getBuildStatus(Component comp, CalculatedResult calculatedResult) {
 		Build mb = new Build(calculatedResult.getReleaseBranch(comp), comp, calculatedResult);
 		return mb.getStatus();
