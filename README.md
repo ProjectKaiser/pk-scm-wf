@@ -54,7 +54,6 @@ To avoid double status calculation all extended statuses are kept and taken from
 
 __ExtendedStatus__
 
-  - coords?
   - Status
   - latestVersion
   - Map<Coords, ExtendedStatus> subComponents
