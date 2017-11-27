@@ -57,6 +57,12 @@ __ExtendedStatusTreeNode__
 - [exact versions in `develop`/`mdeps`](/../../issues/4)
 - [postTag hooks](/../../issues/8)
 
+# Related repositories
+  
+  - [scm4j-vcs-api](../../../scm4j-vcs-api/blob/master/README.md)
+  - [scm4j-vcs-git](../../../scm4j-vcs-git/blob/master/README.md)
+  - [scm4j-vcs-svn](../../../scm4j-vcs-svn/blob/master/README.md)
+
 # See also
 
 [Historical version](https://github.com/scm4j/scm4j-releaser/blob/d540cb00674d485846117dbd68df19bdad306e56/README.md)
