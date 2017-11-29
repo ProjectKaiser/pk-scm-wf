@@ -1,14 +1,19 @@
 package org.scm4j.releaser;
 
+import java.io.File;
 import java.util.Collection;
 import java.util.concurrent.ForkJoinPool;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import org.scm4j.commons.Version;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.releaser.conf.Component;
+import org.scm4j.releaser.conf.TagDesc;
 
 public final class Utils {
+	
+	public static final File RELEASES_DIR = new File(System.getProperty("user.dir"), "releases");
 
 	public static <T> T reportDuration(Supplier<T> sup, String message, Component comp, IProgress progress) {
 		if (progress == null) {
@@ -39,4 +44,20 @@ public final class Utils {
 		}
 		pool.shutdown();
 	}
+
+	public static String getReleaseBranchName(Component comp, Version forVersion) {
+		return comp.getVcsRepository().getReleaseBranchPrefix() + forVersion.getReleaseNoPatchString();
+	}
+	
+	public static File getBuildDir(Component comp, Version forVersion) {
+		File buildDir = new File(RELEASES_DIR, comp.getUrl().replaceAll("[^a-zA-Z0-9.-]", "_"));
+		buildDir = new File(buildDir, getReleaseBranchName(comp, forVersion).replaceAll("[^a-zA-Z0-9.-]", "_"));
+		return buildDir;
+	}
+	
+	public static TagDesc getTagDesc(String verStr) {
+		String tagMessage = verStr + " release";
+		return new TagDesc(verStr, tagMessage);
+	}
+	
 }

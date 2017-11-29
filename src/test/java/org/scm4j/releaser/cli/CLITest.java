@@ -8,7 +8,7 @@ import org.junit.contrib.java.lang.system.ExpectedSystemExit;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.releaser.SCMReleaser;
 import org.scm4j.releaser.TestEnvironment;
-import org.scm4j.releaser.actions.ActionKind;
+import org.scm4j.releaser.actions.ActionSet;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.conf.Option;
 import org.scm4j.releaser.conf.Options;
@@ -67,23 +67,23 @@ public class CLITest {
 
 	@Test
 	public void testCommandFORK() throws Exception {
-		doReturn(mockedAction).when(mockedReleaser).getActionTree(UNTILL, ActionKind.FORK_ONLY);
+		doReturn(mockedAction).when(mockedReleaser).getActionTree(UNTILL, ActionSet.FORK_ONLY);
 		CommandLine cmd = new CommandLine(new String[] { CLICommand.FORK.getStrValue(), UNTILL });
 
 		assertEquals( CLI.EXIT_CODE_OK, new CLI().exec(mockedReleaser, cmd, mockedPS));
 
-		verify(mockedReleaser).getActionTree(UNTILL, ActionKind.FORK_ONLY);
+		verify(mockedReleaser).getActionTree(UNTILL, ActionSet.FORK_ONLY);
 		verify(mockedAction).execute(any(IProgress.class));
 	}
 
 	@Test
 	public void testCommandBUILD() throws Exception {
-		doReturn(mockedAction).when(mockedReleaser).getActionTree(UNTILL, ActionKind.FULL);
+		doReturn(mockedAction).when(mockedReleaser).getActionTree(UNTILL, ActionSet.FULL);
 		CommandLine cmd = new CommandLine(new String[] { CLICommand.BUILD.getStrValue(), UNTILL });
 
 		assertEquals( CLI.EXIT_CODE_OK, new CLI().exec(mockedReleaser, cmd, mockedPS));
 
-		verify(mockedReleaser).getActionTree(UNTILL, ActionKind.FULL);
+		verify(mockedReleaser).getActionTree(UNTILL, ActionSet.FULL);
 		verify(mockedAction).execute(any(IProgress.class));
 	}
 

@@ -1,42 +1,46 @@
 package org.scm4j.releaser.scmactions.procs;
 
-import lombok.SneakyThrows;
+import java.io.File;
+import java.nio.file.Files;
+
 import org.apache.commons.io.FileUtils;
 import org.scm4j.commons.Version;
 import org.scm4j.commons.progress.IProgress;
-import org.scm4j.releaser.CalculatedResult;
+import org.scm4j.releaser.CachedStatuses;
 import org.scm4j.releaser.LogTag;
 import org.scm4j.releaser.SCMReleaser;
 import org.scm4j.releaser.Utils;
-import org.scm4j.releaser.branch.ReleaseBranch;
-import org.scm4j.releaser.conf.*;
+import org.scm4j.releaser.conf.Component;
+import org.scm4j.releaser.conf.DelayedTagsFile;
+import org.scm4j.releaser.conf.Option;
+import org.scm4j.releaser.conf.Options;
+import org.scm4j.releaser.conf.TagDesc;
 import org.scm4j.releaser.exceptions.ENoBuilder;
 import org.scm4j.releaser.exceptions.EReleaserException;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSCommit;
 
-import java.io.File;
-import java.nio.file.Files;
+import lombok.SneakyThrows;
 
 public class SCMProcBuild implements ISCMProc {
 	
-	private final ReleaseBranch rb;
 	private final IVCS vcs;
 	private final Component comp;
-	private final CalculatedResult calculatedResult;
+	private final String releaseBranchName;
+	private final Version versionToBuild;
  
-	public SCMProcBuild(ReleaseBranch rb, Component comp, CalculatedResult calculatedResult) {
-		this.rb = rb;
+	public SCMProcBuild(Component comp, CachedStatuses cache) {
 		this.comp = comp;
-		this.calculatedResult = calculatedResult;
 		vcs = comp.getVCS();
+		releaseBranchName = Utils.getReleaseBranchName(comp, cache.get(comp.getUrl()).getLatestVersion());
+		versionToBuild = cache.get(comp.getUrl()).getLatestVersion();
 	}
 
 	@Override
 	public void execute(IProgress progress) {
-		VCSCommit headCommit = vcs.getHeadCommit(rb.getName());
+		VCSCommit headCommit = vcs.getHeadCommit(releaseBranchName);
 		if (headCommit == null) {
-			throw new EReleaserException("branch does not exist: " + rb.getName());
+			throw new EReleaserException("branch does not exist: " + releaseBranchName);
 		}
 		
 		if (comp.getVcsRepository().getBuilder() == null) {
@@ -47,22 +51,23 @@ public class SCMProcBuild implements ISCMProc {
 		
 		tagBuild(progress, headCommit);
 		
-		Version newVersion = raisePatchVersion(progress);
+		raisePatchVersion(progress);
 		
-		calculatedResult.replaceReleaseBranch(comp, new ReleaseBranch(comp, newVersion, true));
+		// for what?
+		//calculatedResult.replaceReleaseBranch(comp, new ReleaseBranch(comp, newVersion, true));
 		
-		progress.reportStatus(comp.getName() + " " + rb.getVersion().toString() + " is built in " + rb.getName());
+		progress.reportStatus(comp.getName() + " " + versionToBuild + " is built in " + releaseBranchName);
 
 	}
 	
 	@SneakyThrows
 	private void build(IProgress progress, VCSCommit headCommit) {
-		File buildDir = rb.getBuildDir();
+		File buildDir = Utils.getBuildDir(comp, versionToBuild);
 		if (buildDir.exists()) {
 			FileUtils.deleteDirectory(buildDir);
 		}
 		Files.createDirectories(buildDir.toPath());		
-		Utils.reportDuration(() -> vcs.checkout(rb.getName(), buildDir.getPath(), headCommit.getRevision()),
+		Utils.reportDuration(() -> vcs.checkout(releaseBranchName, buildDir.getPath(), headCommit.getRevision()),
 				String.format("check out %s on revision %s into %s", comp.getName(), headCommit.getRevision(), buildDir.getPath()), null, progress);
 		comp.getVcsRepository().getBuilder().build(comp, buildDir, progress);
 	}
@@ -74,16 +79,15 @@ public class SCMProcBuild implements ISCMProc {
 			delayedTagsFile.writeUrlRevision(comp.getVcsRepository().getUrl(), headCommit.getRevision());
 			progress.reportStatus("build commit " + headCommit.getRevision() + " is saved for delayed tagging");
 		} else {
-			String releaseBranchName = rb.getName();
-			TagDesc tagDesc = SCMReleaser.getTagDesc(rb.getVersion().toString());
+			TagDesc tagDesc = Utils.getTagDesc(versionToBuild.toString());
 			Utils.reportDuration(() -> vcs.createTag(releaseBranchName, tagDesc.getName(), tagDesc.getMessage(), headCommit.getRevision()),
 					String.format("tag head of %s: %s", releaseBranchName, tagDesc.getName()), null, progress);
 		}
 	}
 
 	private Version raisePatchVersion(IProgress progress) {
-		Version nextPatchVersion = rb.getVersion().toNextPatch();
-		Utils.reportDuration(() -> vcs.setFileContent(rb.getName(), SCMReleaser.VER_FILE_NAME, nextPatchVersion.toString(),
+		Version nextPatchVersion = versionToBuild.toNextPatch();
+		Utils.reportDuration(() -> vcs.setFileContent(releaseBranchName, SCMReleaser.VER_FILE_NAME, nextPatchVersion.toString(),
 				LogTag.SCM_VER + " " + nextPatchVersion),
 				"bump patch version in release branch: " + nextPatchVersion, null, progress);
 		return nextPatchVersion;

@@ -4,7 +4,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.commons.progress.ProgressConsole;
 import org.scm4j.releaser.SCMReleaser;
-import org.scm4j.releaser.actions.ActionKind;
+import org.scm4j.releaser.actions.ActionSet;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.actions.PrintAction;
 import org.scm4j.releaser.conf.Option;
@@ -41,13 +41,13 @@ public class CLI {
 		long startMS = System.currentTimeMillis();
 		switch(cmd.getCommand()) {
 		case BUILD:
-			action = releaser.getActionTree(cmd.getProductCoords(), ActionKind.FULL);
+			action = releaser.getActionTree(cmd.getProductCoords(), ActionSet.FULL);
 			try (IProgress progress = new ProgressConsole(action.toStringAction(), ">>> ", "<<< ")) {
 				action.execute(progress);
 			}
 			break;
 		case FORK:
-			action = releaser.getActionTree(cmd.getProductCoords(), ActionKind.FORK_ONLY);
+			action = releaser.getActionTree(cmd.getProductCoords(), ActionSet.FORK_ONLY);
 			try (IProgress progress = new ProgressConsole(action.toStringAction(), ">>> ", "<<< ")) {
 				action.execute(progress);
 			}

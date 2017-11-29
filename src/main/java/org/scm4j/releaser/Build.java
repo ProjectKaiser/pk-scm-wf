@@ -1,5 +1,7 @@
 package org.scm4j.releaser;
 
+import java.util.List;
+
 import org.scm4j.commons.Version;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.commons.progress.ProgressConsole;
@@ -15,8 +17,6 @@ import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.vcs.api.VCSTag;
 import org.scm4j.vcs.api.WalkDirection;
-
-import java.util.List;
 
 public class Build {
 
@@ -36,17 +36,17 @@ public class Build {
 		progress = new ProgressConsole();
 	}
 
-	public Build(Component comp, CalculatedResult calculatedResult, IProgress progress) {
+	public Build(Component comp, ReleaseBranch rb, CalculatedResult calculatedResult, IProgress progress) {
 		this.comp = comp;
-		this.rb = new ReleaseBranch(comp);
+		this.rb = rb;
 		this.db = new DevelopBranch(comp);
 		this.calculatedResult = calculatedResult;
 		this.progress = progress;
 	}
 	
-	public Build(Component comp) {
-		this(comp, new CalculatedResult(), new ProgressConsole());
-	}
+//	public Build(Component comp) {
+//		this(comp, new ReleaseBrnew CalculatedResult(), new ProgressConsole());
+//	}
 
 	public Build(ReleaseBranch rb, Component comp) {
 		this(rb, comp, new CalculatedResult());
@@ -97,16 +97,15 @@ public class Build {
 
 	private boolean hasMDepsNotInDONEStatus(List<Component> mDeps) {
 		for (Component mDep : mDeps) {
-			// probably need to store mdeps for each release branch
-			ReleaseBranch rbMDep = calculatedResult.setReleaseBranch(mDep, () -> new ReleaseBranch(mDep), progress);
 			
-			List<Component> rbMDeps = calculatedResult.setMDeps(mDep, rbMDep::getMDeps, progress);
+			ReleaseBranch crbMDep = calculatedResult.setReleaseBranch(comp, () -> ExtendedStatusTreeBuilder.getCRB(mDep, calculatedResult, progress), progress);
+			List<Component> crbMDeps = calculatedResult.getMDeps(comp);
 			
-			if (hasMDepsNotInDONEStatus(rbMDeps)) {
+			if (hasMDepsNotInDONEStatus(crbMDeps)) {
 				return true;
 			}
 			
-			BuildStatus bs = calculatedResult.setBuildStatus(mDep, () -> new Build(mDep, calculatedResult, progress).getStatus(),
+			BuildStatus bs = calculatedResult.setBuildStatus(mDep, () -> new Build(mDep, crbMDep, calculatedResult, progress).getStatus(),
 					progress);
 			if (bs != BuildStatus.DONE) {
 				return true;
@@ -180,13 +179,13 @@ public class Build {
 		ReleaseBranch mDepRB;
 		Version mDepRBHeadVersion;
 		for (Component mDep : mDeps) {
-			Boolean isNeedToForkMDep = calculatedResult.setNeedsToFork(mDep, () -> new Build(mDep, calculatedResult, progress).isNeedToFork(),
+			Boolean isNeedToForkMDep = calculatedResult.setNeedsToFork(mDep, () -> new Build(mDep, rb, calculatedResult, progress).isNeedToFork(),
 					progress);
 			if (isNeedToForkMDep) {
 				return true;
 			}
 			
-			mDepRB = calculatedResult.setReleaseBranch(mDep, () -> new ReleaseBranch(mDep), progress);
+			mDepRB = calculatedResult.setReleaseBranch(mDep, () -> ExtendedStatusTreeBuilder.getCRB(mDep, calculatedResult, progress), progress);
 			mDepRBHeadVersion = mDepRB.getVersion();
 			// zero patch is checked above
 			if (!mDepRBHeadVersion.toPreviousPatch().equals(mDep.getVersion())) {

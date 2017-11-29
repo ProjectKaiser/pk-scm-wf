@@ -1,7 +1,7 @@
 package org.scm4j.releaser;
 
 import org.junit.Test;
-import org.scm4j.releaser.actions.ActionKind;
+import org.scm4j.releaser.actions.ActionSet;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.conf.Component;
 
@@ -20,7 +20,7 @@ public class SCMReleaserTest extends WorkflowTestBase {
 		doReturn(BuildStatus.ERROR).when(releaser).getBuildStatus(any(Component.class), any(CalculatedResult.class));
 
 		try {
-			releaser.getActionTree(TestEnvironment.PRODUCT_UNTILL, ActionKind.FULL);
+			releaser.getActionTree(TestEnvironment.PRODUCT_UNTILL, ActionSet.FULL);
 			fail();
 		} catch (IllegalArgumentException e) {
 
@@ -29,17 +29,17 @@ public class SCMReleaserTest extends WorkflowTestBase {
 	
 	@Test
 	public void testGetActionTreeUsingActionKind() throws Exception {
-		IAction action = releaser.getActionTree(UNTILLDB, ActionKind.FULL);
+		IAction action = releaser.getActionTree(UNTILLDB, ActionSet.FULL);
 		assertIsGoingToForkAndBuild(action, compUnTillDb);
 		
-		action = releaser.getActionTree(UNTILLDB, ActionKind.FORK_ONLY);
+		action = releaser.getActionTree(UNTILLDB, ActionSet.FORK_ONLY);
 		assertIsGoingToFork(action, compUnTillDb);
 		action.execute(getProgress(action));
 		
-		action = releaser.getActionTree(UNTILLDB, ActionKind.FULL);
+		action = releaser.getActionTree(UNTILLDB, ActionSet.FULL);
 		assertIsGoingToBuild(action, compUnTillDb);
 		
-		action = releaser.getActionTree(UNTILLDB, ActionKind.FORK_ONLY);
+		action = releaser.getActionTree(UNTILLDB, ActionSet.FORK_ONLY);
 		assertIsGoingToDoNothing(action, BuildStatus.BUILD, null, compUnTillDb);
 	}
 }

@@ -5,7 +5,7 @@ import org.scm4j.commons.Version;
 import org.scm4j.releaser.BuildStatus;
 import org.scm4j.releaser.SCMReleaser;
 import org.scm4j.releaser.WorkflowTestBase;
-import org.scm4j.releaser.actions.ActionKind;
+import org.scm4j.releaser.actions.ActionSet;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.MDepsFile;
@@ -45,7 +45,7 @@ public class ReleaseBranchTest extends WorkflowTestBase {
 
 	@Test
 	public void testGetMDeps() throws Exception {
-		IAction action = releaser.getActionTree(compUnTill, ActionKind.FORK_ONLY);
+		IAction action = releaser.getActionTree(compUnTill, ActionSet.FORK_ONLY);
 		action.execute(getProgress(action));
 		
 		ReleaseBranch rb = new ReleaseBranch(compUnTill);
@@ -63,7 +63,7 @@ public class ReleaseBranchTest extends WorkflowTestBase {
 
 		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevelopBranch(), "feature added");
 
-		IAction action = releaser.getActionTree(compUnTill, ActionKind.FORK_ONLY);
+		IAction action = releaser.getActionTree(compUnTill, ActionSet.FORK_ONLY);
 		assertIsGoingToForkAll(action);
 		action.execute(getProgress(action));
 
@@ -80,7 +80,7 @@ public class ReleaseBranchTest extends WorkflowTestBase {
 
 		// fork next UBL version
 		env.generateFeatureCommit(env.getUblVCS(), compUBL.getVcsRepository().getDevelopBranch(), "feature added");
-		action = releaser.getActionTree(UBL, ActionKind.FORK_ONLY);
+		action = releaser.getActionTree(UBL, ActionSet.FORK_ONLY);
 		assertIsGoingToFork(action, compUBL);
 		action.execute(getProgress(action));
 
@@ -88,7 +88,7 @@ public class ReleaseBranchTest extends WorkflowTestBase {
 		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevelopBranch(), "feature added");
 
 		// ensure UnTillDb is going to fork
-		action = releaser.getActionTree(UNTILLDB, ActionKind.FORK_ONLY);
+		action = releaser.getActionTree(UNTILLDB, ActionSet.FORK_ONLY);
 		assertIsGoingToFork(action, compUnTillDb);
 
 		// build UBL. unTillDb fork should be skipped
@@ -100,7 +100,7 @@ public class ReleaseBranchTest extends WorkflowTestBase {
 	@Test
 	public void testMDepsUsageIfNewMDeps() throws Exception {
 		// fork UBL
-		IAction action = releaser.getActionTree(UBL, ActionKind.FORK_ONLY);
+		IAction action = releaser.getActionTree(UBL, ActionSet.FORK_ONLY);
 		assertIsGoingToFork(action, compUBL, compUnTillDb);
 		action.execute(getProgress(action));
 		checkUBLForked();

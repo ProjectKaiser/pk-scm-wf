@@ -14,7 +14,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
-import org.scm4j.releaser.actions.ActionKind;
+import org.scm4j.releaser.actions.ActionSet;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.branch.ReleaseBranch;
 import org.scm4j.releaser.conf.Component;
@@ -99,7 +99,7 @@ public class BuildTest extends WorkflowTestBase {
 	@Test
 	public void testBUILDIfNoReleasesOnExistingReleaseBranch() throws Exception {
 		SCMReleaser releaser = new SCMReleaser();
-		IAction action = releaser.getActionTree(compUnTillDb, ActionKind.FORK_ONLY);
+		IAction action = releaser.getActionTree(compUnTillDb, ActionSet.FORK_ONLY);
 		action.execute(getProgress(action));
 		
 		Build md = new Build(compUnTillDb);
@@ -110,7 +110,7 @@ public class BuildTest extends WorkflowTestBase {
 	public void testFREEZEIfMDepsNotFrozen() throws Exception {
 		// fork UBL
 		SCMReleaser releaser = new SCMReleaser();
-		IAction action = releaser.getActionTree(compUBL, ActionKind.FORK_ONLY); 
+		IAction action = releaser.getActionTree(compUBL, ActionSet.FORK_ONLY); 
 		assertIsGoingToFork(action, compUBL);
 		action.execute(getProgress(action));
 		
@@ -195,7 +195,7 @@ public class BuildTest extends WorkflowTestBase {
 	
 	@Test
 	public void testNoReleasesForPatch() throws Exception {
-		IAction action = new SCMReleaser().getActionTree(UNTILLDB, ActionKind.FORK_ONLY);
+		IAction action = new SCMReleaser().getActionTree(UNTILLDB, ActionSet.FORK_ONLY);
 		assertIsGoingToFork(action, compUnTillDb);
 		action.execute(getProgress(action));
 		

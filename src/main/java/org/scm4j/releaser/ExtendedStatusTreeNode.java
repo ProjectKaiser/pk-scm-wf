@@ -1,26 +1,27 @@
 package org.scm4j.releaser;
 
 import java.util.LinkedHashMap;
-import java.util.Map;
 
 import org.scm4j.commons.Version;
-import org.scm4j.commons.coords.Coords;
+import org.scm4j.releaser.conf.Component;
 
 public class ExtendedStatusTreeNode {
 
+	public static final ExtendedStatusTreeNode DUMMY = new ExtendedStatusTreeNode(null, null, null, null);
+	
+	private final Component comp;
 	private final Version latestVersion;
-	private final Coords coords;
 	private final BuildStatus status;
-	private final LinkedHashMap<Coords, ExtendedStatusTreeNode> subComponents;
+	private final LinkedHashMap<Component, ExtendedStatusTreeNode> subComponents;
 
 	public ExtendedStatusTreeNode(Version latestVersion, BuildStatus status,
-			LinkedHashMap<Coords, ExtendedStatusTreeNode> subComponents, Coords coords) {
+			LinkedHashMap<Component, ExtendedStatusTreeNode> subComponents, Component comp) {
 		this.latestVersion = latestVersion;
 		this.status = status;
 		this.subComponents = subComponents;
-		this.coords = coords;
+		this.comp = comp;
 	}
-
+	
 	public Version getLatestVersion() {
 		return latestVersion;
 	}
@@ -29,11 +30,17 @@ public class ExtendedStatusTreeNode {
 		return status;
 	}
 
-	public Map<Coords, ExtendedStatusTreeNode> getSubComponents() {
+	public LinkedHashMap<Component, ExtendedStatusTreeNode> getSubComponents() {
 		return subComponents;
 	}
 
-	public Coords getCoords() {
-		return coords;
+	public Component getComp() {
+		return comp;
+	}
+	
+	@Override
+	public String toString() {
+		return "ExtendedStatusTreeNode [comp=" + getComp() + ", latestVersion=" + latestVersion + ", status=" + status
+				+ ", subComponents=" + subComponents + "]";
 	}
 }

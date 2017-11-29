@@ -27,47 +27,11 @@ public class ReleaseBranch {
 		return name;
 	}
 	
-	public ReleaseBranch(Component comp) {
-		this.url = comp.getVcsRepository().getUrl();
-		this.vcs = comp.getVCS();
-		Version candidateVer = getDevVersion(comp).toPreviousMinor().toReleaseZeroPatch();
-		Version version;
-		boolean exists;
-		try {
-			version = new Version(vcs.getFileContent(getName(comp, candidateVer), SCMReleaser.VER_FILE_NAME, null)).toRelease();
-			exists = true;
-		} catch (EVCSBranchNotFound | EVCSFileNotFound e) {
-			exists = false;
-			version = candidateVer;
-		}
-		this.exists = exists;
-		this.version = version;
-		
-		name = getName(comp, version);
-	}
-	
 	public ReleaseBranch(Component comp, Version exactVersion, Boolean exists) {
 		this.url = comp.getVcsRepository().getUrl();
 		this.vcs = comp.getVCS();
 		name = getName(comp, exactVersion);
 		this.version = exactVersion;
-		this.exists = exists;
-	}
-
-	public ReleaseBranch(Component comp, Version exactVersion) {
-		this.url = comp.getVcsRepository().getUrl();
-		this.vcs = comp.getVCS();
-		name = getName(comp, exactVersion);
-		Version version;
-		boolean exists;
-		try {
-			version = new Version(comp.getVCS().getFileContent(name, SCMReleaser.VER_FILE_NAME, null));
-			exists = true;
-		} catch (EVCSBranchNotFound | EVCSFileNotFound e) {
-			exists = false;
-			version = exactVersion;
-		}
-		this.version = version;
 		this.exists = exists;
 	}
 

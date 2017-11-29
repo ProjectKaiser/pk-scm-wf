@@ -77,4 +77,8 @@ public class Component {
 	public String getCoordsNoComment() {
 		return coords.toStringNoComment();
 	}
+
+	public String getUrl() {
+		return getVcsRepository().getUrl();
+	}
 }
