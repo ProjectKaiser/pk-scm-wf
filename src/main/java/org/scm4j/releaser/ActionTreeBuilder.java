@@ -1,13 +1,13 @@
 package org.scm4j.releaser;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
 import org.scm4j.releaser.actions.ActionSet;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.scmactions.SCMActionRelease;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 public class ActionTreeBuilder {
 
@@ -18,6 +18,5 @@ public class ActionTreeBuilder {
 		}
 		
 		return new SCMActionRelease(node.getComp(), childActions, cache, actionSet);
-		
 	}
 }

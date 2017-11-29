@@ -1,9 +1,9 @@
 package org.scm4j.releaser;
 
-import java.util.LinkedHashMap;
-
 import org.scm4j.commons.Version;
 import org.scm4j.releaser.conf.Component;
+
+import java.util.LinkedHashMap;
 
 public class ExtendedStatusTreeNode {
 

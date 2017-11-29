@@ -1,8 +1,5 @@
 package org.scm4j.releaser;
 
-import java.util.LinkedHashMap;
-import java.util.List;
-
 import org.scm4j.commons.Version;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.commons.progress.ProgressConsole;
@@ -21,30 +18,29 @@ import org.scm4j.vcs.api.WalkDirection;
 import org.scm4j.vcs.api.exceptions.EVCSBranchNotFound;
 import org.scm4j.vcs.api.exceptions.EVCSFileNotFound;
 
+import java.util.LinkedHashMap;
+import java.util.List;
+
 public class ExtendedStatusTreeBuilder {
-	
+
 	private static final int COMMITS_RANGE_LIMIT = 10;
-	
+
 	public ExtendedStatusTreeNode getExtendedStatusTreeNode(Component comp, CachedStatuses cache) {
 		return getExtendedStatusTreeNode(comp, cache, new ProgressConsole());
 	}
-	
-	public ExtendedStatusTreeNode getExtendedStatusTreeNode(Component comp) {
-		return getExtendedStatusTreeNode(comp, new CachedStatuses(), new ProgressConsole());
-	}
-	
+
 	public ExtendedStatusTreeNode getExtendedStatusTreeNode(Component comp, CachedStatuses cache, IProgress progress) {
-		
+
 		ExtendedStatusTreeNode existing = cache.putIfAbsent(comp.getUrl(), ExtendedStatusTreeNode.DUMMY);
-		
+
 		if (ExtendedStatusTreeNode.DUMMY == existing) {
 			throw new IllegalStateException("Circular dependency detected: %s ");
 		}
-		
-		if(null != existing) {
+
+		if (null != existing) {
 			return existing;
 		}
-		
+
 		IVCS vcs = comp.getVCS();
 		Version crbVersion = getDevVersion(comp).toPreviousMinor().toReleaseZeroPatch();
 		Version latestVersion;
@@ -56,28 +52,28 @@ public class ExtendedStatusTreeBuilder {
 			crbExists = false;
 			latestVersion = crbVersion;
 		}
-		
+
 		List<Component> mdeps;
-		if (crbExists && latestVersion.getPatch().equals("0")) {
-			mdeps = new ReleaseBranch(comp, latestVersion, crbExists).getMDeps();
+		if (crbExists && !latestVersion.getPatch().equals("0")) {
+			mdeps = new ReleaseBranch(comp, latestVersion, true).getMDeps();
 		} else {
 			mdeps = new DevelopBranch(comp).getMDeps();
 		}
-		
+
 		// Extended status for subcomponents
 		for (Component mdep : mdeps) {
 			getExtendedStatusTreeNode(mdep, cache, progress);
 		}
-		
+
 		LinkedHashMap<Component, ExtendedStatusTreeNode> subComponents = new LinkedHashMap<>();
 		for (Component mdep : mdeps) {
 			subComponents.put(mdep, cache.get(mdep.getUrl()));
 		}
-		
+
 		Boolean isNeedToFork = isNeedToFork(comp, latestVersion, crbExists, mdeps, cache);
-		
+
 		BuildStatus status = getBuildStatus(comp, isNeedToFork, latestVersion, crbExists, mdeps, cache);
-		
+
 		Version targetVersion;
 		if (status.ordinal() > BuildStatus.FREEZE.ordinal()) {
 			targetVersion = latestVersion;
@@ -91,12 +87,12 @@ public class ExtendedStatusTreeBuilder {
 	}
 
 	private BuildStatus getBuildStatus(Component comp, Boolean isNeedToFork, Version latestVersion, boolean crbExists, List<Component> mdeps,
-			CachedStatuses cache) {
+									   CachedStatuses cache) {
 		if (Options.isPatch()) {
 			if (!crbExists) {
 				throw new ENoReleaseBranchForPatch("Release Branch does not exists for the requested Component version: " + comp);
 			}
-			
+
 			if (Integer.parseInt(latestVersion.getPatch()) < 1) {
 				throw new ENoReleases("Release Branch version patch is " + latestVersion.getPatch() + ". Component release should be created before patch");
 			}
@@ -104,16 +100,16 @@ public class ExtendedStatusTreeBuilder {
 			if (!comp.getVersion().isLocked() && isNeedToFork) {
 				return BuildStatus.FORK;
 			}
-			
+
 			if (Integer.parseInt(latestVersion.getPatch()) > 0) {
 				return BuildStatus.DONE;
 			}
 		}
-		
+
 		if (!areMDepsFrozen(mdeps)) {
 			return BuildStatus.FREEZE;
 		}
-		
+
 		if (hasMDepsNotInDONEStatus(mdeps, cache)) {
 			return BuildStatus.BUILD_MDEPS;
 		}
@@ -121,16 +117,16 @@ public class ExtendedStatusTreeBuilder {
 		if (!areMDepsPatchesActual(mdeps, cache)) {
 			return BuildStatus.ACTUALIZE_PATCHES;
 		}
-		
+
 		if (Options.isPatch() && noValueableCommitsAfterLastTag(comp)) {
 			return BuildStatus.DONE;
 		}
-		
+
 		return BuildStatus.BUILD;
-		
-		
+
+
 	}
-	
+
 	private boolean hasMDepsNotInDONEStatus(List<Component> mDeps, CachedStatuses cache) {
 		for (Component mDep : mDeps) {
 			if (cache.get(mDep.getUrl()).getStatus() != BuildStatus.DONE) {
@@ -143,7 +139,7 @@ public class ExtendedStatusTreeBuilder {
 	private boolean noValueableCommitsAfterLastTag(Component comp) {
 		IVCS vcs = comp.getVCS();
 		String startingFromRevision = null;
-		
+
 		DelayedTagsFile dtf = new DelayedTagsFile();
 		String delayedTagRevision = dtf.getRevisitonByUrl(comp.getVcsRepository().getUrl());
 		List<VCSCommit> commits;
@@ -169,7 +165,7 @@ public class ExtendedStatusTreeBuilder {
 
 	private boolean areMDepsPatchesActual(List<Component> mDeps, CachedStatuses cache) {
 		for (Component mDep : mDeps) {
-			if (!cache.get(mDep.getUrl()).getLatestVersion().equals(mDep.getVersion().toNextPatch())) { 
+			if (!cache.get(mDep.getUrl()).getLatestVersion().equals(mDep.getVersion().toNextPatch())) {
 				return false;
 			}
 		}
@@ -189,17 +185,17 @@ public class ExtendedStatusTreeBuilder {
 		if (!crbExists) {
 			return true;
 		}
-		
+
 		if (latestVersion.getPatch().equals("0")) {
 			return false;
 		}
-		
+
 		// develop branch has valuable commits => YES
 		if (new DevelopBranch(comp).getStatus() == DevelopBranchStatus.MODIFIED) {
 			return true;
 		}
-		
-		
+
+
 		ExtendedStatusTreeNode mdepStatus;
 		for (Component mdep : mdeps) {
 			mdepStatus = cache.get(mdep.getUrl());
@@ -207,18 +203,18 @@ public class ExtendedStatusTreeBuilder {
 			if (mdepStatus.getStatus() == BuildStatus.FORK) {
 				return true;
 			}
-			
+
 			// Versions in mdeps does NOT equal to components CR versions => YES
 			if (!mdepStatus.getLatestVersion().toPreviousPatch().equals(mdep.getVersion())) {
 				return true;
 			}
 		}
-		
+
 		return false;
 	}
 
 	public static ReleaseBranch getCRB(Component comp, CalculatedResult calculatedResult, IProgress progress) {
-		
+
 		Version candidateVer = getDevVersion(comp).toPreviousMinor().toReleaseZeroPatch();
 		Version tempVersion;
 		boolean crbExists;
@@ -230,9 +226,9 @@ public class ExtendedStatusTreeBuilder {
 			crbExists = false;
 			tempVersion = candidateVer;
 		}
-		
+
 		final Version latestVersion = tempVersion;
-		
+
 		ReleaseBranch rb = new ReleaseBranch(comp, latestVersion, crbExists);
 		if (crbExists && latestVersion.getPatch().equals("0")) {
 			calculatedResult.setMDeps(comp, () -> rb.getMDeps(), progress);
@@ -241,7 +237,7 @@ public class ExtendedStatusTreeBuilder {
 		}
 		return rb;
 	}
-	
+
 	public static Version getDevVersion(Component comp) {
 		return new Version(comp.getVCS().getFileContent(comp.getVcsRepository().getDevelopBranch(), SCMReleaser.VER_FILE_NAME, null));
 	}
