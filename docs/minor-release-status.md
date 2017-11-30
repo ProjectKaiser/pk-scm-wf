@@ -45,3 +45,6 @@ Extended status calculation is introduced as a way to avoid multiple visits of s
   - Status
   - nextVersion. If Coords includes version latest version is taken from correspondent `RB`, otherwise version from `develop` branch is used
   - Map<Coords, ExtendedStatusTreeNode> subComponents
+
+# See Also
+- (Wrongly refactored)[https://github.com/scm4j/scm4j-releaser/blob/eafe1330dd7076d7e9c1c41dfdbb7dc9e85a6afb/docs/minor-release-status.md]
