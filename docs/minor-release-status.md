@@ -14,7 +14,7 @@ Parameters calculation
     - else `develop`
   - else RB for given version
 - `mdeps`: are taken from mdepsBranch
-- `subComponents` are calculated using mdeps
+- `subComponents` extended status are calculated using mdeps
 - `WB`:
 
 Status calculation
