@@ -4,7 +4,7 @@
 
 # MINOR BUILD STATUS
 
-Status denotes next action which should be undertaken to finish minor build: {FORK, FREEZE, BUILD_MDEPS, ACTUALIZE_PATCHES, BUILD, DONE}
+Status denotes next action which should be undertaken to finish minor build: {FORK, LOCK, BUILD_MDEPS, ACTUALIZE_PATCHES, BUILD, DONE}
 
 Aux calculations
 
@@ -20,7 +20,7 @@ Status calculation
 
 - If version is not locked: FORK needed? => FORK
 - WB.version.patch >0 => DONE
-- mdeps are not frozen => FREEZE
+- any mdeps version is not locked => LOCK
 - Any component is not in DONE status => BUILD_MDEPS
 - Any component has patch which is greater than one mentioned in `mdeps` => ACTUALIZE_PATCHES
 - If none of above : BUILD
@@ -41,7 +41,7 @@ Status calculation
 Status denotes next action which should be undertaken to finish patch build: {ACTUALIZE_PATCHES, BUILD, DONE}
 
 - RB does not exist or RB.patch < 1 => ERROR, show error on status command
-- mdeps are not frozen => FREEZE
+- mdeps are not locked  => LOCK
 - Any component is not in DONE status => BUILD_MDEPS
 - Any component has patch which is greater than one mentioned in `mdeps` => ACTUALIZE_PATCHES
 - No valuable commits after last tag => DONE
