@@ -51,7 +51,7 @@ Status denotes next action which should be undertaken to finish patch build: {AC
 
 Extended status calculation is introduced as a way to avoid multiple visits of subcomponents repositories. Every subcomponent repository is visitied only once, each visit fetches all info needed for all calculations.
 
-  - Coords
+  - Component
   - Status
   - wbVersion. Version from `WB`, no decrements, -SNAPSHOT is truncated
-  - Map<Coords, ExtendedStatusTreeNode> subComponents
+  - Map<Component, ExtendedStatusTreeNode> subComponents
