@@ -8,7 +8,7 @@ Status denotes next action which should be undertaken to finish minor build: {FO
 
 Aux calculations
 
-- `WB`: branch where to get mdeps from
+- `WB`: branch to get mdeps from
   - if version locked 
     - RB for given version
   - else 
