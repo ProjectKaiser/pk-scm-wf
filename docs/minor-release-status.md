@@ -8,7 +8,7 @@ Status denotes next action which should be undertaken to finish minor build: {FO
 
 Parameters calculation
 
-- WB: branch where to get mdeps from
+- `WB`: branch where to get mdeps from
   - if version not locked 
     - if CRB exists - CRB
     - else `develop`
