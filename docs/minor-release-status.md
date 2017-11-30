@@ -1,41 +1,15 @@
 - `CR`: current minor release,  `develop`.version - minor(1)
 - `CRB`: current release branch
 - `RB`: release branch
-# Example
-- case 1:
-  - unTill ver 123.0-SNAPSHOT, has develo commits (i.e. needs to be forked) and has DONE release/122 branch
-    - UBL ver 23.0-SNAPSHOT, has develop commits (i.e. needs to be forked) and has DONE release/22 branch
-  - cmd: status untill 
-    - Where to take unTill's mdeps from?
-      - version is not locked -> CRB (release/122) exists -> develop - correct
-- case 2:
-  - unTill ver 123.0-SNAPSHOT and has ACTUALZE_PATCHES status for release/122 branch
-    - UBL ver 23.0-SNAPSHOT and has DONE release/22 branch
-  - cmd: status untill 
-    - Where to take unTill's mdeps from?
-      - version is not locked -> CRB (release/122) exists -> develop - wrong, should be release/122
-      
-      
 
 # MINOR BUILD STATUS
 
-Status denotes next action which should be undertaken to finish minor build: {FORK, LOCK, BUILD_MDEPS, ACTUALIZE_PATCHES, BUILD, DONE}
-
-Aux calculations
-
-- `WB`: branch to get mdeps from
-  - if version locked 
-    - RB for given version
-  - else 
-    - CRB exists? CRB : `develop`
-- `mdeps`: are taken from `WB`
-- `subComponents` extended statuses are calculated using `mdeps`
-
-Status calculation
+Status denotes next action which should be undertaken to finish minor build: {FORK, FREEZE, BUILD_MDEPS, ACTUALIZE_PATCHES, BUILD, DONE}
 
 - If version is not locked: FORK needed? => FORK
-- WB.version.patch >0 => DONE
-- any mdeps version is not locked => LOCK
+- If version is locked: mdeps extended status is calculated using mdeps from particular RB
+- CRB.version.patch >0 => DONE
+- mdeps are not frozen => FREEZE
 - Any component is not in DONE status => BUILD_MDEPS
 - Any component has patch which is greater than one mentioned in `mdeps` => ACTUALIZE_PATCHES
 - If none of above : BUILD
@@ -44,8 +18,9 @@ Status calculation
 
 {YES, NO}
 
-- WB.name = `develop` => YES
-- WB.version.patch == 0 => NO
+- `CRB` does not exist => YES
+- `CRB`.version.patch == 0 => NO
+- Extended status of subcomponents is calculated.  if CRB exists and version.patch == 0 mdeps are taken from CRB otherwise from `develop`
 - `develop` branch has valuable commits => YES
 - Any mdep needs FORK => YES
 - Versions in `mdeps` does NOT equal to components CR versions => YES (means that all is built but some sub-component has newer minor or patch)
@@ -56,7 +31,7 @@ Status calculation
 Status denotes next action which should be undertaken to finish patch build: {ACTUALIZE_PATCHES, BUILD, DONE}
 
 - RB does not exist or RB.patch < 1 => ERROR, show error on status command
-- mdeps are not locked  => LOCK
+- mdeps are not frozen => FREEZE
 - Any component is not in DONE status => BUILD_MDEPS
 - Any component has patch which is greater than one mentioned in `mdeps` => ACTUALIZE_PATCHES
 - No valuable commits after last tag => DONE
@@ -66,7 +41,7 @@ Status denotes next action which should be undertaken to finish patch build: {AC
 
 Extended status calculation is introduced as a way to avoid multiple visits of subcomponents repositories. Every subcomponent repository is visitied only once, each visit fetches all info needed for all calculations.
 
-  - Component
+  - Coords
   - Status
-  - wbVersion. Version from `WB`, no decrements, -SNAPSHOT is truncated
-  - Map<Component, ExtendedStatusTreeNode> subComponents
+  - nextVersion. If Coords includes version latest version is taken from correspondent `RB`, otherwise version from `develop` branch is used
+  - Map<Coords, ExtendedStatusTreeNode> subComponents
