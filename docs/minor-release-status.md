@@ -1,4 +1,4 @@
-- `CR`: current release,  `develop`.version - minor(1)
+- `CR`: current minor release,  `develop`.version - minor(1)
 - `CRB`: current release branch
 - `RB`: release branch
 
@@ -43,5 +43,6 @@ Extended status calculation is introduced as a way to avoid multiple visits of s
 
   - Coords
   - Status
-  - latestVersion. If Coords includes version latest version is taken from correspondent `RB`, otherwise `CRB` is used
+  - latestVersion. If Coords includes version latest version is taken from correspondent `RB`, otherwise `CRB` is used.
+    - Could be null if CRB does not exist
   - Map<Coords, ExtendedStatusTreeNode> subComponents
