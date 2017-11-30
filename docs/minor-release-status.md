@@ -6,10 +6,10 @@
 
 Extended status calculation is introduced as a way to avoid multiple visits of subcomponents repositories. Every subcomponent repository is visitied only once, each visit fetches all info needed for all calculations.
 
-  - Coords
-  - Status: denotes next action which should be undertaken to finish build: {FORK, LOCK (dependencies), BUILD_MDEPS, ACTUALIZE_PATCHES, BUILD, DONE}
-  - nextVersion. FORK: from `develop` (without -SNAPSHOT, 0-patched), otherwise from RB
-  - Map<Coords, ExtendedStatusTreeNode> subComponents
+  - `Coords`
+  - `Status`: denotes next action which should be undertaken to finish build: {FORK, LOCK (dependencies), BUILD_MDEPS, ACTUALIZE_PATCHES, BUILD, DONE}
+  - `nextVersion`. FORK: from `develop` (without -SNAPSHOT, 0-patched), otherwise from RB
+  - Map<Coords, ExtendedStatusTreeNode> `subComponents`
 
 
 # MINOR BUILD STATUS
