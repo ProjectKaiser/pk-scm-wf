@@ -9,10 +9,11 @@ Status denotes next action which should be undertaken to finish minor build: {FO
 Aux calculations
 
 - `WB`: branch where to get mdeps from
-  - if version not locked 
+  - if version locked 
+    - RB for given version
+  - else 
     - if CRB exists - CRB
     - else `develop`
-  - else RB for given version
 - `mdeps`: are taken from `WB`
 - `subComponents` extended status are calculated using `mdeps`
 
