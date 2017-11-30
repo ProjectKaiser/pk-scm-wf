@@ -12,7 +12,7 @@ Aux calculations
   - if version locked 
     - RB for given version
   - else 
-    - CRB exists? CRB: `develop`
+    - CRB exists? CRB : `develop`
 - `mdeps`: are taken from `WB`
 - `subComponents` extended status are calculated using `mdeps`
 
