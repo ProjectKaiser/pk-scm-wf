@@ -39,7 +39,7 @@ public class SCMProcFreezeMDeps implements ISCMProc {
 		Version newVersion;
 		boolean hasChanges = false;
 		for (Component currentMDep : currentMDepsFile.getMDeps()) {
-			newVersion = cache.get(currentMDep.getUrl()).getLatestVersion();
+			newVersion = cache.get(currentMDep.getUrl()).getWBVersion();
 			if (!newVersion.getPatch().equals(Build.ZERO_PATCH)) {
 				newVersion = newVersion.toPreviousPatch();
 			}
@@ -52,7 +52,7 @@ public class SCMProcFreezeMDeps implements ISCMProc {
 		}
 		if (hasChanges) {
 			progress.reportStatus("mdeps to freeze:\r\n" + sb.toString());
-			Utils.reportDuration(() -> vcs.setFileContent(Utils.getReleaseBranchName(comp, status.getLatestVersion()), SCMReleaser.MDEPS_FILE_NAME, currentMDepsFile.toFileContent(), LogTag.SCM_MDEPS),
+			Utils.reportDuration(() -> vcs.setFileContent(Utils.getReleaseBranchName(comp, status.getWBVersion()), SCMReleaser.MDEPS_FILE_NAME, currentMDepsFile.toFileContent(), LogTag.SCM_MDEPS),
 					"freeze mdeps" , null, progress);
 		}
 	}

@@ -1,12 +1,12 @@
 package org.scm4j.releaser;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+
 import org.junit.Test;
 import org.scm4j.commons.Version;
 import org.scm4j.releaser.actions.ActionSet;
 import org.scm4j.releaser.actions.IAction;
-import org.scm4j.releaser.branch.ReleaseBranch;
-
-import static org.junit.Assert.*;
 
 public class WorkflowForkTest extends WorkflowTestBase {
 	

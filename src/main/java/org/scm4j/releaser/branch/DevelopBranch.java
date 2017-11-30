@@ -55,20 +55,7 @@ public class DevelopBranch {
 		return comp.getVcsRepository().getDevelopBranch();
 	}
 	
-	public List<Component> getMDeps() {
-		String mDepsFileContent;
-		try {
-			mDepsFileContent = vcs.getFileContent(getName(), SCMReleaser.MDEPS_FILE_NAME, null);
-		} catch (EVCSBranchNotFound | EVCSFileNotFound e) {
-			return new ArrayList<>();
-		}
-		MDepsFile mDeps = new MDepsFile(mDepsFileContent);
-		List<Component> res = new ArrayList<>();
-		for (Component mDep : mDeps.getMDeps()) {
-			res.add(mDep.clone(""));
-		}
-		return res;
-	}
+	
 
 	@Override
 	public String toString() {

@@ -31,7 +31,7 @@ public class SCMProcActualizePatches implements ISCMProc {
 		boolean hasNew = false;
 		Version newVersion;
 		for (Component currentMDep : currentMDepsFile.getMDeps()) {
-			newVersion = cache.get(currentMDep.getUrl()).getLatestVersion().toPreviousPatch();
+			newVersion = cache.get(currentMDep.getUrl()).getWBVersion().toPreviousPatch();
 			if (!newVersion.equals(currentMDep.getVersion())) {
 				hasNew = true;
 			}
@@ -46,7 +46,7 @@ public class SCMProcActualizePatches implements ISCMProc {
 		if (hasNew) {
 			sb.setLength(sb.length() - 2);
 			progress.reportStatus("patches to actualize:\r\n" + sb.toString());
-			Utils.reportDuration(() -> vcs.setFileContent(Utils.getReleaseBranchName(comp, cache.get(comp.getUrl()).getLatestVersion()), SCMReleaser.MDEPS_FILE_NAME, currentMDepsFile.toFileContent(), LogTag.SCM_MDEPS),
+			Utils.reportDuration(() -> vcs.setFileContent(Utils.getReleaseBranchName(comp, cache.get(comp.getUrl()).getWBVersion()), SCMReleaser.MDEPS_FILE_NAME, currentMDepsFile.toFileContent(), LogTag.SCM_MDEPS),
 					"writting mdeps", null, progress);
 		} else {
 			progress.reportStatus("mdeps patches are actual already");

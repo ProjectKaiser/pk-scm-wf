@@ -1,7 +1,7 @@
 package org.scm4j.releaser.scmactions;
 
 import org.junit.Test;
-import org.scm4j.releaser.branch.ReleaseBranch;
+import org.scm4j.releaser.branch.WorkingBranch;
 
 import java.util.ArrayList;
 
@@ -13,7 +13,7 @@ public class SCMActionTagReleaseTest extends SCMActionTestBase {
 	@Test
 	public void testExceptions() throws Exception {
 		comp = spy(comp);
-		ReleaseBranch rb = spy(new ReleaseBranch(comp));
+		WorkingBranch rb = spy(new WorkingBranch(comp));
 		SCMActionTag action = spy(new SCMActionTag(rb, comp, new ArrayList<>()));
 		when(comp.getVcsRepository()).thenCallRealMethod().thenReturn(null);
 		

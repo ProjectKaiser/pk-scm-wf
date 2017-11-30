@@ -7,7 +7,7 @@ import org.scm4j.commons.progress.IProgress;
 import org.scm4j.commons.progress.ProgressConsole;
 import org.scm4j.releaser.branch.DevelopBranch;
 import org.scm4j.releaser.branch.DevelopBranchStatus;
-import org.scm4j.releaser.branch.ReleaseBranch;
+import org.scm4j.releaser.branch.WorkingBranch;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.DelayedTagsFile;
 import org.scm4j.releaser.conf.Options;
@@ -23,12 +23,12 @@ public class Build {
 	public static final String ZERO_PATCH = "0";
 	private static final int COMMITS_RANGE_LIMIT = 10;
 	private final Component comp;
-	private final ReleaseBranch rb;
+	private final WorkingBranch rb;
 	private final DevelopBranch db;
 	private final CalculatedResult calculatedResult;
 	private final IProgress progress;
 
-	public Build(ReleaseBranch rb, Component comp, CalculatedResult calculatedResult) {
+	public Build(WorkingBranch rb, Component comp, CalculatedResult calculatedResult) {
 		this.comp = comp;
 		this.rb = rb;
 		db = new DevelopBranch(comp);
@@ -36,7 +36,7 @@ public class Build {
 		progress = new ProgressConsole();
 	}
 
-	public Build(Component comp, ReleaseBranch rb, CalculatedResult calculatedResult, IProgress progress) {
+	public Build(Component comp, WorkingBranch rb, CalculatedResult calculatedResult, IProgress progress) {
 		this.comp = comp;
 		this.rb = rb;
 		this.db = new DevelopBranch(comp);
@@ -48,7 +48,7 @@ public class Build {
 //		this(comp, new ReleaseBrnew CalculatedResult(), new ProgressConsole());
 //	}
 
-	public Build(ReleaseBranch rb, Component comp) {
+	public Build(WorkingBranch rb, Component comp) {
 		this(rb, comp, new CalculatedResult());
 	}
 
@@ -77,7 +77,7 @@ public class Build {
 		List<Component> mDeps = calculatedResult.setMDeps(comp, rb::getMDeps, progress);
 		
 		if (!areMDepsFrozen(mDeps)) {
-			return BuildStatus.FREEZE;
+			return BuildStatus.LOCK;
 		}
 		
 		if (hasMDepsNotInDONEStatus(mDeps)) {
@@ -98,7 +98,7 @@ public class Build {
 	private boolean hasMDepsNotInDONEStatus(List<Component> mDeps) {
 		for (Component mDep : mDeps) {
 			
-			ReleaseBranch crbMDep = calculatedResult.setReleaseBranch(comp, () -> ExtendedStatusTreeBuilder.getCRB(mDep, calculatedResult, progress), progress);
+			WorkingBranch crbMDep = calculatedResult.setReleaseBranch(comp, () -> ExtendedStatusTreeBuilder.getCRB(mDep, calculatedResult, progress), progress);
 			List<Component> crbMDeps = calculatedResult.getMDeps(comp);
 			
 			if (hasMDepsNotInDONEStatus(crbMDeps)) {
@@ -142,7 +142,7 @@ public class Build {
 
 	private boolean areMDepsPatchesActual(List<Component> mDeps) {
 		for (Component mDep : mDeps) {
-			ReleaseBranch rbMDep = calculatedResult.getReleaseBranch(mDep); // already created above
+			WorkingBranch rbMDep = calculatedResult.getReleaseBranch(mDep); // already created above
 			// mdep 2.59.0, rb 2.59.1 - all is ok. not need to build 2.59.1 because if so BUILD_MDEPS will be result before
 			if (!rbMDep.getVersion().equals(mDep.getVersion().toNextPatch())) { 
 				return false;
@@ -176,7 +176,7 @@ public class Build {
 		}
 
 		List<Component> mDeps = rb.getMDeps();
-		ReleaseBranch mDepRB;
+		WorkingBranch mDepRB;
 		Version mDepRBHeadVersion;
 		for (Component mDep : mDeps) {
 			Boolean isNeedToForkMDep = calculatedResult.setNeedsToFork(mDep, () -> new Build(mDep, rb, calculatedResult, progress).isNeedToFork(),

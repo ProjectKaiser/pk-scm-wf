@@ -10,7 +10,7 @@ import org.scm4j.commons.progress.IProgress;
 import org.scm4j.commons.progress.ProgressConsole;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.branch.DevelopBranch;
-import org.scm4j.releaser.branch.ReleaseBranch;
+import org.scm4j.releaser.branch.WorkingBranch;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.DelayedTagsFile;
 import org.scm4j.releaser.conf.MDepsFile;
@@ -56,7 +56,7 @@ public class WorkflowTestBase {
 		dbUBL = new DevelopBranch(compUBL);
 		TestBuilder.setBuilders(new HashMap<>());
 		new DelayedTagsFile().delete();
-		waitForDeleteDir(ReleaseBranch.RELEASES_DIR);
+		waitForDeleteDir(WorkingBranch.RELEASES_DIR);
 	}
 
 	@After
@@ -67,7 +67,7 @@ public class WorkflowTestBase {
 		TestBuilder.setBuilders(null);
 		Options.setOptions(new ArrayList<>());
 		Options.setIsPatch(false);
-		waitForDeleteDir(ReleaseBranch.RELEASES_DIR);
+		waitForDeleteDir(WorkingBranch.RELEASES_DIR);
 	}
 
 	public static void waitForDeleteDir(File dir) throws Exception {
@@ -109,7 +109,7 @@ public class WorkflowTestBase {
 	
 	protected Version getLatestVersion(Component comp) {
 		IVCS vcs = comp.getVCS();
-		Version crbVersion = ExtendedStatusTreeBuilder.getDevVersion(comp).toPreviousMinor().toReleaseZeroPatch();
+		Version crbVersion = Utils.getDevVersion(comp).toPreviousMinor().toReleaseZeroPatch();
 		Version latestVersion;
 		try {
 			latestVersion = new Version(vcs.getFileContent(Utils.getReleaseBranchName(comp, crbVersion), SCMReleaser.VER_FILE_NAME, null)).toRelease();
@@ -335,7 +335,7 @@ public class WorkflowTestBase {
 		assertThat(action, allOf(
 				instanceOf(SCMActionRelease.class),
 				hasProperty("bsFrom", equalTo(BuildStatus.FORK)), 
-				hasProperty("bsTo", equalTo(BuildStatus.FREEZE))), comps);
+				hasProperty("bsTo", equalTo(BuildStatus.LOCK))), comps);
 	}
 
 	protected void assertIsGoingToForkAndBuild(IAction action, Component... comps) {

@@ -16,7 +16,7 @@ import java.util.List;
 import org.junit.Test;
 import org.scm4j.releaser.actions.ActionSet;
 import org.scm4j.releaser.actions.IAction;
-import org.scm4j.releaser.branch.ReleaseBranch;
+import org.scm4j.releaser.branch.WorkingBranch;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.MDepsFile;
 import org.scm4j.releaser.conf.Options;
@@ -115,13 +115,13 @@ public class BuildTest extends WorkflowTestBase {
 		action.execute(getProgress(action));
 		
 		// simulate mdeps not frozen
-		ReleaseBranch rb = new ReleaseBranch(compUBL);
+		WorkingBranch rb = new WorkingBranch(compUBL);
 		List<Component> mDeps = rb.getMDeps();
 		Component snapshotedUnTillDb = mDeps.get(0).clone(mDeps.get(0).getVersion().toSnapshot());
 		MDepsFile mDepsFile = new MDepsFile(Arrays.asList(snapshotedUnTillDb));
 		env.getUblVCS().setFileContent(rb.getName(), SCMReleaser.MDEPS_FILE_NAME, mDepsFile.toFileContent(), "mdeps snapshoted");
 		
-		assertEquals(BuildStatus.FREEZE, new Build(compUBL).getStatus());
+		assertEquals(BuildStatus.LOCK, new Build(compUBL).getStatus());
 	}
 	
 	@Test
@@ -133,12 +133,12 @@ public class BuildTest extends WorkflowTestBase {
 		action.execute(getProgress(action));
 		
 		// build unTillDb patch
-		ReleaseBranch rbUnTillDb = new ReleaseBranch(compUnTillDb);
+		WorkingBranch rbUnTillDb = new WorkingBranch(compUnTillDb);
 		env.generateFeatureCommit(env.getUnTillDbVCS(), rbUnTillDb.getName(), "patch feature merged");
 		action = releaser.getActionTree(compUnTillDb.clone(env.getUnTillDbVer().toRelease()));
 		assertIsGoingToBuild(action, compUnTillDb);
 		action.execute(getProgress(action));
-		assertEquals(env.getUnTillDbVer().toReleaseZeroPatch().toNextPatch().toNextPatch(), new ReleaseBranch(compUnTillDb).getVersion());
+		assertEquals(env.getUnTillDbVer().toReleaseZeroPatch().toNextPatch().toNextPatch(), new WorkingBranch(compUnTillDb).getVersion());
 		
 		assertEquals(BuildStatus.ACTUALIZE_PATCHES, new Build(compUBL).getStatus());
 	}
@@ -152,7 +152,7 @@ public class BuildTest extends WorkflowTestBase {
 		action.execute(getProgress(action));
 
 		// add an igonored feature and tag it
-		ReleaseBranch rbUnTillDb = new ReleaseBranch(compUnTillDb);
+		WorkingBranch rbUnTillDb = new WorkingBranch(compUnTillDb);
 		env.generateFeatureCommit(env.getUnTillDbVCS(), rbUnTillDb.getName(), LogTag.SCM_IGNORE + " feature megred");
 		env.getUnTillDbVCS().createTag(rbUnTillDb.getName(), "tag", "tag", null);
 
@@ -184,7 +184,7 @@ public class BuildTest extends WorkflowTestBase {
 	public void testNoReleaseBranchForPatch() throws Exception {
 		Options.setIsPatch(true);
 		Component comp = new Component(UNTILLDB + ":2.59.0");
-		ReleaseBranch rb = new ReleaseBranch(comp, comp.getCoords().getVersion());
+		WorkingBranch rb = new WorkingBranch(comp, comp.getCoords().getVersion());
 		Build b = new Build(rb, comp);
 		try {
 			b.getStatus();
@@ -200,7 +200,7 @@ public class BuildTest extends WorkflowTestBase {
 		action.execute(getProgress(action));
 		
 		Component comp = new Component(UNTILLDB + ":2.59.0");
-		ReleaseBranch rb = new ReleaseBranch(comp, comp.getCoords().getVersion());
+		WorkingBranch rb = new WorkingBranch(comp, comp.getCoords().getVersion());
 		Build b = new Build(rb, comp);
 		Options.setIsPatch(true);
 		try {

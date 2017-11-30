@@ -30,21 +30,21 @@ public class SCMActionRelease extends ActionAbstract {
 		super(comp, childActions);
 		ExtendedStatusTreeNode status = cache.get(comp.getUrl());
 		this.bsFrom = status.getStatus();
-		targetVersion = status.getLatestVersion();
+		targetVersion = status.getWBVersion();
 		
 		BuildStatus bsTo = null;
 		switch(bsFrom) {
 		case FORK:
 			procs.add(new SCMProcForkBranch(comp, cache));
-		case FREEZE:
+		case LOCK:
 			getProcs().add(new SCMProcFreezeMDeps(comp, cache));
-			bsTo = BuildStatus.FREEZE;
+			bsTo = BuildStatus.LOCK;
 			if (actionSet == ActionSet.FORK_ONLY) {
 				break;
 			}
 		case BUILD_MDEPS:
 		case ACTUALIZE_PATCHES:
-			if (bsFrom.ordinal() > BuildStatus.FREEZE.ordinal() && actionSet == ActionSet.FULL) {
+			if (bsFrom.ordinal() > BuildStatus.LOCK.ordinal() && actionSet == ActionSet.FULL) {
 				getProcs().add(new SCMProcActualizePatches(comp, cache));
 			}
 		case BUILD:

@@ -10,20 +10,20 @@ public class ExtendedStatusTreeNode {
 	public static final ExtendedStatusTreeNode DUMMY = new ExtendedStatusTreeNode(null, null, null, null);
 	
 	private final Component comp;
-	private final Version latestVersion;
+	private final Version wbVersion;
 	private final BuildStatus status;
 	private final LinkedHashMap<Component, ExtendedStatusTreeNode> subComponents;
 
-	public ExtendedStatusTreeNode(Version latestVersion, BuildStatus status,
+	public ExtendedStatusTreeNode(Version wbVersion, BuildStatus status,
 			LinkedHashMap<Component, ExtendedStatusTreeNode> subComponents, Component comp) {
-		this.latestVersion = latestVersion;
+		this.wbVersion = wbVersion;
 		this.status = status;
 		this.subComponents = subComponents;
 		this.comp = comp;
 	}
 	
-	public Version getLatestVersion() {
-		return latestVersion;
+	public Version getWBVersion() {
+		return wbVersion;
 	}
 
 	public BuildStatus getStatus() {
@@ -40,7 +40,7 @@ public class ExtendedStatusTreeNode {
 	
 	@Override
 	public String toString() {
-		return "ExtendedStatusTreeNode [comp=" + getComp() + ", latestVersion=" + latestVersion + ", status=" + status
+		return "ExtendedStatusTreeNode [comp=" + getComp() + ", wbVersion=" + wbVersion + ", status=" + status
 				+ ", subComponents=" + subComponents + "]";
 	}
 }

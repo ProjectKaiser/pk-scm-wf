@@ -5,7 +5,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.scm4j.commons.Version;
 import org.scm4j.releaser.actions.IAction;
-import org.scm4j.releaser.branch.ReleaseBranch;
+import org.scm4j.releaser.branch.WorkingBranch;
 import org.scm4j.releaser.conf.*;
 import org.scm4j.vcs.api.VCSTag;
 import org.scm4j.vcs.api.WalkDirection;
@@ -34,7 +34,7 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 		assertIsGoingToForkAndBuildAll(action);
 		action.execute(getProgress(action));
 
-		env.generateFeatureCommit(env.getUnTillDbVCS(), new ReleaseBranch(compUnTillDb, env.getUnTillDbVer()).getName(), "patch feature merged");
+		env.generateFeatureCommit(env.getUnTillDbVCS(), new WorkingBranch(compUnTillDb, env.getUnTillDbVer()).getName(), "patch feature merged");
 		Options.setOptions(Collections.singletonList(Option.DELAYED_TAG));
 		
 		// build all patches
@@ -124,7 +124,7 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 		assertIsGoingToTagAll(action);
 
 		// simulate tag exists already
-		ReleaseBranch rbUnTill = new ReleaseBranch(compUnTill);
+		WorkingBranch rbUnTill = new WorkingBranch(compUnTill);
 		Map<String, String> content = dtf.getContent();
 		for (Map.Entry<String, String> entry : content.entrySet()) {
 			if (compUnTill.getVcsRepository().getUrl().equals(entry.getKey())) {
@@ -170,7 +170,7 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 		action.execute(getProgress(action));
 
 		String revisionToTag = dtf.getRevisitonByUrl(compUnTillDb.getVcsRepository().getUrl());
-		ReleaseBranch rbUnTillDb = new ReleaseBranch(compUnTillDb);
+		WorkingBranch rbUnTillDb = new WorkingBranch(compUnTillDb);
 		env.getUnTillDbVCS().createTag(rbUnTillDb.getName(), "other-tag", "other tag message", revisionToTag);
 		
 		// simulate tag exists
@@ -192,7 +192,7 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 	}
 	
 	private boolean isPreHeadCommitTaggedWithVersion(Component comp) {
-		ReleaseBranch rb = new ReleaseBranch(comp);
+		WorkingBranch rb = new WorkingBranch(comp);
 		List<VCSTag> tags = comp.getVCS().getTagsOnRevision(comp.getVCS().getCommitsRange(rb.getName(), null, WalkDirection.DESC, 2).get(1).getRevision());
 		for (VCSTag tag : tags) {
 			if (tag.getTagName().equals(rb.getVersion().toPreviousPatch().toReleaseString())) {

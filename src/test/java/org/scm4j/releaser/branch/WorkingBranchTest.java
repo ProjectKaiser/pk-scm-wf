@@ -15,13 +15,13 @@ import java.util.List;
 
 import static org.junit.Assert.*;
 
-public class ReleaseBranchTest extends WorkflowTestBase {
+public class WorkingBranchTest extends WorkflowTestBase {
 
 	private final SCMReleaser releaser = new SCMReleaser();
 
 	@Test
 	public void testCreate() {
-		ReleaseBranch rb = new ReleaseBranch(compUnTillDb);
+		WorkingBranch rb = new WorkingBranch(compUnTillDb);
 		assertEquals(compUnTillDb.getVcsRepository().getUrl(), rb.getUrl());
 		assertEquals(compUnTillDb.getVcsRepository().getReleaseBranchPrefix()
 				+ env.getUnTillDbVer().toPreviousMinor().getReleaseNoPatchString(), rb.getName());
@@ -29,7 +29,7 @@ public class ReleaseBranchTest extends WorkflowTestBase {
 
 	@Test
 	public void testExists() throws Exception {
-		ReleaseBranch rb = new ReleaseBranch(compUnTillDb);
+		WorkingBranch rb = new WorkingBranch(compUnTillDb);
 		assertFalse(rb.exists());
 
 		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevelopBranch(),
@@ -37,7 +37,7 @@ public class ReleaseBranchTest extends WorkflowTestBase {
 		IAction action = releaser.getActionTree(compUnTillDb);
 		action.execute(getProgress(action));
 
-		rb = new ReleaseBranch(compUnTillDb);
+		rb = new WorkingBranch(compUnTillDb);
 		assertTrue(rb.exists());
 		assertEquals(compUnTillDb.getVcsRepository().getReleaseBranchPrefix()
 				+ env.getUnTillDbVer().getReleaseNoPatchString(), rb.getName());
@@ -48,7 +48,7 @@ public class ReleaseBranchTest extends WorkflowTestBase {
 		IAction action = releaser.getActionTree(compUnTill, ActionSet.FORK_ONLY);
 		action.execute(getProgress(action));
 		
-		ReleaseBranch rb = new ReleaseBranch(compUnTill);
+		WorkingBranch rb = new WorkingBranch(compUnTill);
 		List<Component> mDeps = rb.getMDeps();
 		assertTrue(mDeps.size() == 2);
 		assertTrue(mDeps.contains(compUBL.clone(env.getUblVer().toReleaseZeroPatch())));
@@ -57,9 +57,9 @@ public class ReleaseBranchTest extends WorkflowTestBase {
 
 	@Test
 	public void testVersionSelect() throws Exception {
-		assertEquals(env.getUnTillDbVer().toPreviousMinor().toReleaseZeroPatch(), new ReleaseBranch(compUnTillDb).getVersion());
+		assertEquals(env.getUnTillDbVer().toPreviousMinor().toReleaseZeroPatch(), new WorkingBranch(compUnTillDb).getVersion());
 		Version testVer = new Version("11.12");
-		assertEquals(testVer, new ReleaseBranch(compUnTillDb, testVer).getVersion());
+		assertEquals(testVer, new WorkingBranch(compUnTillDb, testVer).getVersion());
 
 		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevelopBranch(), "feature added");
 
@@ -67,7 +67,7 @@ public class ReleaseBranchTest extends WorkflowTestBase {
 		assertIsGoingToForkAll(action);
 		action.execute(getProgress(action));
 
-		assertEquals(env.getUnTillDbVer().toReleaseZeroPatch(), new ReleaseBranch(compUnTillDb).getVersion());
+		assertEquals(env.getUnTillDbVer().toReleaseZeroPatch(), new WorkingBranch(compUnTillDb).getVersion());
 	}
 
 	@Test
@@ -119,6 +119,6 @@ public class ReleaseBranchTest extends WorkflowTestBase {
 	
 	@Test
 	public void testToString() {
-		assertNotNull(new ReleaseBranch(compUnTill).toString());
+		assertNotNull(new WorkingBranch(compUnTill).toString());
 	}
 }
