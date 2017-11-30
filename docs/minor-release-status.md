@@ -9,7 +9,7 @@ Status denotes next action which should be undertaken to finish minor build: {FO
 - If version is not locked: FORK needed? => FORK
 - If version is locked: mdeps extended status is calculated using mdeps from particular RB
 - CRB.version.patch >0 => DONE
-- mdeps are not frozen => LOCK
+- mdeps are not locked => LOCK
 - Any component is not in DONE status => BUILD_MDEPS
 - Any component has patch which is greater than one mentioned in `mdeps` => ACTUALIZE_PATCHES
 - If none of above : BUILD
