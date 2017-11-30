@@ -6,7 +6,7 @@
 
 Status denotes next action which should be undertaken to finish minor build: {FORK, FREEZE, BUILD_MDEPS, ACTUALIZE_PATCHES, BUILD, DONE}
 
-Aux calculations:
+Aux calculations
 
 - `WB`: branch where to get mdeps from
   - if version not locked 
