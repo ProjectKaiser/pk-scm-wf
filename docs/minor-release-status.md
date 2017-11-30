@@ -9,7 +9,7 @@
     - Where to take unTill's mdeps from?
       - version is not locked -> CRB (release/122) exists -> develop - correct
 - case 2:
-  - unTill ver 123.0-SNAPSHOT and has DONE release/122 branch
+  - unTill ver 123.0-SNAPSHOT and has ACTUALZE_PATCHES status for release/122 branch
     - UBL ver 23.0-SNAPSHOT and has DONE release/22 branch
   - cmd: status untill 
     - Where to take unTill's mdeps from?
