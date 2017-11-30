@@ -14,7 +14,7 @@ Aux calculations
   - else 
     - CRB exists? CRB : `develop`
 - `mdeps`: are taken from `WB`
-- `subComponents` extended status are calculated using `mdeps`
+- `subComponents` extended statuses are calculated using `mdeps`
 
 Status calculation
 
