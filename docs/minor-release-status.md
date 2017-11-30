@@ -53,5 +53,5 @@ Extended status calculation is introduced as a way to avoid multiple visits of s
 
   - Coords
   - Status
-  - nextVersion. If Coords includes version latest version is taken from correspondent `RB` (as is no decrements), otherwise version from `develop` branch is used (-SNAPSHOT is truncated)
+  - wbVersion. Version from `WB`, no decrements, -SNAPSHOT is truncated
   - Map<Coords, ExtendedStatusTreeNode> subComponents
