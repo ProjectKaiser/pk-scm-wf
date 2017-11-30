@@ -17,7 +17,7 @@ Extended status calculation is introduced as a way to avoid multiple visits of s
 Status denotes next action which should be undertaken to finish minor build: {FORK, LOCK, BUILD_MDEPS, ACTUALIZE_PATCHES, BUILD, DONE}
 
 - If version is not locked: FORK needed? => FORK
-- If version is locked: mdeps extended status is calculated using mdeps from particular RB
+- If version is locked: `subComponents` are calculated using mdeps from particular RB
 - CRB.version.patch >0 => DONE
 - mdeps are not locked => LOCK
 - Any component is not in DONE status => BUILD_MDEPS
