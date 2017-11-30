@@ -43,6 +43,5 @@ Extended status calculation is introduced as a way to avoid multiple visits of s
 
   - Coords
   - Status
-  - latestVersion. If Coords includes version latest version is taken from correspondent `RB`, otherwise `CRB` is used.
-    - Could be null if CRB does not exist
+  - nextVersion. If Coords includes version latest version is taken from correspondent `RB`, otherwise version from `develop` branch is used
   - Map<Coords, ExtendedStatusTreeNode> subComponents
