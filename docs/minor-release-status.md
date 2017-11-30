@@ -32,6 +32,7 @@ Status denotes next action which should be undertaken to finish patch build: {AC
 
 - RB does not exist or RB.patch < 1 => ERROR, show error on status command
 - mdeps are not frozen => FREEZE
+- mdeps extended status is calculated using mdeps from particular RB
 - Any component is not in DONE status => BUILD_MDEPS
 - Any component has patch which is greater than one mentioned in `mdeps` => ACTUALIZE_PATCHES
 - No valuable commits after last tag => DONE
