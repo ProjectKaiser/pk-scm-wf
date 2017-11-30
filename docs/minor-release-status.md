@@ -44,7 +44,7 @@ Extended status calculation is introduced as a way to avoid multiple visits of s
 
   - Coords
   - Status
-  - nextVersion. FORK: from `develop` (without -SNAPSHOT), otherwise from RB
+  - nextVersion. FORK: from `develop` (without -SNAPSHOT, 0-patched), otherwise from RB
   - Map<Coords, ExtendedStatusTreeNode> subComponents
 
 # See Also
