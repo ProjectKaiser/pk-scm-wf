@@ -13,9 +13,8 @@ Parameters calculation
     - if CRB exists - CRB
     - else `develop`
   - else RB for given version
-- `mdeps`: are taken from mdepsBranch
-- `subComponents` extended status are calculated using mdeps
-- `WB`:
+- `mdeps`: are taken from `WB`
+- `subComponents` extended status are calculated using `mdeps`
 
 Status calculation
 
