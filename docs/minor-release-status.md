@@ -47,4 +47,4 @@ Extended status calculation is introduced as a way to avoid multiple visits of s
   - Map<Coords, ExtendedStatusTreeNode> subComponents
 
 # See Also
-- (Wrongly refactored)[https://github.com/scm4j/scm4j-releaser/blob/eafe1330dd7076d7e9c1c41dfdbb7dc9e85a6afb/docs/minor-release-status.md]
+- [Wrongly refactored](https://github.com/scm4j/scm4j-releaser/blob/eafe1330dd7076d7e9c1c41dfdbb7dc9e85a6afb/docs/minor-release-status.md)
