@@ -1,5 +1,20 @@
 package org.scm4j.releaser;
 
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasProperty;
+import static org.hamcrest.Matchers.instanceOf;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
 import org.apache.commons.io.FileUtils;
 import org.hamcrest.Matcher;
 import org.junit.After;
@@ -10,7 +25,7 @@ import org.scm4j.commons.progress.IProgress;
 import org.scm4j.commons.progress.ProgressConsole;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.branch.DevelopBranch;
-import org.scm4j.releaser.branch.WorkingBranch;
+import org.scm4j.releaser.branch.MDepsSource;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.DelayedTagsFile;
 import org.scm4j.releaser.conf.MDepsFile;
@@ -23,14 +38,6 @@ import org.scm4j.vcs.api.VCSTag;
 import org.scm4j.vcs.api.WalkDirection;
 import org.scm4j.vcs.api.exceptions.EVCSBranchNotFound;
 import org.scm4j.vcs.api.exceptions.EVCSFileNotFound;
-
-import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
 
 public class WorkflowTestBase {
 	protected TestEnvironment env;
@@ -56,7 +63,7 @@ public class WorkflowTestBase {
 		dbUBL = new DevelopBranch(compUBL);
 		TestBuilder.setBuilders(new HashMap<>());
 		new DelayedTagsFile().delete();
-		waitForDeleteDir(WorkingBranch.RELEASES_DIR);
+		waitForDeleteDir(MDepsSource.RELEASES_DIR);
 	}
 
 	@After
@@ -67,7 +74,7 @@ public class WorkflowTestBase {
 		TestBuilder.setBuilders(null);
 		Options.setOptions(new ArrayList<>());
 		Options.setIsPatch(false);
-		waitForDeleteDir(WorkingBranch.RELEASES_DIR);
+		waitForDeleteDir(MDepsSource.RELEASES_DIR);
 	}
 
 	public static void waitForDeleteDir(File dir) throws Exception {

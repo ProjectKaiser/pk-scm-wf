@@ -22,7 +22,7 @@ public class SCMProcForkBranch implements ISCMProc {
 		db = new DevelopBranch(comp);
 		vcs = comp.getVCS();
 		status = cache.get(comp.getUrl());
-		newBranchName = Utils.getReleaseBranchName(comp, status.getWBVersion());
+		newBranchName = Utils.getReleaseBranchName(comp, status.getNextVersion());
 	}
 	
 	@Override
@@ -43,7 +43,7 @@ public class SCMProcForkBranch implements ISCMProc {
 	}
 	
 	private void truncateSnapshotReleaseVersion(IProgress progress) {
-		String noSnapshotVersion = status.getWBVersion().toString();
+		String noSnapshotVersion = status.getNextVersion().toString();
 		Utils.reportDuration(() -> vcs.setFileContent(newBranchName, SCMReleaser.VER_FILE_NAME, noSnapshotVersion, LogTag.SCM_VER + " " + noSnapshotVersion),
 				"truncate snapshot: " + noSnapshotVersion + " in branch " + newBranchName, null, progress);
 	}

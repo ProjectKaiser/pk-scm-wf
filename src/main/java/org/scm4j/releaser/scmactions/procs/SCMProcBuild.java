@@ -32,8 +32,8 @@ public class SCMProcBuild implements ISCMProc {
 	public SCMProcBuild(Component comp, CachedStatuses cache) {
 		this.comp = comp;
 		vcs = comp.getVCS();
-		releaseBranchName = Utils.getReleaseBranchName(comp, cache.get(comp.getUrl()).getWBVersion());
-		versionToBuild = cache.get(comp.getUrl()).getWBVersion();
+		releaseBranchName = Utils.getReleaseBranchName(comp, cache.get(comp.getUrl()).getNextVersion());
+		versionToBuild = cache.get(comp.getUrl()).getNextVersion();
 	}
 
 	@Override

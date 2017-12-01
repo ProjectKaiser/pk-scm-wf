@@ -195,7 +195,7 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 		WorkingBranch rb = new WorkingBranch(comp);
 		List<VCSTag> tags = comp.getVCS().getTagsOnRevision(comp.getVCS().getCommitsRange(rb.getName(), null, WalkDirection.DESC, 2).get(1).getRevision());
 		for (VCSTag tag : tags) {
-			if (tag.getTagName().equals(rb.getVersion().toPreviousPatch().toReleaseString())) {
+			if (tag.getTagName().equals(rb.getNextVersion().toPreviousPatch().toReleaseString())) {
 				return true;
 			}
 		}

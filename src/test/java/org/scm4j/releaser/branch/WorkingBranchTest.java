@@ -57,9 +57,9 @@ public class WorkingBranchTest extends WorkflowTestBase {
 
 	@Test
 	public void testVersionSelect() throws Exception {
-		assertEquals(env.getUnTillDbVer().toPreviousMinor().toReleaseZeroPatch(), new WorkingBranch(compUnTillDb).getVersion());
+		assertEquals(env.getUnTillDbVer().toPreviousMinor().toReleaseZeroPatch(), new WorkingBranch(compUnTillDb).getNextVersion());
 		Version testVer = new Version("11.12");
-		assertEquals(testVer, new WorkingBranch(compUnTillDb, testVer).getVersion());
+		assertEquals(testVer, new WorkingBranch(compUnTillDb, testVer).getNextVersion());
 
 		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevelopBranch(), "feature added");
 
@@ -67,7 +67,7 @@ public class WorkingBranchTest extends WorkflowTestBase {
 		assertIsGoingToForkAll(action);
 		action.execute(getProgress(action));
 
-		assertEquals(env.getUnTillDbVer().toReleaseZeroPatch(), new WorkingBranch(compUnTillDb).getVersion());
+		assertEquals(env.getUnTillDbVer().toReleaseZeroPatch(), new WorkingBranch(compUnTillDb).getNextVersion());
 	}
 
 	@Test

@@ -1,18 +1,14 @@
 package org.scm4j.releaser.branch;
 
+import java.util.List;
+
 import org.scm4j.commons.Version;
 import org.scm4j.releaser.LogTag;
 import org.scm4j.releaser.SCMReleaser;
 import org.scm4j.releaser.conf.Component;
-import org.scm4j.releaser.conf.MDepsFile;
 import org.scm4j.releaser.exceptions.EComponentConfig;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSCommit;
-import org.scm4j.vcs.api.exceptions.EVCSBranchNotFound;
-import org.scm4j.vcs.api.exceptions.EVCSFileNotFound;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class DevelopBranch {
 	
@@ -54,8 +50,6 @@ public class DevelopBranch {
 	public String getName() {
 		return comp.getVcsRepository().getDevelopBranch();
 	}
-	
-	
 
 	@Override
 	public String toString() {

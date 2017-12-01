@@ -4,11 +4,12 @@ import java.util.LinkedHashMap;
 import java.util.List;
 
 import org.apache.commons.lang3.NotImplementedException;
+import org.scm4j.commons.Version;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.commons.progress.ProgressConsole;
 import org.scm4j.releaser.branch.DevelopBranch;
 import org.scm4j.releaser.branch.DevelopBranchStatus;
-import org.scm4j.releaser.branch.WorkingBranch;
+import org.scm4j.releaser.branch.MDepsSource;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.DelayedTagsFile;
 import org.scm4j.releaser.conf.Options;
@@ -39,75 +40,79 @@ public class ExtendedStatusTreeBuilder {
 			return existing;
 		}
 
-		WorkingBranch wb = new WorkingBranch(comp);
+		MDepsSource mDepsSource = new MDepsSource(comp);
 		
-		for (Component mdep : wb.getMdeps()) {
-			cache.put(mdep.getUrl(), getExtendedStatusTreeNode(comp, cache, progress));
+		// не тут, а где-то в getMinorBuildStatus
+		// а почему не тут? можно вынести из isNeedToFork, т.к. этот код зависит теперь только от WorkingBranch
+		for (Component mdep : mDepsSource.getMDeps()) {
+			cache.put(mdep.getUrl(), getExtendedStatusTreeNode(mdep, cache, progress));
 		}
 		
 		BuildStatus status;
-		if (Options.isPatch()) {
-			status = getMinorBuildStatus(comp, wb, cache);
+		if (comp.getVersion().isLocked()) {
+			status = getPatchBuildStatus(comp, mDepsSource, cache);
 		} else {
-			status = getPatchBuildStatus(comp, wb, cache);
+			status = getMinorBuildStatus(comp, mDepsSource, cache, progress);
 		}
 		
 		LinkedHashMap<Component, ExtendedStatusTreeNode> subComponents = new LinkedHashMap<>();
-		for (Component mdep : wb.getMdeps()) {
+		for (Component mdep : mDepsSource.getMDeps()) {
 			subComponents.put(mdep, cache.get(mdep.getUrl()));
 		}
-
-		ExtendedStatusTreeNode res = new ExtendedStatusTreeNode(wb.getVersion(), status, subComponents, comp);
+		
+		
+		Version nextVersion = status == BuildStatus.FORK ? mDepsSource.getDevVersion().toReleaseZeroPatch() : mDepsSource.getVersion(); 
+		ExtendedStatusTreeNode res = new ExtendedStatusTreeNode(nextVersion, status, subComponents, comp);
 		cache.replace(comp.getUrl(), res);
 		return res;
 	}
 
-	private BuildStatus getPatchBuildStatus(Component comp, WorkingBranch wb, CachedStatuses cache) {
-		if (!wb.isDevelop()) {
+	private BuildStatus getPatchBuildStatus(Component comp, MDepsSource mDepsSource, CachedStatuses cache) {
+		if (mDepsSource.isDevelopMDepSource()) {
 			throw new ENoReleaseBranchForPatch("Release Branch does not exists for the requested Component version: " + comp);
 		}
 
-		if (Integer.parseInt(wb.getVersion().getPatch()) < 1) {
-			throw new ENoReleases("Release Branch version patch is " + wb.getVersion().getPatch() + ". Component release should be created before patch");
+		if (Integer.parseInt(mDepsSource.getVersion().getPatch()) < 1) {
+			throw new ENoReleases("Release Branch version patch is " + mDepsSource.getVersion().getPatch() + ". Component release should be created before patch");
 		}
 
-		if (!areMDepsFrozen(wb.getMdeps())) {
+		if (!areMDepsFrozen(mDepsSource.getMDeps())) {
 			return BuildStatus.LOCK;
 		}
 
-		if (hasMDepsNotInDONEStatus(wb.getMdeps(), cache)) {
+		if (hasMDepsNotInDONEStatus(mDepsSource.getMDeps(), cache)) {
 			return BuildStatus.BUILD_MDEPS;
 		}
 
-		if (!areMDepsPatchesActual(wb.getMdeps(), cache)) {
+		if (!areMDepsPatchesActual(mDepsSource.getMDeps(), cache)) {
 			return BuildStatus.ACTUALIZE_PATCHES;
 		}
 
-		if (Options.isPatch() && noValueableCommitsAfterLastTag(comp)) {
+		if (noValueableCommitsAfterLastTag(comp)) {
 			return BuildStatus.DONE;
 		}
 
 		return BuildStatus.BUILD;
 	}
 
-	private BuildStatus getMinorBuildStatus(Component comp, WorkingBranch wb, CachedStatuses cache) {
-		if (!comp.getVersion().isLocked() && isNeedToFork(comp, wb, cache)) {
+	private BuildStatus getMinorBuildStatus(Component comp, MDepsSource mDepsSource, CachedStatuses cache, IProgress progress) {
+		if (!comp.getVersion().isLocked() && isNeedToFork(comp, mDepsSource, cache, progress)) {
 			return BuildStatus.FORK;
 		}
 		
-		if (Integer.parseInt(wb.getVersion().getPatch()) > 0) {
+		if (Integer.parseInt(mDepsSource.getVersion().getPatch()) > 0) {
 			return BuildStatus.DONE;
 		}
 
-		if (!areMDepsFrozen(wb.getMdeps())) {
+		if (!areMDepsFrozen(mDepsSource.getMDeps())) {
 			return BuildStatus.LOCK;
 		}
 
-		if (hasMDepsNotInDONEStatus(wb.getMdeps(), cache)) {
+		if (hasMDepsNotInDONEStatus(mDepsSource.getMDeps(), cache)) {
 			return BuildStatus.BUILD_MDEPS;
 		}
 
-		if (!areMDepsPatchesActual(wb.getMdeps(), cache)) {
+		if (!areMDepsPatchesActual(mDepsSource.getMDeps(), cache)) {
 			return BuildStatus.ACTUALIZE_PATCHES;
 		}
 
@@ -158,7 +163,7 @@ public class ExtendedStatusTreeBuilder {
 
 	private boolean areMDepsPatchesActual(List<Component> mDeps, CachedStatuses cache) {
 		for (Component mDep : mDeps) {
-			if (!cache.get(mDep.getUrl()).getWBVersion().equals(mDep.getVersion().toNextPatch())) {
+			if (!cache.get(mDep.getUrl()).getNextVersion().equals(mDep.getVersion().toNextPatch())) {
 				return false;
 			}
 		}
@@ -174,12 +179,12 @@ public class ExtendedStatusTreeBuilder {
 		return true;
 	}
 
-	private Boolean isNeedToFork(Component comp, WorkingBranch wb, CachedStatuses cache) {
-		if (wb.isDevelop()) {
+	private Boolean isNeedToFork(Component comp, MDepsSource mDepsSource, CachedStatuses cache, IProgress progress) {
+		if (mDepsSource.isDevelopMDepSource()) {
 			return true;
 		}
 
-		if (wb.getVersion().getPatch().equals("0")) {
+		if (mDepsSource.getVersion().getPatch().equals("0")) {
 			return false;
 		}
 		
@@ -189,7 +194,7 @@ public class ExtendedStatusTreeBuilder {
 		}
 		
 		ExtendedStatusTreeNode mdepStatus;
-		for (Component mdep : wb.getMdeps()) {
+		for (Component mdep : mDepsSource.getMDeps()) {
 			mdepStatus = cache.get(mdep.getUrl());
 			// any mdeps needs FORK => YES
 			if (mdepStatus.getStatus() == BuildStatus.FORK) {
@@ -197,7 +202,7 @@ public class ExtendedStatusTreeBuilder {
 			}
 
 			// Versions in mdeps does NOT equal to components CR versions => YES
-			if (!mdepStatus.getWBVersion().toPreviousPatch().equals(mdep.getVersion())) {
+			if (!mdepStatus.getNextVersion().toPreviousPatch().equals(mdep.getVersion())) {
 				return true;
 			}
 		}

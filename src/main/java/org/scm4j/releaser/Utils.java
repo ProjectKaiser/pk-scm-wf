@@ -1,9 +1,7 @@
 package org.scm4j.releaser;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.concurrent.ForkJoinPool;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -11,9 +9,7 @@ import java.util.function.Supplier;
 import org.scm4j.commons.Version;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.releaser.conf.Component;
-import org.scm4j.releaser.conf.MDepsFile;
 import org.scm4j.releaser.conf.TagDesc;
-import org.scm4j.vcs.api.exceptions.EVCSFileNotFound;
 
 public final class Utils {
 	

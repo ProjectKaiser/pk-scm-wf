@@ -81,6 +81,6 @@ public class DevelopBranchTest extends WorkflowTestBase {
 		MDepsFile mdf = new MDepsFile(Arrays.asList(compUnTillDbVersioned));
 		env.getUblVCS().setFileContent(compUBL.getVcsRepository().getDevelopBranch(), SCMReleaser.MDEPS_FILE_NAME, mdf.toFileContent(),
 				"mdeps versioned");
-		assertTrue(new DevelopBranch(compUBL).getMDeps().get(0).getVersion().isEmpty());
+		assertTrue(new DevelopBranch(compUBL).getMDeps().get(0).getNextVersion().isEmpty());
 	}
 }

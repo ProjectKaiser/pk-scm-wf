@@ -138,7 +138,7 @@ public class BuildTest extends WorkflowTestBase {
 		action = releaser.getActionTree(compUnTillDb.clone(env.getUnTillDbVer().toRelease()));
 		assertIsGoingToBuild(action, compUnTillDb);
 		action.execute(getProgress(action));
-		assertEquals(env.getUnTillDbVer().toReleaseZeroPatch().toNextPatch().toNextPatch(), new WorkingBranch(compUnTillDb).getVersion());
+		assertEquals(env.getUnTillDbVer().toReleaseZeroPatch().toNextPatch().toNextPatch(), new WorkingBranch(compUnTillDb).getNextVersion());
 		
 		assertEquals(BuildStatus.ACTUALIZE_PATCHES, new Build(compUBL).getStatus());
 	}

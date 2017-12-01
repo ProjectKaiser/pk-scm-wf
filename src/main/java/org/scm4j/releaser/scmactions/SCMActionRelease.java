@@ -30,7 +30,7 @@ public class SCMActionRelease extends ActionAbstract {
 		super(comp, childActions);
 		ExtendedStatusTreeNode status = cache.get(comp.getUrl());
 		this.bsFrom = status.getStatus();
-		targetVersion = status.getWBVersion();
+		targetVersion = status.getNextVersion();
 		
 		BuildStatus bsTo = null;
 		switch(bsFrom) {

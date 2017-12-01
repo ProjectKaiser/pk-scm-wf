@@ -32,7 +32,7 @@ public class WorkflowPatchesTest extends WorkflowTestBase {
 		action.execute(getProgress(action));
 		WorkingBranch rbUnTillDbPatch = new WorkingBranch(compUnTillDbPatch);
 		assertEquals(env.getUnTillDbVer().toReleaseZeroPatch().toNextPatch().toNextPatch(),
-				rbUnTillDbPatch.getVersion());
+				rbUnTillDbPatch.getNextVersion());
 		assertEquals(BuildStatus.DONE, new Build(compUnTillDbPatch).getStatus());
 
 		//Thread.sleep(1000);
@@ -72,7 +72,7 @@ public class WorkflowPatchesTest extends WorkflowTestBase {
 		action.execute(getProgress(action));
 		checkUnTillDbBuilt(2);
 
-		assertEquals(env.getUnTillDbVer().toNextMinor().toRelease(), new WorkingBranch(compUnTillDb).getVersion());
+		assertEquals(env.getUnTillDbVer().toNextMinor().toRelease(), new WorkingBranch(compUnTillDb).getNextVersion());
 
 		// add feature for 2.59.1
 		Component compToPatch = new Component(UNTILLDB + ":2.59.1");
@@ -83,6 +83,6 @@ public class WorkflowPatchesTest extends WorkflowTestBase {
 		action = releaser.getActionTree(compToPatch);
 		assertIsGoingToBuild(action, compUnTillDb);
 		action.execute(getProgress(action));
-		assertEquals(dbUnTillDb.getVersion().toPreviousMinor().toPreviousMinor().toNextPatch().toRelease(), new WorkingBranch(compToPatch, compToPatch.getVersion()).getVersion());
+		assertEquals(dbUnTillDb.getVersion().toPreviousMinor().toPreviousMinor().toNextPatch().toRelease(), new WorkingBranch(compToPatch, compToPatch.getVersion()).getNextVersion());
 	}
 }

@@ -4,6 +4,7 @@ import org.scm4j.commons.Version;
 import org.scm4j.releaser.actions.ActionSet;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.branch.DevelopBranch;
+import org.scm4j.releaser.branch.WorkingBranch;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.scmactions.SCMActionTag;
 
@@ -41,8 +42,7 @@ public class SCMReleaser {
 
 	public IAction getTagActionTree(Component comp) {
 		List<IAction> childActions = new ArrayList<>();
-		DevelopBranch db = new DevelopBranch(comp);
-		List<Component> mDeps = db.getMDeps();
+		List<Component> mDeps = WorkingBranch.getMDepsDevelop(comp);
 
 		for (Component mDep : mDeps) {
 			childActions.add(getTagActionTree(mDep));

@@ -58,7 +58,7 @@ public class Build {
 				throw new ENoReleaseBranchForPatch("Release Branch does not exists for the requested Component version: " + comp);
 			}
 			
-			Version releaseVersion = rb.getVersion();
+			Version releaseVersion = rb.getNextVersion();
 			if (Integer.parseInt(releaseVersion.getPatch()) < 1) {
 				throw new ENoReleases("Release Branch version patch is " + releaseVersion.getPatch() + ". Component release should be created before patch");
 			}
@@ -69,7 +69,7 @@ public class Build {
 				}
 			}
 			
-			if (Integer.parseInt(rb.getVersion().getPatch()) > 0) {
+			if (Integer.parseInt(rb.getNextVersion().getPatch()) > 0) {
 				return BuildStatus.DONE;
 			}
 		}
@@ -144,7 +144,7 @@ public class Build {
 		for (Component mDep : mDeps) {
 			WorkingBranch rbMDep = calculatedResult.getReleaseBranch(mDep); // already created above
 			// mdep 2.59.0, rb 2.59.1 - all is ok. not need to build 2.59.1 because if so BUILD_MDEPS will be result before
-			if (!rbMDep.getVersion().equals(mDep.getVersion().toNextPatch())) { 
+			if (!rbMDep.getNextVersion().equals(mDep.getVersion().toNextPatch())) { 
 				return false;
 			}
 		}
@@ -166,7 +166,7 @@ public class Build {
 			return true;
 		}
 
-		Version ver = rb.getVersion();
+		Version ver = rb.getNextVersion();
 		if (ver.getPatch().equals(ZERO_PATCH)) {
 			return false;
 		}
@@ -186,7 +186,7 @@ public class Build {
 			}
 			
 			mDepRB = calculatedResult.setReleaseBranch(mDep, () -> ExtendedStatusTreeBuilder.getCRB(mDep, calculatedResult, progress), progress);
-			mDepRBHeadVersion = mDepRB.getVersion();
+			mDepRBHeadVersion = mDepRB.getNextVersion();
 			// zero patch is checked above
 			if (!mDepRBHeadVersion.toPreviousPatch().equals(mDep.getVersion())) {
 				return true;
