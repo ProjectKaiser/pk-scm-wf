@@ -220,7 +220,8 @@ public class CLITest {
 		String[] args = new String[] {CLICommand.STATUS.getStrValue(), "unknown:component"};
 		CommandLine cmd = new CommandLine(args);
 		CLI.setReleaser(new SCMReleaser());
-		try {
+		try (TestEnvironment te = new TestEnvironment()) {
+			te.generateTestEnvironmentNoVCS();
 			new CLI().getActionTree(cmd);
 			fail();
 		} catch (EComponentConfig e) {
