@@ -143,7 +143,6 @@ public class CLITest {
 		}
 		
 		assertEquals(CLI.EXIT_CODE_ERROR, mockedCLI.exec(args));
-
 		verify(mockedPS).println(thrown.getMessage());
 		verify(mockedPS).println(CommandLine.getUsage());
 		
@@ -164,7 +163,6 @@ public class CLITest {
 		}
 
 		assertEquals(CLI.EXIT_CODE_ERROR, mockedCLI.exec(args));
-
 		verify(mockedPS).println(thrown.getMessage());
 		verify(mockedPS).println(CommandLine.getUsage());
 		
@@ -185,7 +183,6 @@ public class CLITest {
 		}
 
 		assertEquals(CLI.EXIT_CODE_ERROR, mockedCLI.exec(args));
-
 		verify(mockedPS).println(thrown.getMessage());
 		verify(mockedPS).println(CommandLine.getUsage());
 		
@@ -206,10 +203,9 @@ public class CLITest {
 		}
 
 		assertEquals(CLI.EXIT_CODE_ERROR, mockedCLI.exec(args));
-
 		verify(mockedPS).println(thrown.getMessage());
 		verify(mockedPS).println(CommandLine.getUsage());
-		
+
 		exit.expectSystemExitWithStatus(CLI.EXIT_CODE_ERROR);
 		CLI.main(args);
 	}
@@ -222,19 +218,20 @@ public class CLITest {
 		CLI.setReleaser(new SCMReleaser());
 		try (TestEnvironment te = new TestEnvironment()) {
 			te.generateTestEnvironmentNoVCS();
-			new CLI().getActionTree(cmd);
-			fail();
-		} catch (EComponentConfig e) {
-			thrown = e;
+			try {
+				new CLI().getActionTree(cmd);
+				fail();
+			} catch (EComponentConfig e) {
+				thrown = e;
+			}
+			
+			assertEquals(CLI.EXIT_CODE_ERROR, mockedCLI.exec(args));
+			verify(mockedPS).println(thrown.getMessage());
+			verify(mockedPS, never()).println(CommandLine.getUsage());
+
+			exit.expectSystemExitWithStatus(CLI.EXIT_CODE_ERROR);
+			CLI.main(args);
 		}
-
-		assertEquals(CLI.EXIT_CODE_ERROR, mockedCLI.exec(args));
-
-		verify(mockedPS).println(thrown.getMessage());
-		verify(mockedPS, never()).println(CommandLine.getUsage());
-		
-		exit.expectSystemExitWithStatus(CLI.EXIT_CODE_ERROR);
-		CLI.main(args);
 	}
 	
 	@Test
