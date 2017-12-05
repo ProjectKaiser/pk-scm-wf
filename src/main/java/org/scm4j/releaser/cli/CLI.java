@@ -13,78 +13,93 @@ import org.scm4j.releaser.exceptions.EReleaserException;
 import org.scm4j.releaser.exceptions.cmdline.*;
 
 import java.io.PrintStream;
-import java.util.Arrays;
 
 public class CLI {
 	
 	public static final int EXIT_CODE_OK = 0;
 	public static final int EXIT_CODE_ERROR = 1;
+
+	private static SCMReleaser releaser = new SCMReleaser();
+	private static PrintStream out = System.out;
+
+	static void setReleaser(SCMReleaser releaser) {
+		CLI.releaser = releaser;
+	}
+
+	static void setOut(PrintStream out) {
+		CLI.out = out;
+	}
+
+	private void printActionTree(IAction action) {
+		PrintAction pa = new PrintAction();
+		pa.print(out, action);
+	}
+
+	public void execActionTree(IAction action) throws Exception {
+		try (IProgress progress = new ProgressConsole(action.toStringAction(), ">>> ", "<<< ")) {
+			action.execute(progress);
+		}
+	}
+
+	public IAction getActionTree(CommandLine cmd) throws Exception {
+		switch (cmd.getCommand()) {
+			case STATUS:
+			case BUILD:
+				return releaser.getActionTree(cmd.getProductCoords(), ActionKind.FULL);
+			case FORK:
+				return releaser.getActionTree(cmd.getProductCoords(), ActionKind.FORK_ONLY);
+			case TAG:
+				return releaser.getTagActionTree(cmd.getProductCoords());
+			default:
+				throw new IllegalArgumentException("Unsupported command: " + cmd.getCommand().toString());
+		}
+	}
 	
-	public void execInternal(SCMReleaser releaser, CommandLine cmd, PrintStream ps) throws Exception {
+	public int exec(String[] args) {
+		try {
+			CommandLine cmd = new CommandLine(args);
+			validateCommandLine(cmd);
+			Options.parse(cmd.getOptionArgs());
+			long startMS = System.currentTimeMillis();
+			IAction action = getActionTree(cmd);
+			if (cmd.getCommand() == CLICommand.STATUS) {
+				printActionTree(action);
+			} else {
+				execActionTree(action);
+			}
+			out.println("elapsed time: " + (System.currentTimeMillis() - startMS));
+			return EXIT_CODE_OK;
+		} catch (ECmdLine e) {
+			printException(args, e, out);
+			out.println(CommandLine.getUsage());
+			return EXIT_CODE_ERROR;
+		} catch (Exception e) {
+			printException(args, e, out);
+			return EXIT_CODE_ERROR;
+		}
+	}
+
+	public void validateCommandLine(CommandLine cmd) {
 		if (cmd.getArgs().length > 2) {
-			String[] optionArgs = Arrays.copyOfRange(cmd.getArgs(), 2, cmd.getArgs().length);
+			String[] optionArgs = cmd.getOptionArgs();
 			for (String optionArg : optionArgs) {
 				if (!Option.isValid(optionArg)) {
 					throw new ECmdLineUnknownOption(optionArg);
 				}
 			}
-			Options.parse(optionArgs);
-		} 
-		
+		}
+
 		if (cmd.getCommand() == null) {
 			throw new ECmdLineNoCommand();
 		}
+
+		if (cmd.getCommand() == CLICommand.UNKNOWN) {
+			throw new ECmdLineUnknownCommand(cmd.getCommandStr());
+		}
+
 		if (cmd.getProductCoords() == null) {
 			throw new ECmdLineNoProduct();
 		}
-		IAction action;
-		long startMS = System.currentTimeMillis();
-		switch(cmd.getCommand()) {
-		case BUILD:
-			action = releaser.getActionTree(cmd.getProductCoords(), ActionKind.FULL);
-			try (IProgress progress = new ProgressConsole(action.toStringAction(), ">>> ", "<<< ")) {
-				action.execute(progress);
-			}
-			break;
-		case FORK:
-			action = releaser.getActionTree(cmd.getProductCoords(), ActionKind.FORK_ONLY);
-			try (IProgress progress = new ProgressConsole(action.toStringAction(), ">>> ", "<<< ")) {
-				action.execute(progress);
-			}
-			break;
-		case STATUS:
-			action = releaser.getActionTree(cmd.getProductCoords());
-			PrintAction pa = new PrintAction();
-			pa.print(ps, action);
-			break;
-		case TAG:
-			action = releaser.getActionTree(cmd.getProductCoords());
-			try (IProgress progress = new ProgressConsole(action.toString(), ">>> ", "<<< ")) {
-				action.execute(progress);
-			}
-			break;
-		case UNKNOWN: 
-			throw new ECmdLineUnknownCommand(cmd.getCommandStr());
-		}
-		System.out.println("elapsed time: " + (System.currentTimeMillis() - startMS));
-	}
-	
-	public int exec(SCMReleaser releaser, CommandLine cmd, PrintStream ps) {
-		try {
-			execInternal(releaser, cmd, ps);
-			return EXIT_CODE_OK;
-		} catch (ECmdLine e) {
-			printException(cmd.getArgs(), e, ps);
-			ps.println(CommandLine.getUsage());
-			return EXIT_CODE_ERROR;
-		} catch (Exception e) {
-			printException(cmd.getArgs(), e, ps);
-			return EXIT_CODE_ERROR;
-		}
-	}
-	
-	public int exec(String[] args) throws Exception {
-		return exec(new SCMReleaser(), new CommandLine(args), System.out);
 	}
 
 	private void printException(String[] args, Exception e, PrintStream ps) {

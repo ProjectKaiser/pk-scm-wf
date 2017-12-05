@@ -2,6 +2,8 @@ package org.scm4j.releaser.cli;
 
 import org.scm4j.releaser.conf.Option;
 
+import java.util.Arrays;
+
 public class CommandLine {
 
 	private final String[] args;
@@ -57,5 +59,9 @@ public class CommandLine {
 
 	public String[] getArgs() {
 		return args;
+	}
+
+	public String[] getOptionArgs() {
+		return Arrays.copyOfRange(args, 2, args.length);
 	}
 }

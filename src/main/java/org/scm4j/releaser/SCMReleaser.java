@@ -109,4 +109,8 @@ public class SCMReleaser {
 		}
 		return new SCMActionTag(new ReleaseBranch(comp), comp, childActions);
 	}
+
+	public IAction getTagActionTree(String coords) {
+		return getTagActionTree(new Component(coords));
+	}
 }
