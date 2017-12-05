@@ -34,7 +34,7 @@ public class SCMReleaser {
 	public IAction getActionTree(String coords, ActionKind actionKind) throws Exception {
 		Component comp = new Component(coords);
 		Options.setIsPatch(comp.getVersion().isExact());
-		return getActionTree(new Component(coords), actionKind, new CalculatedResult());
+		return getActionTree(comp, actionKind, new CalculatedResult());
 	}
 	
 	public IAction getActionTree(Component comp, ActionKind actionKind) throws Exception {
