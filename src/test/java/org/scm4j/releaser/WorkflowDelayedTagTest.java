@@ -74,12 +74,8 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 		assertNotNull(dtf.getRevisitonByUrl(compUnTill.getVcsRepository().getUrl()));
 		assertNotNull(dtf.getRevisitonByUrl(compUBL.getVcsRepository().getUrl()));
 
-		// check Delayed Tags are used
-		action = releaser.getActionTree(compUnTill.clone(env.getUnTillVer().toReleaseZeroPatch()));
-		assertIsGoingToDoNothing(action);
-
 		// tag all
-		action = releaser.getTagActionTree(compUnTill);
+		action = releaser.getTagActionTree(UNTILL);
 		assertIsGoingToTagAll(action);
 		action.execute(getProgress(action));
 
@@ -100,7 +96,7 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 		action.execute(getProgress(action));
 
 		// simulate delayed tags file is deleted right after action create
-		action = releaser.getTagActionTree(compUnTill);
+		action = releaser.getTagActionTree(UNTILL);
 		assertIsGoingToTagAll(action);
 		dtf.delete();
 		action.execute(getProgress(action));
@@ -120,7 +116,7 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 		action.execute(getProgress(action));
 
 		// all is going to tag
-		action = releaser.getTagActionTree(compUnTill);
+		action = releaser.getTagActionTree(UNTILL);
 		assertIsGoingToTagAll(action);
 
 		// simulate tag exists already

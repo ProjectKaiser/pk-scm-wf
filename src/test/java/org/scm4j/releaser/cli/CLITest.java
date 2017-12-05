@@ -224,7 +224,7 @@ public class CLITest {
 			} catch (EComponentConfig e) {
 				thrown = e;
 			}
-			
+
 			assertEquals(CLI.EXIT_CODE_ERROR, mockedCLI.exec(args));
 			verify(mockedPS).println(thrown.getMessage());
 			verify(mockedPS, never()).println(CommandLine.getUsage());
