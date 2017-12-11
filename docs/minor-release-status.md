@@ -49,24 +49,32 @@ Status denotes next action which should be undertaken to finish patch build: {AC
 - No valuable commits after last tag => DONE
 - If none of above : BUILD
 
-# Example 1
-- status unTill -> unTill 123.0 DONE, UDB 18.0 DONE
-- add feature to develop of UDB, fork UDB 19.0 (do not build)
-- status unTill -> unTill 123.0 DONE, UDB 18.0 DONE
-  - unTill release\123 exists -> take unTill mdeps from CRB -> take UDB 18.0 (locked)
-- Should be:
-  - unTill 124.0 FORK -> BUILD, UDB 19.0 LOCK -> BUILD
-    - unTill fork needed: "has mdep which version does not equal to CR version of this mdep": unTill -> release\123 -> UDB 18.0, but exists UDB release\19 -> version 19.0 (not built yet).
-    
-# Example 2
-- status unTill -> unTill 123.0 DONE, UDB 18.0 DONE
-- add feature to develop of UDB, build UDB 19.0
-- status unTill -> unTill 123.0 DONE, UDB 18.0 DONE
-  - unTill release\123 exists -> take unTill mdeps from CRB -> take UDB 18.0 (locked)
-- Should be:
-  - unTill 124.0 FORK -> BUILD, UDB 19.0 DONE
+# Example 1, Forked Sub
 
-# Example 3
+Situation
+
+- Main:  done, no commits
+- Sub:  is forked but not built (patch == 0)
+
+Status:
+
+- Main: FORK
+- Sub: BUILD
+
+   
+# Example 2, New  Sub
+
+Situation
+
+- Main:  done, no commits
+- Sub:  new version is released
+
+Status
+
+- Main: FORK
+- Sub: DONE
+
+# Example 3, All Forked
 
 Situation
 
@@ -77,19 +85,6 @@ Status
 
 - Main: BUILD_MDEPS
 - Sub: BUILD
-
-# Example 4
-
-Situation
-
-- Main:  is forked and built, no commits
-- Sub: Forked but not built
-
-Status:
-
-- Main: FORK
-- Sub: BUILD
-
 
 # See Also
 - [Wrongly refactored](https://github.com/scm4j/scm4j-releaser/blob/eafe1330dd7076d7e9c1c41dfdbb7dc9e85a6afb/docs/minor-release-status.md)
