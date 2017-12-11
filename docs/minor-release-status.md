@@ -61,7 +61,7 @@ Status denotes next action which should be undertaken to finish patch build: {AC
 # Example 2
 - status unTill -> unTill 123.0 DONE, UDB 18.0 DONE
 - add feature to develop of UDB, build UDB 19.0
-- status unTill -> unTill 123.0 DONE, UBL 18.0 DONE
+- status unTill -> unTill 123.0 DONE, UDB 18.0 DONE
   - unTill release\123 exists -> take unTill mdeps from CRB -> take UDB 18.0 (locked)
 - Should be:
   - unTill 124.0 FORK -> BUILD, UDB 19.0 DONE
