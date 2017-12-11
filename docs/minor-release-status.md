@@ -42,7 +42,7 @@ Status denotes next action which should be undertaken to finish minor build: {FO
 - `CRB`.version.patch == 0 => NO
 - `develop` branch has valuable commits => YES
 - Any mdep needs FORK => YES
-- Versions in `mdeps` does NOT equal to components CR versions => YES (means that all is built but some sub-component has newer minor or patch)
+- Versions in `mdeps` does NOT equal to components CR versions => YES (means that all is built but some sub-component has newer minor or patch) //- wrong: newer patch -> ACTUALIZE_PATCHES
 - NO
 
 This procedure also calculates `nextVersion` and `subComponents`.  If CRB exists and version.patch == 0 mdeps are taken from CRB otherwise from `develop`
