@@ -2,6 +2,16 @@
 - `CRB`: current release branch
 - `RB`: release branch
 
+# Example
+- Have unTill 123.0 DONE, UBL 18.0 DONE
+- add feature to develop of UDB, fork UDB 19.0 (do not build)
+- Have unTill 123.0 DONE, UBL 18.0 DONE
+  - unTill release\123 exists -> take unTill mdeps from CRB -> take UDB 18.0 (locked)
+- Should be:
+  - unTill 124.0 FORK -> BUILD, UBL 19.0 LOCK -> BUILD
+    - unTill fork needed: "has mdep which version does not equal to CR version of this mdep": unTill -> release\123 -> UDB 18.0, but exists UDB release\19 -> version 19.0 (not built yet).
+
+
 # EXTENDED STATUS 
 
 Extended status calculation is introduced as a way to avoid multiple visits of subcomponents repositories. Every subcomponent repository is visitied only once, each visit fetches all info needed for all calculations. Extended status is represented by `ExtendedStatusTreeNode`:
