@@ -30,7 +30,6 @@ public class MDepsSource {
 		if (mdeps != null) {
 			return mdeps;
 		}
-		// beware: UBL forked, UDB forked -> take UDB 18.0 -> error no releases
 		if (Options.isPatch()) {
 			mdeps = getMDepsRelease(comp, crbName);
 		} else {
@@ -103,12 +102,6 @@ public class MDepsSource {
 
 	public Version getRbVersion() {
 		return rbVersion;
-	}
-
-	@Override
-	public String toString() {
-		return "MDepsSource [mdeps=" + mdeps + ", comp=" + comp + ", hasCRB=" + hasCRB + ", crbName=" + crbName
-				+ ", crbVersion=" + crbVersion + ", rbVersion=" + rbVersion + "]";
 	}
 
 	public Version getDevVersion() {

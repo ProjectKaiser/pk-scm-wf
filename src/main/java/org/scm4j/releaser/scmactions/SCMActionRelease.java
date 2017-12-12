@@ -61,43 +61,6 @@ public class SCMActionRelease extends ActionAbstract {
 		this.bsTo = bsTo;
 	}
 
-//	public SCMActionRelease(ReleaseBranch rb, Component comp, List<IAction> childActions, ActionSet actionSet, BuildStatus bs, CalculatedResult calculatedResult) {
-//		super(comp, childActions);
-//		this.bsFrom = bs;
-//		BuildStatus bsTo = null;
-//		if (bs.ordinal() > BuildStatus.FREEZE.ordinal()) {
-//			targetRB = rb;
-//		} else {
-//			targetRB = new ReleaseBranch(comp, rb.getVersion().toNextMinor().toReleaseZeroPatch());
-//		}
-//		switch (bs) {
-//		case FORK:
-//			getProcs().add(new SCMProcForkBranch(targetRB, comp, calculatedResult));
-//		case FREEZE:
-//			getProcs().add(new SCMProcFreezeMDeps(targetRB, comp, calculatedResult));
-//			bsTo = BuildStatus.FREEZE;
-//			if (actionSet == ActionSet.FORK_ONLY) {
-//				break;
-//			}
-//		case BUILD_MDEPS:
-//		case ACTUALIZE_PATCHES:
-//			if (bs.ordinal() > BuildStatus.FREEZE.ordinal() && actionSet == ActionSet.FULL) {
-//				getProcs().add(new SCMProcActualizePatches(targetRB, comp, calculatedResult));
-//			}
-//		case BUILD:
-//			if (actionSet == ActionSet.FULL) {
-//				getProcs().add(new SCMProcBuild(targetRB, comp, calculatedResult));
-//				bsTo = BuildStatus.BUILD;
-//			}
-//			break;
-//		case DONE: 
-//			break;
-//		default:
-//			throw new IllegalArgumentException("unsupported build status: " + bs);
-//		}
-//		this.bsTo = bsTo;
-//	}
-
 	@Override
 	protected void executeAction(IProgress progress) {
 		for (ISCMProc proc : getProcs()) {
