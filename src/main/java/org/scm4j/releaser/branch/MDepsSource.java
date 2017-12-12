@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.scm4j.commons.Version;
+import org.scm4j.releaser.Build;
 import org.scm4j.releaser.SCMReleaser;
 import org.scm4j.releaser.Utils;
 import org.scm4j.releaser.conf.Component;
@@ -18,55 +19,53 @@ public class MDepsSource {
 	
 	private List<Component> mdeps;
 	private final Component comp;
-	private final Version version;
-	private final boolean isFromDevelop;
+	private final boolean hasCRB;
 	private final String name;
+	private final Version crbVersion;
+	private final Version rbVersion;
 	private final Version devVersion;
 
 	public List<Component> getMDeps() {
 		if (mdeps != null) {
 			return mdeps;
 		}
-		mdeps = isFromDevelop ? getMDepsDevelop(comp) : getMDepsRelease(comp, getName());
+		// beware: UBL forked, UDB forked -> take UDB 18.0 -> error no releases
+		mdeps = hasCRB && crbVersion.getPatch().equals(Build.ZERO_PATCH) ? getMDepsRelease(comp, getName()) : getMDepsDevelop(comp);
 		return mdeps;
 	}
 	
 	public MDepsSource(Component comp) {
 		this.comp = comp;
 		IVCS vcs = comp.getVCS();
+		devVersion = Utils.getDevVersion(comp);
 		if (comp.getVersion().isLocked()) {
 			name = Utils.getReleaseBranchName(comp, comp.getVersion());
-			version = new Version(vcs.getFileContent(name, SCMReleaser.VER_FILE_NAME, null)).toRelease();
-			isFromDevelop = false;
-			devVersion = null;
+			rbVersion = new Version(vcs.getFileContent(name, SCMReleaser.VER_FILE_NAME, null)).toRelease();
+			String crbName = Utils.getReleaseBranchName(comp, getDevVersion().toPreviousMinor());
+			if (crbName.equals(name)) {
+				crbVersion = rbVersion;
+			} else {
+				crbVersion = new Version(vcs.getFileContent(crbName, SCMReleaser.VER_FILE_NAME, null)).toRelease();
+			}
+			hasCRB = true;
 		} else {
-			Boolean crbExists;
-			devVersion = Utils.getDevVersion(comp);
+			Boolean hasCRB;
 			Version crbVersion;
 			String releaseBranchName = Utils.getReleaseBranchName(comp, getDevVersion().toPreviousMinor());
 			try {
 				crbVersion = new Version(vcs.getFileContent(releaseBranchName, SCMReleaser.VER_FILE_NAME, null)).toRelease();
-				crbExists = true;
+				hasCRB = true;
 			} catch (EVCSBranchNotFound e) {
 				crbVersion = getDevVersion().toReleaseZeroPatch();
-				crbExists = false;
+				hasCRB = false;
 			}
-			
-			if (crbExists && crbVersion.getPatch().equals("0")) {
-				isFromDevelop = false;
-			} else {
-				isFromDevelop = true;
-			}
-			
-			this.version = crbVersion;
-			name = isFromDevelop ? null : releaseBranchName;
+			this.hasCRB = hasCRB;
+			rbVersion = crbVersion;
+			this.crbVersion = crbVersion;
+			name = hasCRB ? releaseBranchName : null;
 		}
 	}
 
-	public Version getVersion() {
-		return version;
-	}
-	
 	public static List<Component> getMDepsRelease(Component comp, String releaseBranchName) {
 		try {
 			String mDepsFileContent = comp.getVCS().getFileContent(releaseBranchName, SCMReleaser.MDEPS_FILE_NAME, null);
@@ -88,17 +87,25 @@ public class MDepsSource {
 		return name;
 	}
 
-	public boolean isDevelopMDepSource() {
-		return isFromDevelop;
+	public boolean hasCRB() {
+		return hasCRB;
 	}
-	
-	public Version getDevVersion() {
-		return devVersion;
+
+	public Version getCrbVersion() {
+		return crbVersion;
+	}
+
+	public Version getRbVersion() {
+		return rbVersion;
 	}
 
 	@Override
 	public String toString() {
-		return "WorkingBranch [comp=" + comp + ", version=" + version + ", name=" + name
-				+ ", isDevelopMDepSource=" + isFromDevelop + ", mdeps=" + mdeps + "]";
+		return "MDepsSource [mdeps=" + mdeps + ", comp=" + comp + ", hasCRB=" + hasCRB + ", name=" + name
+				+ ", crbVersion=" + crbVersion + ", rbVersion=" + rbVersion + "]";
+	}
+
+	public Version getDevVersion() {
+		return devVersion;
 	}
 }

@@ -62,22 +62,23 @@ public class WorkflowForkTest extends WorkflowTestBase {
 	}
 
 	@Test
-	public void testForkRootIfNestedIsForkedAlready() throws Exception {
+	//public void testForkRootIfNestedIsForkedAlready() throws Exception {
+	public void testForkRootIfNestedIsBuiltAlready() throws Exception {
 		// build UBL + unTillDb
 		IAction action = releaser.getActionTree(UBL);
 		action.execute(getProgress(action));
 
-		// second fork unTillDb
+		// next fork unTillDb
 		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevelopBranch(), "feature added");
-		action = releaser.getActionTree(compUnTillDb, ActionSet.FORK_ONLY);
-		assertIsGoingToFork(action, compUnTillDb);
+		action = releaser.getActionTree(compUnTillDb, ActionSet.FULL);
+		assertIsGoingToForkAndBuild(action, compUnTillDb);
 		action.execute(getProgress(action));
-		checkUnTillDbForked(2);
+		checkUnTillDbBuilt(2);
 
 		// UBL should be forked then
 		action = releaser.getActionTree(compUBL, ActionSet.FORK_ONLY);
 		assertIsGoingToFork(action, compUBL);
-		assertIsGoingToDoNothing(action, BuildStatus.BUILD, null, compUnTillDb);
+		assertIsGoingToDoNothing(action, compUnTillDb);
 		action.execute(getProgress(action));
 		checkUBLForked(2);
 	}

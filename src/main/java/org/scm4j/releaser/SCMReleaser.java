@@ -1,16 +1,16 @@
 package org.scm4j.releaser;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.scm4j.commons.Version;
 import org.scm4j.releaser.actions.ActionSet;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.branch.DevelopBranch;
-import org.scm4j.releaser.branch.WorkingBranch;
+import org.scm4j.releaser.branch.MDepsSource;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.scmactions.SCMActionTag;
-
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 
 public class SCMReleaser {
 
@@ -42,12 +42,13 @@ public class SCMReleaser {
 
 	public IAction getTagActionTree(Component comp) {
 		List<IAction> childActions = new ArrayList<>();
-		List<Component> mDeps = WorkingBranch.getMDepsDevelop(comp);
+		List<Component> mDeps = MDepsSource.getMDepsDevelop(comp);
 
 		for (Component mDep : mDeps) {
 			childActions.add(getTagActionTree(mDep));
 		}
 
+		DevelopBranch db = new DevelopBranch(comp);
 		Version lastReleaseVersion = db.getVersion().toPreviousMinor();
 
 		return new SCMActionTag(comp, childActions, Utils.getReleaseBranchName(comp, lastReleaseVersion));

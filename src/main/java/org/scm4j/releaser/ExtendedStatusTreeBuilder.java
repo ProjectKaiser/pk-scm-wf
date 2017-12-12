@@ -42,8 +42,6 @@ public class ExtendedStatusTreeBuilder {
 
 		MDepsSource mDepsSource = new MDepsSource(comp);
 		
-		// не тут, а где-то в getMinorBuildStatus
-		// а почему не тут? можно вынести из isNeedToFork, т.к. этот код зависит теперь только от WorkingBranch
 		for (Component mdep : mDepsSource.getMDeps()) {
 			cache.put(mdep.getUrl(), getExtendedStatusTreeNode(mdep, cache, progress));
 		}
@@ -60,20 +58,30 @@ public class ExtendedStatusTreeBuilder {
 			subComponents.put(mdep, cache.get(mdep.getUrl()));
 		}
 		
-		
-		Version nextVersion = status == BuildStatus.FORK ? mDepsSource.getDevVersion().toReleaseZeroPatch() : mDepsSource.getVersion(); 
+		Version nextVersion;
+		if (status == BuildStatus.FORK) {
+			nextVersion = mDepsSource.getDevVersion().toReleaseZeroPatch();
+		} else {
+			if (mDepsSource.getCrbVersion().isGreaterThan(mDepsSource.getRbVersion())) {
+				nextVersion = mDepsSource.getCrbVersion();
+			} else {
+				nextVersion = mDepsSource.getRbVersion();
+			}
+		}
+		// = status == BuildStatus.FORK ? devVersion : devVersion.toPreviousMinor(); 
+		// nextVersion - всегда dev.minor(-1)
 		ExtendedStatusTreeNode res = new ExtendedStatusTreeNode(nextVersion, status, subComponents, comp);
 		cache.replace(comp.getUrl(), res);
 		return res;
 	}
 
 	private BuildStatus getPatchBuildStatus(Component comp, MDepsSource mDepsSource, CachedStatuses cache) {
-		if (mDepsSource.isDevelopMDepSource()) {
+		if (!mDepsSource.hasCRB()) {
 			throw new ENoReleaseBranchForPatch("Release Branch does not exists for the requested Component version: " + comp);
 		}
 
-		if (Integer.parseInt(mDepsSource.getVersion().getPatch()) < 1) {
-			throw new ENoReleases("Release Branch version patch is " + mDepsSource.getVersion().getPatch() + ". Component release should be created before patch");
+		if (Integer.parseInt(mDepsSource.getRbVersion().getPatch()) < 1) {
+			throw new ENoReleases("Release Branch version patch is " + mDepsSource.getRbVersion().getPatch() + ". Component release should be created before patch");
 		}
 
 		if (!areMDepsFrozen(mDepsSource.getMDeps())) {
@@ -100,7 +108,7 @@ public class ExtendedStatusTreeBuilder {
 			return BuildStatus.FORK;
 		}
 		
-		if (Integer.parseInt(mDepsSource.getVersion().getPatch()) > 0) {
+		if (Integer.parseInt(mDepsSource.getCrbVersion().getPatch()) > 0) {
 			return BuildStatus.DONE;
 		}
 
@@ -180,11 +188,11 @@ public class ExtendedStatusTreeBuilder {
 	}
 
 	private Boolean isNeedToFork(Component comp, MDepsSource mDepsSource, CachedStatuses cache, IProgress progress) {
-		if (mDepsSource.isDevelopMDepSource()) {
+		if (!mDepsSource.hasCRB()) {
 			return true;
-		}
+		} 
 
-		if (mDepsSource.getVersion().getPatch().equals("0")) {
+		if (mDepsSource.getCrbVersion().getPatch().equals("0")) {
 			return false;
 		}
 		
@@ -202,7 +210,7 @@ public class ExtendedStatusTreeBuilder {
 			}
 
 			// Versions in mdeps does NOT equal to components CR versions => YES
-			if (!mdepStatus.getNextVersion().toPreviousPatch().equals(mdep.getVersion())) {
+			if (!mdep.getVersion().equals(mdepStatus.getNextVersion().toPreviousMinor())) {
 				return true;
 			}
 		}
