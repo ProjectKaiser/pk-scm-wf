@@ -4,12 +4,11 @@ import java.util.LinkedHashMap;
 
 import org.junit.Test;
 import org.scm4j.commons.Version;
-import org.scm4j.releaser.conf.Component;
 
-public class ExtendedStatusTreeNodeTest {
+public class ExtendedStatusTreeNodeTest extends WorkflowTestBase {
 	
 	@Test
 	public void testToString() {
-		new ExtendedStatusTreeNode(new Version(""), BuildStatus.BUILD, new LinkedHashMap<>(), new Component("comp")).toString();
+		new ExtendedStatusTreeNode(new Version(""), BuildStatus.BUILD, new LinkedHashMap<>(), compUnTill).toString();
 	}
 }
