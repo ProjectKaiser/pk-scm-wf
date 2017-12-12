@@ -85,17 +85,19 @@ Status
 - Main: BUILD_MDEPS
 - Sub: BUILD
 
-# Patch examples:
-# Example 4, All Forked, trying to build
+# Exmaple 4, patch handling
 
 Situation
 
-- Main: is forked but not built (patch == 0) 
-- Sub: is forked but not built (patch == 0)
+- Main: forked 18.0 but not built
 
-Build
+Cmd line: build Main:18.0
 
-- failed because sub is 0-patched
+- should fail because 0-patched
+
+Cmd line: status Main
+
+- should build 18.0 but failed because still 0-patched
 
 # See Also
 - [Wrongly refactored](https://github.com/scm4j/scm4j-releaser/blob/eafe1330dd7076d7e9c1c41dfdbb7dc9e85a6afb/docs/minor-release-status.md)
