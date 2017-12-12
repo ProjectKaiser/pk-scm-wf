@@ -29,11 +29,25 @@ For version definitions ref. [semantic Versioning 2.0.0](http://semver.org/).
 1. Run `groovy run.groovy status com.mycompany:my-root-component` to view status of your project
 1. Run `groovy run.groovy build com.mycompany:my-root-component` to build your project (and all mdeps)
 
+# How It Works
+
+__Overview__
+
+- `CLI` gets ExtendedStatusTree using `ExtendedStatusTreeBuilder` class (ref. [release statuses](docs/minor-release-status.md))
+- `ActionTreeBuilder` converts ExtendedStatusTree to ActionTree (IAction)
+- IAction is executed
+
+__ExtendedStatusTreeNode__
+
+  - Coords
+  - Status
+  - latestVersion. If Coords includes version latest version is taken from correspondent release branch, otherwise latest release branch is used
+  - Map<Coords, ExtendedStatusTreeNode> subComponents
 
 # Data Structure
 
 - [data-structure](docs/data-structure.md)
-- [release statuses](/../../issues/10)
+- [release statuses](docs/minor-release-status.md)
 
 # Features
 
@@ -41,26 +55,12 @@ For version definitions ref. [semantic Versioning 2.0.0](http://semver.org/).
 - [exact versions in `develop`/`mdeps`](/../../issues/4)
 - [postTag hooks](/../../issues/8)
 
-# How It Works
-
-
-*Overview*
-
-- `CLI` calls `ExtendedStatusTreeBuilder`
-- `ActionTreeBuilder` converts ExtendedStatusTree to ActionTree
-
-**Overview**
-
-
-
-
-ExtendedStatusTreeNode:
-  - Status
-  - latestVersion
-  - Map<Coords, ExtendedStatusTreeNode> subComponents
+# Related repositories
   
-
-
+  - [scm4j-releaser-choco](../../../scm4j-releaser-choco/blob/master/README.md)
+  - [scm4j-vcs-api](../../../scm4j-vcs-api/blob/master/README.md)
+  - [scm4j-vcs-git](../../../scm4j-vcs-git/blob/master/README.md)
+  - [scm4j-vcs-svn](../../../scm4j-vcs-svn/blob/master/README.md)
 
 # See also
 

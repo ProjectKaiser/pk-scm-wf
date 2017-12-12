@@ -56,3 +56,21 @@ public class SCMReleaser {
 
 
 }
+	public static TagDesc getTagDesc(String verStr) {
+		String tagMessage = verStr + " release";
+		return new TagDesc(verStr, tagMessage);
+	}
+	public IAction getTagActionTree(Component comp) {
+		List<IAction> childActions = new ArrayList<>();
+		DevelopBranch db = new DevelopBranch(comp);
+		List<Component> mDeps = db.getMDeps();
+
+		for (Component mDep : mDeps) {
+			childActions.add(getTagActionTree(mDep));
+		}
+		return new SCMActionTag(new ReleaseBranch(comp), comp, childActions);
+	}
+
+	public IAction getTagActionTree(String coords) {
+		return getTagActionTree(new Component(coords));
+	}
