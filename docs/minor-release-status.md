@@ -16,8 +16,7 @@ Extended status calculation is introduced as a way to avoid multiple visits of s
 
 Status denotes next action which should be undertaken to finish minor build: {FORK, LOCK, BUILD_MDEPS, ACTUALIZE_PATCHES, BUILD, DONE}
 
-- If version is not locked: FORK needed? => FORK
-- If version is locked: `subComponents` are calculated using mdeps from particular RB
+- FORK needed? => FORK
 - CRB.version.patch >0 => DONE
 - mdeps are not locked => LOCK
 - Any component is not in DONE status => BUILD_MDEPS
@@ -41,6 +40,7 @@ This procedure also calculates `nextVersion` and `subComponents`.  If CRB exists
 
 Status denotes next action which should be undertaken to finish patch build: {ACTUALIZE_PATCHES, BUILD, DONE}
 
+- `subComponents` are calculated using mdeps from particular RB
 - RB does not exist or RB.patch < 1 => ERROR, show error on status command
 - mdeps are not locked => ERROR
 - mdeps extended status is calculated using mdeps from particular RB
@@ -85,6 +85,18 @@ Status
 
 - Main: BUILD_MDEPS
 - Sub: BUILD
+
+# Patch examples:
+# Example 4, All Forked, trying to build
+
+Situation
+
+- Main: is forked but not built (patch == 0) 
+- Sub: is forked but not built (patch == 0)
+
+Build
+
+- failed because sub is 0-patched
 
 # See Also
 - [Wrongly refactored](https://github.com/scm4j/scm4j-releaser/blob/eafe1330dd7076d7e9c1c41dfdbb7dc9e85a6afb/docs/minor-release-status.md)
