@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import org.scm4j.commons.Version;
 import org.scm4j.commons.progress.IProgress;
+import org.scm4j.releaser.Build;
 import org.scm4j.releaser.CachedStatuses;
 import org.scm4j.releaser.LogTag;
 import org.scm4j.releaser.SCMReleaser;
@@ -31,7 +32,10 @@ public class SCMProcActualizePatches implements ISCMProc {
 		boolean hasNew = false;
 		Version newVersion;
 		for (Component currentMDep : currentMDepsFile.getMDeps()) {
-			newVersion = cache.get(currentMDep.getUrl()).getNextVersion().toPreviousPatch();
+			newVersion = cache.get(currentMDep.getUrl()).getNextVersion();
+			if (!newVersion.getPatch().equals(Build.ZERO_PATCH)) {
+				newVersion = newVersion.toPreviousPatch();
+			}
 			if (!newVersion.equals(currentMDep.getVersion())) {
 				hasNew = true;
 			}
@@ -40,8 +44,6 @@ public class SCMProcActualizePatches implements ISCMProc {
 				sb.append("" + currentMDep.getName() + ": " + currentMDep.getVersion() + " -> " + newVersion + "\r\n");
 			}
 			currentMDepsFile.replaceMDep(currentMDep.clone(newVersion));
-			// for what?
-			//calculatedResult.replaceReleaseBranch(currentMDep, new ReleaseBranch(comp, rbMDep.getVersion(), true));
 		}
 		if (hasNew) {
 			sb.setLength(sb.length() - 2);
