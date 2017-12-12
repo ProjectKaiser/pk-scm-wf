@@ -24,6 +24,11 @@ import org.scm4j.vcs.api.WalkDirection;
 public class ExtendedStatusTreeBuilder {
 
 	private static final int COMMITS_RANGE_LIMIT = 10;
+	
+	public ExtendedStatusTreeNode getExtendedStatusTreeNode(Component comp) {
+		CachedStatuses cache = new CachedStatuses();
+		return getExtendedStatusTreeNode(comp, cache);
+	}
 
 	public ExtendedStatusTreeNode getExtendedStatusTreeNode(Component comp, CachedStatuses cache) {
 		return getExtendedStatusTreeNode(comp, cache, new ProgressConsole());
@@ -43,7 +48,7 @@ public class ExtendedStatusTreeBuilder {
 		MDepsSource mDepsSource = new MDepsSource(comp);
 		
 		ExtendedStatusTreeNode res;
-		if (Options.isPatch()) { // comp.getVersion().isLocked()
+		if (Options.isPatch()) {
 			res = getPatchTreeNode(comp, mDepsSource, cache, progress);
 		} else {
 			res = getMinorTreeNode(comp, mDepsSource, cache, progress);
@@ -57,36 +62,23 @@ public class ExtendedStatusTreeBuilder {
 			IProgress progress) {
 		LinkedHashMap<Component, ExtendedStatusTreeNode> subComponents = new LinkedHashMap<>();
 		BuildStatus status = getMinorBuildStatus(comp, mDepsSource, cache, progress, subComponents);
-		for (Component mdep : mDepsSource.getMDeps()) {
-			subComponents.put(mdep, cache.get(mdep.getUrl()));
-		}
 		Version nextVersion;
 		if (status == BuildStatus.FORK) {
 			nextVersion = mDepsSource.getDevVersion().toReleaseZeroPatch();
 		} else {
 			nextVersion = mDepsSource.getRbVersion();
 		}
-		
 		return new ExtendedStatusTreeNode(nextVersion, status, subComponents, comp);
 	}
 
 	private ExtendedStatusTreeNode getPatchTreeNode(Component comp, MDepsSource mDepsSource, CachedStatuses cache, IProgress progress) {
 		LinkedHashMap<Component, ExtendedStatusTreeNode> subComponents = new LinkedHashMap<>();
 		BuildStatus status = getPatchBuildStatus(comp, mDepsSource, cache, progress, subComponents);
-//		for (Component mdep : mDepsSource.getMDeps()) {
-//			subComponents.put(mdep, cache.get(mdep.getUrl()));
-//		}
-		Version nextVersion;
-		if (mDepsSource.getCrbVersion().isGreaterThan(mDepsSource.getRbVersion())) {
-			nextVersion = mDepsSource.getCrbVersion();
-		} else {
-			nextVersion = mDepsSource.getRbVersion();
-		}
-		
+		Version nextVersion = mDepsSource.getRbVersion();
 		return new ExtendedStatusTreeNode(nextVersion, status, subComponents, comp);
 	}
 
-	private BuildStatus getPatchBuildStatus(Component comp, MDepsSource mDepsSource, CachedStatuses cache, IProgress progress, LinkedHashMap<Component, ExtendedStatusTreeNode> subComponents) {
+	public BuildStatus getPatchBuildStatus(Component comp, MDepsSource mDepsSource, CachedStatuses cache, IProgress progress, LinkedHashMap<Component, ExtendedStatusTreeNode> subComponents) {
 		if (!mDepsSource.hasCRB()) {
 			throw new ENoReleaseBranchForPatch("Release Branch does not exists for the requested Component version: " + comp);
 		}
@@ -113,7 +105,7 @@ public class ExtendedStatusTreeBuilder {
 			return BuildStatus.ACTUALIZE_PATCHES;
 		}
 
-		if (noValueableCommitsAfterLastTag(comp)) {
+		if (noValueableCommitsAfterLastTag(comp, mDepsSource)) {
 			return BuildStatus.DONE;
 		}
 
@@ -142,10 +134,6 @@ public class ExtendedStatusTreeBuilder {
 			return BuildStatus.ACTUALIZE_PATCHES;
 		}
 
-//		if (Options.isPatch() && noValueableCommitsAfterLastTag(comp)) {
-//			return BuildStatus.DONE;
-//		}
-
 		return BuildStatus.BUILD;
 	}
 
@@ -158,16 +146,21 @@ public class ExtendedStatusTreeBuilder {
 		return false;
 	}
 
-	private boolean noValueableCommitsAfterLastTag(Component comp) {
+	private boolean noValueableCommitsAfterLastTag(Component comp, MDepsSource mDepsSource) {
 		IVCS vcs = comp.getVCS();
 		String startingFromRevision = null;
 
 		DelayedTagsFile dtf = new DelayedTagsFile();
 		String delayedTagRevision = dtf.getRevisitonByUrl(comp.getVcsRepository().getUrl());
 		List<VCSCommit> commits;
-		String crbName = Utils.getReleaseBranchName(comp, comp.getVersion());
+		String branchName;
+		if (Options.isPatch()) {
+			branchName = mDepsSource.getRbName();
+		} else {
+			branchName = mDepsSource.getCrbName();
+		}
 		do {
-			commits = vcs.getCommitsRange(crbName, startingFromRevision, WalkDirection.DESC, COMMITS_RANGE_LIMIT);
+			commits = vcs.getCommitsRange(branchName, startingFromRevision, WalkDirection.DESC, COMMITS_RANGE_LIMIT);
 			for (VCSCommit commit : commits) {
 				if (commit.getRevision().equals(delayedTagRevision)) {
 					return true;
@@ -187,7 +180,7 @@ public class ExtendedStatusTreeBuilder {
 
 	private boolean areMDepsPatchesActual(List<Component> mDeps, CachedStatuses cache) {
 		for (Component mDep : mDeps) {
-			if (!cache.get(mDep.getUrl()).getNextVersion().equals(mDep.getVersion())) { //mDep.getVersion().toNextPatch()
+			if (!cache.get(mDep.getUrl()).getNextVersion().equals(mDep.getVersion().toNextPatch())) { //mDep.getVersion().toNextPatch()
 				return false;
 			}
 		}
@@ -214,7 +207,7 @@ public class ExtendedStatusTreeBuilder {
 			return true;
 		} 
 
-		if (mDepsSource.getCrbVersion().getPatch().equals("0")) {
+		if (mDepsSource.getCrbVersion().getPatch().equals(Utils.ZERO_PATCH)) {
 			return false;
 		}
 		

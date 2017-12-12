@@ -60,12 +60,12 @@ public class CLITest {
 
 	@Test
 	public void testCommandSTATUS() throws Exception {
-		doReturn(mockedAction).when(mockedReleaser).getActionTree(UNTILL, ActionKind.FULL);
+		doReturn(mockedAction).when(mockedReleaser).getActionTree(UNTILL, ActionSet.FULL);
 		String[] args = new String[] { CLICommand.STATUS.getStrValue(), UNTILL };
 
 		assertEquals(CLI.EXIT_CODE_OK, mockedCLI.exec(args));
 
-		verify(mockedReleaser).getActionTree(UNTILL, ActionKind.FULL);
+		verify(mockedReleaser).getActionTree(UNTILL, ActionSet.FULL);
 		verify(mockedAction, never()).execute(any(IProgress.class));
 		verify(mockedPS, atLeast(1)).println(anyString());
 

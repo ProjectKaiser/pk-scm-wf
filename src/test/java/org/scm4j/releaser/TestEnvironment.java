@@ -172,7 +172,7 @@ public class TestEnvironment implements AutoCloseable {
 	private void createTestEnvironmentFolder() throws Exception {
 		envDir = new File(TEST_ENVIRONMENT_DIR);
 		if (envDir.exists()) {
-			WorkflowTestBase.waitForDeleteDir(envDir);
+			Utils.waitForDeleteDir(envDir);
 		}
 		envDir.mkdirs();
 	}
@@ -230,7 +230,7 @@ public class TestEnvironment implements AutoCloseable {
 	@Override
 	public void close() throws Exception {
 		if (envDir != null && envDir.exists()) {
-			WorkflowTestBase.waitForDeleteDir(envDir);
+			Utils.waitForDeleteDir(envDir);
 		}
 		VCSRepositories.setConfigSource(new EnvVarsConfigSource());
 		VCSRepositories.resetDefault();

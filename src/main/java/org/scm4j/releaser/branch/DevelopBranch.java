@@ -43,10 +43,6 @@ public class DevelopBranch {
 		return DevelopBranchStatus.MODIFIED;
 	}
 	
-	public boolean hasVersionFile() {
-		return vcs.fileExists(comp.getVcsRepository().getDevelopBranch(), SCMReleaser.VER_FILE_NAME);
-	}
-	
 	public String getName() {
 		return comp.getVcsRepository().getDevelopBranch();
 	}

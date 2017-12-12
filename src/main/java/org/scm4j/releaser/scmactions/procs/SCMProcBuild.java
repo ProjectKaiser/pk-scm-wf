@@ -3,10 +3,10 @@ package org.scm4j.releaser.scmactions.procs;
 import java.io.File;
 import java.nio.file.Files;
 
-import org.apache.commons.io.FileUtils;
 import org.scm4j.commons.Version;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.releaser.CachedStatuses;
+import org.scm4j.releaser.ExtendedStatusTreeNode;
 import org.scm4j.releaser.LogTag;
 import org.scm4j.releaser.SCMReleaser;
 import org.scm4j.releaser.Utils;
@@ -28,10 +28,12 @@ public class SCMProcBuild implements ISCMProc {
 	private final Component comp;
 	private final String releaseBranchName;
 	private final Version versionToBuild;
+	private final CachedStatuses cache;
  
 	public SCMProcBuild(Component comp, CachedStatuses cache) {
 		this.comp = comp;
 		vcs = comp.getVCS();
+		this.cache = cache;
 		releaseBranchName = Utils.getReleaseBranchName(comp, cache.get(comp.getUrl()).getNextVersion());
 		versionToBuild = cache.get(comp.getUrl()).getNextVersion();
 	}
@@ -53,8 +55,8 @@ public class SCMProcBuild implements ISCMProc {
 		
 		raisePatchVersion(progress);
 		
-		// for what?
-		//calculatedResult.replaceReleaseBranch(comp, new ReleaseBranch(comp, newVersion, true));
+		ExtendedStatusTreeNode existing = cache.get(comp.getUrl());
+		cache.replace(comp.getUrl(), new ExtendedStatusTreeNode(versionToBuild.toNextPatch(), existing.getStatus(), existing.getSubComponents(), comp));
 		
 		progress.reportStatus(comp.getName() + " " + versionToBuild + " is built in " + releaseBranchName);
 
@@ -64,7 +66,7 @@ public class SCMProcBuild implements ISCMProc {
 	private void build(IProgress progress, VCSCommit headCommit) {
 		File buildDir = Utils.getBuildDir(comp, versionToBuild);
 		if (buildDir.exists()) {
-			FileUtils.deleteDirectory(buildDir);
+			Utils.waitForDeleteDir(buildDir);
 		}
 		Files.createDirectories(buildDir.toPath());		
 		Utils.reportDuration(() -> vcs.checkout(releaseBranchName, buildDir.getPath(), headCommit.getRevision()),

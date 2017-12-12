@@ -10,12 +10,10 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import org.apache.commons.io.FileUtils;
 import org.hamcrest.Matcher;
 import org.junit.After;
 import org.junit.Assert;
@@ -63,7 +61,7 @@ public class WorkflowTestBase {
 		dbUBL = new DevelopBranch(compUBL);
 		TestBuilder.setBuilders(new HashMap<>());
 		new DelayedTagsFile().delete();
-		waitForDeleteDir(MDepsSource.RELEASES_DIR);
+		Utils.waitForDeleteDir(MDepsSource.RELEASES_DIR);
 	}
 
 	@After
@@ -74,23 +72,9 @@ public class WorkflowTestBase {
 		TestBuilder.setBuilders(null);
 		Options.setOptions(new ArrayList<>());
 		Options.setIsPatch(false);
-		waitForDeleteDir(MDepsSource.RELEASES_DIR);
+		Utils.waitForDeleteDir(MDepsSource.RELEASES_DIR);
 	}
 
-	public static void waitForDeleteDir(File dir) throws Exception {
-		for (Integer i = 1; i <= 10; i++) {
-			try {
-				FileUtils.deleteDirectory(dir);
-				break;
-			} catch (Exception e) {
-				Thread.sleep(100);
-			}
-		}
-		if (dir.exists()) {
-			throw new Exception("failed to delete " + dir);
-		}
-	}
-	
 	protected Version getCrbNextVersion(Component comp) {
 		IVCS vcs = comp.getVCS();
 		Version crbFirstVersion = Utils.getDevVersion(comp).toPreviousMinor().toReleaseZeroPatch();
@@ -285,20 +269,20 @@ public class WorkflowTestBase {
 	public void checkUBLNotBuilt() {
 		checkUnTillDbNotBuilt();
 		Version latestVersion = getCrbNextVersion(compUnTillDb);
-		assertEquals("0", latestVersion.getPatch());
+		assertEquals(Utils.ZERO_PATCH, latestVersion.getPatch());
 		assertTrue(env.getUblVCS().getTags().isEmpty());
 	}
 
 	public void checkUnTillDbNotBuilt() {
 		Version latestVersion = getCrbNextVersion(compUnTillDb);
-		assertEquals("0", latestVersion.getPatch());
+		assertEquals(Utils.ZERO_PATCH, latestVersion.getPatch());
 		assertTrue(env.getUnTillDbVCS().getTags().isEmpty());
 	}
 
 	public void checkUnTillNotBuilt() {
 		checkUBLNotBuilt();
 		Version latestVersion = getCrbNextVersion(compUnTill);
-		assertEquals("0", latestVersion.getPatch());
+		assertEquals(Utils.ZERO_PATCH, latestVersion.getPatch());
 		assertTrue(env.getUnTillVCS().getTags().isEmpty());
 	}
 

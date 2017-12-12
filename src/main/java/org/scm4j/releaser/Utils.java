@@ -6,6 +6,7 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import org.apache.commons.io.FileUtils;
 import org.scm4j.commons.Version;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.releaser.conf.Component;
@@ -14,6 +15,7 @@ import org.scm4j.releaser.conf.TagDesc;
 public final class Utils {
 	
 	public static final File RELEASES_DIR = new File(System.getProperty("user.dir"), "releases");
+	public static final String ZERO_PATCH = "0";
 
 	public static <T> T reportDuration(Supplier<T> sup, String message, Component comp, IProgress progress) {
 		if (progress == null) {
@@ -62,6 +64,20 @@ public final class Utils {
 	
 	public static Version getDevVersion(Component comp) {
 		return new Version(comp.getVCS().getFileContent(comp.getVcsRepository().getDevelopBranch(), SCMReleaser.VER_FILE_NAME, null));
+	}
+	
+	public static void waitForDeleteDir(File dir) throws Exception {
+		for (Integer i = 1; i <= 10; i++) {
+			try {
+				FileUtils.deleteDirectory(dir);
+				break;
+			} catch (Exception e) {
+				Thread.sleep(100);
+			}
+		}
+		if (dir.exists()) {
+			throw new Exception("failed to delete " + dir);
+		}
 	}
 	
 }

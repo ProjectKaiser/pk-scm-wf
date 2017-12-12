@@ -1,5 +1,11 @@
 package org.scm4j.releaser.branch;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
+
+import java.util.ArrayList;
+
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -8,15 +14,9 @@ import org.scm4j.releaser.SCMReleaser;
 import org.scm4j.releaser.WorkflowTestBase;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.conf.Component;
-import org.scm4j.releaser.conf.MDepsFile;
 import org.scm4j.releaser.exceptions.EComponentConfig;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSCommit;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-
-import static org.junit.Assert.*;
 
 public class DevelopBranchTest extends WorkflowTestBase {
 
@@ -66,21 +66,5 @@ public class DevelopBranchTest extends WorkflowTestBase {
 			fail();
 		} catch (EComponentConfig e) {
 		}
-	}
-	
-	@Test
-	public void testHasVersionFile() {
-		assertTrue(new DevelopBranch(compUnTill).hasVersionFile());
-		env.getUnTillVCS().removeFile(compUnTill.getVcsRepository().getDevelopBranch(), SCMReleaser.VER_FILE_NAME, "version file removed");
-		assertFalse(new DevelopBranch(compUnTill).hasVersionFile());
-	}
-
-	@Test
-	public void testGetMDeps() {
-		Component compUnTillDbVersioned = new Component(UNTILL + ":12.13.14");
-		MDepsFile mdf = new MDepsFile(Arrays.asList(compUnTillDbVersioned));
-		env.getUblVCS().setFileContent(compUBL.getVcsRepository().getDevelopBranch(), SCMReleaser.MDEPS_FILE_NAME, mdf.toFileContent(),
-				"mdeps versioned");
-		assertTrue(new DevelopBranch(compUBL).getMDeps().get(0).getNextVersion().isEmpty());
 	}
 }

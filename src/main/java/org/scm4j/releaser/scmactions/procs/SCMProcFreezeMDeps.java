@@ -4,7 +4,6 @@ import java.util.ArrayList;
 
 import org.scm4j.commons.Version;
 import org.scm4j.commons.progress.IProgress;
-import org.scm4j.releaser.Build;
 import org.scm4j.releaser.CachedStatuses;
 import org.scm4j.releaser.ExtendedStatusTreeNode;
 import org.scm4j.releaser.LogTag;
@@ -40,7 +39,7 @@ public class SCMProcFreezeMDeps implements ISCMProc {
 		boolean hasChanges = false;
 		for (Component currentMDep : currentMDepsFile.getMDeps()) {
 			newVersion = cache.get(currentMDep.getUrl()).getNextVersion();
-			if (!newVersion.getPatch().equals(Build.ZERO_PATCH)) {
+			if (!newVersion.getPatch().equals(Utils.ZERO_PATCH)) {
 				newVersion = newVersion.toPreviousPatch();
 			}
 			sb.append("" + currentMDep.getName() + ": " + currentMDep.getVersion() + " -> " + newVersion + "\r\n");
