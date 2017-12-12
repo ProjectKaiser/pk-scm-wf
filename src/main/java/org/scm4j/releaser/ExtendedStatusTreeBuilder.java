@@ -80,7 +80,7 @@ public class ExtendedStatusTreeBuilder {
 			throw new ENoReleaseBranchForPatch("Release Branch does not exists for the requested Component version: " + comp);
 		}
 
-		if (Integer.parseInt(mDepsSource.getRbVersion().getPatch()) < 1) {
+		if (Integer.parseInt(mDepsSource.getCrbVersion().getPatch()) < 1) {
 			throw new ENoReleases("Release Branch version patch is " + mDepsSource.getRbVersion().getPatch() + ". Component release should be created before patch");
 		}
 
@@ -202,15 +202,15 @@ public class ExtendedStatusTreeBuilder {
 		}
 		
 		ExtendedStatusTreeNode mdepStatus;
-		for (Component mdep : mDepsSource.getMDeps()) {
+		for (Component mdep : mDepsSource.getCRBMDeps()) {
 			mdepStatus = cache.get(mdep.getUrl());
 			// any mdeps needs FORK => YES
-			if (mdepStatus.getStatus() == BuildStatus.FORK) {
+			if (mdepStatus.getStatus() != BuildStatus.DONE) {
 				return true;
 			}
 
 			// Versions in mdeps does NOT equal to components CR versions => YES
-			if (!mdep.getVersion().equals(mdepStatus.getNextVersion().toPreviousMinor())) {
+			if (!mdep.getVersion().toReleaseZeroPatch().equals(mdepStatus.getNextVersion().toReleaseZeroPatch())) {
 				return true;
 			}
 		}

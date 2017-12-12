@@ -36,9 +36,9 @@ public class WorkflowForkTest extends WorkflowTestBase {
 		action.execute(getProgress(action));
 		checkUnTillOnlyForked(2);
 
-		Version latestVersionUBL = getLatestVersion(compUBL);
-		Version latestVersionUnTill = getLatestVersion(compUnTill);
-		Version latestVersionUnTillDb = getLatestVersion(compUnTillDb);
+		Version latestVersionUBL = getCrbNextVersion(compUBL);
+		Version latestVersionUnTill = getCrbNextVersion(compUnTill);
+		Version latestVersionUnTillDb = getCrbNextVersion(compUnTillDb);
 		
 		assertEquals(env.getUblVer().toReleaseZeroPatch().toNextPatch(), latestVersionUBL);
 		assertEquals(env.getUnTillVer().toReleaseZeroPatch().toNextMinor(), latestVersionUnTill);
@@ -50,9 +50,9 @@ public class WorkflowForkTest extends WorkflowTestBase {
 		assertIsGoingToDoNothing(action, compUnTillDb, compUBL);
 		action.execute(getProgress(action));
 
-		latestVersionUBL = getLatestVersion(compUBL);
-		latestVersionUnTill = getLatestVersion(compUnTill);
-		latestVersionUnTillDb = getLatestVersion(compUnTillDb);
+		latestVersionUBL = getCrbNextVersion(compUBL);
+		latestVersionUnTill = getCrbNextVersion(compUnTill);
+		latestVersionUnTillDb = getCrbNextVersion(compUnTillDb);
 		assertEquals(env.getUblVer().toReleaseZeroPatch().toNextPatch(), latestVersionUBL);
 		assertEquals(env.getUnTillVer().toReleaseZeroPatch().toNextMinor().toNextPatch(), latestVersionUnTill);
 		assertEquals(env.getUnTillDbVer().toReleaseZeroPatch().toNextPatch(), latestVersionUnTillDb);
@@ -62,24 +62,24 @@ public class WorkflowForkTest extends WorkflowTestBase {
 	}
 
 	@Test
-	//public void testForkRootIfNestedIsForkedAlready() throws Exception {
-	public void testForkRootIfNestedIsBuiltAlready() throws Exception {
+	public void testForkRootIfNestedIsForkedAlready() throws Exception {
 		// build UBL + unTillDb
 		IAction action = releaser.getActionTree(UBL);
 		action.execute(getProgress(action));
 
 		// next fork unTillDb
 		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevelopBranch(), "feature added");
-		action = releaser.getActionTree(compUnTillDb, ActionSet.FULL);
-		assertIsGoingToForkAndBuild(action, compUnTillDb);
+		action = releaser.getActionTree(compUnTillDb, ActionSet.FORK_ONLY);
+		assertIsGoingToFork(action, compUnTillDb);
 		action.execute(getProgress(action));
-		checkUnTillDbBuilt(2);
+		checkUnTillDbForked(2);
 
 		// UBL should be forked then
-		action = releaser.getActionTree(compUBL, ActionSet.FORK_ONLY);
-		assertIsGoingToFork(action, compUBL);
-		assertIsGoingToDoNothing(action, compUnTillDb);
+		action = releaser.getActionTree(compUBL, ActionSet.FULL);
+		assertIsGoingToForkAndBuild(action, compUBL);
+		assertIsGoingToBuild(action, compUnTillDb);
 		action.execute(getProgress(action));
-		checkUBLForked(2);
+		checkUBLBuilt(2);
 	}
 }
+

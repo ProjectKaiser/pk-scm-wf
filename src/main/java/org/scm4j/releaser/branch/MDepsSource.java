@@ -30,8 +30,12 @@ public class MDepsSource {
 			return mdeps;
 		}
 		// beware: UBL forked, UDB forked -> take UDB 18.0 -> error no releases
-		mdeps = hasCRB && crbVersion.getPatch().equals(Build.ZERO_PATCH) ? getMDepsRelease(comp, getName()) : getMDepsDevelop(comp);
+		mdeps = hasCRB && rbVersion.getPatch().equals(Build.ZERO_PATCH) ? getMDepsRelease(comp, name) : getMDepsDevelop(comp);
 		return mdeps;
+	}
+	
+	public List<Component> getCRBMDeps() {
+		return getMDepsRelease(comp, name);
 	}
 	
 	public MDepsSource(Component comp) {
@@ -40,13 +44,9 @@ public class MDepsSource {
 		devVersion = Utils.getDevVersion(comp);
 		if (comp.getVersion().isLocked()) {
 			name = Utils.getReleaseBranchName(comp, comp.getVersion());
-			rbVersion = new Version(vcs.getFileContent(name, SCMReleaser.VER_FILE_NAME, null)).toRelease();
+			rbVersion = comp.getVersion();
 			String crbName = Utils.getReleaseBranchName(comp, getDevVersion().toPreviousMinor());
-			if (crbName.equals(name)) {
-				crbVersion = rbVersion;
-			} else {
-				crbVersion = new Version(vcs.getFileContent(crbName, SCMReleaser.VER_FILE_NAME, null)).toRelease();
-			}
+			crbVersion = new Version(vcs.getFileContent(crbName, SCMReleaser.VER_FILE_NAME, null)).toRelease();
 			hasCRB = true;
 		} else {
 			Boolean hasCRB;

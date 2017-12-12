@@ -30,6 +30,10 @@ public class SCMReleaser {
 	public IAction getActionTree(String coords, ActionSet actionSet) {
 		return getActionTree(new Component(coords), actionSet);
 	}
+	
+	public IAction getTagActionTree(String coords) {
+		return getTagActionTree(new Component(coords));
+	}
 
 	public IAction getActionTree(Component comp, ActionSet actionSet) {
 		CachedStatuses cache = new CachedStatuses();
@@ -53,24 +57,4 @@ public class SCMReleaser {
 
 		return new SCMActionTag(comp, childActions, Utils.getReleaseBranchName(comp, lastReleaseVersion));
 	}
-
-
 }
-	public static TagDesc getTagDesc(String verStr) {
-		String tagMessage = verStr + " release";
-		return new TagDesc(verStr, tagMessage);
-	}
-	public IAction getTagActionTree(Component comp) {
-		List<IAction> childActions = new ArrayList<>();
-		DevelopBranch db = new DevelopBranch(comp);
-		List<Component> mDeps = db.getMDeps();
-
-		for (Component mDep : mDeps) {
-			childActions.add(getTagActionTree(mDep));
-		}
-		return new SCMActionTag(new ReleaseBranch(comp), comp, childActions);
-	}
-
-	public IAction getTagActionTree(String coords) {
-		return getTagActionTree(new Component(coords));
-	}

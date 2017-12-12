@@ -13,6 +13,15 @@ targetCompatibility = JavaVersion.VERSION_1_8
 group = 'org.scm4j'
 version = file('version').text.trim()
 
+sourceSets {
+	inv {
+		java {
+			srcDir 'src/inv/java'
+		}
+	}
+}
+
+
 jacocoTestReport {
 	reports {
 		xml.enabled = true // coveralls plugin depends on xml format report
