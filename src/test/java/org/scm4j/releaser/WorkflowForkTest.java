@@ -9,30 +9,34 @@ import org.scm4j.releaser.actions.IAction;
 
 public class WorkflowForkTest extends WorkflowTestBase {
 	
-	private final ActionTreeBuilder actionBuilder = new ActionTreeBuilder();
-	
 	@Test
 	public void testForkAll() throws Exception {
-		IAction action = actionBuilder.getActionTree(UNTILL);
-		assertIsGoingToForkAndBuildAll(action);
-		action.execute(getProgress(action));
-		checkUnTillBuilt();
+		IAction action = getActionTreeFork(compUnTill);
+		assertIsGoingToForkAll(action);
+		execAction(action);
+		checkUnTillForked();
 		assertFalse(action.getClass().getMethod("toString").getDeclaringClass().equals(Object.class));
+		
+		// check nothing happens on next fork
+		action = getActionTreeFork(compUnTill);
+		assertIsGoingToSkipAll(action);
+		execAction(action);
+		checkUnTillForked();
 	}
-
+	
 	@Test
 	public void testForkRootOnly() throws Exception {
-		IAction action = actionBuilder.getActionTree(UNTILL);
+		IAction action = getActionTreeBuild(compUnTill);
 		assertIsGoingToForkAndBuildAll(action);
-		action.execute(getProgress(action));
+		execAction(action);
 		checkUnTillBuilt();
 
 		env.generateFeatureCommit(env.getUnTillVCS(), compUnTill.getVcsRepository().getDevelopBranch(), "feature added");
 		// fork untill only
-		action = actionBuilder.getActionTreeForkOnly(UNTILL);
+		action = getActionTreeFork(compUnTill);
 		assertIsGoingToFork(action, compUnTill);
 		assertIsGoingToDoNothing(action, compUnTillDb, compUBL);
-		action.execute(getProgress(action));
+		execAction(action);
 		checkUnTillOnlyForked(2);
 
 		Version latestVersionUBL = getCrbNextVersion(compUBL);
@@ -44,10 +48,10 @@ public class WorkflowForkTest extends WorkflowTestBase {
 		assertEquals(env.getUnTillDbVer().toReleaseZeroPatch().toNextPatch(), latestVersionUnTillDb);
 
 		// build untill only
-		action = actionBuilder.getActionTree(UNTILL);
+		action = getActionTreeBuild(compUnTill);
 		assertIsGoingToBuild(action, compUnTill);
 		assertIsGoingToDoNothing(action, compUnTillDb, compUBL);
-		action.execute(getProgress(action));
+		execAction(action);
 
 		latestVersionUBL = getCrbNextVersion(compUBL);
 		latestVersionUnTill = getCrbNextVersion(compUnTill);
@@ -63,21 +67,21 @@ public class WorkflowForkTest extends WorkflowTestBase {
 	@Test
 	public void testForkRootIfNestedIsForkedAlready() throws Exception {
 		// build UBL + unTillDb
-		IAction action = actionBuilder.getActionTree(UBL);
-		action.execute(getProgress(action));
+		IAction action = getActionTreeBuild(compUBL);
+		execAction(action);
 
 		// next fork unTillDb
 		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevelopBranch(), "feature added");
-		action = actionBuilder.getActionTreeForkOnly(compUnTillDb);
+		action = getActionTreeFork(compUnTillDb);
 		assertIsGoingToFork(action, compUnTillDb);
-		action.execute(getProgress(action));
+		execAction(action);
 		checkUnTillDbForked(2);
 
-		// UBL should be forked then
-		action = actionBuilder.getActionTree(compUBL);
+		// UBL should be forked and built then
+		action = getActionTreeBuild(compUBL);
 		assertIsGoingToForkAndBuild(action, compUBL);
 		assertIsGoingToBuild(action, compUnTillDb);
-		action.execute(getProgress(action));
+		execAction(action);
 		checkUBLBuilt(2);
 	}
 }

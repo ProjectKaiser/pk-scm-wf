@@ -44,7 +44,7 @@ public class CLI {
 		}
 	}
 
-	public IAction getActionTree(CommandLine cmd, Options options) throws Exception {
+	public IAction getActionTree(CommandLine cmd, Options options) {
 		switch (cmd.getCommand()) {
 		case STATUS:
 		case BUILD:

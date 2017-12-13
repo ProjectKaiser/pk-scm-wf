@@ -18,14 +18,17 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.scm4j.commons.Version;
-import org.scm4j.commons.progress.IProgress;
-import org.scm4j.commons.progress.ProgressConsole;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.branch.DevelopBranch;
 import org.scm4j.releaser.branch.MDepsSource;
+import org.scm4j.releaser.cli.CLI;
+import org.scm4j.releaser.cli.CLICommand;
+import org.scm4j.releaser.cli.CommandLine;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.DelayedTagsFile;
 import org.scm4j.releaser.conf.MDepsFile;
+import org.scm4j.releaser.conf.Option;
+import org.scm4j.releaser.conf.Options;
 import org.scm4j.releaser.scmactions.SCMActionRelease;
 import org.scm4j.releaser.scmactions.SCMActionTag;
 import org.scm4j.vcs.api.IVCS;
@@ -309,10 +312,6 @@ public class WorkflowTestBase {
 		assertEquals(commits.get(1), tag.getRelatedCommit());
 	}
 	
-	protected IProgress getProgress(IAction action) {
-		return new ProgressConsole(action.toStringAction(), ">>> ", "<<< ");
-	}
-
 	private IAction getActionByComp(IAction action, Component comp, int level) {
 		for (IAction nestedAction : action.getChildActions()) {
 			IAction res = getActionByComp(nestedAction, comp, level + 1);
@@ -341,11 +340,11 @@ public class WorkflowTestBase {
 	}
 
 	protected void assertIsGoingToForkAll(IAction action) {
-		assertIsGoingToFork(action, compUBL, compUnTillDb, compUnTill);
+		assertIsGoingToFork(action, getAllComps());
 	}
 
 	protected void assertIsGoingToForkAndBuildAll(IAction action) {
-		assertIsGoingToForkAndBuild(action, compUBL, compUnTillDb, compUnTill);
+		assertIsGoingToForkAndBuild(action, getAllComps());
 	}
 
 	protected void assertIsGoingToFork(IAction action, Component... comps) {
@@ -384,6 +383,16 @@ public class WorkflowTestBase {
 				hasProperty("bsTo", equalTo(bsTo)),
 				hasProperty("procs", empty())), comps);
 	}
+	
+	protected void assertIsGoingToSkipAll(IAction action) {
+		assertThat(action, allOf(
+				instanceOf(SCMActionRelease.class),
+				hasProperty("procs", empty())), getAllComps());
+	}
+	
+	private  Component[] getAllComps() {
+		return new Component[] {compUBL, compUnTillDb, compUnTill};
+	}
 
 	protected void assertIsGoingToDoNothing(IAction action, Component... comps) {
 		assertIsGoingToDoNothing(action, BuildStatus.DONE, null, comps);
@@ -400,8 +409,32 @@ public class WorkflowTestBase {
 	}
 
 	protected void assertIsGoingToTagAll(IAction action) {
-		assertIsGoingToTag(action, compUnTillDb);
-		assertIsGoingToTag(action, compUnTill);
-		assertIsGoingToTag(action, compUBL);
+		assertThat(action, instanceOf(SCMActionTag.class), getAllComps());
+	}
+	
+	protected IAction getActionTreeFork(Component comp) {
+		return new CLI().getActionTree(new CommandLine(new String[] {CLICommand.FORK.getStrValue(), comp.getCoords().toString()}), new Options());
+	}
+	
+	protected void execAction(IAction action) {
+		try {
+			new CLI().execActionTree(action);
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	protected IAction getActionTreeBuild(Component comp) {
+		return new CLI().getActionTree(new CommandLine(new String[] {CLICommand.BUILD.getStrValue(), comp.getCoords().toString()}), new Options());
+	}
+	
+	protected IAction getActionTreeTag(Component comp) {
+		return new CLI().getActionTree(new CommandLine(new String[] {CLICommand.TAG.getStrValue(), comp.getCoords().toString()}), new Options());
+	}
+	
+	protected IAction getActionTreeDelayedTag(Component comp) {
+		Options options = new Options();
+		options.parse(new String[] {Option.DELAYED_TAG.getStrValue()});
+		return new CLI().getActionTree(new CommandLine(new String[] {CLICommand.BUILD.getStrValue(), comp.getCoords().toString()}), options);
 	}
 }

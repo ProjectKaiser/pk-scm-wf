@@ -25,9 +25,8 @@ public class DevelopBranchTest extends WorkflowTestBase {
 		env.generateFeatureCommit(env.getUnTillDbVCS(), dbUnTillDb.getName(), "feature added");
 		env.generateFeatureCommit(env.getUnTillVCS(), dbUnTill.getName(), "feature added");
 		env.generateFeatureCommit(env.getUblVCS(), dbUBL.getName(), "feature added");
-		ActionTreeBuilder actionBuilder = new ActionTreeBuilder();
-		IAction action = actionBuilder.getActionTree(compUnTill);
-		action.execute(getProgress(action));
+		IAction action = getActionTreeBuild(compUnTill);
+		execAction(action);
 		assertEquals(DevelopBranchStatus.BRANCHED, dbUnTill.getStatus());
 	}
 
