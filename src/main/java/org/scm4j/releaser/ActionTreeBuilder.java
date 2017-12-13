@@ -8,7 +8,7 @@ import java.util.Map;
 import org.scm4j.commons.Version;
 import org.scm4j.releaser.actions.ActionSet;
 import org.scm4j.releaser.actions.IAction;
-import org.scm4j.releaser.branch.ReleaseBranchBuilder;
+import org.scm4j.releaser.branch.ReleaseBranchFactory;
 import org.scm4j.releaser.branch.DevelopBranch;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.scmactions.SCMActionRelease;
@@ -59,17 +59,17 @@ public class ActionTreeBuilder {
 	
 	private IAction getActionTree(Component comp, ActionSet actionSet, boolean delayedTag, boolean isForPatch) {
 		CachedStatuses cache = new CachedStatuses();
-		ExtendedStatusTreeBuilder statusBuilder = new ExtendedStatusTreeBuilder();
-		ExtendedStatusTreeNode node = isForPatch ? 
-				statusBuilder.getExtendedStatusTreeNodeForPatch(comp, cache) :
-				statusBuilder.getExtendedStatusTreeNode(comp, cache);
+		ExtendedStatusBuilder statusBuilder = new ExtendedStatusBuilder();
+		ExtendedStatus node = isForPatch ? 
+				statusBuilder.getAndCachePatchStatus(comp, cache) :
+				statusBuilder.getAndCacheMinorStatus(comp, cache);
 
 		return getActionTree(node, cache, actionSet, delayedTag);
 	}
 	
-	public IAction getActionTree(ExtendedStatusTreeNode node, CachedStatuses cache, ActionSet actionSet, boolean delayedTag) {
+	public IAction getActionTree(ExtendedStatus node, CachedStatuses cache, ActionSet actionSet, boolean delayedTag) {
 		List<IAction> childActions = new ArrayList<>();
-		for (Map.Entry<Component, ExtendedStatusTreeNode> nodeEntry : node.getSubComponents().entrySet()) {
+		for (Map.Entry<Component, ExtendedStatus> nodeEntry : node.getSubComponents().entrySet()) {
 			childActions.add(getActionTree(nodeEntry.getValue(), cache, actionSet, delayedTag));
 		}
 		
@@ -78,7 +78,7 @@ public class ActionTreeBuilder {
 
 	public IAction getTagActionTree(Component comp) {
 		List<IAction> childActions = new ArrayList<>();
-		List<Component> mDeps = ReleaseBranchBuilder.getMDepsDevelop(comp);
+		List<Component> mDeps = ReleaseBranchFactory.getMDepsDevelop(comp);
 
 		for (Component mDep : mDeps) {
 			childActions.add(getTagActionTree(mDep));

@@ -6,7 +6,7 @@ import java.nio.file.Files;
 import org.scm4j.commons.Version;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.releaser.CachedStatuses;
-import org.scm4j.releaser.ExtendedStatusTreeNode;
+import org.scm4j.releaser.ExtendedStatus;
 import org.scm4j.releaser.LogTag;
 import org.scm4j.releaser.ActionTreeBuilder;
 import org.scm4j.releaser.Utils;
@@ -55,8 +55,8 @@ public class SCMProcBuild implements ISCMProc {
 		
 		raisePatchVersion(progress);
 		
-		ExtendedStatusTreeNode existing = cache.get(comp.getUrl());
-		cache.replace(comp.getUrl(), new ExtendedStatusTreeNode(versionToBuild.toNextPatch(), existing.getStatus(), existing.getSubComponents(), comp));
+		ExtendedStatus existing = cache.get(comp.getUrl());
+		cache.replace(comp.getUrl(), new ExtendedStatus(versionToBuild.toNextPatch(), existing.getStatus(), existing.getSubComponents(), comp));
 		
 		progress.reportStatus(comp.getName() + " " + versionToBuild + " is built in " + releaseBranchName);
 

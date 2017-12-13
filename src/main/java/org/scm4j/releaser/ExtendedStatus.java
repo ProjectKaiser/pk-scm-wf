@@ -5,17 +5,17 @@ import org.scm4j.releaser.conf.Component;
 
 import java.util.LinkedHashMap;
 
-public class ExtendedStatusTreeNode {
+public class ExtendedStatus {
 
-	public static final ExtendedStatusTreeNode DUMMY = new ExtendedStatusTreeNode(null, null, null, null);
+	public static final ExtendedStatus DUMMY = new ExtendedStatus(null, null, null, null);
 	
 	private final Component comp;
 	private final Version nextVersion;
 	private final BuildStatus status;
-	private final LinkedHashMap<Component, ExtendedStatusTreeNode> subComponents;
+	private final LinkedHashMap<Component, ExtendedStatus> subComponents;
 
-	public ExtendedStatusTreeNode(Version nextVersion, BuildStatus status,
-			LinkedHashMap<Component, ExtendedStatusTreeNode> subComponents, Component comp) {
+	public ExtendedStatus(Version nextVersion, BuildStatus status,
+			LinkedHashMap<Component, ExtendedStatus> subComponents, Component comp) {
 		this.nextVersion = nextVersion;
 		this.status = status;
 		this.subComponents = subComponents;
@@ -30,7 +30,7 @@ public class ExtendedStatusTreeNode {
 		return status;
 	}
 
-	public LinkedHashMap<Component, ExtendedStatusTreeNode> getSubComponents() {
+	public LinkedHashMap<Component, ExtendedStatus> getSubComponents() {
 		return subComponents;
 	}
 

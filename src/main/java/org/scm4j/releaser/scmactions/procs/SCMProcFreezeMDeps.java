@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import org.scm4j.commons.Version;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.releaser.CachedStatuses;
-import org.scm4j.releaser.ExtendedStatusTreeNode;
+import org.scm4j.releaser.ExtendedStatus;
 import org.scm4j.releaser.LogTag;
 import org.scm4j.releaser.ActionTreeBuilder;
 import org.scm4j.releaser.Utils;
@@ -17,7 +17,7 @@ public class SCMProcFreezeMDeps implements ISCMProc {
 	
 	private final IVCS vcs;
 	private final Component comp;
-	private final ExtendedStatusTreeNode status;
+	private final ExtendedStatus status;
 	private final CachedStatuses cache;
  
 	public SCMProcFreezeMDeps(Component comp, CachedStatuses cache) {

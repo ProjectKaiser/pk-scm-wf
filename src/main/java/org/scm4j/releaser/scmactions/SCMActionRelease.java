@@ -7,7 +7,7 @@ import org.scm4j.commons.Version;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.releaser.BuildStatus;
 import org.scm4j.releaser.CachedStatuses;
-import org.scm4j.releaser.ExtendedStatusTreeNode;
+import org.scm4j.releaser.ExtendedStatus;
 import org.scm4j.releaser.Utils;
 import org.scm4j.releaser.actions.ActionAbstract;
 import org.scm4j.releaser.actions.ActionSet;
@@ -28,7 +28,7 @@ public class SCMActionRelease extends ActionAbstract {
 	
 	public SCMActionRelease(Component comp, List<IAction> childActions, CachedStatuses cache, ActionSet actionSet, boolean delayedTag) {
 		super(comp, childActions);
-		ExtendedStatusTreeNode status = cache.get(comp.getUrl());
+		ExtendedStatus status = cache.get(comp.getUrl());
 		this.bsFrom = status.getStatus();
 		targetVersion = status.getNextVersion();
 		

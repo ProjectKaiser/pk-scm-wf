@@ -12,9 +12,9 @@ import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.exceptions.EVCSBranchNotFound;
 import org.scm4j.vcs.api.exceptions.EVCSFileNotFound;
 
-public class ReleaseBranchBuilder {
+public class ReleaseBranchFactory {
 	
-	public ReleaseBranch getReleaseBranchPatch(Component comp) {
+	public static ReleaseBranch getReleaseBranchPatch(Component comp) {
 		IVCS vcs = comp.getVCS();
 		String name = Utils.getReleaseBranchName(comp, comp.getVersion());
 		boolean exists;
@@ -31,7 +31,7 @@ public class ReleaseBranchBuilder {
 		return new ReleaseBranch(mdeps, exists, name, version, null); 
 	}
 	
-	public ReleaseBranch getReleaseBranchCurrent(Component comp) {
+	public static ReleaseBranch getCRB(Component comp) {
 		IVCS vcs = comp.getVCS();
 		Version devVersion = Utils.getDevVersion(comp);
 		Version version;

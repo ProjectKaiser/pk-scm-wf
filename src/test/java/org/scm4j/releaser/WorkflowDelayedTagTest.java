@@ -12,7 +12,7 @@ import org.junit.Test;
 import org.scm4j.commons.Version;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.branch.ReleaseBranch;
-import org.scm4j.releaser.branch.ReleaseBranchBuilder;
+import org.scm4j.releaser.branch.ReleaseBranchFactory;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.DelayedTagsFile;
 import org.scm4j.releaser.conf.TagDesc;
@@ -38,8 +38,7 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 
 		// add feature to unTillDb release/2.59
 		Component compUnTillDbVersioned = compUnTillDb.clone(env.getUnTillDbVer());
-		ReleaseBranchBuilder rbb = new ReleaseBranchBuilder();
-		ReleaseBranch rb = rbb.getReleaseBranchPatch(compUnTillDbVersioned);
+		ReleaseBranch rb = ReleaseBranchFactory.getReleaseBranchPatch(compUnTillDbVersioned);
 		env.generateFeatureCommit(env.getUnTillDbVCS(),  rb.getName(), "patch feature merged");
 		
 		// build all patches, delayed tag
@@ -120,8 +119,7 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 		assertIsGoingToTagAll(action);
 
 		// simulate tag exists already
-		ReleaseBranchBuilder rbb = new ReleaseBranchBuilder();
-		ReleaseBranch rb = rbb.getReleaseBranchCurrent(compUnTill);
+		ReleaseBranch rb = ReleaseBranchFactory.getCRB(compUnTill);
 		Map<String, String> content = dtf.getContent();
 		for (Map.Entry<String, String> entry : content.entrySet()) {
 			if (compUnTill.getVcsRepository().getUrl().equals(entry.getKey())) {
@@ -165,8 +163,7 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 		execAction(action);
 
 		String revisionToTag = dtf.getRevisitonByUrl(compUnTillDb.getVcsRepository().getUrl());
-		ReleaseBranchBuilder rbb = new ReleaseBranchBuilder();
-		ReleaseBranch rb = rbb.getReleaseBranchCurrent(compUnTillDb);
+		ReleaseBranch rb = ReleaseBranchFactory.getCRB(compUnTillDb);
 		env.getUnTillDbVCS().createTag(rb.getName(), "other-tag", "other tag message", revisionToTag);
 		
 		// simulate tag exists
@@ -187,8 +184,7 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 	}
 	
 	private boolean isPreHeadCommitTaggedWithVersion(Component comp) {
-		ReleaseBranchBuilder rbb = new ReleaseBranchBuilder();
-		ReleaseBranch rb = rbb.getReleaseBranchCurrent(comp);
+		ReleaseBranch rb = ReleaseBranchFactory.getCRB(comp);
 		List<VCSTag> tags = comp.getVCS().getTagsOnRevision(comp.getVCS().getCommitsRange(rb.getName(), null, WalkDirection.DESC, 2).get(1).getRevision());
 		for (VCSTag tag : tags) {
 			if (tag.getTagName().equals(rb.getVersion().toPreviousPatch().toReleaseString())) {

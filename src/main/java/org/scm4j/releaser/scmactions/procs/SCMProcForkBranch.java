@@ -4,7 +4,7 @@ import org.scm4j.commons.Version;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.releaser.ActionTreeBuilder;
 import org.scm4j.releaser.CachedStatuses;
-import org.scm4j.releaser.ExtendedStatusTreeNode;
+import org.scm4j.releaser.ExtendedStatus;
 import org.scm4j.releaser.LogTag;
 import org.scm4j.releaser.Utils;
 import org.scm4j.releaser.branch.DevelopBranch;
@@ -16,7 +16,7 @@ public class SCMProcForkBranch implements ISCMProc {
 	private final DevelopBranch db;
 	private final Component comp;
 	private final IVCS vcs;
-	private final ExtendedStatusTreeNode status;
+	private final ExtendedStatus status;
 	private final String newBranchName;
  
 	public SCMProcForkBranch(Component comp, CachedStatuses cache) {

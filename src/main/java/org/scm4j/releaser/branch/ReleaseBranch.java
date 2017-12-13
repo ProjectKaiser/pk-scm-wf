@@ -38,6 +38,6 @@ public class ReleaseBranch {
 	}
 
 	public List<Component> getCRBDeps() {
-		return ReleaseBranchBuilder.getMDepsRelease(comp, name);
+		return ReleaseBranchFactory.getMDepsRelease(comp, name);
 	}
 }
