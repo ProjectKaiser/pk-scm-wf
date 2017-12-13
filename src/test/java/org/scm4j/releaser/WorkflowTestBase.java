@@ -20,7 +20,6 @@ import org.junit.Before;
 import org.scm4j.commons.Version;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.branch.DevelopBranch;
-import org.scm4j.releaser.branch.MDepsSource;
 import org.scm4j.releaser.cli.CLI;
 import org.scm4j.releaser.cli.CLICommand;
 import org.scm4j.releaser.cli.CommandLine;
@@ -61,7 +60,7 @@ public class WorkflowTestBase {
 		dbUBL = new DevelopBranch(compUBL);
 		TestBuilder.setBuilders(new HashMap<>());
 		new DelayedTagsFile().delete();
-		Utils.waitForDeleteDir(MDepsSource.RELEASES_DIR);
+		Utils.waitForDeleteDir(Utils.RELEASES_DIR);
 	}
 
 	@After
@@ -70,7 +69,7 @@ public class WorkflowTestBase {
 			env.close();
 		}
 		TestBuilder.setBuilders(null);
-		Utils.waitForDeleteDir(MDepsSource.RELEASES_DIR);
+		Utils.waitForDeleteDir(Utils.RELEASES_DIR);
 	}
 
 	protected Version getCrbNextVersion(Component comp) {

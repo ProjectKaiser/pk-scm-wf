@@ -7,7 +7,8 @@ import java.util.List;
 
 import org.junit.Test;
 import org.scm4j.releaser.actions.IAction;
-import org.scm4j.releaser.branch.MDepsSource;
+import org.scm4j.releaser.branch.ReleaseBranch;
+import org.scm4j.releaser.branch.ReleaseBranchBuilder;
 import org.scm4j.releaser.conf.Component;
 
 public class WorkflowPatchesTest extends WorkflowTestBase {
@@ -20,8 +21,9 @@ public class WorkflowPatchesTest extends WorkflowTestBase {
 		checkUnTillBuilt();
 
 		// add feature to existing unTillDb release
-		MDepsSource mDepsSource = new MDepsSource(compUnTillDb);
-		env.generateFeatureCommit(env.getUnTillDbVCS(), mDepsSource.getCrbName(), "patch feature added");
+		ReleaseBranchBuilder rbb = new ReleaseBranchBuilder();
+		ReleaseBranch rb = rbb.getReleaseBranchCRB(compUnTillDb);
+		env.generateFeatureCommit(env.getUnTillDbVCS(), rb.getName(), "patch feature added");
 
 		// build unTillDb patch
 		Component compUnTillDbPatch = new Component(UNTILLDB + ":" + env.getUnTillDbVer().toRelease());
@@ -29,9 +31,9 @@ public class WorkflowPatchesTest extends WorkflowTestBase {
 		assertIsGoingToBuild(action, compUnTillDb);
 		execAction(action);
 		
-		mDepsSource = new MDepsSource(compUnTillDbPatch, true);
+		rb = rbb.getReleaseBranchPatch(compUnTillDbPatch);
 		assertEquals(env.getUnTillDbVer().toReleaseZeroPatch().toNextPatch().toNextPatch(),
-				mDepsSource.getCrbVersion());
+				rb.getVersion());
 		ExtendedStatusTreeBuilder builder = new ExtendedStatusTreeBuilder();
 		assertEquals(BuildStatus.DONE, builder.getExtendedStatusTreeNode(compUnTillDbPatch).getStatus());
 
@@ -43,9 +45,9 @@ public class WorkflowPatchesTest extends WorkflowTestBase {
 		execAction(action);
 
 		// check unTill uses new untillDb and UBL versions in existing unTill release branch.
-		mDepsSource = new MDepsSource(compUnTill.clone(env.getUnTillVer().toRelease()), true);
+		rb = rbb.getReleaseBranchPatch(compUnTill.clone(env.getUnTillVer().toRelease()));
 		
-		List<Component> mdeps = mDepsSource.getMDeps();
+		List<Component> mdeps = rb.getMDeps();
 		for (Component mdep : mdeps) {
 			if (mdep.getName().equals(UBL)) {
 				assertEquals(env.getUblVer().toReleaseZeroPatch().toNextPatch(), mdep.getVersion());
@@ -72,19 +74,20 @@ public class WorkflowPatchesTest extends WorkflowTestBase {
 		execAction(action);
 		checkUnTillDbBuilt(2);
 
-		MDepsSource mDepsSource = new MDepsSource(compUnTillDb);
-		assertEquals(env.getUnTillDbVer().toNextMinor().toRelease(), mDepsSource.getCrbVersion());
+		ReleaseBranchBuilder rbb = new ReleaseBranchBuilder();
+		ReleaseBranch rb = rbb.getReleaseBranchCRB(compUnTillDb);
+		assertEquals(env.getUnTillDbVer().toNextMinor().toRelease(), rb.getVersion());
 
 		// add feature for 2.59.1
 		Component compToPatch = new Component(UNTILLDB + ":2.59.1");
-		mDepsSource = new MDepsSource(compToPatch);
-		env.generateFeatureCommit(env.getUnTillDbVCS(), mDepsSource.getRbName(), "2.59.1 feature merged");
+		rb = rbb.getReleaseBranchPatch(compToPatch);
+		env.generateFeatureCommit(env.getUnTillDbVCS(), rb.getName(), "2.59.1 feature merged");
 
 		// build new unTillDb patch 2.59.1
 		action = getActionTreeBuild(compToPatch);
 		assertIsGoingToBuild(action, compUnTillDb);
 		execAction(action);
-		mDepsSource = new MDepsSource(compToPatch, true);
-		assertEquals(dbUnTillDb.getVersion().toPreviousMinor().toPreviousMinor().toNextPatch().toRelease(), mDepsSource.getRbVersion());
+		rb = rbb.getReleaseBranchPatch(compToPatch);
+		assertEquals(dbUnTillDb.getVersion().toPreviousMinor().toPreviousMinor().toNextPatch().toRelease(), rb.getVersion());
 	}
 }

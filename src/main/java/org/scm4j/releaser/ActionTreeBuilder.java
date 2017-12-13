@@ -8,8 +8,8 @@ import java.util.Map;
 import org.scm4j.commons.Version;
 import org.scm4j.releaser.actions.ActionSet;
 import org.scm4j.releaser.actions.IAction;
+import org.scm4j.releaser.branch.ReleaseBranchBuilder;
 import org.scm4j.releaser.branch.DevelopBranch;
-import org.scm4j.releaser.branch.MDepsSource;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.scmactions.SCMActionRelease;
 import org.scm4j.releaser.scmactions.SCMActionTag;
@@ -78,14 +78,13 @@ public class ActionTreeBuilder {
 
 	public IAction getTagActionTree(Component comp) {
 		List<IAction> childActions = new ArrayList<>();
-		List<Component> mDeps = MDepsSource.getMDepsDevelop(comp);
+		List<Component> mDeps = ReleaseBranchBuilder.getMDepsDevelop(comp);
 
 		for (Component mDep : mDeps) {
 			childActions.add(getTagActionTree(mDep));
 		}
 
-		DevelopBranch db = new DevelopBranch(comp);
-		Version lastReleaseVersion = db.getVersion().toPreviousMinor();
+		Version lastReleaseVersion = new DevelopBranch(comp).getVersion().toPreviousMinor();
 
 		return new SCMActionTag(comp, childActions, Utils.getReleaseBranchName(comp, lastReleaseVersion));
 	}

@@ -7,9 +7,9 @@ import org.apache.commons.lang3.NotImplementedException;
 import org.scm4j.commons.Version;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.commons.progress.ProgressConsole;
+import org.scm4j.releaser.branch.ReleaseBranchBuilder;
 import org.scm4j.releaser.branch.DevelopBranch;
-import org.scm4j.releaser.branch.DevelopBranchStatus;
-import org.scm4j.releaser.branch.MDepsSource;
+import org.scm4j.releaser.branch.ReleaseBranch;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.DelayedTagsFile;
 import org.scm4j.releaser.exceptions.ENoReleaseBranchForPatch;
@@ -48,92 +48,90 @@ public class ExtendedStatusTreeBuilder {
 			return existing;
 		}
 
-		MDepsSource mDepsSource = new MDepsSource(comp, isForPatch);
-		
+		ReleaseBranchBuilder rbb = new ReleaseBranchBuilder();
 		ExtendedStatusTreeNode res;
 		if (isForPatch) {
-			res = getPatchTreeNode(comp, mDepsSource, cache, progress);
+			res = getPatchTreeNode(comp, rbb.getReleaseBranchPatch(comp), cache, progress);
 		} else {
-			res = getMinorTreeNode(comp, mDepsSource, cache, progress);
+			res = getMinorTreeNode(comp, rbb.getReleaseBranchCRB(comp), cache, progress);
 		}
 		
 		cache.replace(comp.getUrl(), res);
 		return res;
 	}
 	
-	private ExtendedStatusTreeNode getMinorTreeNode(Component comp, MDepsSource mDepsSource, CachedStatuses cache,
+	private ExtendedStatusTreeNode getMinorTreeNode(Component comp, ReleaseBranch rb, CachedStatuses cache,
 			IProgress progress) {
 		LinkedHashMap<Component, ExtendedStatusTreeNode> subComponents = new LinkedHashMap<>();
-		BuildStatus status = getMinorBuildStatus(comp, mDepsSource, cache, progress, subComponents);
+		BuildStatus status = getMinorBuildStatus(comp, rb, cache, progress, subComponents);
 		Version nextVersion;
 		if (status == BuildStatus.FORK) {
-			nextVersion = mDepsSource.getDevVersion().toReleaseZeroPatch();
+			nextVersion = new DevelopBranch(comp).getVersion().toReleaseZeroPatch();
 		} else {
-			nextVersion = mDepsSource.getRbVersion();
+			nextVersion = rb.getVersion();
 		}
 		return new ExtendedStatusTreeNode(nextVersion, status, subComponents, comp);
 	}
 
-	private ExtendedStatusTreeNode getPatchTreeNode(Component comp, MDepsSource mDepsSource, CachedStatuses cache, IProgress progress) {
+	private ExtendedStatusTreeNode getPatchTreeNode(Component comp, ReleaseBranch rb, CachedStatuses cache, IProgress progress) {
 		LinkedHashMap<Component, ExtendedStatusTreeNode> subComponents = new LinkedHashMap<>();
-		BuildStatus status = getPatchBuildStatus(comp, mDepsSource, cache, progress, subComponents);
-		Version nextVersion = mDepsSource.getRbVersion();
+		BuildStatus status = getPatchBuildStatus(comp, rb, cache, progress, subComponents);
+		Version nextVersion = rb.getVersion();
 		return new ExtendedStatusTreeNode(nextVersion, status, subComponents, comp);
 	}
 
-	public BuildStatus getPatchBuildStatus(Component comp, MDepsSource mDepsSource, CachedStatuses cache, IProgress progress, LinkedHashMap<Component, ExtendedStatusTreeNode> subComponents) {
-		if (!mDepsSource.hasCRB()) {
+	public BuildStatus getPatchBuildStatus(Component comp, ReleaseBranch rb, CachedStatuses cache, IProgress progress, LinkedHashMap<Component, ExtendedStatusTreeNode> subComponents) {
+		if (!rb.exists()) {
 			throw new ENoReleaseBranchForPatch("Release Branch does not exists for the requested Component version: " + comp);
 		}
 
-		// failed if we to build previously forked component which is 0-patched
-		if (Integer.parseInt(mDepsSource.getCrbVersion().getPatch()) < 1) {
-			throw new ENoReleases("Release Branch version patch is " + mDepsSource.getRbVersion().getPatch() + ". Component release should be created before patch");
+		if (Integer.parseInt(rb.getVersion().getPatch()) < 1) {
+			throw new ENoReleases("Release Branch version patch is " + rb.getVersion().getPatch() + ". Component release should be created before patch");
 		}
 		
-		if (!areMDepsLocked(mDepsSource.getMDeps())) {
+		if (!areMDepsLocked(rb.getMDeps())) {
 			throw new EReleaserException("not all mdeps locked"); // TODO: add unlocked component output
 		}
 		
-		for (Component mdep : mDepsSource.getMDeps()) {
+		for (Component mdep : rb.getMDeps()) {
 			ExtendedStatusTreeNode status = getExtendedStatusTreeNode(mdep, cache, progress, true);
 			subComponents.put(mdep, status);
 		}
 
-		if (hasMDepsNotInDONEStatus(mDepsSource.getMDeps(), cache)) {
+		if (hasMDepsNotInDONEStatus(rb.getMDeps(), cache)) {
 			return BuildStatus.BUILD_MDEPS;
 		}
 
-		if (!areMDepsPatchesActual(mDepsSource.getMDeps(), cache)) {
+		if (!areMDepsPatchesActual(rb.getMDeps(), cache)) {
 			return BuildStatus.ACTUALIZE_PATCHES;
 		}
 
-		if (noValueableCommitsAfterLastTag(comp, mDepsSource)) {
+		if (noValueableCommitsAfterLastTag(comp, rb)) {
 			return BuildStatus.DONE;
 		}
 
 		return BuildStatus.BUILD;
 	}
 
-	private BuildStatus getMinorBuildStatus(Component comp, MDepsSource mDepsSource, CachedStatuses cache, IProgress progress, LinkedHashMap<Component, ExtendedStatusTreeNode> subComponents) {
+	private BuildStatus getMinorBuildStatus(Component comp, ReleaseBranch rb, CachedStatuses cache, IProgress progress, LinkedHashMap<Component, ExtendedStatusTreeNode> subComponents) {
 	
-		if (isNeedToFork(comp, mDepsSource, cache, progress, subComponents)) {
+		if (isNeedToFork(comp, rb, cache, progress, subComponents)) {
 			return BuildStatus.FORK;
 		}
 		
-		if (Integer.parseInt(mDepsSource.getCrbVersion().getPatch()) > 0) {
+		if (Integer.parseInt(rb.getVersion().getPatch()) > 0) {
 			return BuildStatus.DONE;
 		}
 
-		if (!areMDepsLocked(mDepsSource.getMDeps())) {
+		if (!areMDepsLocked(rb.getMDeps())) {
 			return BuildStatus.LOCK;
 		}
 
-		if (hasMDepsNotInDONEStatus(mDepsSource.getMDeps(), cache)) {
+		if (hasMDepsNotInDONEStatus(rb.getMDeps(), cache)) {
 			return BuildStatus.BUILD_MDEPS;
 		}
 
-		if (!areMDepsPatchesActual(mDepsSource.getMDeps(), cache)) {
+		if (!areMDepsPatchesActual(rb.getMDeps(), cache)) {
 			return BuildStatus.ACTUALIZE_PATCHES;
 		}
 
@@ -149,7 +147,7 @@ public class ExtendedStatusTreeBuilder {
 		return false;
 	}
 
-	private boolean noValueableCommitsAfterLastTag(Component comp, MDepsSource mDepsSource) {
+	private boolean noValueableCommitsAfterLastTag(Component comp, ReleaseBranch rb) {
 		IVCS vcs = comp.getVCS();
 		String startingFromRevision = null;
 
@@ -157,7 +155,7 @@ public class ExtendedStatusTreeBuilder {
 		String delayedTagRevision = dtf.getRevisitonByUrl(comp.getVcsRepository().getUrl());
 		List<VCSCommit> commits;
 		String branchName;
-		branchName = mDepsSource.getRbName();
+		branchName = rb.getName();
 		do {
 			commits = vcs.getCommitsRange(branchName, startingFromRevision, WalkDirection.DESC, COMMITS_RANGE_LIMIT);
 			for (VCSCommit commit : commits) {
@@ -195,28 +193,28 @@ public class ExtendedStatusTreeBuilder {
 		return true;
 	}
 
-	private Boolean isNeedToFork(Component comp, MDepsSource mDepsSource, CachedStatuses cache, IProgress progress, LinkedHashMap<Component, ExtendedStatusTreeNode> subComponents) {
+	private Boolean isNeedToFork(Component comp, ReleaseBranch rb, CachedStatuses cache, IProgress progress, LinkedHashMap<Component, ExtendedStatusTreeNode> subComponents) {
 		
-		for (Component mdep : mDepsSource.getMDeps()) {
+		for (Component mdep : rb.getMDeps()) {
 			ExtendedStatusTreeNode mDepStatus = getExtendedStatusTreeNode(mdep, cache, progress, false);
 			subComponents.put(mdep, mDepStatus);
 		}
 		
-		if (!mDepsSource.hasCRB()) {
+		if (!rb.exists()) {
 			return true;
 		} 
 
-		if (mDepsSource.getCrbVersion().getPatch().equals(Utils.ZERO_PATCH)) {
+		if (rb.getVersion().getPatch().equals(Utils.ZERO_PATCH)) {
 			return false;
 		}
 		
 		// develop branch has valuable commits => YES
-		if (DevelopBranchStatus.MODIFIED == new DevelopBranch(comp).getStatus()) {
+		if (new DevelopBranch(comp).isModified()) {
 			return true;
 		}
 		
 		ExtendedStatusTreeNode mdepStatus;
-		for (Component mdep : mDepsSource.getCRBMDeps()) {
+		for (Component mdep : rb.getCRBDeps()) {
 			mdepStatus = cache.get(mdep.getUrl());
 			// any mdeps needs FORK => YES
 			if (mdepStatus.getStatus() != BuildStatus.DONE) {

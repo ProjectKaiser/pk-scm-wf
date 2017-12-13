@@ -11,7 +11,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.scm4j.commons.Version;
 import org.scm4j.releaser.actions.IAction;
-import org.scm4j.releaser.branch.MDepsSource;
+import org.scm4j.releaser.branch.ReleaseBranch;
+import org.scm4j.releaser.branch.ReleaseBranchBuilder;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.DelayedTagsFile;
 import org.scm4j.releaser.conf.TagDesc;
@@ -37,8 +38,9 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 
 		// add feature to unTillDb release/2.59
 		Component compUnTillDbVersioned = compUnTillDb.clone(env.getUnTillDbVer());
-		MDepsSource mDepsSource = new MDepsSource(compUnTillDbVersioned);
-		env.generateFeatureCommit(env.getUnTillDbVCS(),  mDepsSource.getRbName(), "patch feature merged");
+		ReleaseBranchBuilder rbb = new ReleaseBranchBuilder();
+		ReleaseBranch rb = rbb.getReleaseBranchPatch(compUnTillDbVersioned);
+		env.generateFeatureCommit(env.getUnTillDbVCS(),  rb.getName(), "patch feature merged");
 		
 		// build all patches, delayed tag
 		Component compUnTillVersioned = compUnTill.clone(env.getUnTillVer().toReleaseZeroPatch());
@@ -118,15 +120,15 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 		assertIsGoingToTagAll(action);
 
 		// simulate tag exists already
-		MDepsSource mDepsSource = new MDepsSource(compUnTill);
-		//WorkingBranch rbUnTill = new WorkingBranch(compUnTill);
+		ReleaseBranchBuilder rbb = new ReleaseBranchBuilder();
+		ReleaseBranch rb = rbb.getReleaseBranchCRB(compUnTill);
 		Map<String, String> content = dtf.getContent();
 		for (Map.Entry<String, String> entry : content.entrySet()) {
 			if (compUnTill.getVcsRepository().getUrl().equals(entry.getKey())) {
-				Version delayedTagVersion = new Version(env.getUnTillVCS().getFileContent(mDepsSource.getRbName(), ActionTreeBuilder.VER_FILE_NAME,
+				Version delayedTagVersion = new Version(env.getUnTillVCS().getFileContent(rb.getName(), ActionTreeBuilder.VER_FILE_NAME,
 						entry.getValue()));
 				TagDesc tagDesc = Utils.getTagDesc(delayedTagVersion.toString());
-				env.getUnTillVCS().createTag(mDepsSource.getRbName(), tagDesc.getName(), tagDesc.getMessage(), entry.getValue());
+				env.getUnTillVCS().createTag(rb.getName(), tagDesc.getName(), tagDesc.getMessage(), entry.getValue());
 			}
 		}
 
@@ -163,14 +165,15 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 		execAction(action);
 
 		String revisionToTag = dtf.getRevisitonByUrl(compUnTillDb.getVcsRepository().getUrl());
-		MDepsSource mDepsSource = new MDepsSource(compUnTillDb);
-		env.getUnTillDbVCS().createTag(mDepsSource.getRbName(), "other-tag", "other tag message", revisionToTag);
+		ReleaseBranchBuilder rbb = new ReleaseBranchBuilder();
+		ReleaseBranch rb = rbb.getReleaseBranchCRB(compUnTillDb);
+		env.getUnTillDbVCS().createTag(rb.getName(), "other-tag", "other tag message", revisionToTag);
 		
 		// simulate tag exists
-		Version delayedTagVersion = new Version(env.getUnTillDbVCS().getFileContent(mDepsSource.getRbName(), ActionTreeBuilder.VER_FILE_NAME,
+		Version delayedTagVersion = new Version(env.getUnTillDbVCS().getFileContent(rb.getName(), ActionTreeBuilder.VER_FILE_NAME,
 				revisionToTag));
 		TagDesc tagDesc = Utils.getTagDesc(delayedTagVersion.toString());
-		env.getUnTillDbVCS().createTag(mDepsSource.getRbName(), tagDesc.getName(), tagDesc.getMessage(), revisionToTag);
+		env.getUnTillDbVCS().createTag(rb.getName(), tagDesc.getName(), tagDesc.getMessage(), revisionToTag);
 
 		Thread.sleep(1000); // FIXME: test fails without sleep
 
@@ -181,14 +184,14 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 
 		// check no new tags
 		assertTrue(env.getUnTillDbVCS().getTags().size() == 2);
-
 	}
 	
 	private boolean isPreHeadCommitTaggedWithVersion(Component comp) {
-		MDepsSource mDepsSource = new MDepsSource(comp);
-		List<VCSTag> tags = comp.getVCS().getTagsOnRevision(comp.getVCS().getCommitsRange(mDepsSource.getRbName(), null, WalkDirection.DESC, 2).get(1).getRevision());
+		ReleaseBranchBuilder rbb = new ReleaseBranchBuilder();
+		ReleaseBranch rb = rbb.getReleaseBranchCRB(comp);
+		List<VCSTag> tags = comp.getVCS().getTagsOnRevision(comp.getVCS().getCommitsRange(rb.getName(), null, WalkDirection.DESC, 2).get(1).getRevision());
 		for (VCSTag tag : tags) {
-			if (tag.getTagName().equals(mDepsSource.getRbVersion().toPreviousPatch().toReleaseString())) {
+			if (tag.getTagName().equals(rb.getVersion().toPreviousPatch().toReleaseString())) {
 				return true;
 			}
 		}
