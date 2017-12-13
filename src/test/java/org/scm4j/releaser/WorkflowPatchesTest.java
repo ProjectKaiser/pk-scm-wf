@@ -22,7 +22,7 @@ public class WorkflowPatchesTest extends WorkflowTestBase {
 
 		// add feature to existing unTillDb release
 		ReleaseBranchBuilder rbb = new ReleaseBranchBuilder();
-		ReleaseBranch rb = rbb.getReleaseBranchCRB(compUnTillDb);
+		ReleaseBranch rb = rbb.getReleaseBranchCurrent(compUnTillDb);
 		env.generateFeatureCommit(env.getUnTillDbVCS(), rb.getName(), "patch feature added");
 
 		// build unTillDb patch
@@ -75,7 +75,7 @@ public class WorkflowPatchesTest extends WorkflowTestBase {
 		checkUnTillDbBuilt(2);
 
 		ReleaseBranchBuilder rbb = new ReleaseBranchBuilder();
-		ReleaseBranch rb = rbb.getReleaseBranchCRB(compUnTillDb);
+		ReleaseBranch rb = rbb.getReleaseBranchCurrent(compUnTillDb);
 		assertEquals(env.getUnTillDbVer().toNextMinor().toRelease(), rb.getVersion());
 
 		// add feature for 2.59.1

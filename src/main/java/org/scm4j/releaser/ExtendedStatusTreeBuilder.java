@@ -49,12 +49,9 @@ public class ExtendedStatusTreeBuilder {
 		}
 
 		ReleaseBranchBuilder rbb = new ReleaseBranchBuilder();
-		ExtendedStatusTreeNode res;
-		if (isForPatch) {
-			res = getPatchTreeNode(comp, rbb.getReleaseBranchPatch(comp), cache, progress);
-		} else {
-			res = getMinorTreeNode(comp, rbb.getReleaseBranchCRB(comp), cache, progress);
-		}
+		ExtendedStatusTreeNode res = isForPatch ? 
+			getPatchTreeNode(comp, rbb.getReleaseBranchPatch(comp), cache, progress) :
+			getMinorTreeNode(comp, rbb.getReleaseBranchCurrent(comp), cache, progress);
 		
 		cache.replace(comp.getUrl(), res);
 		return res;

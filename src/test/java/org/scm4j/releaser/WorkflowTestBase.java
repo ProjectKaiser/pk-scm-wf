@@ -388,7 +388,7 @@ public class WorkflowTestBase {
 				hasProperty("procs", empty())), getAllComps());
 	}
 	
-	private  Component[] getAllComps() {
+	private Component[] getAllComps() {
 		return new Component[] {compUBL, compUnTillDb, compUnTill};
 	}
 

@@ -34,7 +34,9 @@ public class CommandLine {
 	private static String printOptions() {
 		StringBuilder sb = new StringBuilder();
 		for (Option opt : Option.values()) {
-			sb.append("[").append(opt.getCmdLineStr()).append("] ");
+			if (opt != Option.UNKNOWN) {
+				sb.append("[").append(opt.getCmdLineStr()).append("] ");
+			}
 		}
 		sb.deleteCharAt(sb.length() - 1);
 		return sb.toString();
@@ -43,7 +45,9 @@ public class CommandLine {
 	private static String printCommands() {
 		StringBuilder sb = new StringBuilder();
 		for (CLICommand cmd : CLICommand.values()) {
-			sb.append(cmd.getCmdLineStr() + "|");
+			if (cmd != CLICommand.UNKNOWN) {
+				sb.append(cmd.getCmdLineStr() + "|");
+			}
 		}
 		sb.deleteCharAt(sb.length() - 1);
 		return sb.toString();
@@ -51,7 +55,7 @@ public class CommandLine {
 
 	public static String getUsage() {
 		int maxLen = CLICommand.getMaxLen();
-		return "usage:  groovy run.groovy " + printCommands() + " productCoords " + printOptions() + "\r\n"
+		return "usage: groovy run.groovy " + printCommands() + " productCoords " + printOptions() + "\r\n"
 				+ "\r\n"
 				+ String.format("%-" + maxLen + "s - show actions will be made with product specified by productCoords\r\n", CLICommand.STATUS.getCmdLineStr())
 				+ String.format("%-" + maxLen + "s - create all necessary release branches for product specified by productCoords\r\n", CLICommand.FORK.getCmdLineStr())

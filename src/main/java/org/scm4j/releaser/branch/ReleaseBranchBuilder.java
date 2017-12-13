@@ -31,7 +31,7 @@ public class ReleaseBranchBuilder {
 		return new ReleaseBranch(mdeps, exists, name, version, null); 
 	}
 	
-	public ReleaseBranch getReleaseBranchCRB(Component comp) {
+	public ReleaseBranch getReleaseBranchCurrent(Component comp) {
 		IVCS vcs = comp.getVCS();
 		Version devVersion = Utils.getDevVersion(comp);
 		Version version;

@@ -37,11 +37,4 @@ public class ExtendedStatusTreeNode {
 	public Component getComp() {
 		return comp;
 	}
-
-	@Override
-	public String toString() {
-		return "ExtendedStatusTreeNode [comp=" + comp + ", nextVersion=" + nextVersion + ", status=" + status
-				+ ", subComponents=" + subComponents + "]";
-	}
-	
 }
