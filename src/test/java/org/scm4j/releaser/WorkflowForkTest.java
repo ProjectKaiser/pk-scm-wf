@@ -5,7 +5,6 @@ import static org.junit.Assert.assertFalse;
 
 import org.junit.Test;
 import org.scm4j.commons.Version;
-import org.scm4j.releaser.actions.ActionSet;
 import org.scm4j.releaser.actions.IAction;
 
 public class WorkflowForkTest extends WorkflowTestBase {
@@ -30,7 +29,7 @@ public class WorkflowForkTest extends WorkflowTestBase {
 
 		env.generateFeatureCommit(env.getUnTillVCS(), compUnTill.getVcsRepository().getDevelopBranch(), "feature added");
 		// fork untill only
-		action = releaser.getActionTree(UNTILL, ActionSet.FORK_ONLY);
+		action = releaser.getActionTreeForkOnly(UNTILL);
 		assertIsGoingToFork(action, compUnTill);
 		assertIsGoingToDoNothing(action, compUnTillDb, compUBL);
 		action.execute(getProgress(action));
@@ -69,13 +68,13 @@ public class WorkflowForkTest extends WorkflowTestBase {
 
 		// next fork unTillDb
 		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevelopBranch(), "feature added");
-		action = releaser.getActionTree(compUnTillDb, ActionSet.FORK_ONLY);
+		action = releaser.getActionTreeForkOnly(compUnTillDb);
 		assertIsGoingToFork(action, compUnTillDb);
 		action.execute(getProgress(action));
 		checkUnTillDbForked(2);
 
 		// UBL should be forked then
-		action = releaser.getActionTree(compUBL, ActionSet.FULL);
+		action = releaser.getActionTree(compUBL);
 		assertIsGoingToForkAndBuild(action, compUBL);
 		assertIsGoingToBuild(action, compUnTillDb);
 		action.execute(getProgress(action));

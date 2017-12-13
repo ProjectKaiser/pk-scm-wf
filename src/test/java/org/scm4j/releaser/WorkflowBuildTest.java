@@ -1,10 +1,9 @@
 package org.scm4j.releaser;
 
-import org.junit.Test;
-import org.scm4j.releaser.actions.ActionSet;
-import org.scm4j.releaser.actions.IAction;
+import static org.junit.Assert.assertTrue;
 
-import static org.junit.Assert.*;
+import org.junit.Test;
+import org.scm4j.releaser.actions.IAction;
 public class WorkflowBuildTest extends WorkflowTestBase {
 	
 	private final SCMReleaser releaser = new SCMReleaser();
@@ -42,13 +41,13 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 	@Test
 	public void testBuildRootAndChildIfAllForkedAlready() throws Exception {
 		// fork unTillDb
-		IAction action = releaser.getActionTree(UNTILLDB, ActionSet.FORK_ONLY);
+		IAction action = releaser.getActionTreeForkOnly(UNTILLDB);
 		assertIsGoingToFork(action, compUnTillDb);
 		action.execute(getProgress(action));
 		checkUnTillDbForked();
 		
 		// fork UBL
-		action = releaser.getActionTree(UBL, ActionSet.FORK_ONLY);
+		action = releaser.getActionTreeForkOnly(UBL);
 		assertIsGoingToFork(action, compUBL);
 		assertIsGoingToDoNothing(action, BuildStatus.BUILD, null, compUnTillDb);
 		action.execute(getProgress(action));
@@ -84,7 +83,7 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 	@Test
 	public void testBuildAllIfNestedForked() throws Exception {
 		// fork unTillDb
-		IAction action = releaser.getActionTree(UNTILLDB, ActionSet.FORK_ONLY);
+		IAction action = releaser.getActionTreeForkOnly(UNTILLDB);
 		assertIsGoingToFork(action, compUnTillDb);
 		action.execute(getProgress(action));
 		checkUnTillDbForked();
@@ -100,13 +99,13 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 	@Test
 	public void testSkipBuildsOnFORKActionKind() throws Exception {
 		// fork all
-		IAction action = releaser.getActionTree(compUnTill, ActionSet.FORK_ONLY);
+		IAction action = releaser.getActionTreeForkOnly(compUnTill);
 		assertIsGoingToForkAll(action);
 		action.execute(getProgress(action));
 		checkUnTillForked();
 
 		// try to build with FORK target action kind. All builds should be skipped
-		action = releaser.getActionTree(compUnTill, ActionSet.FORK_ONLY);
+		action = releaser.getActionTreeForkOnly(compUnTill);
 		assertIsGoingToDoNothing(action, BuildStatus.BUILD_MDEPS, null, compUnTill, compUBL);
 		assertIsGoingToDoNothing(action, BuildStatus.BUILD, null, compUnTillDb);
 	}

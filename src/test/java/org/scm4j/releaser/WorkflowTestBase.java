@@ -10,7 +10,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -27,7 +26,6 @@ import org.scm4j.releaser.branch.MDepsSource;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.DelayedTagsFile;
 import org.scm4j.releaser.conf.MDepsFile;
-import org.scm4j.releaser.conf.Options;
 import org.scm4j.releaser.scmactions.SCMActionRelease;
 import org.scm4j.releaser.scmactions.SCMActionTag;
 import org.scm4j.vcs.api.IVCS;
@@ -70,8 +68,6 @@ public class WorkflowTestBase {
 			env.close();
 		}
 		TestBuilder.setBuilders(null);
-		Options.setOptions(new ArrayList<>());
-		Options.setIsPatch(false);
 		Utils.waitForDeleteDir(MDepsSource.RELEASES_DIR);
 	}
 

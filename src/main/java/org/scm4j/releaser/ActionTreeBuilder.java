@@ -11,12 +11,12 @@ import java.util.Map;
 
 public class ActionTreeBuilder {
 
-	public IAction getActionTree(ExtendedStatusTreeNode node, CachedStatuses cache, ActionSet actionSet) {
+	public IAction getActionTree(ExtendedStatusTreeNode node, CachedStatuses cache, ActionSet actionSet, boolean delayedTag) {
 		List<IAction> childActions = new ArrayList<>();
 		for (Map.Entry<Component, ExtendedStatusTreeNode> nodeEntry : node.getSubComponents().entrySet()) {
-			childActions.add(getActionTree(nodeEntry.getValue(), cache, actionSet));
+			childActions.add(getActionTree(nodeEntry.getValue(), cache, actionSet, delayedTag));
 		}
 		
-		return new SCMActionRelease(node.getComp(), childActions, cache, actionSet);
+		return new SCMActionRelease(node.getComp(), childActions, cache, actionSet, delayedTag);
 	}
 }

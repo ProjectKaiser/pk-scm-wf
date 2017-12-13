@@ -3,7 +3,6 @@ package org.scm4j.releaser;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -15,8 +14,6 @@ import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.branch.MDepsSource;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.DelayedTagsFile;
-import org.scm4j.releaser.conf.Option;
-import org.scm4j.releaser.conf.Options;
 import org.scm4j.releaser.conf.TagDesc;
 import org.scm4j.vcs.api.VCSTag;
 import org.scm4j.vcs.api.WalkDirection;
@@ -43,12 +40,10 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 		Component compUnTillDbVersioned = compUnTillDb.clone(env.getUnTillDbVer());
 		MDepsSource mDepsSource = new MDepsSource(compUnTillDbVersioned);
 		env.generateFeatureCommit(env.getUnTillDbVCS(),  mDepsSource.getRbName(), "patch feature merged");
-		Options.setOptions(Collections.singletonList(Option.DELAYED_TAG));
 		
 		// build all patches, delayed tag
-		Options.setIsPatch(true);
 		Component compUnTillVersioned = compUnTill.clone(env.getUnTillVer().toReleaseZeroPatch());
-		action = releaser.getActionTree(compUnTillVersioned);
+		action = releaser.getActionTreeDelayedTag(compUnTillVersioned);
 		assertIsGoingToBuildAll(action);
 		action.execute(getProgress(action));
 		
@@ -69,9 +64,7 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 	
 	@Test
 	public void testDelayedTag() throws Exception {
-		Options.setOptions(Collections.singletonList(Option.DELAYED_TAG));
-
-		IAction action = releaser.getActionTree(compUnTill);
+		IAction action = releaser.getActionTreeDelayedTag(compUnTill);
 		action.execute(getProgress(action));
 
 		// check no tags
@@ -100,9 +93,7 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 
 	@Test
 	public void testTagFileDeleted() throws Exception {
-		Options.setOptions(Collections.singletonList(Option.DELAYED_TAG));
-
-		IAction action = releaser.getActionTree(compUnTill);
+		IAction action = releaser.getActionTreeDelayedTag(compUnTill);
 		action.execute(getProgress(action));
 
 		// simulate delayed tags file is deleted right after action create
@@ -119,10 +110,8 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 
 	@Test
 	public void testTagExistsOnExecute() throws Exception {
-		Options.setOptions(Collections.singletonList(Option.DELAYED_TAG));
-
 		// build all
-		IAction action = releaser.getActionTree(compUnTill);
+		IAction action = releaser.getActionTreeDelayedTag(compUnTill);
 		action.execute(getProgress(action));
 
 		// all is going to tag
@@ -169,10 +158,8 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 	
 	@Test
 	public void testTagExistsOnGetActionTree() throws Exception {
-		Options.setOptions(Collections.singletonList(Option.DELAYED_TAG));
-
-		// fork all
-		IAction action = releaser.getActionTree(compUnTillDb);
+		// build all
+		IAction action = releaser.getActionTreeDelayedTag(compUnTillDb);
 		assertIsGoingToForkAndBuild(action, compUnTillDb);
 		action.execute(getProgress(action));
 

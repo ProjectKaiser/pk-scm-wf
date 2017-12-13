@@ -21,10 +21,18 @@ public class SCMActionReleaseTest extends WorkflowTestBase {
 		ExtendedStatusTreeNode node = new ExtendedStatusTreeNode(env.getUnTillVer(), BuildStatus.ERROR, new LinkedHashMap<>(), compUnTill);
 		cache.put(compUnTill.getUrl(), node);
 		try {
-			new SCMActionRelease(compUnTill, new ArrayList<>(), cache, ActionSet.FULL);
+			new SCMActionRelease(compUnTill, new ArrayList<>(), cache, ActionSet.FULL, false);
 			fail();
 		} catch (IllegalArgumentException e) {
 
 		}
+	}
+	
+	@Test
+	public void testToString() {
+		CachedStatuses cache = new CachedStatuses();
+		ExtendedStatusTreeNode node = new ExtendedStatusTreeNode(env.getUnTillVer(), BuildStatus.DONE, new LinkedHashMap<>(), compUnTill);
+		cache.put(compUnTill.getUrl(), node);
+		new SCMActionRelease(compUnTill, new ArrayList<>(), cache, ActionSet.FULL, false).toString();
 	}
 }

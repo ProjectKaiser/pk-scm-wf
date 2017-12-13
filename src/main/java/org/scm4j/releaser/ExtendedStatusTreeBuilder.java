@@ -12,7 +12,6 @@ import org.scm4j.releaser.branch.DevelopBranchStatus;
 import org.scm4j.releaser.branch.MDepsSource;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.DelayedTagsFile;
-import org.scm4j.releaser.conf.Options;
 import org.scm4j.releaser.exceptions.ENoReleaseBranchForPatch;
 import org.scm4j.releaser.exceptions.ENoReleases;
 import org.scm4j.releaser.exceptions.EReleaserException;
@@ -31,10 +30,14 @@ public class ExtendedStatusTreeBuilder {
 	}
 
 	public ExtendedStatusTreeNode getExtendedStatusTreeNode(Component comp, CachedStatuses cache) {
-		return getExtendedStatusTreeNode(comp, cache, new ProgressConsole());
+		return getExtendedStatusTreeNode(comp, cache, new ProgressConsole(), false);
+	}
+	
+	public ExtendedStatusTreeNode getExtendedStatusTreeNodeForPatch(Component comp, CachedStatuses cache) {
+		return getExtendedStatusTreeNode(comp, cache, new ProgressConsole(), true);
 	}
 
-	public ExtendedStatusTreeNode getExtendedStatusTreeNode(Component comp, CachedStatuses cache, IProgress progress) {
+	public ExtendedStatusTreeNode getExtendedStatusTreeNode(Component comp, CachedStatuses cache, IProgress progress, boolean isForPatch) {
 		ExtendedStatusTreeNode existing = cache.putIfAbsent(comp.getUrl(), ExtendedStatusTreeNode.DUMMY);
 
 		if (ExtendedStatusTreeNode.DUMMY == existing) {
@@ -45,10 +48,10 @@ public class ExtendedStatusTreeBuilder {
 			return existing;
 		}
 
-		MDepsSource mDepsSource = new MDepsSource(comp);
+		MDepsSource mDepsSource = new MDepsSource(comp, isForPatch);
 		
 		ExtendedStatusTreeNode res;
-		if (Options.isPatch()) {
+		if (isForPatch) {
 			res = getPatchTreeNode(comp, mDepsSource, cache, progress);
 		} else {
 			res = getMinorTreeNode(comp, mDepsSource, cache, progress);
@@ -84,7 +87,7 @@ public class ExtendedStatusTreeBuilder {
 		}
 
 		// failed if we to build previously forked component which is 0-patched
-		if (Options.isPatch() && Integer.parseInt(mDepsSource.getCrbVersion().getPatch()) < 1) {
+		if (Integer.parseInt(mDepsSource.getCrbVersion().getPatch()) < 1) {
 			throw new ENoReleases("Release Branch version patch is " + mDepsSource.getRbVersion().getPatch() + ". Component release should be created before patch");
 		}
 		
@@ -93,7 +96,7 @@ public class ExtendedStatusTreeBuilder {
 		}
 		
 		for (Component mdep : mDepsSource.getMDeps()) {
-			ExtendedStatusTreeNode status = getExtendedStatusTreeNode(mdep, cache, progress);
+			ExtendedStatusTreeNode status = getExtendedStatusTreeNode(mdep, cache, progress, true);
 			subComponents.put(mdep, status);
 		}
 
@@ -154,11 +157,7 @@ public class ExtendedStatusTreeBuilder {
 		String delayedTagRevision = dtf.getRevisitonByUrl(comp.getVcsRepository().getUrl());
 		List<VCSCommit> commits;
 		String branchName;
-		if (Options.isPatch()) {
-			branchName = mDepsSource.getRbName();
-		} else {
-			branchName = mDepsSource.getCrbName();
-		}
+		branchName = mDepsSource.getRbName();
 		do {
 			commits = vcs.getCommitsRange(branchName, startingFromRevision, WalkDirection.DESC, COMMITS_RANGE_LIMIT);
 			for (VCSCommit commit : commits) {
@@ -199,7 +198,7 @@ public class ExtendedStatusTreeBuilder {
 	private Boolean isNeedToFork(Component comp, MDepsSource mDepsSource, CachedStatuses cache, IProgress progress, LinkedHashMap<Component, ExtendedStatusTreeNode> subComponents) {
 		
 		for (Component mdep : mDepsSource.getMDeps()) {
-			ExtendedStatusTreeNode mDepStatus = getExtendedStatusTreeNode(mdep, cache, progress);
+			ExtendedStatusTreeNode mDepStatus = getExtendedStatusTreeNode(mdep, cache, progress, false);
 			subComponents.put(mdep, mDepStatus);
 		}
 		
@@ -232,4 +231,6 @@ public class ExtendedStatusTreeBuilder {
 
 		return false;
 	}
+
+	
 }

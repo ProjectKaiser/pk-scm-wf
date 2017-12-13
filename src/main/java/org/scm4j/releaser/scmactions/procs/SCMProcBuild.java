@@ -12,8 +12,6 @@ import org.scm4j.releaser.SCMReleaser;
 import org.scm4j.releaser.Utils;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.DelayedTagsFile;
-import org.scm4j.releaser.conf.Option;
-import org.scm4j.releaser.conf.Options;
 import org.scm4j.releaser.conf.TagDesc;
 import org.scm4j.releaser.exceptions.ENoBuilder;
 import org.scm4j.releaser.exceptions.EReleaserException;
@@ -29,13 +27,15 @@ public class SCMProcBuild implements ISCMProc {
 	private final String releaseBranchName;
 	private final Version versionToBuild;
 	private final CachedStatuses cache;
+	private final boolean delayedTag;
  
-	public SCMProcBuild(Component comp, CachedStatuses cache) {
+	public SCMProcBuild(Component comp, CachedStatuses cache, boolean delayedTag) {
 		this.comp = comp;
 		vcs = comp.getVCS();
 		this.cache = cache;
 		releaseBranchName = Utils.getReleaseBranchName(comp, cache.get(comp.getUrl()).getNextVersion());
 		versionToBuild = cache.get(comp.getUrl()).getNextVersion();
+		this.delayedTag = delayedTag;
 	}
 
 	@Override
@@ -76,7 +76,7 @@ public class SCMProcBuild implements ISCMProc {
 
 	@SneakyThrows
 	private void tagBuild(IProgress progress, VCSCommit headCommit) {
-		if (Options.hasOption(Option.DELAYED_TAG)) {
+		if (delayedTag) {
 			DelayedTagsFile delayedTagsFile = new DelayedTagsFile();
 			delayedTagsFile.writeUrlRevision(comp.getVcsRepository().getUrl(), headCommit.getRevision());
 			progress.reportStatus("build commit " + headCommit.getRevision() + " is saved for delayed tagging");

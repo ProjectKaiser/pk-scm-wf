@@ -9,7 +9,6 @@ import org.junit.Test;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.branch.MDepsSource;
 import org.scm4j.releaser.conf.Component;
-import org.scm4j.releaser.conf.Options;
 
 public class WorkflowPatchesTest extends WorkflowTestBase {
 
@@ -28,11 +27,10 @@ public class WorkflowPatchesTest extends WorkflowTestBase {
 
 		// build unTillDb patch
 		Component compUnTillDbPatch = new Component(UNTILLDB + ":" + env.getUnTillDbVer().toRelease());
-		Options.setIsPatch(true);
 		action = releaser.getActionTree(compUnTillDbPatch);
 		assertIsGoingToBuild(action, compUnTillDb);
 		action.execute(getProgress(action));
-		mDepsSource = new MDepsSource(compUnTillDbPatch);
+		mDepsSource = new MDepsSource(compUnTillDbPatch, true);
 		assertEquals(env.getUnTillDbVer().toReleaseZeroPatch().toNextPatch().toNextPatch(),
 				mDepsSource.getCrbVersion());
 		ExtendedStatusTreeBuilder builder = new ExtendedStatusTreeBuilder();
@@ -46,7 +44,7 @@ public class WorkflowPatchesTest extends WorkflowTestBase {
 		action.execute(getProgress(action));
 
 		// check unTill uses new untillDb and UBL versions in existing unTill release branch.
-		mDepsSource = new MDepsSource(compUnTill.clone(env.getUnTillVer().toRelease()));
+		mDepsSource = new MDepsSource(compUnTill.clone(env.getUnTillVer().toRelease()), true);
 		
 		List<Component> mdeps = mDepsSource.getMDeps();
 		for (Component mdep : mdeps) {
@@ -84,11 +82,10 @@ public class WorkflowPatchesTest extends WorkflowTestBase {
 		env.generateFeatureCommit(env.getUnTillDbVCS(), mDepsSource.getRbName(), "2.59.1 feature merged");
 
 		// build new unTillDb patch 2.59.1
-		Options.setIsPatch(true);
 		action = releaser.getActionTree(compToPatch);
 		assertIsGoingToBuild(action, compUnTillDb);
 		action.execute(getProgress(action));
-		mDepsSource = new MDepsSource(compToPatch);
+		mDepsSource = new MDepsSource(compToPatch, true);
 		assertEquals(dbUnTillDb.getVersion().toPreviousMinor().toPreviousMinor().toNextPatch().toRelease(), mDepsSource.getRbVersion());
 	}
 }

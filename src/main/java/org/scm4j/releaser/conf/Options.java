@@ -5,37 +5,20 @@ import java.util.List;
 
 public final class Options {
 
-	private static List<Option> options = new ArrayList<>();
-	private static boolean isPatch;
+	private List<Option> options = new ArrayList<>();
 	
-	private Options() {
-	}
-
-	public static synchronized List<Option> getOptions() {
+	public List<Option> getOptions() {
 		return options;
 	}
 
-	public static boolean hasOption(Option option) {
-		return getOptions().contains(option);
-	}
-
-	public static synchronized void setOptions(List<Option> options) {
-		Options.options = options;
-	}
-
-	public static void parse(String[] strs) {
-		List<Option> options = new ArrayList<>();
+	public void parse(String[] strs) {
+		options.clear();
 		for (String optionStr : strs) {
 			options.add(Option.getArgsMap().get(optionStr));
 		}
-		setOptions(options);
 	}
 	
-	public static void setIsPatch(boolean isPatch) {
-		Options.isPatch = isPatch;
-	}
-
-	public static boolean isPatch() {
-		return isPatch;
+	public boolean isDelayedTag() {
+		return options.contains(Option.DELAYED_TAG);
 	}
 }

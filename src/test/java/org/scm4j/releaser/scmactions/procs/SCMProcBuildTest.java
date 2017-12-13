@@ -14,7 +14,6 @@ import org.scm4j.releaser.ExtendedStatusTreeNode;
 import org.scm4j.releaser.SCMReleaser;
 import org.scm4j.releaser.TestEnvironment;
 import org.scm4j.releaser.WorkflowTestBase;
-import org.scm4j.releaser.actions.ActionSet;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.VCSRepository;
@@ -27,7 +26,7 @@ public class SCMProcBuildTest extends WorkflowTestBase {
 	public void testNoReleaseBranch() {
 		CachedStatuses cache = new CachedStatuses();
 		cache.put(compUBL.getUrl(), new ExtendedStatusTreeNode(env.getUblVer(), BuildStatus.BUILD, new LinkedHashMap<>(), compUBL));
-		ISCMProc proc = new SCMProcBuild(compUBL, cache);
+		ISCMProc proc = new SCMProcBuild(compUBL, cache, false);
 		try {
 			proc.execute(new ProgressConsole());
 			fail();
@@ -44,11 +43,11 @@ public class SCMProcBuildTest extends WorkflowTestBase {
 		Mockito.when(mockedRepo.getBuilder()).thenReturn(null);
 		
 		// avoid "no release branch exception"
-		IAction action = new SCMReleaser().getActionTree(mockedComp, ActionSet.FORK_ONLY);
+		IAction action = new SCMReleaser().getActionTreeForkOnly(mockedComp);
 		action.execute(new ProgressConsole());
 		CachedStatuses cache = new CachedStatuses();
 		cache.put(mockedComp.getUrl(), new ExtendedStatusTreeNode(env.getUnTillVer(), BuildStatus.BUILD, new LinkedHashMap<>(), mockedComp));
-		ISCMProc proc = new SCMProcBuild(mockedComp, cache);
+		ISCMProc proc = new SCMProcBuild(mockedComp, cache, false);
 		try {
 			proc.execute(new ProgressConsole());
 			fail();

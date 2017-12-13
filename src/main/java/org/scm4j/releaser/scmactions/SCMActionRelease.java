@@ -26,7 +26,7 @@ public class SCMActionRelease extends ActionAbstract {
 	private final BuildStatus bsTo;
 	private final Version targetVersion;
 	
-	public SCMActionRelease(Component comp, List<IAction> childActions, CachedStatuses cache, ActionSet actionSet) {
+	public SCMActionRelease(Component comp, List<IAction> childActions, CachedStatuses cache, ActionSet actionSet, boolean delayedTag) {
 		super(comp, childActions);
 		ExtendedStatusTreeNode status = cache.get(comp.getUrl());
 		this.bsFrom = status.getStatus();
@@ -49,7 +49,7 @@ public class SCMActionRelease extends ActionAbstract {
 			}
 		case BUILD:
 			if (actionSet == ActionSet.FULL) {
-				getProcs().add(new SCMProcBuild(comp, cache));
+				getProcs().add(new SCMProcBuild(comp, cache, delayedTag));
 				bsTo = BuildStatus.BUILD;
 			}
 			break;

@@ -9,7 +9,6 @@ import org.scm4j.releaser.SCMReleaser;
 import org.scm4j.releaser.Utils;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.MDepsFile;
-import org.scm4j.releaser.conf.Options;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.exceptions.EVCSBranchNotFound;
 import org.scm4j.vcs.api.exceptions.EVCSFileNotFound;
@@ -25,12 +24,13 @@ public class MDepsSource {
 	private final Version crbVersion;
 	private final Version rbVersion;
 	private final Version devVersion;
+	private final boolean isPatch;
 
 	public List<Component> getMDeps() {
 		if (mdeps != null) {
 			return mdeps;
 		}
-		if (Options.isPatch()) {
+		if (isPatch) {
 			mdeps = getMDepsRelease(comp, crbName);
 		} else {
 			mdeps = hasCRB && rbVersion.getPatch().equals(Utils.ZERO_PATCH) ? getMDepsRelease(comp, crbName) : getMDepsDevelop(comp);
@@ -43,7 +43,12 @@ public class MDepsSource {
 	}
 	
 	public MDepsSource(Component comp) {
+		this(comp, false);
+	}
+	
+	public MDepsSource(Component comp, boolean isPatch) {
 		this.comp = comp;
+		this.isPatch = isPatch;
 		IVCS vcs = comp.getVCS();
 		devVersion = Utils.getDevVersion(comp);
 		if (comp.getVersion().isLocked()) {
