@@ -76,7 +76,7 @@ public class WorkflowTestBase {
 		Version crbFirstVersion = Utils.getDevVersion(comp).toPreviousMinor().toReleaseZeroPatch();
 		Version latestVersion;
 		try {
-			latestVersion = new Version(vcs.getFileContent(Utils.getReleaseBranchName(comp, crbFirstVersion), SCMReleaser.VER_FILE_NAME, null));
+			latestVersion = new Version(vcs.getFileContent(Utils.getReleaseBranchName(comp, crbFirstVersion), ActionTreeBuilder.VER_FILE_NAME, null));
 		} catch (EVCSBranchNotFound | EVCSFileNotFound e) {
 			latestVersion = crbFirstVersion;
 		}
@@ -170,7 +170,7 @@ public class WorkflowTestBase {
 
 	protected List<Component> getReleaseBranchMDeps(Component comp, Version forVersion) {
 		try {
-			return new MDepsFile(comp.getVCS().getFileContent(Utils.getReleaseBranchName(comp, forVersion), SCMReleaser.MDEPS_FILE_NAME, null)).getMDeps();
+			return new MDepsFile(comp.getVCS().getFileContent(Utils.getReleaseBranchName(comp, forVersion), ActionTreeBuilder.MDEPS_FILE_NAME, null)).getMDeps();
 		} catch(EVCSFileNotFound | EVCSBranchNotFound e) {
 			throw new RuntimeException(Utils.getReleaseBranchName(comp, forVersion) + " branch does not exist");
 		}

@@ -63,7 +63,7 @@ public final class Utils {
 	}
 	
 	public static Version getDevVersion(Component comp) {
-		return new Version(comp.getVCS().getFileContent(comp.getVcsRepository().getDevelopBranch(), SCMReleaser.VER_FILE_NAME, null));
+		return new Version(comp.getVCS().getFileContent(comp.getVcsRepository().getDevelopBranch(), ActionTreeBuilder.VER_FILE_NAME, null));
 	}
 	
 	public static void waitForDeleteDir(File dir) throws Exception {

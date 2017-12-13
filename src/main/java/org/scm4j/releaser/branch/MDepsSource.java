@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.scm4j.commons.Version;
-import org.scm4j.releaser.SCMReleaser;
+import org.scm4j.releaser.ActionTreeBuilder;
 import org.scm4j.releaser.Utils;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.MDepsFile;
@@ -53,16 +53,16 @@ public class MDepsSource {
 		devVersion = Utils.getDevVersion(comp);
 		if (comp.getVersion().isLocked()) {
 			rbName = Utils.getReleaseBranchName(comp, comp.getVersion());
-			rbVersion = new Version(vcs.getFileContent(rbName, SCMReleaser.VER_FILE_NAME, null)).toRelease(); //comp.getVersion();
+			rbVersion = new Version(vcs.getFileContent(rbName, ActionTreeBuilder.VER_FILE_NAME, null)).toRelease(); //comp.getVersion();
 			crbName = Utils.getReleaseBranchName(comp, devVersion.toPreviousMinor());
-			crbVersion = new Version(vcs.getFileContent(crbName, SCMReleaser.VER_FILE_NAME, null)).toRelease();
+			crbVersion = new Version(vcs.getFileContent(crbName, ActionTreeBuilder.VER_FILE_NAME, null)).toRelease();
 			hasCRB = true;
 		} else {
 			Boolean hasCRB;
 			Version crbVersion;
 			String releaseBranchName = Utils.getReleaseBranchName(comp, getDevVersion().toPreviousMinor());
 			try {
-				crbVersion = new Version(vcs.getFileContent(releaseBranchName, SCMReleaser.VER_FILE_NAME, null)).toRelease();
+				crbVersion = new Version(vcs.getFileContent(releaseBranchName, ActionTreeBuilder.VER_FILE_NAME, null)).toRelease();
 				hasCRB = true;
 			} catch (EVCSBranchNotFound e) {
 				crbVersion = getDevVersion().toReleaseZeroPatch();
@@ -78,7 +78,7 @@ public class MDepsSource {
 
 	public static List<Component> getMDepsRelease(Component comp, String releaseBranchName) {
 		try {
-			String mDepsFileContent = comp.getVCS().getFileContent(releaseBranchName, SCMReleaser.MDEPS_FILE_NAME, null);
+			String mDepsFileContent = comp.getVCS().getFileContent(releaseBranchName, ActionTreeBuilder.MDEPS_FILE_NAME, null);
 			return new MDepsFile(mDepsFileContent).getMDeps();
 		} catch (EVCSFileNotFound e) {
 			return new ArrayList<>();

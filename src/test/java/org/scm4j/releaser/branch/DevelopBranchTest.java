@@ -10,7 +10,7 @@ import org.eclipse.jgit.api.errors.GitAPIException;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.scm4j.releaser.LogTag;
-import org.scm4j.releaser.SCMReleaser;
+import org.scm4j.releaser.ActionTreeBuilder;
 import org.scm4j.releaser.WorkflowTestBase;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.conf.Component;
@@ -25,8 +25,8 @@ public class DevelopBranchTest extends WorkflowTestBase {
 		env.generateFeatureCommit(env.getUnTillDbVCS(), dbUnTillDb.getName(), "feature added");
 		env.generateFeatureCommit(env.getUnTillVCS(), dbUnTill.getName(), "feature added");
 		env.generateFeatureCommit(env.getUblVCS(), dbUBL.getName(), "feature added");
-		SCMReleaser releaser = new SCMReleaser();
-		IAction action = releaser.getActionTree(compUnTill);
+		ActionTreeBuilder actionBuilder = new ActionTreeBuilder();
+		IAction action = actionBuilder.getActionTree(compUnTill);
 		action.execute(getProgress(action));
 		assertEquals(DevelopBranchStatus.BRANCHED, dbUnTill.getStatus());
 	}
@@ -60,7 +60,7 @@ public class DevelopBranchTest extends WorkflowTestBase {
 	
 	@Test
 	public void testExceptionIfNoVersionFile() {
-		env.getUnTillVCS().removeFile(compUnTill.getVcsRepository().getDevelopBranch(), SCMReleaser.VER_FILE_NAME, "version file deleted");
+		env.getUnTillVCS().removeFile(compUnTill.getVcsRepository().getDevelopBranch(), ActionTreeBuilder.VER_FILE_NAME, "version file deleted");
 		try {
 			new DevelopBranch(compUnTill).getVersion();
 			fail();

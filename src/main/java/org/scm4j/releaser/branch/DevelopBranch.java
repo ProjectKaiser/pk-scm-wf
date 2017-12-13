@@ -4,7 +4,7 @@ import java.util.List;
 
 import org.scm4j.commons.Version;
 import org.scm4j.releaser.LogTag;
-import org.scm4j.releaser.SCMReleaser;
+import org.scm4j.releaser.ActionTreeBuilder;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.exceptions.EComponentConfig;
 import org.scm4j.vcs.api.IVCS;
@@ -21,11 +21,11 @@ public class DevelopBranch {
 	}
 	
 	public Version getVersion() {
-		if (vcs.fileExists(comp.getVcsRepository().getDevelopBranch(), SCMReleaser.VER_FILE_NAME)) {
-			String verFileContent = vcs.getFileContent(comp.getVcsRepository().getDevelopBranch(), SCMReleaser.VER_FILE_NAME, null);
+		if (vcs.fileExists(comp.getVcsRepository().getDevelopBranch(), ActionTreeBuilder.VER_FILE_NAME)) {
+			String verFileContent = vcs.getFileContent(comp.getVcsRepository().getDevelopBranch(), ActionTreeBuilder.VER_FILE_NAME, null);
 			return new Version(verFileContent.trim());
 		}
-		throw new EComponentConfig(SCMReleaser.VER_FILE_NAME + " file is missing in develop branch of " + comp);
+		throw new EComponentConfig(ActionTreeBuilder.VER_FILE_NAME + " file is missing in develop branch of " + comp);
 	}
 	
 	public DevelopBranchStatus getStatus() {

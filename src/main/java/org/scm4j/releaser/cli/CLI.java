@@ -5,7 +5,7 @@ import java.io.PrintStream;
 import org.apache.commons.lang3.ArrayUtils;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.commons.progress.ProgressConsole;
-import org.scm4j.releaser.SCMReleaser;
+import org.scm4j.releaser.ActionTreeBuilder;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.actions.PrintAction;
 import org.scm4j.releaser.conf.Option;
@@ -22,11 +22,11 @@ public class CLI {
 	public static final int EXIT_CODE_OK = 0;
 	public static final int EXIT_CODE_ERROR = 1;
 
-	private static SCMReleaser releaser = new SCMReleaser();
+	private static ActionTreeBuilder actionBuilder = new ActionTreeBuilder();
 	private static PrintStream out = System.out;
 
-	static void setReleaser(SCMReleaser releaser) {
-		CLI.releaser = releaser;
+	static void setActionBuilder(ActionTreeBuilder actionBuilder) {
+		CLI.actionBuilder = actionBuilder;
 	}
 
 	static void setOut(PrintStream out) {
@@ -49,12 +49,12 @@ public class CLI {
 		case STATUS:
 		case BUILD:
 			return options.isDelayedTag() ? 
-					releaser.getActionTreeDelayedTag(cmd.getProductCoords()) :
-					releaser.getActionTree(cmd.getProductCoords());
+					actionBuilder.getActionTreeDelayedTag(cmd.getProductCoords()) :
+					actionBuilder.getActionTree(cmd.getProductCoords());
 		case FORK:
-			return releaser.getActionTreeForkOnly(cmd.getProductCoords());
+			return actionBuilder.getActionTreeForkOnly(cmd.getProductCoords());
 		case TAG:
-			return releaser.getTagActionTree(cmd.getProductCoords());
+			return actionBuilder.getTagActionTree(cmd.getProductCoords());
 		default:
 			throw new IllegalArgumentException("Unsupported command: " + cmd.getCommand().toString());
 		}

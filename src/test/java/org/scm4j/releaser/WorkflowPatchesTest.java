@@ -12,11 +12,11 @@ import org.scm4j.releaser.conf.Component;
 
 public class WorkflowPatchesTest extends WorkflowTestBase {
 
-	private final SCMReleaser releaser = new SCMReleaser();
+	private final ActionTreeBuilder actionBuilder = new ActionTreeBuilder();
 
 	@Test
 	public void testPatches() throws Exception {
-		IAction action = releaser.getActionTree(compUnTill);
+		IAction action = actionBuilder.getActionTree(compUnTill);
 		assertIsGoingToForkAndBuildAll(action);
 		action.execute(getProgress(action));
 		checkUnTillBuilt();
@@ -27,7 +27,7 @@ public class WorkflowPatchesTest extends WorkflowTestBase {
 
 		// build unTillDb patch
 		Component compUnTillDbPatch = new Component(UNTILLDB + ":" + env.getUnTillDbVer().toRelease());
-		action = releaser.getActionTree(compUnTillDbPatch);
+		action = actionBuilder.getActionTree(compUnTillDbPatch);
 		assertIsGoingToBuild(action, compUnTillDb);
 		action.execute(getProgress(action));
 		mDepsSource = new MDepsSource(compUnTillDbPatch, true);
@@ -37,7 +37,7 @@ public class WorkflowPatchesTest extends WorkflowTestBase {
 		assertEquals(BuildStatus.DONE, builder.getExtendedStatusTreeNode(compUnTillDbPatch).getStatus());
 
 		// Existing unTill and UBL release branches should actualize its mdeps
-		action = releaser.getActionTree(compUnTill.clone(env.getUnTillVer().toRelease()));
+		action = actionBuilder.getActionTree(compUnTill.clone(env.getUnTillVer().toRelease()));
 		assertIsGoingToBuild(action, compUBL, BuildStatus.ACTUALIZE_PATCHES);
 		assertIsGoingToBuild(action, compUnTill, BuildStatus.BUILD_MDEPS);
 		assertIsGoingToDoNothing(action, compUnTillDb);
@@ -61,14 +61,14 @@ public class WorkflowPatchesTest extends WorkflowTestBase {
 	@Test
 	public void testBuildPatchOnExistingRelease() throws Exception {
 		// fork unTillDb 2.59
-		IAction action = releaser.getActionTree(UNTILLDB);
+		IAction action = actionBuilder.getActionTree(UNTILLDB);
 		assertIsGoingToForkAndBuild(action, compUnTillDb);
 		action.execute(getProgress(action));
 		checkUnTillDbBuilt();
 
 		// fork new unTillDb Release 2.60
 		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevelopBranch(), "feature added");
-		action = releaser.getActionTree(UNTILLDB);
+		action = actionBuilder.getActionTree(UNTILLDB);
 		assertIsGoingToForkAndBuild(action, compUnTillDb);
 		action.execute(getProgress(action));
 		checkUnTillDbBuilt(2);
@@ -82,7 +82,7 @@ public class WorkflowPatchesTest extends WorkflowTestBase {
 		env.generateFeatureCommit(env.getUnTillDbVCS(), mDepsSource.getRbName(), "2.59.1 feature merged");
 
 		// build new unTillDb patch 2.59.1
-		action = releaser.getActionTree(compToPatch);
+		action = actionBuilder.getActionTree(compToPatch);
 		assertIsGoingToBuild(action, compUnTillDb);
 		action.execute(getProgress(action));
 		mDepsSource = new MDepsSource(compToPatch, true);

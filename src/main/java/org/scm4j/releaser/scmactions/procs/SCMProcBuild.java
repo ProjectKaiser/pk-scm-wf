@@ -8,7 +8,7 @@ import org.scm4j.commons.progress.IProgress;
 import org.scm4j.releaser.CachedStatuses;
 import org.scm4j.releaser.ExtendedStatusTreeNode;
 import org.scm4j.releaser.LogTag;
-import org.scm4j.releaser.SCMReleaser;
+import org.scm4j.releaser.ActionTreeBuilder;
 import org.scm4j.releaser.Utils;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.DelayedTagsFile;
@@ -89,7 +89,7 @@ public class SCMProcBuild implements ISCMProc {
 
 	private Version raisePatchVersion(IProgress progress) {
 		Version nextPatchVersion = versionToBuild.toNextPatch();
-		Utils.reportDuration(() -> vcs.setFileContent(releaseBranchName, SCMReleaser.VER_FILE_NAME, nextPatchVersion.toString(),
+		Utils.reportDuration(() -> vcs.setFileContent(releaseBranchName, ActionTreeBuilder.VER_FILE_NAME, nextPatchVersion.toString(),
 				LogTag.SCM_VER + " " + nextPatchVersion),
 				"bump patch version in release branch: " + nextPatchVersion, null, progress);
 		return nextPatchVersion;

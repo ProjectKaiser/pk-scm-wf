@@ -9,11 +9,11 @@ import org.scm4j.releaser.actions.IAction;
 
 public class WorkflowForkTest extends WorkflowTestBase {
 	
-	private final SCMReleaser releaser = new SCMReleaser();
+	private final ActionTreeBuilder actionBuilder = new ActionTreeBuilder();
 	
 	@Test
 	public void testForkAll() throws Exception {
-		IAction action = releaser.getActionTree(UNTILL);
+		IAction action = actionBuilder.getActionTree(UNTILL);
 		assertIsGoingToForkAndBuildAll(action);
 		action.execute(getProgress(action));
 		checkUnTillBuilt();
@@ -22,14 +22,14 @@ public class WorkflowForkTest extends WorkflowTestBase {
 
 	@Test
 	public void testForkRootOnly() throws Exception {
-		IAction action = releaser.getActionTree(UNTILL);
+		IAction action = actionBuilder.getActionTree(UNTILL);
 		assertIsGoingToForkAndBuildAll(action);
 		action.execute(getProgress(action));
 		checkUnTillBuilt();
 
 		env.generateFeatureCommit(env.getUnTillVCS(), compUnTill.getVcsRepository().getDevelopBranch(), "feature added");
 		// fork untill only
-		action = releaser.getActionTreeForkOnly(UNTILL);
+		action = actionBuilder.getActionTreeForkOnly(UNTILL);
 		assertIsGoingToFork(action, compUnTill);
 		assertIsGoingToDoNothing(action, compUnTillDb, compUBL);
 		action.execute(getProgress(action));
@@ -44,7 +44,7 @@ public class WorkflowForkTest extends WorkflowTestBase {
 		assertEquals(env.getUnTillDbVer().toReleaseZeroPatch().toNextPatch(), latestVersionUnTillDb);
 
 		// build untill only
-		action = releaser.getActionTree(UNTILL);
+		action = actionBuilder.getActionTree(UNTILL);
 		assertIsGoingToBuild(action, compUnTill);
 		assertIsGoingToDoNothing(action, compUnTillDb, compUBL);
 		action.execute(getProgress(action));
@@ -63,18 +63,18 @@ public class WorkflowForkTest extends WorkflowTestBase {
 	@Test
 	public void testForkRootIfNestedIsForkedAlready() throws Exception {
 		// build UBL + unTillDb
-		IAction action = releaser.getActionTree(UBL);
+		IAction action = actionBuilder.getActionTree(UBL);
 		action.execute(getProgress(action));
 
 		// next fork unTillDb
 		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevelopBranch(), "feature added");
-		action = releaser.getActionTreeForkOnly(compUnTillDb);
+		action = actionBuilder.getActionTreeForkOnly(compUnTillDb);
 		assertIsGoingToFork(action, compUnTillDb);
 		action.execute(getProgress(action));
 		checkUnTillDbForked(2);
 
 		// UBL should be forked then
-		action = releaser.getActionTree(compUBL);
+		action = actionBuilder.getActionTree(compUBL);
 		assertIsGoingToForkAndBuild(action, compUBL);
 		assertIsGoingToBuild(action, compUnTillDb);
 		action.execute(getProgress(action));

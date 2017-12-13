@@ -20,7 +20,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.contrib.java.lang.system.ExpectedSystemExit;
 import org.scm4j.commons.progress.IProgress;
-import org.scm4j.releaser.SCMReleaser;
+import org.scm4j.releaser.ActionTreeBuilder;
 import org.scm4j.releaser.TestEnvironment;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.conf.Option;
@@ -36,7 +36,7 @@ public class CLITest {
 
 	private static final String TEST_EXCEPTION = "test exception";
 	private static final String UNTILL = "eu.untill:unTill";
-	private SCMReleaser mockedReleaser;
+	private ActionTreeBuilder mockedReleaser;
 	private IAction mockedAction;
 	private PrintStream mockedPS;
 	private CLI mockedCLI;
@@ -46,11 +46,11 @@ public class CLITest {
 
 	@Before
 	public void setUp() throws Exception {
-		mockedReleaser = mock(SCMReleaser.class);
+		mockedReleaser = mock(ActionTreeBuilder.class);
 		mockedAction = mock(IAction.class);
 		mockedPS = mock(PrintStream.class);
 		CLI.setOut(mockedPS);
-		CLI.setReleaser(mockedReleaser);
+		CLI.setActionBuilder(mockedReleaser);
 		mockedCLI = spy(new CLI());
 	}
 
@@ -58,7 +58,7 @@ public class CLITest {
 	public void tearDown() {
 		VCSRepositories.resetDefault();
 		CLI.setOut(System.out);
-		CLI.setReleaser(new SCMReleaser());
+		CLI.setActionBuilder(new ActionTreeBuilder());
 	}
 
 	@Test
@@ -219,7 +219,7 @@ public class CLITest {
 		Exception thrown = null;
 		String[] args = new String[] { CLICommand.STATUS.getStrValue(), "unknown:component" };
 		CommandLine cmd = new CommandLine(args);
-		CLI.setReleaser(new SCMReleaser());
+		CLI.setActionBuilder(new ActionTreeBuilder());
 		try (TestEnvironment te = new TestEnvironment()) {
 			te.generateTestEnvironmentNoVCS();
 			try {
@@ -267,7 +267,7 @@ public class CLITest {
 		try (TestEnvironment env = new TestEnvironment()) {
 			env.generateTestEnvironment();
 			exit.expectSystemExitWithStatus(CLI.EXIT_CODE_OK);
-			CLI.setReleaser(new SCMReleaser());
+			CLI.setActionBuilder(new ActionTreeBuilder());
 			CLI.main(new String[] { CLICommand.STATUS.getStrValue(), TestEnvironment.PRODUCT_UNTILL });
 		}
 	}

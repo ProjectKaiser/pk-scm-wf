@@ -11,7 +11,7 @@ import org.scm4j.commons.progress.ProgressConsole;
 import org.scm4j.releaser.BuildStatus;
 import org.scm4j.releaser.CachedStatuses;
 import org.scm4j.releaser.ExtendedStatusTreeNode;
-import org.scm4j.releaser.SCMReleaser;
+import org.scm4j.releaser.ActionTreeBuilder;
 import org.scm4j.releaser.TestEnvironment;
 import org.scm4j.releaser.WorkflowTestBase;
 import org.scm4j.releaser.actions.IAction;
@@ -43,7 +43,7 @@ public class SCMProcBuildTest extends WorkflowTestBase {
 		Mockito.when(mockedRepo.getBuilder()).thenReturn(null);
 		
 		// avoid "no release branch exception"
-		IAction action = new SCMReleaser().getActionTreeForkOnly(mockedComp);
+		IAction action = new ActionTreeBuilder().getActionTreeForkOnly(mockedComp);
 		action.execute(new ProgressConsole());
 		CachedStatuses cache = new CachedStatuses();
 		cache.put(mockedComp.getUrl(), new ExtendedStatusTreeNode(env.getUnTillVer(), BuildStatus.BUILD, new LinkedHashMap<>(), mockedComp));

@@ -6,11 +6,11 @@ import org.junit.Test;
 import org.scm4j.releaser.actions.IAction;
 public class WorkflowBuildTest extends WorkflowTestBase {
 	
-	private final SCMReleaser releaser = new SCMReleaser();
+	private final ActionTreeBuilder actionBuilder = new ActionTreeBuilder();
 	
 	@Test
 	public void testBuildAllAndTestIGNOREDDev() throws Exception {
-		IAction action = releaser.getActionTree(UNTILL);
+		IAction action = actionBuilder.getActionTree(UNTILL);
 		assertIsGoingToForkAndBuild(action, compUnTill);
 		action.execute(getProgress(action));
 		checkUnTillBuilt();
@@ -18,20 +18,20 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		// test IGNORED dev branch state
 		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevelopBranch(),
 				LogTag.SCM_IGNORE + " ignored feature commit added");
-		action = releaser.getActionTree(UNTILL);
+		action = actionBuilder.getActionTree(UNTILL);
 		assertIsGoingToDoNothing(action);
 	}
 
 	@Test
 	public void testBuildRootIfNestedIsBuiltAlready() throws Exception {
 		// build unTillDb
-		IAction action = releaser.getActionTree(UNTILLDB);
+		IAction action = actionBuilder.getActionTree(UNTILLDB);
 		assertIsGoingToForkAndBuild(action, compUnTillDb);
 		action.execute(getProgress(action));
 		checkUnTillDbBuilt();
 		
 		// build UBL
-		action = releaser.getActionTree(UBL);
+		action = actionBuilder.getActionTree(UBL);
 		assertIsGoingToForkAndBuild(action, compUBL);
 		assertIsGoingToDoNothing(action, compUnTillDb);
 		action.execute(getProgress(action));
@@ -41,13 +41,13 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 	@Test
 	public void testBuildRootAndChildIfAllForkedAlready() throws Exception {
 		// fork unTillDb
-		IAction action = releaser.getActionTreeForkOnly(UNTILLDB);
+		IAction action = actionBuilder.getActionTreeForkOnly(UNTILLDB);
 		assertIsGoingToFork(action, compUnTillDb);
 		action.execute(getProgress(action));
 		checkUnTillDbForked();
 		
 		// fork UBL
-		action = releaser.getActionTreeForkOnly(UBL);
+		action = actionBuilder.getActionTreeForkOnly(UBL);
 		assertIsGoingToFork(action, compUBL);
 		assertIsGoingToDoNothing(action, BuildStatus.BUILD, null, compUnTillDb);
 		action.execute(getProgress(action));
@@ -56,7 +56,7 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		assertTrue(TestBuilder.getBuilders().isEmpty());
 		
 		// build UBL and unTillDb
-		action = releaser.getActionTree(UBL);
+		action = actionBuilder.getActionTree(UBL);
 		assertIsGoingToBuild(action, compUnTillDb);
 		assertIsGoingToBuild(action, compUBL, BuildStatus.BUILD_MDEPS);
 		action.execute(getProgress(action));
@@ -66,7 +66,7 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 	@Test
 	public void testBuildSingleComponentTwice() throws Exception {
 		// fork unTillDb
-		IAction action = releaser.getActionTree(UNTILLDB);
+		IAction action = actionBuilder.getActionTree(UNTILLDB);
 		assertIsGoingToForkAndBuild(action, compUnTillDb);
 		action.execute(getProgress(action));
 		checkUnTillDbBuilt();
@@ -74,7 +74,7 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevelopBranch(), "feature commit added");
 		
 		// fork unTillDb next release
-		action = releaser.getActionTree(UNTILLDB);
+		action = actionBuilder.getActionTree(UNTILLDB);
 		assertIsGoingToForkAndBuild(action, compUnTillDb);
 		action.execute(getProgress(action));
 		checkUnTillDbBuilt(2);
@@ -83,13 +83,13 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 	@Test
 	public void testBuildAllIfNestedForked() throws Exception {
 		// fork unTillDb
-		IAction action = releaser.getActionTreeForkOnly(UNTILLDB);
+		IAction action = actionBuilder.getActionTreeForkOnly(UNTILLDB);
 		assertIsGoingToFork(action, compUnTillDb);
 		action.execute(getProgress(action));
 		checkUnTillDbForked();
 		
 		// unTillDb - build, unTill and UBl - fork and build
-		action = releaser.getActionTree(UNTILL);
+		action = actionBuilder.getActionTree(UNTILL);
 		assertIsGoingToForkAndBuild(action, compUnTill, compUBL);
 		assertIsGoingToBuild(action, compUnTillDb);
 		action.execute(getProgress(action));
@@ -99,13 +99,13 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 	@Test
 	public void testSkipBuildsOnFORKActionKind() throws Exception {
 		// fork all
-		IAction action = releaser.getActionTreeForkOnly(compUnTill);
+		IAction action = actionBuilder.getActionTreeForkOnly(compUnTill);
 		assertIsGoingToForkAll(action);
 		action.execute(getProgress(action));
 		checkUnTillForked();
 
 		// try to build with FORK target action kind. All builds should be skipped
-		action = releaser.getActionTreeForkOnly(compUnTill);
+		action = actionBuilder.getActionTreeForkOnly(compUnTill);
 		assertIsGoingToDoNothing(action, BuildStatus.BUILD_MDEPS, null, compUnTill, compUBL);
 		assertIsGoingToDoNothing(action, BuildStatus.BUILD, null, compUnTillDb);
 	}
