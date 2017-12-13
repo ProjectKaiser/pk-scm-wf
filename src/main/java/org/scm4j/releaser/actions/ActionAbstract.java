@@ -93,6 +93,7 @@ public abstract class ActionAbstract implements IAction {
 			throw (EReleaserException) e;
 		}
 	}
-	
-	protected abstract void executeAction(IProgress progress);
+
+	// throwing exception is used in tests only
+	protected abstract void executeAction(IProgress progress) throws Exception;
 }
