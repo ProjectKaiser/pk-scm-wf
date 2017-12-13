@@ -34,9 +34,6 @@ public class SCMProcForkBranch implements ISCMProc {
 		truncateSnapshotReleaseVersion(progress);
 		
 		bumpTrunkMinorVersion(progress);
-		
-		//for what?
-		//calculatedResult.replaceReleaseBranch(comp, new ReleaseBranch(comp, newTrunkVersion.toPreviousMinor().toReleaseZeroPatch(), true));
 	}
 	
 	private void createBranch(IProgress progress) {
@@ -50,10 +47,9 @@ public class SCMProcForkBranch implements ISCMProc {
 				"truncate snapshot: " + noSnapshotVersion + " in branch " + newBranchName, null, progress);
 	}
 	
-	private Version bumpTrunkMinorVersion(IProgress progress) {
+	private void bumpTrunkMinorVersion(IProgress progress) {
 		Version newMinorVersion = db.getVersion().toNextMinor();
 		Utils.reportDuration(() -> vcs.setFileContent(comp.getVcsRepository().getDevelopBranch(), ActionTreeBuilder.VER_FILE_NAME, newMinorVersion.toString(), LogTag.SCM_VER + " " + newMinorVersion),
 				"change to version " + newMinorVersion + " in trunk", null, progress);
-		return newMinorVersion;
 	}
 }

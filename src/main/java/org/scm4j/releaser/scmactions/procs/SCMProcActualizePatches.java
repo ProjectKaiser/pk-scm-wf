@@ -1,16 +1,16 @@
 package org.scm4j.releaser.scmactions.procs;
 
-import java.util.ArrayList;
-
 import org.scm4j.commons.Version;
 import org.scm4j.commons.progress.IProgress;
+import org.scm4j.releaser.ActionTreeBuilder;
 import org.scm4j.releaser.CachedStatuses;
 import org.scm4j.releaser.LogTag;
-import org.scm4j.releaser.ActionTreeBuilder;
 import org.scm4j.releaser.Utils;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.MDepsFile;
 import org.scm4j.vcs.api.IVCS;
+
+import java.util.ArrayList;
 
 public class SCMProcActualizePatches implements ISCMProc {
 	
@@ -52,7 +52,5 @@ public class SCMProcActualizePatches implements ISCMProc {
 		} else {
 			progress.reportStatus("mdeps patches are actual already");
 		}
-
 	}
-
 }

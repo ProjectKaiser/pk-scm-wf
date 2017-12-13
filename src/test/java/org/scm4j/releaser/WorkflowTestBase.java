@@ -1,18 +1,5 @@
 package org.scm4j.releaser;
 
-import static org.hamcrest.Matchers.allOf;
-import static org.hamcrest.Matchers.empty;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.hasProperty;
-import static org.hamcrest.Matchers.instanceOf;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
-import java.util.HashMap;
-import java.util.List;
-
 import org.hamcrest.Matcher;
 import org.junit.After;
 import org.junit.Assert;
@@ -35,6 +22,12 @@ import org.scm4j.vcs.api.VCSTag;
 import org.scm4j.vcs.api.WalkDirection;
 import org.scm4j.vcs.api.exceptions.EVCSBranchNotFound;
 import org.scm4j.vcs.api.exceptions.EVCSFileNotFound;
+
+import java.util.HashMap;
+import java.util.List;
+
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.*;
 
 public class WorkflowTestBase {
 	protected TestEnvironment env;
@@ -274,13 +267,6 @@ public class WorkflowTestBase {
 		Version latestVersion = getCrbNextVersion(compUnTillDb);
 		assertEquals(Utils.ZERO_PATCH, latestVersion.getPatch());
 		assertTrue(env.getUnTillDbVCS().getTags().isEmpty());
-	}
-
-	public void checkUnTillNotBuilt() {
-		checkUBLNotBuilt();
-		Version latestVersion = getCrbNextVersion(compUnTill);
-		assertEquals(Utils.ZERO_PATCH, latestVersion.getPatch());
-		assertTrue(env.getUnTillVCS().getTags().isEmpty());
 	}
 
 	public void checkUnTillBuilt() {

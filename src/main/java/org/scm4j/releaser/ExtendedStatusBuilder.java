@@ -1,8 +1,5 @@
 package org.scm4j.releaser;
 
-import java.util.LinkedHashMap;
-import java.util.List;
-
 import org.scm4j.commons.Version;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.commons.progress.ProgressConsole;
@@ -18,6 +15,9 @@ import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.vcs.api.VCSTag;
 import org.scm4j.vcs.api.WalkDirection;
+
+import java.util.LinkedHashMap;
+import java.util.List;
 
 public class ExtendedStatusBuilder {
 
@@ -165,7 +165,7 @@ public class ExtendedStatusBuilder {
 
 	private boolean areMDepsPatchesActual(List<Component> mDeps, CachedStatuses cache) {
 		for (Component mDep : mDeps) {
-			if (!cache.get(mDep.getUrl()).getNextVersion().equals(mDep.getVersion().toNextPatch())) { //mDep.getVersion().toNextPatch()
+			if (!cache.get(mDep.getUrl()).getNextVersion().equals(mDep.getVersion().toNextPatch())) {
 				return false;
 			}
 		}

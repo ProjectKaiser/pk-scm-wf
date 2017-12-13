@@ -68,10 +68,6 @@ public class CommandLine {
 				+ "Use " + Option.STACK_TRACE.getCmdLineStr() + " option to get full stack trace in case of any errors";
 	}
 
-	public List<Option> getOptions() {
-		return options;
-	}
-
 	public String[] getOptionArgs() {
 		if (args.length > 2) {
 			return Arrays.copyOfRange(args, 2, args.length);

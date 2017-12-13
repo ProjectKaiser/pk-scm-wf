@@ -1,18 +1,18 @@
 package org.scm4j.releaser;
 
+import org.scm4j.commons.Version;
+import org.scm4j.releaser.actions.ActionSet;
+import org.scm4j.releaser.actions.IAction;
+import org.scm4j.releaser.branch.DevelopBranch;
+import org.scm4j.releaser.branch.ReleaseBranchFactory;
+import org.scm4j.releaser.conf.Component;
+import org.scm4j.releaser.scmactions.SCMActionRelease;
+import org.scm4j.releaser.scmactions.SCMActionTag;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
-import org.scm4j.commons.Version;
-import org.scm4j.releaser.actions.ActionSet;
-import org.scm4j.releaser.actions.IAction;
-import org.scm4j.releaser.branch.ReleaseBranchFactory;
-import org.scm4j.releaser.branch.DevelopBranch;
-import org.scm4j.releaser.conf.Component;
-import org.scm4j.releaser.scmactions.SCMActionRelease;
-import org.scm4j.releaser.scmactions.SCMActionTag;
 
 public class ActionTreeBuilder {
 
@@ -21,10 +21,6 @@ public class ActionTreeBuilder {
 	public static final String DELAYED_TAGS_FILE_NAME = "delayed-tags.yml";
 	public static final File BASE_WORKING_DIR = new File(System.getProperty("user.home"), ".scm4j");
 	
-	public IAction getActionTree(Component comp) {
-		return getActionTreeFull(comp, false);
-	}
-
 	public IAction getActionTree(String coords) {
 		return getActionTreeFull(coords, false);
 	}
@@ -43,10 +39,6 @@ public class ActionTreeBuilder {
 	
 	public IAction getActionTreeDelayedTag(String coords) {
 		return getActionTreeFull(coords, true);
-	}
-	
-	public IAction getActionTreeDelayedTag(Component comp) {
-		return getActionTreeFull(comp, true);
 	}
 	
 	private IAction getActionTreeFull(String coords, boolean delayedTag) {

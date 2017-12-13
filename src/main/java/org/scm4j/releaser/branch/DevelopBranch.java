@@ -1,7 +1,5 @@
 package org.scm4j.releaser.branch;
 
-import java.util.List;
-
 import org.scm4j.commons.Version;
 import org.scm4j.releaser.ActionTreeBuilder;
 import org.scm4j.releaser.LogTag;
@@ -9,6 +7,8 @@ import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.exceptions.EComponentConfig;
 import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.vcs.api.exceptions.EVCSFileNotFound;
+
+import java.util.List;
 
 public class DevelopBranch {
 	
@@ -24,10 +24,7 @@ public class DevelopBranch {
 			return false;
 		}
 		VCSCommit lastCommit = log.get(0);
-		if (lastCommit.getLogMessage().contains(LogTag.SCM_IGNORE) || lastCommit.getLogMessage().contains(LogTag.SCM_VER)) {
-			return false;
-		}
-		return true;
+		return !(lastCommit.getLogMessage().contains(LogTag.SCM_IGNORE) || lastCommit.getLogMessage().contains(LogTag.SCM_VER));
 	}
 	
 	public Version getVersion() {
@@ -38,5 +35,4 @@ public class DevelopBranch {
 			throw new EComponentConfig(ActionTreeBuilder.VER_FILE_NAME + " file is missing in develop branch of " + comp);
 		}
 	}
-	
 }

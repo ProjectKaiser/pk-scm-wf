@@ -21,7 +21,7 @@ public class ActionAbstractTest extends WorkflowTestBase {
 		Component comp = new Component(TestEnvironment.PRODUCT_UNTILL);
 		ActionAbstract aa = spy(new ActionAbstract(comp, new ArrayList<>()) {
 			@Override
-			protected void executeAction(IProgress progress) throws Exception {
+			protected void executeAction(IProgress progress) {
 
 			}
 

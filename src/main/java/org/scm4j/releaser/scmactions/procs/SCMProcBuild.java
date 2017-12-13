@@ -1,15 +1,9 @@
 package org.scm4j.releaser.scmactions.procs;
 
-import java.io.File;
-import java.nio.file.Files;
-
+import lombok.SneakyThrows;
 import org.scm4j.commons.Version;
 import org.scm4j.commons.progress.IProgress;
-import org.scm4j.releaser.CachedStatuses;
-import org.scm4j.releaser.ExtendedStatus;
-import org.scm4j.releaser.LogTag;
-import org.scm4j.releaser.ActionTreeBuilder;
-import org.scm4j.releaser.Utils;
+import org.scm4j.releaser.*;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.DelayedTagsFile;
 import org.scm4j.releaser.conf.TagDesc;
@@ -18,7 +12,8 @@ import org.scm4j.releaser.exceptions.EReleaserException;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSCommit;
 
-import lombok.SneakyThrows;
+import java.io.File;
+import java.nio.file.Files;
 
 public class SCMProcBuild implements ISCMProc {
 	
@@ -59,7 +54,6 @@ public class SCMProcBuild implements ISCMProc {
 		cache.replace(comp.getUrl(), new ExtendedStatus(versionToBuild.toNextPatch(), existing.getStatus(), existing.getSubComponents(), comp));
 		
 		progress.reportStatus(comp.getName() + " " + versionToBuild + " is built in " + releaseBranchName);
-
 	}
 	
 	@SneakyThrows
@@ -87,12 +81,10 @@ public class SCMProcBuild implements ISCMProc {
 		}
 	}
 
-	private Version raisePatchVersion(IProgress progress) {
+	private void raisePatchVersion(IProgress progress) {
 		Version nextPatchVersion = versionToBuild.toNextPatch();
 		Utils.reportDuration(() -> vcs.setFileContent(releaseBranchName, ActionTreeBuilder.VER_FILE_NAME, nextPatchVersion.toString(),
 				LogTag.SCM_VER + " " + nextPatchVersion),
 				"bump patch version in release branch: " + nextPatchVersion, null, progress);
-		return nextPatchVersion;
 	}
-
 }

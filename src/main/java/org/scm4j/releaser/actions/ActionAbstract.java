@@ -94,5 +94,5 @@ public abstract class ActionAbstract implements IAction {
 		}
 	}
 	
-	protected abstract void executeAction(IProgress progress) throws Exception;
+	protected abstract void executeAction(IProgress progress);
 }
