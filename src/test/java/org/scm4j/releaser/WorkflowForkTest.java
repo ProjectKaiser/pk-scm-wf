@@ -1,59 +1,64 @@
 package org.scm4j.releaser;
 
-import org.junit.Test;
-import org.scm4j.releaser.actions.ActionKind;
-import org.scm4j.releaser.actions.IAction;
-import org.scm4j.releaser.branch.ReleaseBranch;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
-import static org.junit.Assert.*;
+import org.junit.Test;
+import org.scm4j.commons.Version;
+import org.scm4j.releaser.actions.IAction;
 
 public class WorkflowForkTest extends WorkflowTestBase {
 	
-	private final SCMReleaser releaser = new SCMReleaser();
-	
 	@Test
 	public void testForkAll() throws Exception {
-		IAction action = releaser.getActionTree(UNTILL);
-		assertIsGoingToForkAndBuildAll(action);
-		action.execute(getProgress(action));
-		checkUnTillBuilt();
+		IAction action = getActionTreeFork(compUnTill);
+		assertIsGoingToForkAll(action);
+		execAction(action);
+		checkUnTillForked();
 		assertFalse(action.getClass().getMethod("toString").getDeclaringClass().equals(Object.class));
+		
+		// check nothing happens on next fork
+		action = getActionTreeFork(compUnTill);
+		assertIsGoingToSkipAll(action);
+		execAction(action);
+		checkUnTillForked();
 	}
-
+	
 	@Test
 	public void testForkRootOnly() throws Exception {
-		IAction action = releaser.getActionTree(UNTILL);
+		IAction action = getActionTreeBuild(compUnTill);
 		assertIsGoingToForkAndBuildAll(action);
-		action.execute(getProgress(action));
+		execAction(action);
 		checkUnTillBuilt();
 
 		env.generateFeatureCommit(env.getUnTillVCS(), compUnTill.getVcsRepository().getDevelopBranch(), "feature added");
 		// fork untill only
-		action = releaser.getActionTree(UNTILL, ActionKind.FORK_ONLY);
+		action = getActionTreeFork(compUnTill);
 		assertIsGoingToFork(action, compUnTill);
 		assertIsGoingToDoNothing(action, compUnTillDb, compUBL);
-		action.execute(getProgress(action));
+		execAction(action);
 		checkUnTillOnlyForked(2);
 
-		ReleaseBranch rbUBL = new ReleaseBranch(compUBL);
-		ReleaseBranch rbUnTill = new ReleaseBranch(compUnTill);
-		ReleaseBranch rbUnTillDb= new ReleaseBranch(compUnTillDb);
-		assertEquals(env.getUblVer().toReleaseZeroPatch().toNextPatch(), rbUBL.getVersion());
-		assertEquals(env.getUnTillVer().toReleaseZeroPatch().toNextMinor(), rbUnTill.getVersion());
-		assertEquals(env.getUnTillDbVer().toReleaseZeroPatch().toNextPatch(), rbUnTillDb.getVersion());
+		Version latestVersionUBL = getCrbNextVersion(compUBL);
+		Version latestVersionUnTill = getCrbNextVersion(compUnTill);
+		Version latestVersionUnTillDb = getCrbNextVersion(compUnTillDb);
+		
+		assertEquals(env.getUblVer().toReleaseZeroPatch().toNextPatch(), latestVersionUBL);
+		assertEquals(env.getUnTillVer().toReleaseZeroPatch().toNextMinor(), latestVersionUnTill);
+		assertEquals(env.getUnTillDbVer().toReleaseZeroPatch().toNextPatch(), latestVersionUnTillDb);
 
 		// build untill only
-		action = releaser.getActionTree(UNTILL);
+		action = getActionTreeBuild(compUnTill);
 		assertIsGoingToBuild(action, compUnTill);
 		assertIsGoingToDoNothing(action, compUnTillDb, compUBL);
-		action.execute(getProgress(action));
+		execAction(action);
 
-		rbUBL = new ReleaseBranch(compUBL);
-		rbUnTill = new ReleaseBranch(compUnTill);
-		rbUnTillDb= new ReleaseBranch(compUnTillDb);
-		assertEquals(env.getUblVer().toReleaseZeroPatch().toNextPatch(), rbUBL.getVersion());
-		assertEquals(env.getUnTillVer().toReleaseZeroPatch().toNextMinor().toNextPatch(), rbUnTill.getVersion());
-		assertEquals(env.getUnTillDbVer().toReleaseZeroPatch().toNextPatch(), rbUnTillDb.getVersion());
+		latestVersionUBL = getCrbNextVersion(compUBL);
+		latestVersionUnTill = getCrbNextVersion(compUnTill);
+		latestVersionUnTillDb = getCrbNextVersion(compUnTillDb);
+		assertEquals(env.getUblVer().toReleaseZeroPatch().toNextPatch(), latestVersionUBL);
+		assertEquals(env.getUnTillVer().toReleaseZeroPatch().toNextMinor().toNextPatch(), latestVersionUnTill);
+		assertEquals(env.getUnTillDbVer().toReleaseZeroPatch().toNextPatch(), latestVersionUnTillDb);
 		assertEquals(env.getUblVer().toNextMinor(), dbUBL.getVersion());
 		assertEquals(env.getUnTillVer().toNextMinor().toNextMinor(), dbUnTill.getVersion());
 		assertEquals(env.getUnTillDbVer().toNextMinor(), dbUnTillDb.getVersion());
@@ -62,21 +67,22 @@ public class WorkflowForkTest extends WorkflowTestBase {
 	@Test
 	public void testForkRootIfNestedIsForkedAlready() throws Exception {
 		// build UBL + unTillDb
-		IAction action = releaser.getActionTree(UBL);
-		action.execute(getProgress(action));
+		IAction action = getActionTreeBuild(compUBL);
+		execAction(action);
 
-		// second fork unTillDb
+		// next fork unTillDb
 		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevelopBranch(), "feature added");
-		action = releaser.getActionTree(compUnTillDb, ActionKind.FORK_ONLY);
+		action = getActionTreeFork(compUnTillDb);
 		assertIsGoingToFork(action, compUnTillDb);
-		action.execute(getProgress(action));
+		execAction(action);
 		checkUnTillDbForked(2);
 
-		// UBL should be forked then
-		action = releaser.getActionTree(compUBL, ActionKind.FORK_ONLY);
-		assertIsGoingToFork(action, compUBL);
-		assertIsGoingToDoNothing(action, BuildStatus.BUILD, null, compUnTillDb);
-		action.execute(getProgress(action));
-		checkUBLForked(2);
+		// UBL should be forked and built then
+		action = getActionTreeBuild(compUBL);
+		assertIsGoingToForkAndBuild(action, compUBL);
+		assertIsGoingToBuild(action, compUnTillDb);
+		execAction(action);
+		checkUBLBuilt(2);
 	}
 }
+

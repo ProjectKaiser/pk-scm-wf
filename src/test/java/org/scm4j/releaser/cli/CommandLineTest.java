@@ -10,7 +10,7 @@ public class CommandLineTest {
 
 	@Test
 	public void testCommandLineParams() {
-		CommandLine cmd = new CommandLine(new String[] {CLICommand.STATUS.getStrValue(), TEST_COORDS});
+		CommandLine cmd = new CommandLine(new String[] {CLICommand.STATUS.getCmdLineStr(), TEST_COORDS});
 		assertEquals(CLICommand.STATUS, cmd.getCommand());
 		assertEquals(TEST_COORDS, cmd.getProductCoords());
 	}

@@ -70,11 +70,11 @@ public class Component {
 		return coords == null ? 0 : coords.hashCode();
 	}
 
-	public void setRepo(VCSRepository repo) {
-		this.repo = repo;
-	}
-
 	public String getCoordsNoComment() {
 		return coords.toStringNoComment();
+	}
+
+	public String getUrl() {
+		return getVcsRepository().getUrl();
 	}
 }

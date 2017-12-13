@@ -3,13 +3,15 @@ package org.scm4j.releaser.scmactions;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.scm4j.commons.Version;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.releaser.BuildStatus;
-import org.scm4j.releaser.CalculatedResult;
+import org.scm4j.releaser.CachedStatuses;
+import org.scm4j.releaser.ExtendedStatus;
+import org.scm4j.releaser.Utils;
 import org.scm4j.releaser.actions.ActionAbstract;
-import org.scm4j.releaser.actions.ActionKind;
+import org.scm4j.releaser.actions.ActionSet;
 import org.scm4j.releaser.actions.IAction;
-import org.scm4j.releaser.branch.ReleaseBranch;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.scmactions.procs.ISCMProc;
 import org.scm4j.releaser.scmactions.procs.SCMProcActualizePatches;
@@ -22,41 +24,39 @@ public class SCMActionRelease extends ActionAbstract {
 	private final List<ISCMProc> procs = new ArrayList<>();
 	private final BuildStatus bsFrom;
 	private final BuildStatus bsTo;
-	private final ReleaseBranch targetRB;
-
-	public SCMActionRelease(ReleaseBranch rb, Component comp, List<IAction> childActions, ActionKind actionSet, BuildStatus bs, CalculatedResult calculatedResult) {
+	private final Version targetVersion;
+	
+	public SCMActionRelease(Component comp, List<IAction> childActions, CachedStatuses cache, ActionSet actionSet, boolean delayedTag) {
 		super(comp, childActions);
-		this.bsFrom = bs;
+		ExtendedStatus status = cache.get(comp.getUrl());
+		this.bsFrom = status.getStatus();
+		targetVersion = status.getNextVersion();
+		
 		BuildStatus bsTo = null;
-		if (bs.ordinal() > BuildStatus.FREEZE.ordinal()) {
-			targetRB = rb;
-		} else {
-			targetRB = new ReleaseBranch(comp, rb.getVersion().toNextMinor().toReleaseZeroPatch());
-		}
-		switch (bs) {
+		switch(bsFrom) {
 		case FORK:
-			getProcs().add(new SCMProcForkBranch(targetRB, comp, calculatedResult));
-		case FREEZE:
-			getProcs().add(new SCMProcFreezeMDeps(targetRB, comp, calculatedResult));
-			bsTo = BuildStatus.FREEZE;
-			if (actionSet == ActionKind.FORK_ONLY) {
+			procs.add(new SCMProcForkBranch(comp, cache));
+		case LOCK:
+			getProcs().add(new SCMProcFreezeMDeps(comp, cache));
+			bsTo = BuildStatus.LOCK;
+			if (actionSet == ActionSet.FORK_ONLY) {
 				break;
 			}
 		case BUILD_MDEPS:
 		case ACTUALIZE_PATCHES:
-			if (bs.ordinal() > BuildStatus.FREEZE.ordinal() && actionSet == ActionKind.FULL) {
-				getProcs().add(new SCMProcActualizePatches(targetRB, comp, calculatedResult));
+			if (bsFrom.ordinal() > BuildStatus.LOCK.ordinal() && actionSet == ActionSet.FULL) {
+				getProcs().add(new SCMProcActualizePatches(comp, cache));
 			}
 		case BUILD:
-			if (actionSet == ActionKind.FULL) {
-				getProcs().add(new SCMProcBuild(targetRB, comp, calculatedResult));
+			if (actionSet == ActionSet.FULL) {
+				getProcs().add(new SCMProcBuild(comp, cache, delayedTag));
 				bsTo = BuildStatus.BUILD;
 			}
 			break;
 		case DONE: 
 			break;
 		default:
-			throw new IllegalArgumentException("unsupported build status: " + bs);
+			throw new IllegalArgumentException("unsupported build status: " + bsFrom);
 		}
 		this.bsTo = bsTo;
 	}
@@ -74,7 +74,7 @@ public class SCMActionRelease extends ActionAbstract {
 	}
 
 	private String getDescription(String status) {
-		return String.format("%s %s, target version: %s, target branch: %s", status, comp.getCoords(), targetRB.getVersion(), targetRB.getName());
+		return String.format("%s %s, target version: %s, target branch: %s", status, comp.getCoords(), targetVersion, Utils.getReleaseBranchName(comp, targetVersion));
 	}
 
 	private String getDetailedStatus() {

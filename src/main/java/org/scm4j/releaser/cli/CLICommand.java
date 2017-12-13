@@ -13,7 +13,7 @@ public enum CLICommand {
 	static {
 		int max = 0;
 		for (CLICommand cmd : values()) {
-			map.put(cmd.getStrValue(), cmd);
+			map.put(cmd.getCmdLineStr(), cmd);
 			if (cmd.toString().length() > max) {
 				max = cmd.toString().length();
 			}
@@ -25,11 +25,11 @@ public enum CLICommand {
 		this.strValue = strValue;
 	}
 	
-	public String getStrValue() {
+	public String getCmdLineStr() {
 		return strValue;
 	}
 	
-	public static CLICommand fromStrValue(String strValue) {
+	public static CLICommand fromCmdLineStr(String strValue) {
 		CLICommand res = map.get(strValue);
 		return res == null ? UNKNOWN : res;
 	}
