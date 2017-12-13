@@ -8,8 +8,6 @@ import org.scm4j.commons.progress.ProgressConsole;
 import org.scm4j.releaser.ActionTreeBuilder;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.actions.PrintAction;
-import org.scm4j.releaser.conf.Option;
-import org.scm4j.releaser.conf.Options;
 import org.scm4j.releaser.exceptions.EReleaserException;
 import org.scm4j.releaser.exceptions.cmdline.ECmdLine;
 import org.scm4j.releaser.exceptions.cmdline.ECmdLineNoCommand;
@@ -44,11 +42,11 @@ public class CLI {
 		}
 	}
 
-	public IAction getActionTree(CommandLine cmd, Options options) {
+	public IAction getActionTree(CommandLine cmd) {
 		switch (cmd.getCommand()) {
 		case STATUS:
 		case BUILD:
-			return options.isDelayedTag() ? 
+			return cmd.isDelayedTag() ? 
 					actionBuilder.getActionTreeDelayedTag(cmd.getProductCoords()) :
 					actionBuilder.getActionTree(cmd.getProductCoords());
 		case FORK:
@@ -64,10 +62,8 @@ public class CLI {
 		try {
 			CommandLine cmd = new CommandLine(args);
 			validateCommandLine(cmd);
-			Options options = new Options();
-			options.parse(cmd.getOptionArgs());
 			long startMS = System.currentTimeMillis();
-			IAction action = getActionTree(cmd, options);
+			IAction action = getActionTree(cmd);
 			if (cmd.getCommand() == CLICommand.STATUS) {
 				printActionTree(action);
 			} else {
@@ -86,12 +82,9 @@ public class CLI {
 	}
 
 	public void validateCommandLine(CommandLine cmd) {
-		if (cmd.getArgs().length > 2) {
-			String[] optionArgs = cmd.getOptionArgs();
-			for (String optionArg : optionArgs) {
-				if (!Option.isValid(optionArg)) {
-					throw new ECmdLineUnknownOption(optionArg);
-				}
+		for (String optionArg : cmd.getOptionArgs()) {
+			if (Option.fromCmdLineStr(optionArg) == Option.UNKNOWN) {
+				throw new ECmdLineUnknownOption(optionArg);
 			}
 		}
 
@@ -107,9 +100,9 @@ public class CLI {
 			throw new ECmdLineNoProduct();
 		}
 	}
-
+	
 	private void printException(String[] args, Exception e, PrintStream ps) {
-		if (ArrayUtils.contains(args, Option.STACK_TRACE.getStrValue())) {
+		if (ArrayUtils.contains(args, Option.STACK_TRACE.getCmdLineStr())) {
 			e.printStackTrace(ps);
 		} else {
 			if (e instanceof EReleaserException) {

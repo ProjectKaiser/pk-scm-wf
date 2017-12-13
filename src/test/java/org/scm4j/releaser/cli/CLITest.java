@@ -23,8 +23,6 @@ import org.scm4j.commons.progress.IProgress;
 import org.scm4j.releaser.ActionTreeBuilder;
 import org.scm4j.releaser.TestEnvironment;
 import org.scm4j.releaser.actions.IAction;
-import org.scm4j.releaser.conf.Option;
-import org.scm4j.releaser.conf.Options;
 import org.scm4j.releaser.conf.VCSRepositories;
 import org.scm4j.releaser.exceptions.EComponentConfig;
 import org.scm4j.releaser.exceptions.cmdline.ECmdLineNoCommand;
@@ -64,7 +62,7 @@ public class CLITest {
 	@Test
 	public void testCommandSTATUS() throws Exception {
 		doReturn(mockedAction).when(mockedReleaser).getActionTree(UNTILL);
-		String[] args = new String[] { CLICommand.STATUS.getStrValue(), UNTILL };
+		String[] args = new String[] { CLICommand.STATUS.getCmdLineStr(), UNTILL };
 
 		assertEquals(CLI.EXIT_CODE_OK, mockedCLI.exec(args));
 
@@ -79,7 +77,7 @@ public class CLITest {
 	@Test
 	public void testCommandFORK() throws Exception {
 		doReturn(mockedAction).when(mockedReleaser).getActionTreeForkOnly(UNTILL);
-		String[] args = new String[] { CLICommand.FORK.getStrValue(), UNTILL };
+		String[] args = new String[] { CLICommand.FORK.getCmdLineStr(), UNTILL };
 
 		assertEquals(CLI.EXIT_CODE_OK, mockedCLI.exec(args));
 
@@ -93,7 +91,7 @@ public class CLITest {
 	@Test
 	public void testCommandBUILD() throws Exception {
 		doReturn(mockedAction).when(mockedReleaser).getActionTree(UNTILL);
-		String[] args = new String[] { CLICommand.BUILD.getStrValue(), UNTILL };
+		String[] args = new String[] { CLICommand.BUILD.getCmdLineStr(), UNTILL };
 
 		assertEquals(CLI.EXIT_CODE_OK, mockedCLI.exec(args));
 
@@ -107,7 +105,7 @@ public class CLITest {
 	@Test
 	public void testCommandTAG() throws Exception {
 		doReturn(mockedAction).when(mockedReleaser).getTagActionTree(UNTILL);
-		String[] args = new String[] { CLICommand.TAG.getStrValue(), UNTILL };
+		String[] args = new String[] { CLICommand.TAG.getCmdLineStr(), UNTILL };
 
 		assertEquals(CLI.EXIT_CODE_OK, mockedCLI.exec(args));
 
@@ -121,8 +119,8 @@ public class CLITest {
 	@Test
 	public void testExceptionsWorkflow() throws Exception {
 		RuntimeException mockedException = spy(new RuntimeException(TEST_EXCEPTION));
-		String[] args = new String[] { CLICommand.STATUS.getStrValue(), UNTILL };
-		doThrow(mockedException).when(mockedCLI).getActionTree(any(CommandLine.class), any(Options.class));
+		String[] args = new String[] { CLICommand.STATUS.getCmdLineStr(), UNTILL };
+		doThrow(mockedException).when(mockedCLI).getActionTree(any(CommandLine.class));
 
 		assertEquals(CLI.EXIT_CODE_ERROR, mockedCLI.exec(args));
 
@@ -176,7 +174,7 @@ public class CLITest {
 	@Test
 	public void testExceptionNoProduct() throws Exception {
 		Exception thrown = null;
-		String[] args = new String[] { CLICommand.STATUS.getStrValue() };
+		String[] args = new String[] { CLICommand.STATUS.getCmdLineStr() };
 		CommandLine cmd = new CommandLine(args);
 		try {
 			new CLI().validateCommandLine(cmd);
@@ -196,7 +194,7 @@ public class CLITest {
 	@Test
 	public void testExceptionUnknownOption() throws Exception {
 		Exception thrown = null;
-		String[] args = new String[] { CLICommand.STATUS.getStrValue(), TestEnvironment.PRODUCT_UNTILL,
+		String[] args = new String[] { CLICommand.STATUS.getCmdLineStr(), TestEnvironment.PRODUCT_UNTILL,
 				"unknown-option" };
 		CommandLine cmd = new CommandLine(args);
 		try {
@@ -217,13 +215,13 @@ public class CLITest {
 	@Test
 	public void testExceptionUnknownComponent() throws Exception {
 		Exception thrown = null;
-		String[] args = new String[] { CLICommand.STATUS.getStrValue(), "unknown:component" };
+		String[] args = new String[] { CLICommand.STATUS.getCmdLineStr(), "unknown:component" };
 		CommandLine cmd = new CommandLine(args);
 		CLI.setActionBuilder(new ActionTreeBuilder());
 		try (TestEnvironment te = new TestEnvironment()) {
 			te.generateTestEnvironmentNoVCS();
 			try {
-				new CLI().getActionTree(cmd, new Options());
+				new CLI().getActionTree(cmd);
 				fail();
 			} catch (EComponentConfig e) {
 				thrown = e;
@@ -241,8 +239,8 @@ public class CLITest {
 	@Test
 	public void testExceptionStackTrace() throws Exception {
 		RuntimeException mockedException = spy(new RuntimeException(TEST_EXCEPTION));
-		String[] args = new String[] { CLICommand.STATUS.getStrValue(), UNTILL, Option.STACK_TRACE.getStrValue() };
-		doThrow(mockedException).when(mockedCLI).getActionTree(any(CommandLine.class), any(Options.class));
+		String[] args = new String[] { CLICommand.STATUS.getCmdLineStr(), UNTILL, Option.STACK_TRACE.getCmdLineStr() };
+		doThrow(mockedException).when(mockedCLI).getActionTree(any(CommandLine.class));
 
 		assertEquals(CLI.EXIT_CODE_ERROR, mockedCLI.exec(args));
 
@@ -253,8 +251,8 @@ public class CLITest {
 	@Test
 	public void testExceptionNoMessage() throws Exception {
 		RuntimeException mockedException = spy(new RuntimeException(TEST_EXCEPTION));
-		doThrow(mockedException).when(mockedCLI).getActionTree(any(CommandLine.class), any(Options.class));
-		String[] args = new String[] { CLICommand.STATUS.getStrValue(), UNTILL };
+		doThrow(mockedException).when(mockedCLI).getActionTree(any(CommandLine.class));
+		String[] args = new String[] { CLICommand.STATUS.getCmdLineStr(), UNTILL };
 
 		assertEquals(CLI.EXIT_CODE_ERROR, mockedCLI.exec(args));
 
@@ -268,7 +266,7 @@ public class CLITest {
 			env.generateTestEnvironment();
 			exit.expectSystemExitWithStatus(CLI.EXIT_CODE_OK);
 			CLI.setActionBuilder(new ActionTreeBuilder());
-			CLI.main(new String[] { CLICommand.STATUS.getStrValue(), TestEnvironment.PRODUCT_UNTILL });
+			CLI.main(new String[] { CLICommand.STATUS.getCmdLineStr(), TestEnvironment.PRODUCT_UNTILL });
 		}
 	}
 
@@ -277,7 +275,7 @@ public class CLITest {
 		CommandLine mockedCmd = mock(CommandLine.class);
 		doReturn(CLICommand.UNKNOWN).when(mockedCmd).getCommand();
 		try {
-			mockedCLI.getActionTree(mockedCmd, new Options());
+			mockedCLI.getActionTree(mockedCmd);
 			fail();
 		} catch (IllegalArgumentException e) {
 		}

@@ -24,11 +24,10 @@ import org.scm4j.releaser.branch.MDepsSource;
 import org.scm4j.releaser.cli.CLI;
 import org.scm4j.releaser.cli.CLICommand;
 import org.scm4j.releaser.cli.CommandLine;
+import org.scm4j.releaser.cli.Option;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.DelayedTagsFile;
 import org.scm4j.releaser.conf.MDepsFile;
-import org.scm4j.releaser.conf.Option;
-import org.scm4j.releaser.conf.Options;
 import org.scm4j.releaser.scmactions.SCMActionRelease;
 import org.scm4j.releaser.scmactions.SCMActionTag;
 import org.scm4j.vcs.api.IVCS;
@@ -413,7 +412,7 @@ public class WorkflowTestBase {
 	}
 	
 	protected IAction getActionTreeFork(Component comp) {
-		return new CLI().getActionTree(new CommandLine(new String[] {CLICommand.FORK.getStrValue(), comp.getCoords().toString()}), new Options());
+		return new CLI().getActionTree(new CommandLine(new String[] {CLICommand.FORK.getCmdLineStr(), comp.getCoords().toString()}));
 	}
 	
 	protected void execAction(IAction action) {
@@ -425,16 +424,14 @@ public class WorkflowTestBase {
 	}
 	
 	protected IAction getActionTreeBuild(Component comp) {
-		return new CLI().getActionTree(new CommandLine(new String[] {CLICommand.BUILD.getStrValue(), comp.getCoords().toString()}), new Options());
+		return new CLI().getActionTree(new CommandLine(new String[] {CLICommand.BUILD.getCmdLineStr(), comp.getCoords().toString()}));
 	}
 	
 	protected IAction getActionTreeTag(Component comp) {
-		return new CLI().getActionTree(new CommandLine(new String[] {CLICommand.TAG.getStrValue(), comp.getCoords().toString()}), new Options());
+		return new CLI().getActionTree(new CommandLine(new String[] {CLICommand.TAG.getCmdLineStr(), comp.getCoords().toString()}));
 	}
 	
 	protected IAction getActionTreeDelayedTag(Component comp) {
-		Options options = new Options();
-		options.parse(new String[] {Option.DELAYED_TAG.getStrValue()});
-		return new CLI().getActionTree(new CommandLine(new String[] {CLICommand.BUILD.getStrValue(), comp.getCoords().toString()}), options);
+		return new CLI().getActionTree(new CommandLine(new String[] {CLICommand.BUILD.getCmdLineStr(), comp.getCoords().toString(), Option.DELAYED_TAG.getCmdLineStr()}));
 	}
 }
