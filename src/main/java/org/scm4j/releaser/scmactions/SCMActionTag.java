@@ -4,7 +4,6 @@ import java.util.List;
 
 import org.scm4j.commons.Version;
 import org.scm4j.commons.progress.IProgress;
-import org.scm4j.releaser.ActionTreeBuilder;
 import org.scm4j.releaser.Utils;
 import org.scm4j.releaser.actions.ActionAbstract;
 import org.scm4j.releaser.actions.IAction;
@@ -33,7 +32,7 @@ public class SCMActionTag extends ActionAbstract {
 			return;
 		}
 		
-		Version delayedTagVersion = new Version(vcs.getFileContent(releaseBranchName, ActionTreeBuilder.VER_FILE_NAME, revisionToTag));
+		Version delayedTagVersion = new Version(vcs.getFileContent(releaseBranchName, Utils.VER_FILE_NAME, revisionToTag));
 		TagDesc tagDesc = Utils.getTagDesc(delayedTagVersion.toString());
 
 		try {

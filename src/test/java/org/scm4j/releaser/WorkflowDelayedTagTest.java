@@ -132,7 +132,7 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 		Map<String, String> content = dtf.getContent();
 		for (Map.Entry<String, String> entry : content.entrySet()) {
 			if (compUnTill.getVcsRepository().getUrl().equals(entry.getKey())) {
-				Version delayedTagVersion = new Version(env.getUnTillVCS().getFileContent(rb.getName(), ActionTreeBuilder.VER_FILE_NAME,
+				Version delayedTagVersion = new Version(env.getUnTillVCS().getFileContent(rb.getName(), Utils.VER_FILE_NAME,
 						entry.getValue()));
 				TagDesc tagDesc = Utils.getTagDesc(delayedTagVersion.toString());
 				env.getUnTillVCS().createTag(rb.getName(), tagDesc.getName(), tagDesc.getMessage(), entry.getValue());
@@ -176,7 +176,7 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 		env.getUnTillDbVCS().createTag(rb.getName(), "other-tag", "other tag message", revisionToTag);
 		
 		// simulate tag exists
-		Version delayedTagVersion = new Version(env.getUnTillDbVCS().getFileContent(rb.getName(), ActionTreeBuilder.VER_FILE_NAME,
+		Version delayedTagVersion = new Version(env.getUnTillDbVCS().getFileContent(rb.getName(), Utils.VER_FILE_NAME,
 				revisionToTag));
 		TagDesc tagDesc = Utils.getTagDesc(delayedTagVersion.toString());
 		env.getUnTillDbVCS().createTag(rb.getName(), tagDesc.getName(), tagDesc.getMessage(), revisionToTag);

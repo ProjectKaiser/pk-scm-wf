@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.scm4j.commons.Version;
-import org.scm4j.releaser.ActionTreeBuilder;
 import org.scm4j.releaser.Utils;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.MDepsFile;
@@ -21,16 +20,16 @@ public final class ReleaseBranchFactory {
 		Version version;
 		List<Component> mdeps;
 		try {
-			version = new Version(vcs.getFileContent(name, ActionTreeBuilder.VER_FILE_NAME, null)).toRelease();
+			version = new Version(vcs.getFileContent(name, Utils.VER_FILE_NAME, null)).toRelease();
 			exists = true;
 			mdeps = getMDepsRelease(comp, name);
 		} catch (EVCSBranchNotFound e) {
 			exists = false;
 			version = null;
-			mdeps = new ArrayList<>();
+			mdeps = new ArrayList<>(); // will not be used because ENoReleaseBranchForPatch will be thrown 
 		}
 		
-		return new ReleaseBranch(mdeps, exists, name, version, null); 
+		return new ReleaseBranch(mdeps, exists, name, version, comp, null); 
 	}
 	
 	public static ReleaseBranch getCRB(Component comp) {
@@ -40,7 +39,7 @@ public final class ReleaseBranchFactory {
 		boolean exists;
 		String name = Utils.getReleaseBranchName(comp, devVersion.toPreviousMinor());
 		try {
-			version = new Version(vcs.getFileContent(name, ActionTreeBuilder.VER_FILE_NAME, null)).toRelease();
+			version = new Version(vcs.getFileContent(name, Utils.VER_FILE_NAME, null)).toRelease();
 			exists = true;
 		} catch (EVCSBranchNotFound e) {
 			version = devVersion.toReleaseZeroPatch();
@@ -48,12 +47,12 @@ public final class ReleaseBranchFactory {
 		}
 		List<Component> mdeps = exists && version.getPatch().equals(Utils.ZERO_PATCH) ? getMDepsRelease(comp, name) : getMDepsDevelop(comp);
 	
-		return new ReleaseBranch(mdeps, exists, name, version, comp);
+		return new ReleaseBranch(mdeps, exists, name, version, comp, devVersion);
 	}
 	
 	public static List<Component> getMDepsRelease(Component comp, String releaseBranchName) {
 		try {
-			String mDepsFileContent = comp.getVCS().getFileContent(releaseBranchName, ActionTreeBuilder.MDEPS_FILE_NAME, null);
+			String mDepsFileContent = comp.getVCS().getFileContent(releaseBranchName, Utils.MDEPS_FILE_NAME, null);
 			return new MDepsFile(mDepsFileContent).getMDeps();
 		} catch (EVCSFileNotFound e) {
 			return new ArrayList<>();

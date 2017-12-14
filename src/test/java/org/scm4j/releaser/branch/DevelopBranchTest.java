@@ -11,8 +11,8 @@ import static org.mockito.Mockito.spy;
 import java.util.ArrayList;
 
 import org.junit.Test;
-import org.scm4j.releaser.ActionTreeBuilder;
 import org.scm4j.releaser.TestEnvironment;
+import org.scm4j.releaser.Utils;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.exceptions.EComponentConfig;
 import org.scm4j.vcs.api.IVCS;
@@ -37,7 +37,7 @@ public class DevelopBranchTest {
 		try (TestEnvironment env = new TestEnvironment()) {
 			env.generateTestEnvironment();
 			Component comp = new Component(TestEnvironment.PRODUCT_UNTILL);
-			env.getUnTillVCS().removeFile(comp.getVcsRepository().getDevelopBranch(), ActionTreeBuilder.VER_FILE_NAME, "version file removed");
+			env.getUnTillVCS().removeFile(comp.getVcsRepository().getDevelopBranch(), Utils.VER_FILE_NAME, "version file removed");
 			DevelopBranch db = new DevelopBranch(comp);
 			try {
 				db.getVersion();

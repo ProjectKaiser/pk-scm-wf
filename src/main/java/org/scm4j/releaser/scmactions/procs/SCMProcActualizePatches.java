@@ -2,7 +2,6 @@ package org.scm4j.releaser.scmactions.procs;
 
 import org.scm4j.commons.Version;
 import org.scm4j.commons.progress.IProgress;
-import org.scm4j.releaser.ActionTreeBuilder;
 import org.scm4j.releaser.CachedStatuses;
 import org.scm4j.releaser.LogTag;
 import org.scm4j.releaser.Utils;
@@ -47,7 +46,7 @@ public class SCMProcActualizePatches implements ISCMProc {
 		if (hasNew) {
 			sb.setLength(sb.length() - 2);
 			progress.reportStatus("patches to actualize:\r\n" + sb.toString());
-			Utils.reportDuration(() -> vcs.setFileContent(Utils.getReleaseBranchName(comp, cache.get(comp.getUrl()).getNextVersion()), ActionTreeBuilder.MDEPS_FILE_NAME, currentMDepsFile.toFileContent(), LogTag.SCM_MDEPS),
+			Utils.reportDuration(() -> vcs.setFileContent(Utils.getReleaseBranchName(comp, cache.get(comp.getUrl()).getNextVersion()), Utils.MDEPS_FILE_NAME, currentMDepsFile.toFileContent(), LogTag.SCM_MDEPS),
 					"writting mdeps", null, progress);
 		} else {
 			progress.reportStatus("mdeps patches are actual already");

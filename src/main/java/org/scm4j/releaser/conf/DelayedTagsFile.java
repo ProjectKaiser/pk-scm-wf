@@ -1,7 +1,7 @@
 package org.scm4j.releaser.conf;
 
 import org.apache.commons.io.FileUtils;
-import org.scm4j.releaser.ActionTreeBuilder;
+import org.scm4j.releaser.Utils;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.File;
@@ -16,7 +16,7 @@ public class DelayedTagsFile {
 	private final File delayedTagsFile;
 	
 	public DelayedTagsFile() {
-		delayedTagsFile = new File(ActionTreeBuilder.DELAYED_TAGS_FILE_NAME);
+		delayedTagsFile = new File(Utils.DELAYED_TAGS_FILE_NAME);
 	}
 	
 	public String getRevisitonByUrl(String url) {

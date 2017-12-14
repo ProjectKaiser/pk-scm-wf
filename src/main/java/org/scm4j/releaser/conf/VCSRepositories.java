@@ -1,6 +1,6 @@
 package org.scm4j.releaser.conf;
 
-import org.scm4j.releaser.ActionTreeBuilder;
+import org.scm4j.releaser.Utils;
 import org.scm4j.releaser.VCSFactory;
 import org.scm4j.releaser.builders.BuilderFactory;
 import org.scm4j.releaser.exceptions.EComponentConfig;
@@ -17,7 +17,7 @@ import java.util.Map;
 
 public class VCSRepositories {
 	public static final VCSType DEFAULT_VCS_TYPE = VCSType.GIT;
-	public static final String DEFAULT_VCS_WORKSPACE_DIR = new File(ActionTreeBuilder.BASE_WORKING_DIR,
+	public static final String DEFAULT_VCS_WORKSPACE_DIR = new File(Utils.BASE_WORKING_DIR,
 			"releaser-vcs-workspaces").getPath();
 
 	private static IConfigSource configSource = new EnvVarsConfigSource();

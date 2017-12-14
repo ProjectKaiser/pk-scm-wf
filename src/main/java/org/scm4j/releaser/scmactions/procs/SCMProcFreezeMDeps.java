@@ -7,7 +7,6 @@ import org.scm4j.commons.progress.IProgress;
 import org.scm4j.releaser.CachedStatuses;
 import org.scm4j.releaser.ExtendedStatus;
 import org.scm4j.releaser.LogTag;
-import org.scm4j.releaser.ActionTreeBuilder;
 import org.scm4j.releaser.Utils;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.MDepsFile;
@@ -51,7 +50,7 @@ public class SCMProcFreezeMDeps implements ISCMProc {
 		}
 		if (hasChanges) {
 			progress.reportStatus("mdeps to freeze:\r\n" + sb.toString());
-			Utils.reportDuration(() -> vcs.setFileContent(Utils.getReleaseBranchName(comp, status.getNextVersion()), ActionTreeBuilder.MDEPS_FILE_NAME, currentMDepsFile.toFileContent(), LogTag.SCM_MDEPS),
+			Utils.reportDuration(() -> vcs.setFileContent(Utils.getReleaseBranchName(comp, status.getNextVersion()), Utils.MDEPS_FILE_NAME, currentMDepsFile.toFileContent(), LogTag.SCM_MDEPS),
 					"freeze mdeps" , null, progress);
 		}
 	}

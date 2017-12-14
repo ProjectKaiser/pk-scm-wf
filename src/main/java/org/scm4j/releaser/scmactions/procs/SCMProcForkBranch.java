@@ -2,7 +2,6 @@ package org.scm4j.releaser.scmactions.procs;
 
 import org.scm4j.commons.Version;
 import org.scm4j.commons.progress.IProgress;
-import org.scm4j.releaser.ActionTreeBuilder;
 import org.scm4j.releaser.CachedStatuses;
 import org.scm4j.releaser.ExtendedStatus;
 import org.scm4j.releaser.LogTag;
@@ -43,13 +42,13 @@ public class SCMProcForkBranch implements ISCMProc {
 	
 	private void truncateSnapshotReleaseVersion(IProgress progress) {
 		String noSnapshotVersion = status.getNextVersion().toString();
-		Utils.reportDuration(() -> vcs.setFileContent(newBranchName, ActionTreeBuilder.VER_FILE_NAME, noSnapshotVersion, LogTag.SCM_VER + " " + noSnapshotVersion),
+		Utils.reportDuration(() -> vcs.setFileContent(newBranchName, Utils.VER_FILE_NAME, noSnapshotVersion, LogTag.SCM_VER + " " + noSnapshotVersion),
 				"truncate snapshot: " + noSnapshotVersion + " in branch " + newBranchName, null, progress);
 	}
 	
 	private void bumpTrunkMinorVersion(IProgress progress) {
 		Version newMinorVersion = db.getVersion().toNextMinor();
-		Utils.reportDuration(() -> vcs.setFileContent(comp.getVcsRepository().getDevelopBranch(), ActionTreeBuilder.VER_FILE_NAME, newMinorVersion.toString(), LogTag.SCM_VER + " " + newMinorVersion),
+		Utils.reportDuration(() -> vcs.setFileContent(comp.getVcsRepository().getDevelopBranch(), Utils.VER_FILE_NAME, newMinorVersion.toString(), LogTag.SCM_VER + " " + newMinorVersion),
 				"change to version " + newMinorVersion + " in trunk", null, progress);
 	}
 }

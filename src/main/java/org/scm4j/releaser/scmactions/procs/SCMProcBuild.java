@@ -83,7 +83,7 @@ public class SCMProcBuild implements ISCMProc {
 
 	private void raisePatchVersion(IProgress progress) {
 		Version nextPatchVersion = versionToBuild.toNextPatch();
-		Utils.reportDuration(() -> vcs.setFileContent(releaseBranchName, ActionTreeBuilder.VER_FILE_NAME, nextPatchVersion.toString(),
+		Utils.reportDuration(() -> vcs.setFileContent(releaseBranchName, Utils.VER_FILE_NAME, nextPatchVersion.toString(),
 				LogTag.SCM_VER + " " + nextPatchVersion),
 				"bump patch version in release branch: " + nextPatchVersion, null, progress);
 	}

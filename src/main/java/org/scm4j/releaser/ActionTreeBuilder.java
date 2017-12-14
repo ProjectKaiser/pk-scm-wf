@@ -1,6 +1,5 @@
 package org.scm4j.releaser;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -15,11 +14,6 @@ import org.scm4j.releaser.scmactions.SCMActionTag;
 
 public class ActionTreeBuilder {
 
-	public static final String MDEPS_FILE_NAME = "mdeps";
-	public static final String VER_FILE_NAME = "version";
-	public static final String DELAYED_TAGS_FILE_NAME = "delayed-tags.yml";
-	public static final File BASE_WORKING_DIR = new File(System.getProperty("user.home"), ".scm4j");
-	
 	public IAction getActionTree(String coords) {
 		return getActionTreeFull(coords, false);
 	}

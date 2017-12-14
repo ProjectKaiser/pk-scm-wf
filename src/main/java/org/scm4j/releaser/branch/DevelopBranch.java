@@ -1,8 +1,8 @@
 package org.scm4j.releaser.branch;
 
 import org.scm4j.commons.Version;
-import org.scm4j.releaser.ActionTreeBuilder;
 import org.scm4j.releaser.LogTag;
+import org.scm4j.releaser.Utils;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.exceptions.EComponentConfig;
 import org.scm4j.vcs.api.VCSCommit;
@@ -29,10 +29,10 @@ public class DevelopBranch {
 	
 	public Version getVersion() {
 		try {
-			String verFileContent = comp.getVCS().getFileContent(comp.getVcsRepository().getDevelopBranch(), ActionTreeBuilder.VER_FILE_NAME, null);
+			String verFileContent = comp.getVCS().getFileContent(comp.getVcsRepository().getDevelopBranch(), Utils.VER_FILE_NAME, null);
 			return new Version(verFileContent.trim());
 		} catch (EVCSFileNotFound e) {
-			throw new EComponentConfig(ActionTreeBuilder.VER_FILE_NAME + " file is missing in develop branch of " + comp);
+			throw new EComponentConfig(Utils.VER_FILE_NAME + " file is missing in develop branch of " + comp);
 		}
 	}
 }

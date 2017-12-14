@@ -104,20 +104,20 @@ public class TestEnvironment implements AutoCloseable {
 	}
 
 	private void uploadVCSConfigFiles() {
-		unTillVCS.setFileContent(null, ActionTreeBuilder.VER_FILE_NAME, unTillVer.toString(),
+		unTillVCS.setFileContent(null, Utils.VER_FILE_NAME, unTillVer.toString(),
 				LogTag.SCM_IGNORE + " ver file added");
 		unTillVCS.setFileContent(null,
-				ActionTreeBuilder.MDEPS_FILE_NAME, PRODUCT_UBL + ":" + ublVer.getSnapshot() + " # comment 1\r\n"
+				Utils.MDEPS_FILE_NAME, PRODUCT_UBL + ":" + ublVer.getSnapshot() + " # comment 1\r\n"
 						+ PRODUCT_UNTILLDB + ":" + unTillDbVer.getSnapshot() + "# comment 2\r\n",
 				LogTag.SCM_IGNORE + " mdeps file added");
 
-		ublVCS.setFileContent(null, ActionTreeBuilder.VER_FILE_NAME, ublVer.toString(),
+		ublVCS.setFileContent(null, Utils.VER_FILE_NAME, ublVer.toString(),
 				LogTag.SCM_IGNORE + " ver file added");
-		ublVCS.setFileContent(null, ActionTreeBuilder.MDEPS_FILE_NAME,
+		ublVCS.setFileContent(null, Utils.MDEPS_FILE_NAME,
 				PRODUCT_UNTILLDB + ":" + unTillDbVer.getSnapshot() + "#comment 3\r\n",
 				LogTag.SCM_IGNORE + " mdeps file added");
 
-		unTillDbVCS.setFileContent(null, ActionTreeBuilder.VER_FILE_NAME, unTillDbVer.toString(),
+		unTillDbVCS.setFileContent(null, Utils.VER_FILE_NAME, unTillDbVer.toString(),
 				LogTag.SCM_IGNORE + " ver file added");
 	}
 
