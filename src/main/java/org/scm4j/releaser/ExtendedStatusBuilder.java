@@ -104,7 +104,7 @@ public class ExtendedStatusBuilder {
 		}
 		
 		if (!areMDepsLocked(rb.getMDeps())) {
-			throw new EReleaserException("not all mdeps locked"); // TODO: add unlocked component output
+			throw new EReleaserException("not all mdeps locked"); // TODO: add non-locked component output
 		}
 		
 		for (Component mdep : rb.getMDeps()) {
