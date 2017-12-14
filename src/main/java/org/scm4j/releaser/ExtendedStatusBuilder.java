@@ -112,13 +112,9 @@ public class ExtendedStatusBuilder {
 			throw new EReleaserException("not all mdeps locked"); // TODO: add non-locked component output
 		}
 		
-		LinkedHashMap<Component, ExtendedStatus> subComponentsLocal = new LinkedHashMap<>();
-		Utils.async(rb.getMDeps(), (mdep) -> {
-			ExtendedStatus status = getAndCacheStatus(mdep, cache, progress, true);
-			subComponentsLocal.put(mdep, status);
-		});
 		for (Component mdep : rb.getMDeps()) {
-			subComponents.put(mdep, subComponentsLocal.get(mdep));
+			ExtendedStatus status = getAndCacheStatus(mdep, cache, progress, true);
+			subComponents.put(mdep, status);
 		}
 		
 		if (hasMDepsNotInDONEStatus(rb.getMDeps(), cache)) {
@@ -192,14 +188,9 @@ public class ExtendedStatusBuilder {
 
 	private Boolean isNeedToFork(Component comp, ReleaseBranch rb, CachedStatuses cache, IProgress progress, LinkedHashMap<Component, ExtendedStatus> subComponents) {
 		
-		LinkedHashMap<Component, ExtendedStatus> subComponentsLocal = new LinkedHashMap<>();
-		Utils.async(rb.getMDeps(), (mdep) -> {
-			ExtendedStatus status = getAndCacheStatus(mdep, cache, progress, false);
-			subComponentsLocal.put(mdep, status);
-		});
-		
 		for (Component mdep : rb.getMDeps()) {
-			subComponents.put(mdep, subComponentsLocal.get(mdep));
+			ExtendedStatus status = getAndCacheStatus(mdep, cache, progress, false);
+			subComponents.put(mdep, status);
 		}
 	
 		if (!rb.exists()) {
