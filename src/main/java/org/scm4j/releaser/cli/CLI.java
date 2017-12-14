@@ -52,7 +52,7 @@ public class CLI {
 		case FORK:
 			return actionBuilder.getActionTreeForkOnly(cmd.getProductCoords());
 		case TAG:
-			return actionBuilder.getTagActionTree(cmd.getProductCoords());
+			return actionBuilder.getTagAction(cmd.getProductCoords());
 		default:
 			throw new IllegalArgumentException("Unsupported command: " + cmd.getCommand().toString());
 		}

@@ -383,7 +383,9 @@ public class WorkflowTestBase {
 	}
 
 	protected void assertIsGoingToTag(IAction action, Component comp) {
-		assertThat(action, instanceOf(SCMActionTag.class), comp);
+		assertThat(action, allOf(
+				instanceOf(SCMActionTag.class), 
+				hasProperty("childActions", empty())), comp);
 	}
 
 	protected void assertIsGoingToBuildAll(IAction action) {
@@ -416,7 +418,7 @@ public class WorkflowTestBase {
 		return new CLI().getActionTree(new CommandLine(new String[] {CLICommand.TAG.getCmdLineStr(), comp.getCoords().toString()}));
 	}
 	
-	protected IAction getActionTreeDelayedTag(Component comp) {
+	protected IAction getActionDelayedTag(Component comp) {
 		return new CLI().getActionTree(new CommandLine(new String[] {CLICommand.BUILD.getCmdLineStr(), comp.getCoords().toString(), Option.DELAYED_TAG.getCmdLineStr()}));
 	}
 }

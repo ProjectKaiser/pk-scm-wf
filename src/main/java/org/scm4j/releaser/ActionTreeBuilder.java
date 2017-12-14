@@ -1,18 +1,17 @@
 package org.scm4j.releaser;
 
-import org.scm4j.commons.Version;
-import org.scm4j.releaser.actions.ActionSet;
-import org.scm4j.releaser.actions.IAction;
-import org.scm4j.releaser.branch.DevelopBranch;
-import org.scm4j.releaser.branch.ReleaseBranchFactory;
-import org.scm4j.releaser.conf.Component;
-import org.scm4j.releaser.scmactions.SCMActionRelease;
-import org.scm4j.releaser.scmactions.SCMActionTag;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+import org.scm4j.commons.Version;
+import org.scm4j.releaser.actions.ActionSet;
+import org.scm4j.releaser.actions.IAction;
+import org.scm4j.releaser.branch.DevelopBranch;
+import org.scm4j.releaser.conf.Component;
+import org.scm4j.releaser.scmactions.SCMActionRelease;
+import org.scm4j.releaser.scmactions.SCMActionTag;
 
 public class ActionTreeBuilder {
 
@@ -25,8 +24,8 @@ public class ActionTreeBuilder {
 		return getActionTreeFull(coords, false);
 	}
 
-	public IAction getTagActionTree(String coords) {
-		return getTagActionTree(new Component(coords));
+	public IAction getTagAction(String coords) {
+		return getTagAction(new Component(coords));
 	}
 	
 	public IAction getActionTreeForkOnly(String coords) {
@@ -62,23 +61,15 @@ public class ActionTreeBuilder {
 	public IAction getActionTree(ExtendedStatus node, CachedStatuses cache, ActionSet actionSet, boolean delayedTag) {
 		List<IAction> childActions = new ArrayList<>();
 		for (Map.Entry<Component, ExtendedStatus> nodeEntry : node.getSubComponents().entrySet()) {
-			childActions.add(getActionTree(nodeEntry.getValue(), cache, actionSet, delayedTag));
+			childActions.add(getActionTree(nodeEntry.getValue(), cache, actionSet, false));
 		}
 		
 		return new SCMActionRelease(node.getComp(), childActions, cache, actionSet, delayedTag);
 	}
 
-	public IAction getTagActionTree(Component comp) {
+	public IAction getTagAction(Component comp) {
 		List<IAction> childActions = new ArrayList<>();
-		List<Component> mDeps = ReleaseBranchFactory.getMDepsDevelop(comp);
-
-		for (Component mDep : mDeps) {
-			childActions.add(getTagActionTree(mDep));
-		}
-
 		Version lastReleaseVersion = new DevelopBranch(comp).getVersion().toPreviousMinor();
-
 		return new SCMActionTag(comp, childActions, Utils.getReleaseBranchName(comp, lastReleaseVersion));
 	}
-	
 }

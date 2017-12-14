@@ -104,12 +104,12 @@ public class CLITest {
 
 	@Test
 	public void testCommandTAG() throws Exception {
-		doReturn(mockedAction).when(mockedReleaser).getTagActionTree(UNTILL);
+		doReturn(mockedAction).when(mockedReleaser).getTagAction(UNTILL);
 		String[] args = new String[] { CLICommand.TAG.getCmdLineStr(), UNTILL };
 
 		assertEquals(CLI.EXIT_CODE_OK, mockedCLI.exec(args));
 
-		verify(mockedReleaser).getTagActionTree(UNTILL);
+		verify(mockedReleaser).getTagAction(UNTILL);
 		verify(mockedAction).execute(any(IProgress.class));
 
 		exit.expectSystemExitWithStatus(CLI.EXIT_CODE_OK);
