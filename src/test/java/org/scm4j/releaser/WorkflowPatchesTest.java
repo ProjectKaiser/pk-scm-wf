@@ -10,6 +10,7 @@ import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.branch.ReleaseBranch;
 import org.scm4j.releaser.branch.ReleaseBranchFactory;
 import org.scm4j.releaser.conf.Component;
+import org.scm4j.releaser.exceptions.ENoReleaseBranchForPatch;
 
 public class WorkflowPatchesTest extends WorkflowTestBase {
 
@@ -87,5 +88,16 @@ public class WorkflowPatchesTest extends WorkflowTestBase {
 		execAction(action);
 		rb = ReleaseBranchFactory.getReleaseBranchPatch(compToPatch);
 		assertEquals(dbUnTillDb.getVersion().toPreviousMinor().toPreviousMinor().toNextPatch().toRelease(), rb.getVersion());
+	}
+	
+	@Test
+	public void testExceptionOnPatchOnUnexistingRelease() {
+		// try do build a patch for unreleased version
+		Component compWithUnexistingVersion = new Component(UNTILLDB + ":2.70.0");
+		try {
+			getActionTreeBuild(compWithUnexistingVersion);
+			fail();
+		} catch (ENoReleaseBranchForPatch e) {
+		}
 	}
 }

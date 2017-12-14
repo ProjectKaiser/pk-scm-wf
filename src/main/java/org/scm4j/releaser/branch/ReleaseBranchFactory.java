@@ -12,21 +12,23 @@ import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.exceptions.EVCSBranchNotFound;
 import org.scm4j.vcs.api.exceptions.EVCSFileNotFound;
 
-public class ReleaseBranchFactory {
+public final class ReleaseBranchFactory {
 	
 	public static ReleaseBranch getReleaseBranchPatch(Component comp) {
 		IVCS vcs = comp.getVCS();
 		String name = Utils.getReleaseBranchName(comp, comp.getVersion());
 		boolean exists;
 		Version version;
+		List<Component> mdeps;
 		try {
 			version = new Version(vcs.getFileContent(name, ActionTreeBuilder.VER_FILE_NAME, null)).toRelease();
 			exists = true;
+			mdeps = getMDepsRelease(comp, name);
 		} catch (EVCSBranchNotFound e) {
 			exists = false;
 			version = null;
+			mdeps = new ArrayList<>();
 		}
-		List<Component> mdeps = getMDepsRelease(comp, name);
 		
 		return new ReleaseBranch(mdeps, exists, name, version, null); 
 	}
@@ -64,5 +66,9 @@ public class ReleaseBranchFactory {
 			res.add(mDep.clone(""));
 		}
 		return res;
+	}
+	
+	private ReleaseBranchFactory() {
+		
 	}
 }

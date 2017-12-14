@@ -1,5 +1,6 @@
 package org.scm4j.releaser;
 
+import org.apache.commons.lang3.NotImplementedException;
 import org.scm4j.commons.Version;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.commons.progress.ProgressConsole;
@@ -21,7 +22,6 @@ import java.util.List;
 
 public class ExtendedStatusBuilder {
 
-	private static final int PARALLEL_CALCULATION_AWAIT_TIME = 500;
 	private static final int COMMITS_RANGE_LIMIT = 10;
 	
 	public ExtendedStatus getAndCacheMinorStatus(Component comp) {
@@ -40,13 +40,8 @@ public class ExtendedStatusBuilder {
 	public ExtendedStatus getAndCacheStatus(Component comp, CachedStatuses cache, IProgress progress, boolean patch) {
 		ExtendedStatus existing = cache.putIfAbsent(comp.getUrl(), ExtendedStatus.DUMMY);
 
-		 while (ExtendedStatus.DUMMY == existing) {
-			try {
-				Thread.sleep(PARALLEL_CALCULATION_AWAIT_TIME);
-			} catch (InterruptedException e) {
-				throw new RuntimeException(e);
-			}
-			existing = cache.get(comp.getUrl());
+		if (ExtendedStatus.DUMMY == existing) {
+			throw new NotImplementedException("under construction");
 		}
 
 		if (null != existing) {
