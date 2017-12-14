@@ -1,6 +1,9 @@
 package org.scm4j.releaser;
 
 import java.io.File;
+import java.util.Collection;
+import java.util.concurrent.ForkJoinPool;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import org.apache.commons.io.FileUtils;
@@ -17,6 +20,8 @@ public final class Utils {
 	public static final String MDEPS_FILE_NAME = "mdeps";
 	public static final String DELAYED_TAGS_FILE_NAME = "delayed-tags.yml";
 	public static final File BASE_WORKING_DIR = new File(System.getProperty("user.home"), ".scm4j");
+	
+	private static final boolean USE_PARALLEL_CALCULATIONS = true;
 
 	public static <T> T reportDuration(Supplier<T> sup, String message, Component comp, IProgress progress) {
 		if (progress == null) {
@@ -35,7 +40,25 @@ public final class Utils {
 		}, message, comp, progress);
 	}
 
+	
+
 	private Utils() {
+	}
+
+	public static <T> void async(Collection<T> collection, Consumer<? super T> action) {
+		if (USE_PARALLEL_CALCULATIONS) {
+			ForkJoinPool pool = new ForkJoinPool(1);
+			try {
+				pool.submit(() -> collection.parallelStream().forEach(action)).get();
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+			pool.shutdown();
+		} else {
+			for (T element : collection) {
+				action.accept(element);
+			}
+		}
 	}
 
 	public static String getReleaseBranchName(Component comp, Version forVersion) {
