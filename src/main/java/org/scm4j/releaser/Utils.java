@@ -2,7 +2,10 @@ package org.scm4j.releaser;
 
 import java.io.File;
 import java.util.Collection;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -47,13 +50,23 @@ public final class Utils {
 
 	public static <T> void async(Collection<T> collection, Consumer<? super T> action) {
 		if (USE_PARALLEL_CALCULATIONS) {
-			ForkJoinPool pool = new ForkJoinPool(1);
 			try {
-				pool.submit(() -> collection.parallelStream().forEach(action)).get();
+				if (collection.isEmpty()) {
+					return;
+				}
+				
+				ExecutorService executor = Executors.newFixedThreadPool(50);
+				for (T element : collection) {
+					executor.execute(() -> action.accept(element));
+				}
+				executor.awaitTermination(1000000, TimeUnit.HOURS);
+//				ForkJoinPool pool = new ForkJoinPool(1);
+//				pool.submit(() -> collection.parallelStream().forEach(action)).get();
+				//collection.parallelStream().forEach(action);
 			} catch (Exception e) {
 				throw new RuntimeException(e);
 			}
-			pool.shutdown();
+			//pool.shutdown();
 		} else {
 			for (T element : collection) {
 				action.accept(element);

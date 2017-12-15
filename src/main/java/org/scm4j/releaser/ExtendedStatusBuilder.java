@@ -43,9 +43,6 @@ public class ExtendedStatusBuilder {
 		
 		ExtendedStatus existing = cache.putIfAbsent(comp.getUrl(), ExtendedStatus.DUMMY);
 		
-
-	
-		
 		while (ExtendedStatus.DUMMY == existing) {
 			try {
 				Thread.sleep(PARALLEL_CALCULATION_AWAIT_TIME);
