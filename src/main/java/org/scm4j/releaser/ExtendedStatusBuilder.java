@@ -43,9 +43,6 @@ public class ExtendedStatusBuilder {
 		
 		ExtendedStatus existing = cache.putIfAbsent(comp.getUrl(), ExtendedStatus.DUMMY);
 		
-
-	
-		
 		while (ExtendedStatus.DUMMY == existing) {
 			try {
 				Thread.sleep(PARALLEL_CALCULATION_AWAIT_TIME);
@@ -56,7 +53,7 @@ public class ExtendedStatusBuilder {
 		}
 
 		if (null != existing) {
-			return existing;
+			return new ExtendedStatus(existing.getNextVersion(), existing.getStatus(), existing.getSubComponents(), comp);
 		}
 
 		ExtendedStatus res = patch ? 
