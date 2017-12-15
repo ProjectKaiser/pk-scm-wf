@@ -1,5 +1,7 @@
 package org.scm4j.releaser.cli;
 
+import java.io.PrintStream;
+
 import org.apache.commons.lang3.ArrayUtils;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.commons.progress.ProgressConsole;
@@ -10,9 +12,11 @@ import org.scm4j.releaser.actions.PrintAction;
 import org.scm4j.releaser.conf.Option;
 import org.scm4j.releaser.conf.Options;
 import org.scm4j.releaser.exceptions.EReleaserException;
-import org.scm4j.releaser.exceptions.cmdline.*;
-
-import java.io.PrintStream;
+import org.scm4j.releaser.exceptions.cmdline.ECmdLine;
+import org.scm4j.releaser.exceptions.cmdline.ECmdLineNoCommand;
+import org.scm4j.releaser.exceptions.cmdline.ECmdLineNoProduct;
+import org.scm4j.releaser.exceptions.cmdline.ECmdLineUnknownCommand;
+import org.scm4j.releaser.exceptions.cmdline.ECmdLineUnknownOption;
 
 public class CLI {
 	

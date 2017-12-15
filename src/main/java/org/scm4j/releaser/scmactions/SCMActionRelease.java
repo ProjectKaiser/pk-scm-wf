@@ -24,7 +24,7 @@ public class SCMActionRelease extends ActionAbstract {
 	private final BuildStatus bsTo;
 	private final ReleaseBranch targetRB;
 
-	public SCMActionRelease(ReleaseBranch rb, Component comp, List<IAction> childActions, ActionKind actionSet, BuildStatus bs, CalculatedResult calculatedResult) {
+	public SCMActionRelease(ReleaseBranch rb, Component comp, List<IAction> childActions, ActionKind actionSet, BuildStatus bs, CalculatedResult calculatedResult, boolean delayedTag) {
 		super(comp, childActions);
 		this.bsFrom = bs;
 		BuildStatus bsTo = null;
@@ -49,7 +49,7 @@ public class SCMActionRelease extends ActionAbstract {
 			}
 		case BUILD:
 			if (actionSet == ActionKind.FULL) {
-				getProcs().add(new SCMProcBuild(targetRB, comp, calculatedResult));
+				getProcs().add(new SCMProcBuild(targetRB, comp, calculatedResult, delayedTag));
 				bsTo = BuildStatus.BUILD;
 			}
 			break;

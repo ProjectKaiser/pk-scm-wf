@@ -24,11 +24,13 @@ public class SCMProcBuild implements ISCMProc {
 	private final IVCS vcs;
 	private final Component comp;
 	private final CalculatedResult calculatedResult;
+	private final boolean delayedTag;
  
-	public SCMProcBuild(ReleaseBranch rb, Component comp, CalculatedResult calculatedResult) {
+	public SCMProcBuild(ReleaseBranch rb, Component comp, CalculatedResult calculatedResult, boolean delayedTag) {
 		this.rb = rb;
 		this.comp = comp;
 		this.calculatedResult = calculatedResult;
+		this.delayedTag = delayedTag;
 		vcs = comp.getVCS();
 	}
 
@@ -69,7 +71,7 @@ public class SCMProcBuild implements ISCMProc {
 
 	@SneakyThrows
 	private void tagBuild(IProgress progress, VCSCommit headCommit) {
-		if (Options.hasOption(Option.DELAYED_TAG)) {
+		if (delayedTag) {
 			DelayedTagsFile delayedTagsFile = new DelayedTagsFile();
 			delayedTagsFile.writeUrlRevision(comp.getVcsRepository().getUrl(), headCommit.getRevision());
 			progress.reportStatus("build commit " + headCommit.getRevision() + " is saved for delayed tagging");

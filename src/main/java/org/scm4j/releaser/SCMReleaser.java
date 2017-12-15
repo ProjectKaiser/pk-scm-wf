@@ -7,6 +7,7 @@ import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.branch.DevelopBranch;
 import org.scm4j.releaser.branch.ReleaseBranch;
 import org.scm4j.releaser.conf.Component;
+import org.scm4j.releaser.conf.Option;
 import org.scm4j.releaser.conf.Options;
 import org.scm4j.releaser.conf.TagDesc;
 import org.scm4j.releaser.scmactions.SCMActionRelease;
@@ -34,27 +35,27 @@ public class SCMReleaser {
 	public IAction getActionTree(String coords, ActionKind actionKind) throws Exception {
 		Component comp = new Component(coords);
 		Options.setIsPatch(comp.getVersion().isExact());
-		return getActionTree(comp, actionKind, new CalculatedResult());
+		return getActionTree(comp, actionKind, new CalculatedResult(), Options.hasOption(Option.DELAYED_TAG));
 	}
 	
 	public IAction getActionTree(Component comp, ActionKind actionKind) throws Exception {
 		Options.setIsPatch(comp.getVersion().isExact());
-		return getActionTree(comp, actionKind, new CalculatedResult());
+		return getActionTree(comp, actionKind, new CalculatedResult(), Options.hasOption(Option.DELAYED_TAG));
 	}
 
-	public IAction getActionTree(Component comp, ActionKind actionKind, CalculatedResult calculatedResult) throws Exception {
+	public IAction getActionTree(Component comp, ActionKind actionKind, CalculatedResult calculatedResult, boolean delayedTag) throws Exception {
 		List<IAction> childActions = new ArrayList<>();
 		IProgress progress = new ProgressConsole();
 		calculateResultNoStatus(comp, calculatedResult, progress);
 		
 		for (Component mdep : calculatedResult.getMDeps(comp)) {
-			childActions.add(getActionTree(mdep, actionKind, calculatedResult));
+			childActions.add(getActionTree(mdep, actionKind, calculatedResult, false));
 		}
 		
 		calculatedResult.setBuildStatus(comp, () -> getBuildStatus(comp, calculatedResult), progress);
 		
 		progress.close();
-		return new SCMActionRelease(calculatedResult.getReleaseBranch(comp), comp, childActions, actionKind, calculatedResult.getBuildStatus(comp), calculatedResult);
+		return new SCMActionRelease(calculatedResult.getReleaseBranch(comp), comp, childActions, actionKind, calculatedResult.getBuildStatus(comp), calculatedResult, delayedTag);
 	}
 
 	protected BuildStatus getBuildStatus(Component comp, CalculatedResult calculatedResult) {
@@ -101,12 +102,6 @@ public class SCMReleaser {
 	
 	public IAction getTagActionTree(Component comp) {
 		List<IAction> childActions = new ArrayList<>();
-		DevelopBranch db = new DevelopBranch(comp);
-		List<Component> mDeps = db.getMDeps();
-
-		for (Component mDep : mDeps) {
-			childActions.add(getTagActionTree(mDep));
-		}
 		return new SCMActionTag(new ReleaseBranch(comp), comp, childActions);
 	}
 

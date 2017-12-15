@@ -25,7 +25,7 @@ public class SCMProcBuildTest extends WorkflowTestBase {
 	@Test
 	public void testNoReleaseBranch() {
 		ReleaseBranch rb = new ReleaseBranch(compUBL);
-		ISCMProc proc = new SCMProcBuild(rb, compUBL, new CalculatedResult());
+		ISCMProc proc = new SCMProcBuild(rb, compUBL, new CalculatedResult(), false);
 		try {
 			proc.execute(new ProgressConsole());
 			fail();
@@ -42,7 +42,7 @@ public class SCMProcBuildTest extends WorkflowTestBase {
 		Mockito.when(mockedRepo.getBuilder()).thenReturn(null);
 		IAction action = new SCMReleaser().getActionTree(mockedComp, ActionKind.FORK_ONLY);
 		action.execute(new ProgressConsole());
-		ISCMProc proc = new SCMProcBuild(new ReleaseBranch(mockedComp), mockedComp, new CalculatedResult());
+		ISCMProc proc = new SCMProcBuild(new ReleaseBranch(mockedComp), mockedComp, new CalculatedResult(), false);
 		try {
 			proc.execute(new ProgressConsole());
 			fail();
