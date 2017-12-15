@@ -1,10 +1,12 @@
 package org.scm4j.releaser;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -55,13 +57,25 @@ public final class Utils {
 					return;
 				}
 				
-				ExecutorService executor = Executors.newFixedThreadPool(50);
+				ExecutorService executor = Executors.newFixedThreadPool(1);
+				List<Callable<T>> calls = new ArrayList<>();
 				for (T element : collection) {
-					executor.execute(() -> action.accept(element));
+					//executor.execute(() -> action.accept(element));
+					
+					calls.add(() -> {
+						action.accept(element); 
+						return null;
+					});
 				}
-				executor.awaitTermination(1000000, TimeUnit.HOURS);
-//				ForkJoinPool pool = new ForkJoinPool(1);
+				executor.invokeAll(calls);
+				executor.shutdown();
+//				for (T element : collection) {
+//					executor.execute(() -> action.accept(element));
+//				}
+				//executor.awaitTermination(1000000, TimeUnit.HOURS);
+//				ForkJoinPool pool = new ForkJoinPool(10);
 //				pool.submit(() -> collection.parallelStream().forEach(action)).get();
+				//collection.parallelStream().forEach(action)
 				//collection.parallelStream().forEach(action);
 			} catch (Exception e) {
 				throw new RuntimeException(e);
