@@ -53,7 +53,7 @@ public class ExtendedStatusBuilder {
 		}
 
 		if (null != existing) {
-			return existing;
+			return new ExtendedStatus(existing.getNextVersion(), existing.getStatus(), existing.getSubComponents(), comp);
 		}
 
 		ExtendedStatus res = patch ? 
