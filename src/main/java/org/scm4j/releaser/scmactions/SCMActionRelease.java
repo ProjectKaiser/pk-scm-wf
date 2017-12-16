@@ -1,8 +1,5 @@
 package org.scm4j.releaser.scmactions;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.scm4j.commons.Version;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.releaser.BuildStatus;
@@ -13,11 +10,10 @@ import org.scm4j.releaser.actions.ActionAbstract;
 import org.scm4j.releaser.actions.ActionSet;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.conf.Component;
-import org.scm4j.releaser.scmactions.procs.ISCMProc;
-import org.scm4j.releaser.scmactions.procs.SCMProcActualizePatches;
-import org.scm4j.releaser.scmactions.procs.SCMProcBuild;
-import org.scm4j.releaser.scmactions.procs.SCMProcForkBranch;
-import org.scm4j.releaser.scmactions.procs.SCMProcFreezeMDeps;
+import org.scm4j.releaser.scmactions.procs.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class SCMActionRelease extends ActionAbstract {
 
@@ -37,7 +33,7 @@ public class SCMActionRelease extends ActionAbstract {
 		case FORK:
 			procs.add(new SCMProcForkBranch(comp, cache));
 		case LOCK:
-			getProcs().add(new SCMProcFreezeMDeps(comp, cache));
+			getProcs().add(new SCMProcLockMDeps(comp, cache));
 			bsTo = BuildStatus.LOCK;
 			if (actionSet == ActionSet.FORK_ONLY) {
 				break;
@@ -52,8 +48,7 @@ public class SCMActionRelease extends ActionAbstract {
 				getProcs().add(new SCMProcBuild(comp, cache, delayedTag));
 				bsTo = BuildStatus.BUILD;
 			}
-			break;
-		case DONE: 
+		case DONE:
 			break;
 		default:
 			throw new IllegalArgumentException("unsupported build status: " + bsFrom);

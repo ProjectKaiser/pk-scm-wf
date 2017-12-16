@@ -1,13 +1,13 @@
 package org.scm4j.releaser.branch;
 
-import static org.scm4j.releaser.Utils.reportDuration;
-
-import java.util.List;
-
 import org.scm4j.commons.Version;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.releaser.Utils;
 import org.scm4j.releaser.conf.Component;
+
+import java.util.List;
+
+import static org.scm4j.releaser.Utils.reportDuration;
 
 public class ReleaseBranch {
 
@@ -43,10 +43,10 @@ public class ReleaseBranch {
 		return version;
 	}
 
-	public List<Component> getCRBDeps(IProgress progress) {
+	public List<Component> getCRBMDeps(IProgress progress) {
 		if (devVersion == null) {
 			// calculated for Patch, no reason to use
-			throw new IllegalStateException("unexpected getCRBDeps() call for patch Release Branch");
+			throw new IllegalStateException("unexpected getCRBMDeps() call for patch Release Branch");
 		}
 		if (exists && version.getPatch().equals(Utils.ZERO_PATCH)) {
 			// calculated already at ReleasebranchFactory.getCRB();

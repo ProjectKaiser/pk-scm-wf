@@ -1,16 +1,22 @@
 package org.scm4j.releaser;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
-
-import java.util.List;
-
+import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.branch.ReleaseBranch;
 import org.scm4j.releaser.branch.ReleaseBranchFactory;
 import org.scm4j.releaser.conf.Component;
+import org.scm4j.releaser.conf.MDepsFile;
 import org.scm4j.releaser.exceptions.ENoReleaseBranchForPatch;
+import org.scm4j.releaser.exceptions.ENoReleases;
+import org.scm4j.releaser.exceptions.EReleaseMDepsNotLocked;
+
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.*;
 
 public class WorkflowPatchesTest extends WorkflowTestBase {
 
@@ -91,13 +97,56 @@ public class WorkflowPatchesTest extends WorkflowTestBase {
 	}
 	
 	@Test
-	public void testExceptionOnPatchOnUnexistingRelease() {
+	public void testExceptionOnPatchOnUnexistingBranch() {
 		// try do build a patch for unreleased version
 		Component compWithUnexistingVersion = new Component(UNTILLDB + ":2.70.0");
 		try {
 			getActionTreeBuild(compWithUnexistingVersion);
 			fail();
 		} catch (ENoReleaseBranchForPatch e) {
+		}
+	}
+
+	@Test
+	public void testExceptionOnPatchOnUnreleasedComponent() {
+		// fork unTillDb
+		IAction action = getActionTreeFork(compUnTillDb);
+		assertIsGoingToFork(action, compUnTillDb);
+		execAction(action);
+		checkUnTillDbForked();
+
+		// try to build a patch on existing branch with no releases
+		Component compUnTillDbVersioned = compUnTillDb.clone(env.getUnTillDbVer().toReleaseZeroPatch());
+		try {
+			getActionTreeBuild(compUnTillDbVersioned);
+			fail();
+		} catch(ENoReleases e) {
+		}
+	}
+
+	@Test
+	public void testExceptionMDepsNotLockedOnPatch() {
+		// build unTillDb
+		IAction action = getActionTreeBuild(compUnTillDb);
+		assertIsGoingToForkAndBuild(action, compUnTillDb);
+		execAction(action);
+		checkUnTillDbBuilt();
+
+		// simulate not locked mdep
+		Component nonLockedMDep = new Component("unexisting.com:unexisting");
+		MDepsFile mdf = new MDepsFile(Arrays.asList(nonLockedMDep));
+		ReleaseBranch rb = ReleaseBranchFactory.getCRB(compUnTillDb);
+		env.getUnTillDbVCS().setFileContent(rb.getName(), Utils.MDEPS_FILE_NAME,
+				mdf.toFileContent(), "mdeps file added");
+
+		// try to build patch
+		try {
+			getActionTreeBuild(compUnTillDb.clone(rb.getVersion()));
+			fail();
+		} catch (EReleaseMDepsNotLocked e) {
+			assertThat(e.getNonLockedMDeps(), Matchers.<Collection<Component>>allOf(
+					hasSize(1),
+					contains(nonLockedMDep)));
 		}
 	}
 }
