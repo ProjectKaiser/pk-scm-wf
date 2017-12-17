@@ -3,8 +3,9 @@ package org.scm4j.releaser;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.scm4j.releaser.actions.IAction;
-import org.scm4j.releaser.branch.ReleaseBranch;
+import org.scm4j.releaser.branch.ReleaseBranchCurrent;
 import org.scm4j.releaser.branch.ReleaseBranchFactory;
+import org.scm4j.releaser.branch.ReleaseBranchPatch;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.MDepsFile;
 import org.scm4j.releaser.exceptions.ENoReleaseBranchForPatch;
@@ -28,16 +29,16 @@ public class WorkflowPatchesTest extends WorkflowTestBase {
 		checkUnTillBuilt();
 
 		// add feature to existing unTillDb release
-		ReleaseBranch rb = ReleaseBranchFactory.getCRB(compUnTillDb);
-		env.generateFeatureCommit(env.getUnTillDbVCS(), rb.getName(), "patch feature added");
+		ReleaseBranchCurrent crb = ReleaseBranchFactory.getCRB(compUnTillDb);
+		env.generateFeatureCommit(env.getUnTillDbVCS(), crb.getName(), "patch feature added");
 
 		// build unTillDb patch
 		Component compUnTillDbPatch = new Component(UNTILLDB + ":" + env.getUnTillDbVer().toRelease());
 		action = getActionTreeBuild(compUnTillDbPatch);
 		assertIsGoingToBuild(action, compUnTillDb);
 		execAction(action);
-		
-		rb = ReleaseBranchFactory.getReleaseBranchPatch(compUnTillDbPatch);
+
+		ReleaseBranchPatch rb = ReleaseBranchFactory.getReleaseBranchPatch(compUnTillDbPatch);
 		assertEquals(env.getUnTillDbVer().toReleaseZeroPatch().toNextPatch().toNextPatch(),
 				rb.getVersion());
 		ExtendedStatusBuilder builder = new ExtendedStatusBuilder();
@@ -80,12 +81,12 @@ public class WorkflowPatchesTest extends WorkflowTestBase {
 		execAction(action);
 		checkUnTillDbBuilt(2);
 
-		ReleaseBranch rb = ReleaseBranchFactory.getCRB(compUnTillDb);
-		assertEquals(env.getUnTillDbVer().toNextMinor().toRelease(), rb.getVersion());
+		ReleaseBranchCurrent crb = ReleaseBranchFactory.getCRB(compUnTillDb);
+		assertEquals(env.getUnTillDbVer().toNextMinor().toRelease(), crb.getVersion());
 
 		// add feature for 2.59.1
 		Component compToPatch = new Component(UNTILLDB + ":2.59.1");
-		rb = ReleaseBranchFactory.getReleaseBranchPatch(compToPatch);
+		ReleaseBranchPatch rb = ReleaseBranchFactory.getReleaseBranchPatch(compToPatch);
 		env.generateFeatureCommit(env.getUnTillDbVCS(), rb.getName(), "2.59.1 feature merged");
 
 		// build new unTillDb patch 2.59.1
@@ -135,7 +136,7 @@ public class WorkflowPatchesTest extends WorkflowTestBase {
 		// simulate not locked mdep
 		Component nonLockedMDep = new Component("unexisting.com:unexisting");
 		MDepsFile mdf = new MDepsFile(Arrays.asList(nonLockedMDep));
-		ReleaseBranch rb = ReleaseBranchFactory.getCRB(compUnTillDb);
+		ReleaseBranchCurrent rb = ReleaseBranchFactory.getCRB(compUnTillDb);
 		env.getUnTillDbVCS().setFileContent(rb.getName(), Utils.MDEPS_FILE_NAME,
 				mdf.toFileContent(), "mdeps file added");
 

@@ -1,9 +1,9 @@
 package org.scm4j.releaser.branch;
 
-import static org.junit.Assert.assertThat;
-import static org.scm4j.releaser.UtilityClassMatcher.isUtilityClass;
-
 import org.junit.Test;
+
+import static org.junit.Assert.*;
+import static org.scm4j.releaser.UtilityClassMatcher.isUtilityClass;
 
 public class ReleaseBranchFactoryTest {
 	

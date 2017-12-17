@@ -4,8 +4,9 @@ import org.scm4j.commons.Version;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.commons.progress.ProgressConsole;
 import org.scm4j.releaser.branch.DevelopBranch;
-import org.scm4j.releaser.branch.ReleaseBranch;
+import org.scm4j.releaser.branch.ReleaseBranchCurrent;
 import org.scm4j.releaser.branch.ReleaseBranchFactory;
+import org.scm4j.releaser.branch.ReleaseBranchPatch;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.DelayedTagsFile;
 import org.scm4j.releaser.exceptions.ENoReleaseBranchForPatch;
@@ -65,7 +66,7 @@ public class ExtendedStatusBuilder {
 	}
 	
 	private ExtendedStatus getMinorStatus(Component comp, CachedStatuses cache, IProgress progress) {
-		ReleaseBranch rb = reportDuration(() -> ReleaseBranchFactory.getCRB(comp), "CRB created", comp, progress);
+		ReleaseBranchCurrent rb = reportDuration(() -> ReleaseBranchFactory.getCRB(comp), "CRB created", comp, progress);
 		LinkedHashMap<Component, ExtendedStatus> subComponents = new LinkedHashMap<>();
 		
 		BuildStatus status;
@@ -93,7 +94,7 @@ public class ExtendedStatusBuilder {
 	}
 
 	private ExtendedStatus getPatchStatus(Component comp, CachedStatuses cache, IProgress progress) {
-		ReleaseBranch rb = ReleaseBranchFactory.getReleaseBranchPatch(comp);
+		ReleaseBranchPatch rb = ReleaseBranchFactory.getReleaseBranchPatch(comp);
 		LinkedHashMap<Component, ExtendedStatus> subComponents = new LinkedHashMap<>();
 		
 		BuildStatus buildStatus;
@@ -138,7 +139,7 @@ public class ExtendedStatusBuilder {
 		return false;
 	}
 
-	private boolean noValueableCommitsAfterLastTag(Component comp, ReleaseBranch rb) {
+	private boolean noValueableCommitsAfterLastTag(Component comp, ReleaseBranchPatch rb) {
 		IVCS vcs = comp.getVCS();
 		String startingFromRevision = null;
 
@@ -188,7 +189,7 @@ public class ExtendedStatusBuilder {
 		return nonlockedMDeps.isEmpty();
 	}
 
-	private Boolean isNeedToFork(Component comp, ReleaseBranch rb, CachedStatuses cache, IProgress progress, LinkedHashMap<Component, ExtendedStatus> subComponents) {
+	private Boolean isNeedToFork(Component comp, ReleaseBranchCurrent rb, CachedStatuses cache, IProgress progress, LinkedHashMap<Component, ExtendedStatus> subComponents) {
 		
 		for (Component mdep : rb.getMDeps()) {
 			ExtendedStatus status = getAndCacheStatus(mdep, cache, progress, false);
