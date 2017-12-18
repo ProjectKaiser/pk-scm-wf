@@ -23,8 +23,9 @@ public final class Utils {
 			return sup.get();
 		}
 		long start = System.currentTimeMillis();
+		progress.startTrace(message + ": " + (comp == null ? "" : comp.getCoordsNoComment() + "..."));
 		T res = sup.get();
-		progress.reportStatus(message + ": " + (comp == null ? "" : comp.getCoordsNoComment() + " ") + "in " + (System.currentTimeMillis() - start) + "ms");
+		progress.endTrace(" in " + (System.currentTimeMillis() - start) + "ms");
 		return res;
 	}
 
