@@ -6,8 +6,12 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.commons.progress.ProgressConsole;
 import org.scm4j.releaser.ActionTreeBuilder;
+import org.scm4j.releaser.CachedStatuses;
+import org.scm4j.releaser.ExtendedStatus;
+import org.scm4j.releaser.ExtendedStatusBuilder;
 import org.scm4j.releaser.actions.IAction;
-import org.scm4j.releaser.actions.PrintAction;
+import org.scm4j.releaser.actions.PrintStatus;
+import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.exceptions.EReleaserException;
 import org.scm4j.releaser.exceptions.cmdline.ECmdLine;
 import org.scm4j.releaser.exceptions.cmdline.ECmdLineNoCommand;
@@ -31,9 +35,9 @@ public class CLI {
 		CLI.out = out;
 	}
 
-	private void printActionTree(IAction action) {
-		PrintAction pa = new PrintAction();
-		pa.print(out, action);
+	private void printStatusTree(ExtendedStatus node) {
+		PrintStatus ps = new PrintStatus();
+		ps.print(out, node);
 	}
 
 	public void execActionTree(IAction action) throws Exception {
@@ -41,34 +45,56 @@ public class CLI {
 			action.execute(progress);
 		}
 	}
-
-	public IAction getActionTree(CommandLine cmd) {
-		switch (cmd.getCommand()) {
-		case STATUS:
-		case BUILD:
+	
+	public ExtendedStatus getStatusTree(CommandLine cmd, CachedStatuses cache) {
+		ExtendedStatusBuilder statusBuilder = new ExtendedStatusBuilder();
+		Component comp = new Component(cmd.getProductCoords());
+		return !comp.getVersion().isLocked() && cmd.getCommand() == CLICommand.BUILD ?
+				statusBuilder.getAndCacheMinorStatus(comp, cache) :
+				statusBuilder.getAndCachePatchStatus(comp, cache);
+	}
+	
+	public IAction getActionTree(ExtendedStatus node, CachedStatuses cache, CommandLine cmd) {
+		if (cmd.getCommand() == CLICommand.BUILD) {
 			return cmd.isDelayedTag() ? 
-					actionBuilder.getActionTreeDelayedTag(cmd.getProductCoords()) :
-					actionBuilder.getActionTree(cmd.getProductCoords());
-		case FORK:
-			return actionBuilder.getActionTreeForkOnly(cmd.getProductCoords());
-		case TAG:
+					actionBuilder.getActionTreeDelayedTag(node, cache) :
+					actionBuilder.getActionTreeFull(node, cache);
+		} else {
+			return actionBuilder.getActionTreeForkOnly(node, cache);
+		}
+	}
+	
+	public IAction getActionTree(CommandLine cmd) {
+		if (cmd.getCommand() == CLICommand.TAG) {
 			return actionBuilder.getTagAction(cmd.getProductCoords());
-		default:
-			throw new IllegalArgumentException("Unsupported command: " + cmd.getCommand().toString());
+		} else {
+			CachedStatuses cache = new CachedStatuses();
+			ExtendedStatus node = getStatusTree(cmd, cache);
+			return getActionTree(node, cache, cmd);
 		}
 	}
 
 	public int exec(String[] args) {
 		try {
+			long startMS = System.currentTimeMillis();
 			CommandLine cmd = new CommandLine(args);
 			validateCommandLine(cmd);
-			long startMS = System.currentTimeMillis();
 			IAction action = getActionTree(cmd);
-			if (cmd.getCommand() == CLICommand.STATUS) {
-				printActionTree(action);
+			execActionTree(action, cmd);
+			if (cmd.getCommand() == CLICommand.TAG) {
+				return actionBuilder.getTagAction(cmd.getProductCoords());
 			} else {
-				execActionTree(action);
+				CachedStatuses cache = new CachedStatuses();
+				ExtendedStatus node = getStatusTree(cmd, cache);
+				if (cmd.getCommand() == CLICommand.STATUS) {
+					printStatusTree(node);
+				} else {
+					IAction action = getActionTree(node, cache, cmd);
+					execActionTree(action);
+				}
 			}
+			
+			
 			out.println("elapsed time: " + (System.currentTimeMillis() - startMS));
 			return EXIT_CODE_OK;
 		} catch (ECmdLine e) {

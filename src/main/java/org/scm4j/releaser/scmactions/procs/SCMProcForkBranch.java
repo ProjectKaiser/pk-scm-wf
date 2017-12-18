@@ -8,6 +8,7 @@ import org.scm4j.releaser.LogTag;
 import org.scm4j.releaser.Utils;
 import org.scm4j.releaser.branch.DevelopBranch;
 import org.scm4j.releaser.conf.Component;
+import org.scm4j.releaser.exceptions.EBuildOnNotForkedRelease;
 import org.scm4j.vcs.api.IVCS;
 
 public class SCMProcForkBranch implements ISCMProc {

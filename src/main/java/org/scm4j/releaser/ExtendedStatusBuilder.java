@@ -1,5 +1,11 @@
 package org.scm4j.releaser;
 
+import static org.scm4j.releaser.Utils.reportDuration;
+
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+
 import org.scm4j.commons.Version;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.commons.progress.ProgressConsole;
@@ -16,12 +22,6 @@ import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.vcs.api.VCSTag;
 import org.scm4j.vcs.api.WalkDirection;
-
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-
-import static org.scm4j.releaser.Utils.reportDuration;
 
 public class ExtendedStatusBuilder {
 
@@ -108,7 +108,7 @@ public class ExtendedStatusBuilder {
 
 		List<Component> nonlockedMDeps = new ArrayList<>();
 		if (!areMDepsLocked(rb.getMDeps(), nonlockedMDeps)) {
-			throw new EReleaseMDepsNotLocked(nonlockedMDeps); // TODO: add non-locked component output
+			throw new EReleaseMDepsNotLocked(nonlockedMDeps);
 		}
 		
 		for (Component mdep : rb.getMDeps()) {

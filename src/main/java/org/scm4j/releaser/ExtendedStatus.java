@@ -1,9 +1,9 @@
 package org.scm4j.releaser;
 
+import java.util.LinkedHashMap;
+
 import org.scm4j.commons.Version;
 import org.scm4j.releaser.conf.Component;
-
-import java.util.LinkedHashMap;
 
 public class ExtendedStatus {
 
@@ -36,5 +36,23 @@ public class ExtendedStatus {
 
 	public Component getComp() {
 		return comp;
+	}
+	
+	private String getDescription(String status) {
+		String targetBranch = Utils.getReleaseBranchName(comp, nextVersion);
+		return String.format("%s %s, target version: %s, target branch: %s", status, comp.getCoords(), nextVersion, targetBranch);
+	}
+
+	public String getDesciption() {
+		if (status == BuildStatus.DONE) {
+			return getDescription("skip " + status.toString());
+		} else {
+			return getDescription(status.toString() + " -> " + BuildStatus.BUILD.toString());
+		}
+	}
+
+	@Override
+	public String toString() {
+		return getDescription(status.toString());
 	}
 }

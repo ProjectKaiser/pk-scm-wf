@@ -26,14 +26,11 @@ public class WorkflowForkTest extends WorkflowTestBase {
 	
 	@Test
 	public void testForkRootOnly() throws Exception {
-		IAction action = getActionTreeBuild(compUnTill);
-		assertIsGoingToForkAndBuildAll(action);
-		execAction(action);
-		checkUnTillBuilt();
+		forkAndBuild(compUnTill);
 
 		env.generateFeatureCommit(env.getUnTillVCS(), compUnTill.getVcsRepository().getDevelopBranch(), "feature added");
 		// fork untill only
-		action = getActionTreeFork(compUnTill);
+		IAction action = getActionTreeFork(compUnTill);
 		assertIsGoingToFork(action, compUnTill);
 		assertIsGoingToDoNothing(action, compUnTillDb, compUBL);
 		execAction(action);
@@ -67,20 +64,22 @@ public class WorkflowForkTest extends WorkflowTestBase {
 	@Test
 	public void testForkRootIfNestedIsForkedAlready() throws Exception {
 		// build UBL + unTillDb
-		IAction action = getActionTreeBuild(compUBL);
-		execAction(action);
+		forkAndBuild(compUBL);
 
 		// next fork unTillDb
 		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevelopBranch(), "feature added");
-		action = getActionTreeFork(compUnTillDb);
-		assertIsGoingToFork(action, compUnTillDb);
-		execAction(action);
-		checkUnTillDbForked(2);
+		forkAndBuild(compUnTillDb, 2);
 
 		// UBL should be forked and built then
+		IAction action  = getActionTreeFork(compUBL);
+		assertIsGoingToFork(action, compUBL);
+		assertIsGoingToDoNothing(action, compUnTillDb);
+		execAction(action);
+		checkUBLForked(2);
+		
 		action = getActionTreeBuild(compUBL);
-		assertIsGoingToForkAndBuild(action, compUBL);
-		assertIsGoingToBuild(action, compUnTillDb);
+		assertIsGoingToBuild(action, compUBL);
+		assertIsGoingToDoNothing(action, compUnTillDb);
 		execAction(action);
 		checkUBLBuilt(2);
 	}

@@ -1,9 +1,14 @@
 package org.scm4j.releaser.scmactions.procs;
 
-import lombok.SneakyThrows;
+import java.io.File;
+import java.nio.file.Files;
+
 import org.scm4j.commons.Version;
 import org.scm4j.commons.progress.IProgress;
-import org.scm4j.releaser.*;
+import org.scm4j.releaser.CachedStatuses;
+import org.scm4j.releaser.ExtendedStatus;
+import org.scm4j.releaser.LogTag;
+import org.scm4j.releaser.Utils;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.DelayedTagsFile;
 import org.scm4j.releaser.conf.TagDesc;
@@ -12,8 +17,7 @@ import org.scm4j.releaser.exceptions.EReleaserException;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSCommit;
 
-import java.io.File;
-import java.nio.file.Files;
+import lombok.SneakyThrows;
 
 public class SCMProcBuild implements ISCMProc {
 	
