@@ -56,7 +56,6 @@ public class MDepsFile {
 			} else {
 				pw.println(lines.get(i).toString());
 			}
-
 		}
 		return sw.toString();
 	}

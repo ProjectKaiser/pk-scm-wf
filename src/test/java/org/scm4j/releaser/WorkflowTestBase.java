@@ -23,6 +23,7 @@ import org.scm4j.vcs.api.WalkDirection;
 import org.scm4j.vcs.api.exceptions.EVCSBranchNotFound;
 import org.scm4j.vcs.api.exceptions.EVCSFileNotFound;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 
@@ -316,7 +317,7 @@ public class WorkflowTestBase {
 		return getActionByComp(action, comp, 0);
 	}
 
-	protected void assertThat(IAction action, Matcher<? super IAction> matcher, Component... comps) {
+	protected void assertThatAction(IAction action, Matcher<? super IAction> matcher, Component... comps) {
 		for (Component comp : comps) {
 			IAction actionForComp = getActionByComp(action, comp);
 			Assert.assertThat("action for " + comp, actionForComp, matcher);
@@ -332,7 +333,7 @@ public class WorkflowTestBase {
 	}
 
 	protected void assertIsGoingToFork(IAction action, Component... comps) {
-		assertThat(action, allOf(
+		assertThatAction(action, allOf(
 				instanceOf(SCMActionRelease.class),
 				hasProperty("bsFrom", equalTo(BuildStatus.FORK)), 
 				hasProperty("bsTo", equalTo(BuildStatus.LOCK))), comps);
@@ -340,28 +341,28 @@ public class WorkflowTestBase {
 
 	protected void assertIsGoingToForkAndBuild(IAction action, Component... comps) {
 		assertTrue(comps.length > 0);
-		assertThat(action, allOf(
+		assertThatAction(action, allOf(
 				instanceOf(SCMActionRelease.class),
 				hasProperty("bsFrom", equalTo(BuildStatus.FORK)),
 				hasProperty("bsTo", equalTo(BuildStatus.BUILD))), comps);
 	}
 
 	protected void assertIsGoingToBuild(IAction action, Component comp, BuildStatus mbs) {
-		assertThat(action, allOf(
+		assertThatAction(action, allOf(
 				instanceOf(SCMActionRelease.class),
 				hasProperty("bsFrom", equalTo(mbs)),
 				hasProperty("bsTo", equalTo(BuildStatus.BUILD))), comp);
 	}
 	
 	protected void assertIsGoingToBuild(IAction action, Component... comps) {
-		assertThat(action, allOf(
+		assertThatAction(action, allOf(
 				instanceOf(SCMActionRelease.class),
 				hasProperty("bsFrom", equalTo(BuildStatus.BUILD)), 
 				hasProperty("bsTo", equalTo(BuildStatus.BUILD))), comps);
 	}
 
 	protected void assertIsGoingToDoNothing(IAction action, BuildStatus bsFrom, BuildStatus bsTo, Component... comps) {
-		assertThat(action, allOf(
+		assertThatAction(action, allOf(
 				instanceOf(SCMActionRelease.class),
 				hasProperty("bsFrom", equalTo(bsFrom)),
 				hasProperty("bsTo", equalTo(bsTo)),
@@ -369,7 +370,7 @@ public class WorkflowTestBase {
 	}
 	
 	protected void assertIsGoingToSkipAll(IAction action) {
-		assertThat(action, allOf(
+		assertThatAction(action, allOf(
 				instanceOf(SCMActionRelease.class),
 				hasProperty("procs", empty())), getAllComps());
 	}
@@ -383,7 +384,7 @@ public class WorkflowTestBase {
 	}
 
 	protected void assertIsGoingToTag(IAction action, Component comp) {
-		assertThat(action, allOf(
+		assertThatAction(action, allOf(
 				instanceOf(SCMActionTag.class), 
 				hasProperty("childActions", empty())), comp);
 	}
@@ -395,7 +396,7 @@ public class WorkflowTestBase {
 	}
 
 	protected void assertIsGoingToTagAll(IAction action) {
-		assertThat(action, instanceOf(SCMActionTag.class), getAllComps());
+		assertThatAction(action, instanceOf(SCMActionTag.class), getAllComps());
 	}
 	
 	protected IAction getActionTreeFork(Component comp) {

@@ -1,25 +1,27 @@
 package org.scm4j.releaser;
 
-import static org.scm4j.releaser.Utils.reportDuration;
-
-import java.util.LinkedHashMap;
-import java.util.List;
-
 import org.scm4j.commons.Version;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.commons.progress.ProgressConsole;
 import org.scm4j.releaser.branch.DevelopBranch;
-import org.scm4j.releaser.branch.ReleaseBranch;
+import org.scm4j.releaser.branch.ReleaseBranchCurrent;
 import org.scm4j.releaser.branch.ReleaseBranchFactory;
+import org.scm4j.releaser.branch.ReleaseBranchPatch;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.DelayedTagsFile;
 import org.scm4j.releaser.exceptions.ENoReleaseBranchForPatch;
 import org.scm4j.releaser.exceptions.ENoReleases;
-import org.scm4j.releaser.exceptions.EReleaserException;
+import org.scm4j.releaser.exceptions.EReleaseMDepsNotLocked;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.vcs.api.VCSTag;
 import org.scm4j.vcs.api.WalkDirection;
+
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+
+import static org.scm4j.releaser.Utils.reportDuration;
 
 public class ExtendedStatusBuilder {
 
@@ -40,7 +42,6 @@ public class ExtendedStatusBuilder {
 	}
 
 	public ExtendedStatus getAndCacheStatus(Component comp, CachedStatuses cache, IProgress progress, boolean patch) {
-		
 		ExtendedStatus existing = cache.putIfAbsent(comp.getUrl(), ExtendedStatus.DUMMY);
 		
 		while (ExtendedStatus.DUMMY == existing) {
@@ -65,7 +66,7 @@ public class ExtendedStatusBuilder {
 	}
 	
 	private ExtendedStatus getMinorStatus(Component comp, CachedStatuses cache, IProgress progress) {
-		ReleaseBranch rb = reportDuration(() -> ReleaseBranchFactory.getCRB(comp), "CRB created", comp, progress);
+		ReleaseBranchCurrent rb = reportDuration(() -> ReleaseBranchFactory.getCRB(comp), "CRB created", comp, progress);
 		LinkedHashMap<Component, ExtendedStatus> subComponents = new LinkedHashMap<>();
 		
 		BuildStatus status;
@@ -93,7 +94,7 @@ public class ExtendedStatusBuilder {
 	}
 
 	private ExtendedStatus getPatchStatus(Component comp, CachedStatuses cache, IProgress progress) {
-		ReleaseBranch rb = ReleaseBranchFactory.getReleaseBranchPatch(comp);
+		ReleaseBranchPatch rb = ReleaseBranchFactory.getReleaseBranchPatch(comp);
 		LinkedHashMap<Component, ExtendedStatus> subComponents = new LinkedHashMap<>();
 		
 		BuildStatus buildStatus;
@@ -104,9 +105,10 @@ public class ExtendedStatusBuilder {
 		if (Integer.parseInt(rb.getVersion().getPatch()) < 1) {
 			throw new ENoReleases("Release Branch version patch is " + rb.getVersion().getPatch() + ". Component release should be created before patch");
 		}
-		
-		if (!areMDepsLocked(rb.getMDeps())) {
-			throw new EReleaserException("not all mdeps locked"); // TODO: add non-locked component output
+
+		List<Component> nonlockedMDeps = new ArrayList<>();
+		if (!areMDepsLocked(rb.getMDeps(), nonlockedMDeps)) {
+			throw new EReleaseMDepsNotLocked(nonlockedMDeps); // TODO: add non-locked component output
 		}
 		
 		LinkedHashMap<Component, ExtendedStatus> subComponentsLocal = new LinkedHashMap<>();
@@ -141,7 +143,7 @@ public class ExtendedStatusBuilder {
 		return false;
 	}
 
-	private boolean noValueableCommitsAfterLastTag(Component comp, ReleaseBranch rb) {
+	private boolean noValueableCommitsAfterLastTag(Component comp, ReleaseBranchPatch rb) {
 		IVCS vcs = comp.getVCS();
 		String startingFromRevision = null;
 
@@ -179,15 +181,19 @@ public class ExtendedStatusBuilder {
 	}
 
 	private boolean areMDepsLocked(List<Component> mDeps) {
-		for (Component mDep : mDeps) {
-			if (!mDep.getVersion().isLocked()) {
-				return false;
-			}
-		}
-		return true;
+		return areMDepsLocked(mDeps, new ArrayList<>());
 	}
 
-	private Boolean isNeedToFork(Component comp, ReleaseBranch rb, CachedStatuses cache, IProgress progress, LinkedHashMap<Component, ExtendedStatus> subComponents) {
+	private boolean areMDepsLocked(List<Component> mDeps, List<Component> nonlockedMDeps) {
+		for (Component mDep : mDeps) {
+			if (!mDep.getVersion().isLocked()) {
+				nonlockedMDeps.add(mDep);
+			}
+		}
+		return nonlockedMDeps.isEmpty();
+	}
+
+	private Boolean isNeedToFork(Component comp, ReleaseBranchCurrent rb, CachedStatuses cache, IProgress progress, LinkedHashMap<Component, ExtendedStatus> subComponents) {
 		
 		LinkedHashMap<Component, ExtendedStatus> subComponentsLocal = new LinkedHashMap<>();
 		Utils.async(rb.getMDeps(), (mdep) -> {
@@ -213,7 +219,7 @@ public class ExtendedStatusBuilder {
 		}
 		
 		ExtendedStatus mdepStatus;
-		for (Component mdep : rb.getCRBDeps(progress)) {
+		for (Component mdep : rb.getCRBMDeps(progress)) {
 			mdepStatus = cache.get(mdep.getUrl());
 			// any mdeps needs FORK => YES
 			if (mdepStatus.getStatus() != BuildStatus.DONE) {

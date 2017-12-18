@@ -1,8 +1,5 @@
 package org.scm4j.releaser.branch;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.scm4j.commons.Version;
 import org.scm4j.releaser.Utils;
 import org.scm4j.releaser.conf.Component;
@@ -11,9 +8,12 @@ import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.exceptions.EVCSBranchNotFound;
 import org.scm4j.vcs.api.exceptions.EVCSFileNotFound;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public final class ReleaseBranchFactory {
 	
-	public static ReleaseBranch getReleaseBranchPatch(Component comp) {
+	public static ReleaseBranchPatch getReleaseBranchPatch(Component comp) {
 		IVCS vcs = comp.getVCS();
 		String name = Utils.getReleaseBranchName(comp, comp.getVersion());
 		boolean exists;
@@ -29,10 +29,10 @@ public final class ReleaseBranchFactory {
 			mdeps = new ArrayList<>(); // will not be used because ENoReleaseBranchForPatch will be thrown 
 		}
 		
-		return new ReleaseBranch(mdeps, exists, name, version, comp, null); 
+		return new ReleaseBranchPatch(mdeps, exists, name, version);
 	}
 	
-	public static ReleaseBranch getCRB(Component comp) {
+	public static ReleaseBranchCurrent getCRB(Component comp) {
 		IVCS vcs = comp.getVCS();
 		Version devVersion = Utils.getDevVersion(comp);
 		Version version;
@@ -47,7 +47,7 @@ public final class ReleaseBranchFactory {
 		}
 		List<Component> mdeps = exists && version.getPatch().equals(Utils.ZERO_PATCH) ? getMDepsRelease(comp, name) : getMDepsDevelop(comp);
 	
-		return new ReleaseBranch(mdeps, exists, name, version, comp, devVersion);
+		return new ReleaseBranchCurrent(mdeps, exists, name, version, comp, devVersion);
 	}
 	
 	public static List<Component> getMDepsRelease(Component comp, String releaseBranchName) {
