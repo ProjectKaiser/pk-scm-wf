@@ -19,7 +19,5 @@ public class PrintStatusTest {
 		pa.print(mockedPS, mockedAction);
 		
 		Mockito.verify(mockedPS, Mockito.times(2)).println(Mockito.anyString());
-		
 	}
-	
 }

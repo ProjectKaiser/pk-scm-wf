@@ -11,14 +11,14 @@ public class WorkflowForkTest extends WorkflowTestBase {
 	
 	@Test
 	public void testForkAll() throws Exception {
-		IAction action = getActionTreeFork(compUnTill);
-		assertIsGoingToForkAll(action);
+		IAction action = getAndExecActionTreeFork(compUnTill);
+		assertActionDoesForkAll(action);
 		execAction(action);
 		checkUnTillForked();
 		assertFalse(action.getClass().getMethod("toString").getDeclaringClass().equals(Object.class));
 		
 		// check nothing happens on next fork
-		action = getActionTreeFork(compUnTill);
+		action = getAndExecActionTreeFork(compUnTill);
 		assertIsGoingToSkipAll(action);
 		execAction(action);
 		checkUnTillForked();
@@ -30,9 +30,9 @@ public class WorkflowForkTest extends WorkflowTestBase {
 
 		env.generateFeatureCommit(env.getUnTillVCS(), compUnTill.getVcsRepository().getDevelopBranch(), "feature added");
 		// fork untill only
-		IAction action = getActionTreeFork(compUnTill);
-		assertIsGoingToFork(action, compUnTill);
-		assertIsGoingToDoNothing(action, compUnTillDb, compUBL);
+		IAction action = getAndExecActionTreeFork(compUnTill);
+		assertActionDoesFork(action, compUnTill);
+		assertActionDoesNothing(action, compUnTillDb, compUBL);
 		execAction(action);
 		checkUnTillOnlyForked(2);
 
@@ -45,9 +45,9 @@ public class WorkflowForkTest extends WorkflowTestBase {
 		assertEquals(env.getUnTillDbVer().toReleaseZeroPatch().toNextPatch(), latestVersionUnTillDb);
 
 		// build untill only
-		action = getActionTreeBuild(compUnTill);
-		assertIsGoingToBuild(action, compUnTill);
-		assertIsGoingToDoNothing(action, compUnTillDb, compUBL);
+		action = getAndExecActionTreeBuild(compUnTill);
+		assertActionDoesBuildBuild(action, compUnTill);
+		assertActionDoesNothing(action, compUnTillDb, compUBL);
 		execAction(action);
 
 		latestVersionUBL = getCrbNextVersion(compUBL);
@@ -71,15 +71,15 @@ public class WorkflowForkTest extends WorkflowTestBase {
 		forkAndBuild(compUnTillDb, 2);
 
 		// UBL should be forked and built then
-		IAction action  = getActionTreeFork(compUBL);
-		assertIsGoingToFork(action, compUBL);
-		assertIsGoingToDoNothing(action, compUnTillDb);
+		IAction action  = getAndExecActionTreeFork(compUBL);
+		assertActionDoesFork(action, compUBL);
+		assertActionDoesNothing(action, compUnTillDb);
 		execAction(action);
 		checkUBLForked(2);
 		
-		action = getActionTreeBuild(compUBL);
-		assertIsGoingToBuild(action, compUBL);
-		assertIsGoingToDoNothing(action, compUnTillDb);
+		action = getAndExecActionTreeBuild(compUBL);
+		assertActionDoesBuildBuild(action, compUBL);
+		assertActionDoesNothing(action, compUnTillDb);
 		execAction(action);
 		checkUBLBuilt(2);
 	}

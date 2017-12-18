@@ -1,19 +1,5 @@
 package org.scm4j.releaser.cli;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.atLeast;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.verify;
-
-import java.io.PrintStream;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -21,6 +7,8 @@ import org.junit.Test;
 import org.junit.contrib.java.lang.system.ExpectedSystemExit;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.releaser.ActionTreeBuilder;
+import org.scm4j.releaser.CachedStatuses;
+import org.scm4j.releaser.ExtendedStatus;
 import org.scm4j.releaser.TestEnvironment;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.conf.VCSRepositories;
@@ -30,45 +18,49 @@ import org.scm4j.releaser.exceptions.cmdline.ECmdLineNoProduct;
 import org.scm4j.releaser.exceptions.cmdline.ECmdLineUnknownCommand;
 import org.scm4j.releaser.exceptions.cmdline.ECmdLineUnknownOption;
 
+import java.io.PrintStream;
+
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.*;
+
 public class CLITest {
 
 	private static final String TEST_EXCEPTION = "test exception";
 	private static final String UNTILL = "eu.untill:unTill";
-	private ActionTreeBuilder mockedReleaser;
 	private IAction mockedAction;
 	private PrintStream mockedPS;
 	private CLI mockedCLI;
+	private ActionTreeBuilder mockedActionTreeBuilder;
 
 	@Rule
 	public final ExpectedSystemExit exit = ExpectedSystemExit.none();
 
 	@Before
 	public void setUp() throws Exception {
-		mockedReleaser = mock(ActionTreeBuilder.class);
 		mockedAction = mock(IAction.class);
 		mockedPS = mock(PrintStream.class);
-		CLI.setOut(mockedPS);
-		CLI.setActionBuilder(mockedReleaser);
+
 		mockedCLI = spy(new CLI());
+		mockedActionTreeBuilder = spy(new ActionTreeBuilder());
+		mockedCLI.setActionBuilder(mockedActionTreeBuilder);
+		mockedCLI.setOut(mockedPS);
 	}
 
 	@After
 	public void tearDown() {
 		VCSRepositories.resetDefault();
-		CLI.setOut(System.out);
-		CLI.setActionBuilder(new ActionTreeBuilder());
 	}
 
 	@Test
 	public void testCommandSTATUS() throws Exception {
-		doReturn(mockedAction).when(mockedReleaser).getActionTree(UNTILL);
+		doReturn(mockedAction).when(mockedCLI).getActionTree(any(CommandLine.class));
 		String[] args = new String[] { CLICommand.STATUS.getCmdLineStr(), UNTILL };
 
 		assertEquals(CLI.EXIT_CODE_OK, mockedCLI.exec(args));
 
-		verify(mockedReleaser).getActionTree(UNTILL);
 		verify(mockedAction, never()).execute(any(IProgress.class));
-		verify(mockedPS, atLeast(1)).println(anyString());
+		verify(mockedCLI).printStatusTree(any(ExtendedStatus.class));
 
 		exit.expectSystemExitWithStatus(CLI.EXIT_CODE_OK);
 		CLI.main(args);
@@ -76,12 +68,11 @@ public class CLITest {
 
 	@Test
 	public void testCommandFORK() throws Exception {
-		doReturn(mockedAction).when(mockedReleaser).getActionTreeForkOnly(UNTILL);
 		String[] args = new String[] { CLICommand.FORK.getCmdLineStr(), UNTILL };
 
 		assertEquals(CLI.EXIT_CODE_OK, mockedCLI.exec(args));
 
-		verify(mockedReleaser).getActionTreeForkOnly(UNTILL);
+		verify(mockedActionTreeBuilder).getActionTreeForkOnly(any(ExtendedStatus.class), any(CachedStatuses.class));
 		verify(mockedAction).execute(any(IProgress.class));
 
 		exit.expectSystemExitWithStatus(CLI.EXIT_CODE_OK);
@@ -90,12 +81,12 @@ public class CLITest {
 
 	@Test
 	public void testCommandBUILD() throws Exception {
-		doReturn(mockedAction).when(mockedReleaser).getActionTree(UNTILL);
+		doReturn(mockedAction).when(mockedActionTreeBuilder).getActionTreeFull(any(ExtendedStatus.class), any(CachedStatuses.class));
 		String[] args = new String[] { CLICommand.BUILD.getCmdLineStr(), UNTILL };
 
 		assertEquals(CLI.EXIT_CODE_OK, mockedCLI.exec(args));
 
-		verify(mockedReleaser).getActionTree(UNTILL);
+		verify(mockedActionTreeBuilder).getActionTreeFull(any(ExtendedStatus.class), any(CachedStatuses.class));
 		verify(mockedAction).execute(any(IProgress.class));
 
 		exit.expectSystemExitWithStatus(CLI.EXIT_CODE_OK);
@@ -104,12 +95,12 @@ public class CLITest {
 
 	@Test
 	public void testCommandTAG() throws Exception {
-		doReturn(mockedAction).when(mockedReleaser).getTagAction(UNTILL);
+		doReturn(mockedAction).when(mockedActionTreeBuilder).getTagAction(UNTILL);
 		String[] args = new String[] { CLICommand.TAG.getCmdLineStr(), UNTILL };
 
 		assertEquals(CLI.EXIT_CODE_OK, mockedCLI.exec(args));
 
-		verify(mockedReleaser).getTagAction(UNTILL);
+		verify(mockedActionTreeBuilder).getTagAction(UNTILL);
 		verify(mockedAction).execute(any(IProgress.class));
 
 		exit.expectSystemExitWithStatus(CLI.EXIT_CODE_OK);
@@ -217,7 +208,7 @@ public class CLITest {
 		Exception thrown = null;
 		String[] args = new String[] { CLICommand.STATUS.getCmdLineStr(), "unknown:component" };
 		CommandLine cmd = new CommandLine(args);
-		CLI.setActionBuilder(new ActionTreeBuilder());
+		mockedCLI.setActionBuilder(new ActionTreeBuilder());
 		try (TestEnvironment te = new TestEnvironment()) {
 			te.generateTestEnvironmentNoVCS();
 			try {
@@ -265,7 +256,7 @@ public class CLITest {
 		try (TestEnvironment env = new TestEnvironment()) {
 			env.generateTestEnvironment();
 			exit.expectSystemExitWithStatus(CLI.EXIT_CODE_OK);
-			CLI.setActionBuilder(new ActionTreeBuilder());
+			mockedCLI.setActionBuilder(new ActionTreeBuilder());
 			CLI.main(new String[] { CLICommand.STATUS.getCmdLineStr(), TestEnvironment.PRODUCT_UNTILL });
 		}
 	}

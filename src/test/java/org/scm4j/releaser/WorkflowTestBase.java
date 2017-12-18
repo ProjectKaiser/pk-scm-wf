@@ -1,18 +1,5 @@
 package org.scm4j.releaser;
 
-import static org.hamcrest.Matchers.allOf;
-import static org.hamcrest.Matchers.empty;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.hasProperty;
-import static org.hamcrest.Matchers.instanceOf;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
-import java.util.HashMap;
-import java.util.List;
-
 import org.hamcrest.Matcher;
 import org.junit.After;
 import org.junit.Assert;
@@ -22,7 +9,6 @@ import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.branch.DevelopBranch;
 import org.scm4j.releaser.cli.CLI;
 import org.scm4j.releaser.cli.CLICommand;
-import org.scm4j.releaser.cli.CommandLine;
 import org.scm4j.releaser.cli.Option;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.DelayedTagsFile;
@@ -35,6 +21,12 @@ import org.scm4j.vcs.api.VCSTag;
 import org.scm4j.vcs.api.WalkDirection;
 import org.scm4j.vcs.api.exceptions.EVCSBranchNotFound;
 import org.scm4j.vcs.api.exceptions.EVCSFileNotFound;
+
+import java.util.HashMap;
+import java.util.List;
+
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.*;
 
 public class WorkflowTestBase {
 	protected TestEnvironment env;
@@ -329,22 +321,22 @@ public class WorkflowTestBase {
 		}
 	}
 
-	protected void assertIsGoingToForkAll(IAction action) {
-		assertIsGoingToFork(action, getAllComps());
+	protected void assertActionDoesForkAll(IAction action) {
+		assertActionDoesFork(action, getAllComps());
 	}
 
-	protected void assertIsGoingToForkAndBuildAll(IAction action) {
-		assertIsGoingToForkAndBuild(action, getAllComps());
+	protected void assertActionDoesForkAndBuildAll(IAction action) {
+		assertActionDoesForkAndBuild(action, getAllComps());
 	}
 
-	protected void assertIsGoingToFork(IAction action, Component... comps) {
+	protected void assertActionDoesFork(IAction action, Component... comps) {
 		assertThatAction(action, allOf(
 				instanceOf(SCMActionRelease.class),
 				hasProperty("bsFrom", equalTo(BuildStatus.FORK)), 
 				hasProperty("bsTo", equalTo(BuildStatus.LOCK))), comps);
 	}
 
-	protected void assertIsGoingToForkAndBuild(IAction action, Component... comps) {
+	protected void assertActionDoesForkAndBuild(IAction action, Component... comps) {
 		assertTrue(comps.length > 0);
 		assertThatAction(action, allOf(
 				instanceOf(SCMActionRelease.class),
@@ -352,21 +344,21 @@ public class WorkflowTestBase {
 				hasProperty("bsTo", equalTo(BuildStatus.BUILD))), comps);
 	}
 
-	protected void assertIsGoingToBuild(IAction action, Component comp, BuildStatus mbs) {
+	protected void assertActionDoesBuildBuild(IAction action, Component comp, BuildStatus mbs) {
 		assertThatAction(action, allOf(
 				instanceOf(SCMActionRelease.class),
 				hasProperty("bsFrom", equalTo(mbs)),
 				hasProperty("bsTo", equalTo(BuildStatus.BUILD))), comp);
 	}
 	
-	protected void assertIsGoingToBuild(IAction action, Component... comps) {
+	protected void assertActionDoesBuildBuild(IAction action, Component... comps) {
 		assertThatAction(action, allOf(
 				instanceOf(SCMActionRelease.class),
 				hasProperty("bsFrom", equalTo(BuildStatus.BUILD)), 
 				hasProperty("bsTo", equalTo(BuildStatus.BUILD))), comps);
 	}
 
-	protected void assertIsGoingToDoNothing(IAction action, BuildStatus bsFrom, BuildStatus bsTo, Component... comps) {
+	protected void assertActionDoesNothing(IAction action, BuildStatus bsFrom, BuildStatus bsTo, Component... comps) {
 		assertThatAction(action, allOf(
 				instanceOf(SCMActionRelease.class),
 				hasProperty("bsFrom", equalTo(bsFrom)),
@@ -384,52 +376,51 @@ public class WorkflowTestBase {
 		return new Component[] {compUBL, compUnTillDb, compUnTill};
 	}
 
-	protected void assertIsGoingToDoNothing(IAction action, Component... comps) {
-		assertIsGoingToDoNothing(action, BuildStatus.DONE, null, comps);
+	protected void assertActionDoesNothing(IAction action, Component... comps) {
+		assertActionDoesNothing(action, BuildStatus.DONE, null, comps);
 	}
 
-	protected void assertIsGoingToTag(IAction action, Component comp) {
+	protected void assertActionDoesTag(IAction action, Component comp) {
 		assertThatAction(action, allOf(
 				instanceOf(SCMActionTag.class), 
 				hasProperty("childActions", empty())), comp);
 	}
 
-	protected void assertIsGoingToBuildAll(IAction action) {
-		assertIsGoingToBuild(action, compUnTillDb, BuildStatus.BUILD);
-		assertIsGoingToBuild(action, compUnTill, BuildStatus.BUILD_MDEPS);
-		assertIsGoingToBuild(action, compUBL, BuildStatus.BUILD_MDEPS);
+	protected void assertActionDoesBuildAll(IAction action) {
+		assertActionDoesBuildBuild(action, compUnTillDb, BuildStatus.BUILD);
+		assertActionDoesBuildBuild(action, compUnTill, BuildStatus.BUILD_MDEPS);
+		assertActionDoesBuildBuild(action, compUBL, BuildStatus.BUILD_MDEPS);
 	}
 
 	protected void assertIsGoingToTagAll(IAction action) {
 		assertThatAction(action, instanceOf(SCMActionTag.class), getAllComps());
 	}
 	
-	protected IAction getActionTreeFork(Component comp) {
-		return new CLI().getActionTree(new CommandLine(new String[] {CLICommand.FORK.getCmdLineStr(), comp.getCoords().toString()}));
+	protected IAction getAndExecActionTreeFork(Component comp) {
+		return getAndExecAction(CLICommand.FORK.getCmdLineStr(), comp.getCoords().toString());
 	}
 	
-	protected void execAction(IAction action) {
-		try {
-			new CLI().execActionTree(action);
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
+	protected IAction getAndExecActionTreeBuild(Component comp) {
+		return getAndExecAction(CLICommand.BUILD.getCmdLineStr(), comp.getCoords().toString());
 	}
-	
-	protected IAction getActionTreeBuild(Component comp) {
+
+	private IAction getAndExecAction(Runnable preExec, String... args) {
 		CLI cli = new CLI();
-		CommandLine cmd = new CommandLine(new String[] {CLICommand.BUILD.getCmdLineStr(), comp.getCoords().toString()});
-		CachedStatuses cache = new CachedStatuses();
-		ExtendedStatus node = cli.getStatusTree(cmd, cache);
-		return cli.getActionTree(node, cache, cmd);
+		cli.setPreExec(preExec);
+		cli.exec(args);
+		return cli.getAction();
+	}
+
+	private IAction getAndExecAction(String... args) {
+		return getAndExecAction(null, args);
 	}
 	
-	protected IAction getActionTreeTag(Component comp) {
-		return new CLI().getActionTree(new CommandLine(new String[] {CLICommand.TAG.getCmdLineStr(), comp.getCoords().toString()}));
+	protected IAction getAndExecActionTreeTag(Component comp, Runnable preExec) {
+		return getAndExecAction(CLICommand.TAG.getCmdLineStr(), comp.getCoords().toString());
 	}
 	
-	protected IAction getActionDelayedTag(Component comp) {
-		return new CLI().getActionTree(new CommandLine(new String[] {CLICommand.BUILD.getCmdLineStr(), comp.getCoords().toString(), Option.DELAYED_TAG.getCmdLineStr()}));
+	protected IAction getAndExecActionDelayedTag(Component comp) {
+		return getAndExecAction(CLICommand.BUILD.getCmdLineStr(), comp.getCoords().toString(), Option.DELAYED_TAG.getCmdLineStr());
 	}
 	
 	protected void forkAndBuild(Component comp) {
@@ -437,17 +428,16 @@ public class WorkflowTestBase {
 	}
 	
 	protected void forkAndBuild(Component comp, int times) {
-		IAction action = getActionTreeFork(comp);
+		IAction action = getAndExecActionTreeFork(comp);
 		if (TestEnvironment.PRODUCT_UNTILL.contains(comp.getCoords().toString())) {
-			assertIsGoingToForkAll(action);
+			assertActionDoesForkAll(action);
 		} else if (TestEnvironment.PRODUCT_UBL.contains(comp.getCoords().toString())) {
-			assertIsGoingToFork(action, compUBL, compUnTillDb);
+			assertActionDoesFork(action, compUBL, compUnTillDb);
 		} else if (TestEnvironment.PRODUCT_UNTILLDB.contains(comp.getCoords().toString())) {
-			assertIsGoingToFork(action, compUnTillDb);
+			assertActionDoesFork(action, compUnTillDb);
 		} else {
 			fail("unexpected coords: " + comp.getCoords());
 		}
-		execAction(action);
 		if (TestEnvironment.PRODUCT_UNTILL.contains(comp.getCoords().toString())) {
 			if (times > 1) {
 				fail("unsupported check unTill builds amount: " + times);
@@ -461,18 +451,17 @@ public class WorkflowTestBase {
 			fail("unexpected coords: " + comp.getCoords());
 		}
 		
-		action = getActionTreeBuild(comp);
+		action = getAndExecActionTreeBuild(comp);
 		if (TestEnvironment.PRODUCT_UNTILL.contains(comp.getCoords().toString())) {
-			assertIsGoingToBuildAll(action);
+			assertActionDoesBuildAll(action);
 		} else if (TestEnvironment.PRODUCT_UBL.contains(comp.getCoords().toString())) {
-			assertIsGoingToBuild(action, compUBL, BuildStatus.BUILD_MDEPS);
-			assertIsGoingToBuild(action, compUnTillDb);
+			assertActionDoesBuildBuild(action, compUBL, BuildStatus.BUILD_MDEPS);
+			assertActionDoesBuildBuild(action, compUnTillDb);
 		} else if (TestEnvironment.PRODUCT_UNTILLDB.contains(comp.getCoords().toString())) {
-			assertIsGoingToBuild(action, compUnTillDb);
+			assertActionDoesBuildBuild(action, compUnTillDb);
 		} else {
 			fail("unexpected coords: " + comp.getCoords());
 		}
-		execAction(action);
 		if (TestEnvironment.PRODUCT_UNTILL.contains(comp.getCoords().toString())) {
 			if (times > 1) {
 				fail("unsupported check unTill builds amount: " + times);
