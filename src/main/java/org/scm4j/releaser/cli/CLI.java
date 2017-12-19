@@ -147,7 +147,7 @@ public class CLI {
 			e.printStackTrace(ps);
 		} else {
 			if (e instanceof EReleaserException) {
-				ps.println(e.getMessage() + (e.getCause() != null ? ": " + e.getCause().toString() : ""));
+				ps.println((e.getMessage() == null || e.getMessage().isEmpty()) ? (e.getCause() != null ? e.getCause().toString() : "") : e.getMessage());
 			} else {
 				ps.println(e.toString());
 			}
