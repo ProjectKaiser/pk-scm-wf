@@ -25,6 +25,7 @@ import org.scm4j.vcs.api.WalkDirection;
 
 public class ExtendedStatusBuilder {
 
+	private static final int PARALLEL_CALCULATION_AWAIT_TIME = 500;
 	private static final int COMMITS_RANGE_LIMIT = 10;
 	
 	public ExtendedStatus getAndCacheMinorStatus(Component comp) {
@@ -42,6 +43,15 @@ public class ExtendedStatusBuilder {
 
 	public ExtendedStatus getAndCacheStatus(Component comp, CachedStatuses cache, IProgress progress, boolean patch) {
 		ExtendedStatus existing = cache.putIfAbsent(comp.getUrl(), ExtendedStatus.DUMMY);
+		
+		while (ExtendedStatus.DUMMY == existing) {
+			try {
+				Thread.sleep(PARALLEL_CALCULATION_AWAIT_TIME);
+				existing = cache.get(comp.getUrl());
+			} catch (InterruptedException e) {
+				throw new RuntimeException(e);
+			}
+		}
 		
 		if (null != existing) {
 			return new ExtendedStatus(existing.getNextVersion(), existing.getStatus(), existing.getSubComponents(), comp);
