@@ -89,6 +89,7 @@ public class CLI {
 
 	public int exec(String[] args) {
 		try {
+			out.println("scm4j-releaser " + CLI.class.getPackage().getSpecificationVersion());
 			long startMS = System.currentTimeMillis();
 			CommandLine cmd = new CommandLine(args);
 			validateCommandLine(cmd);
