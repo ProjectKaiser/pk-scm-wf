@@ -23,9 +23,7 @@ public class WorkflowPatchesTest extends WorkflowTestBase {
 
 	@Test
 	public void testPatches() throws Exception {
-		IAction action = getAndExecActionTreeBuild(compUnTill);
-		assertActionDoesForkAndBuildAll(action);
-		checkUnTillBuilt();
+		forkAndBuild(compUnTill);
 
 		// add feature to existing unTillDb release
 		ReleaseBranchCurrent crb = ReleaseBranchFactory.getCRB(compUnTillDb);
@@ -33,8 +31,8 @@ public class WorkflowPatchesTest extends WorkflowTestBase {
 
 		// build unTillDb patch
 		Component compUnTillDbPatch = new Component(UNTILLDB + ":" + env.getUnTillDbVer().toRelease());
-		action = getAndExecActionTreeBuild(compUnTillDbPatch);
-		assertActionDoesBuildBuild(action, compUnTillDb);
+		IAction action = execAndGetActionBuild(compUnTillDbPatch);
+		assertActionDoesBuild(action, compUnTillDb);
 
 		ReleaseBranchPatch rb = ReleaseBranchFactory.getReleaseBranchPatch(compUnTillDbPatch);
 		assertEquals(env.getUnTillDbVer().toReleaseZeroPatch().toNextPatch().toNextPatch(),
@@ -43,7 +41,7 @@ public class WorkflowPatchesTest extends WorkflowTestBase {
 		assertEquals(BuildStatus.DONE, builder.getAndCacheMinorStatus(compUnTillDbPatch).getStatus());
 
 		// Existing unTill and UBL release branches should actualize its mdeps
-		action = getAndExecActionTreeBuild(compUnTill.clone(env.getUnTillVer().toRelease()));
+		action = execAndGetActionBuild(compUnTill.clone(env.getUnTillVer().toRelease()));
 		assertActionDoesBuildBuild(action, compUBL, BuildStatus.ACTUALIZE_PATCHES);
 		assertActionDoesBuildBuild(action, compUnTill, BuildStatus.BUILD_MDEPS);
 		assertActionDoesNothing(action, compUnTillDb);
@@ -65,16 +63,12 @@ public class WorkflowPatchesTest extends WorkflowTestBase {
 
 	@Test
 	public void testBuildPatchOnExistingRelease() throws Exception {
-		// fork unTillDb 2.59
-		IAction action = getAndExecActionTreeBuild(compUnTillDb);
-		assertActionDoesForkAndBuild(action, compUnTillDb);
-		checkUnTillDbBuilt();
+		// 2.59
+		forkAndBuild(compUnTillDb);
 
-		// fork new unTillDb Release 2.60
+		// 2.60
 		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevelopBranch(), "feature added");
-		action = getAndExecActionTreeBuild(compUnTillDb);
-		assertActionDoesForkAndBuild(action, compUnTillDb);
-		checkUnTillDbBuilt(2);
+		forkAndBuild(compUnTillDb, 2);
 
 		ReleaseBranchCurrent crb = ReleaseBranchFactory.getCRB(compUnTillDb);
 		assertEquals(env.getUnTillDbVer().toNextMinor().toRelease(), crb.getVersion());
@@ -85,8 +79,8 @@ public class WorkflowPatchesTest extends WorkflowTestBase {
 		env.generateFeatureCommit(env.getUnTillDbVCS(), rb.getName(), "2.59.1 feature merged");
 
 		// build new unTillDb patch 2.59.1
-		action = getAndExecActionTreeBuild(compToPatch);
-		assertActionDoesBuildBuild(action, compUnTillDb);
+		IAction action = execAndGetActionBuild(compToPatch);
+		assertActionDoesBuild(action, compUnTillDb);
 		rb = ReleaseBranchFactory.getReleaseBranchPatch(compToPatch);
 		assertEquals(dbUnTillDb.getVersion().toPreviousMinor().toPreviousMinor().toNextPatch().toRelease(), rb.getVersion());
 	}
@@ -96,7 +90,7 @@ public class WorkflowPatchesTest extends WorkflowTestBase {
 		// try do build a patch for unreleased version
 		Component compWithUnexistingVersion = new Component(UNTILLDB + ":2.70.0");
 		try {
-			getAndExecActionTreeBuild(compWithUnexistingVersion);
+			execAndGetActionBuild(compWithUnexistingVersion);
 			fail();
 		} catch (ENoReleaseBranchForPatch e) {
 		}
@@ -104,15 +98,12 @@ public class WorkflowPatchesTest extends WorkflowTestBase {
 
 	@Test
 	public void testExceptionOnPatchOnUnreleasedComponent() {
-		// fork unTillDb
-		IAction action = getAndExecActionTreeFork(compUnTillDb);
-		assertActionDoesFork(action, compUnTillDb);
-		checkUnTillDbForked();
+		fork(compUnTillDb);
 
 		// try to build a patch on existing branch with no releases
 		Component compUnTillDbVersioned = compUnTillDb.clone(env.getUnTillDbVer().toReleaseZeroPatch());
 		try {
-			getAndExecActionTreeBuild(compUnTillDbVersioned);
+			execAndGetActionBuild(compUnTillDbVersioned);
 			fail();
 		} catch(ENoReleases e) {
 		}
@@ -120,10 +111,7 @@ public class WorkflowPatchesTest extends WorkflowTestBase {
 
 	@Test
 	public void testExceptionMDepsNotLockedOnPatch() {
-		// build unTillDb
-		IAction action = getAndExecActionTreeBuild(compUnTillDb);
-		assertActionDoesForkAndBuild(action, compUnTillDb);
-		checkUnTillDbBuilt();
+		forkAndBuild(compUnTillDb);
 
 		// simulate not locked mdep
 		Component nonLockedMDep = new Component("unexisting.com:unexisting");
@@ -134,7 +122,7 @@ public class WorkflowPatchesTest extends WorkflowTestBase {
 
 		// try to build patch
 		try {
-			getAndExecActionTreeBuild(compUnTillDb.clone(rb.getVersion()));
+			execAndGetActionBuild(compUnTillDb.clone(rb.getVersion()));
 			fail();
 		} catch (EReleaseMDepsNotLocked e) {
 			assertThat(e.getNonLockedMDeps(), Matchers.<Collection<Component>>allOf(

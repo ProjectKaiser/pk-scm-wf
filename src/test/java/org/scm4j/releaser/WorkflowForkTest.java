@@ -1,7 +1,6 @@
 package org.scm4j.releaser;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 
 import org.junit.Test;
 import org.scm4j.commons.Version;
@@ -11,16 +10,13 @@ public class WorkflowForkTest extends WorkflowTestBase {
 	
 	@Test
 	public void testForkAll() throws Exception {
-		IAction action = getAndExecActionTreeFork(compUnTill);
+		IAction action = execAndGetActionTreeFork(compUnTill);
 		assertActionDoesForkAll(action);
-		execAction(action);
 		checkUnTillForked();
-		assertFalse(action.getClass().getMethod("toString").getDeclaringClass().equals(Object.class));
 		
 		// check nothing happens on next fork
-		action = getAndExecActionTreeFork(compUnTill);
+		action = execAndGetActionTreeFork(compUnTill);
 		assertIsGoingToSkipAll(action);
-		execAction(action);
 		checkUnTillForked();
 	}
 	
@@ -30,10 +26,9 @@ public class WorkflowForkTest extends WorkflowTestBase {
 
 		env.generateFeatureCommit(env.getUnTillVCS(), compUnTill.getVcsRepository().getDevelopBranch(), "feature added");
 		// fork untill only
-		IAction action = getAndExecActionTreeFork(compUnTill);
+		IAction action = execAndGetActionTreeFork(compUnTill);
 		assertActionDoesFork(action, compUnTill);
 		assertActionDoesNothing(action, compUnTillDb, compUBL);
-		execAction(action);
 		checkUnTillOnlyForked(2);
 
 		Version latestVersionUBL = getCrbNextVersion(compUBL);
@@ -45,10 +40,9 @@ public class WorkflowForkTest extends WorkflowTestBase {
 		assertEquals(env.getUnTillDbVer().toReleaseZeroPatch().toNextPatch(), latestVersionUnTillDb);
 
 		// build untill only
-		action = getAndExecActionTreeBuild(compUnTill);
-		assertActionDoesBuildBuild(action, compUnTill);
+		action = execAndGetActionBuild(compUnTill);
+		assertActionDoesBuild(action, compUnTill);
 		assertActionDoesNothing(action, compUnTillDb, compUBL);
-		execAction(action);
 
 		latestVersionUBL = getCrbNextVersion(compUBL);
 		latestVersionUnTill = getCrbNextVersion(compUnTill);
@@ -63,7 +57,6 @@ public class WorkflowForkTest extends WorkflowTestBase {
 
 	@Test
 	public void testForkRootIfNestedIsForkedAlready() throws Exception {
-		// build UBL + unTillDb
 		forkAndBuild(compUBL);
 
 		// next fork unTillDb
@@ -71,16 +64,14 @@ public class WorkflowForkTest extends WorkflowTestBase {
 		forkAndBuild(compUnTillDb, 2);
 
 		// UBL should be forked and built then
-		IAction action  = getAndExecActionTreeFork(compUBL);
+		IAction action  = execAndGetActionTreeFork(compUBL);
 		assertActionDoesFork(action, compUBL);
 		assertActionDoesNothing(action, compUnTillDb);
-		execAction(action);
 		checkUBLForked(2);
 		
-		action = getAndExecActionTreeBuild(compUBL);
-		assertActionDoesBuildBuild(action, compUBL);
+		action = execAndGetActionBuild(compUBL);
+		assertActionDoesBuild(action, compUBL);
 		assertActionDoesNothing(action, compUnTillDb);
-		execAction(action);
 		checkUBLBuilt(2);
 	}
 }

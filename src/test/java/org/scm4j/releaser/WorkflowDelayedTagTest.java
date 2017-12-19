@@ -31,9 +31,7 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 
 	@Test
 	public void testDelayedTagOnPatch() throws Exception {
-		// build all
-		IAction action = getAndExecActionTreeBuild(compUnTill);
-		assertActionDoesForkAndBuildAll(action);
+		forkAndBuild(compUnTill);
 
 		// add feature to unTillDb release/2.59
 		Component compUnTillDbVersioned = compUnTillDb.clone(env.getUnTillDbVer());
@@ -42,7 +40,7 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 		
 		// build all patches, delayed tag
 		Component compUnTillVersioned = compUnTill.clone(env.getUnTillVer().toReleaseZeroPatch());
-		action = getAndExecActionDelayedTag(compUnTillVersioned); //actionBuilder.getActionTreeDelayedTag(compUnTillVersioned);
+		IAction action = execAndGetActionBuildDelayedTag(compUnTillVersioned);
 		assertActionDoesBuildAll(action);
 		
 		// check no new tags
@@ -56,13 +54,14 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 		assertNull(dtf.getRevisitonByUrl(compUBL.getVcsRepository().getUrl()));
 
 		// check Delayed Tags are used
-		action = getAndExecActionTreeBuild(compUnTillVersioned);
+		action = execAndGetActionBuild(compUnTillVersioned);
 		assertActionDoesNothing(action);
 	}
 	
 	@Test
 	public void testDelayedTag() throws Exception {
-		getAndExecActionDelayedTag(compUnTill);
+		fork(compUnTill);
+		execAndGetActionBuildDelayedTag(compUnTill);
 
 		// check root component tag is delayed
 		assertTrue(env.getUnTillVCS().getTags().isEmpty());
@@ -70,7 +69,7 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 		assertTrue(env.getUblVCS().getTags().size() == 1);
 		
 		// check component with delayed tag is considered as tagged (DONE) on build
-		IAction action = getAndExecActionTreeBuild(compUnTill);
+		IAction action = execAndGetActionBuild(compUnTill);
 		assertActionDoesNothing(action);
 
 		// check Delayed Tags file
@@ -79,9 +78,8 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 		assertNull(dtf.getRevisitonByUrl(compUBL.getVcsRepository().getUrl()));
 
 		// create tag which was delayed
-		action = getAndExecActionTreeTag(compUnTill, null);
+		action = execAndGetActionTag(compUnTill, null);
 		assertActionDoesTag(action, compUnTill);
-		
 
 		// check tags
 		assertTrue(isPreHeadCommitTaggedWithVersion(compUBL));
@@ -95,10 +93,11 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 	@Test
 	public void testTagFileDeleted() throws Exception {
 		// build all, root tag delayed
-		getAndExecActionDelayedTag(compUnTill);
+		fork(compUnTill);
+		execAndGetActionBuildDelayedTag(compUnTill);
 
-		// simulate delayed tags file is deleted right after action create
-		IAction action = getAndExecActionTreeTag(compUnTill, () -> dtf.delete());
+		// simulate delayed tags file is deleted right before action execution
+		IAction action = execAndGetActionTag(compUnTill, () -> dtf.delete());
 		assertActionDoesTag(action, compUnTill);
 
 		// check no tags
@@ -110,10 +109,11 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 	@Test
 	public void testTagExistsOnExecute() {
 		// build all
-		getAndExecActionDelayedTag(compUnTill);
+		fork(compUnTill);
+		execAndGetActionBuildDelayedTag(compUnTill);
 
 		// all is going to tag
-		IAction action = getAndExecActionTreeTag(compUnTill, () -> {
+		IAction action = execAndGetActionTag(compUnTill, () -> {
 			// simulate tag exists already
 			// tagging should be skipped with no exceptions
 			ReleaseBranchCurrent rb = ReleaseBranchFactory.getCRB(compUnTill);
@@ -145,7 +145,7 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 	
 	@Test
 	public void testDoNothingIfNoDelayedTags() {
-		IAction action = getAndExecActionTreeTag(compUnTillDb, null);
+		IAction action = execAndGetActionTag(compUnTillDb, null);
 		assertActionDoesTag(action, compUnTillDb);
 
 		// check no tags
@@ -156,9 +156,9 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 	
 	@Test
 	public void testTagExistsOnGetActionTree() throws Exception {
-		// build all
-		IAction action = getAndExecActionDelayedTag(compUnTillDb);
-		assertActionDoesForkAndBuild(action, compUnTillDb);
+		fork(compUnTillDb);
+		IAction action = execAndGetActionBuildDelayedTag(compUnTillDb);
+		assertActionDoesBuild(action, compUnTillDb);
 
 		String revisionToTag = dtf.getRevisitonByUrl(compUnTillDb.getVcsRepository().getUrl());
 		ReleaseBranchCurrent rb = ReleaseBranchFactory.getCRB(compUnTillDb);
@@ -173,7 +173,7 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 		Thread.sleep(1000); // FIXME: test fails without sleep
 
 		// check version tag is detected -> tagging skipped
-		action = getAndExecActionTreeTag(compUnTillDb, null);
+		action = execAndGetActionTag(compUnTillDb, null);
 		assertActionDoesTag(action, compUnTillDb);
 
 		// check no new tags

@@ -3,8 +3,16 @@ package org.scm4j.releaser;
 import org.junit.Test;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.exceptions.EBuildOnNotForkedRelease;
+import org.scm4j.releaser.exceptions.ENoBuilder;
+import org.yaml.snakeyaml.Yaml;
 
 import static org.junit.Assert.*;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.Map;
+
+import org.apache.commons.io.FileUtils;
 public class WorkflowBuildTest extends WorkflowTestBase {
 	
 	@Test
@@ -12,31 +20,30 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		forkAndBuild(compUnTill);
 		
 		// check nothing happens next time
-		IAction action = getAndExecActionTreeBuild(compUnTill);
+		IAction action = execAndGetActionBuild(compUnTill);
 		assertActionDoesNothing(action, compUnTill);
 		checkUnTillBuilt();
 
 		// test IGNORED dev branch state
 		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevelopBranch(),
 				LogTag.SCM_IGNORE + " ignored feature commit added");
-		action = getAndExecActionTreeBuild(compUnTill);
+		action = execAndGetActionBuild(compUnTill);
 		assertActionDoesNothing(action);
 	}
 
 	@Test
 	public void testBuildRootIfNestedIsBuiltAlready() throws Exception {
-		// build unTillDb
 		forkAndBuild(compUnTillDb);
 		
 		// fork UBL
-		IAction action = getAndExecActionTreeFork(compUBL);
+		IAction action = execAndGetActionTreeFork(compUBL);
 		assertActionDoesFork(action, compUBL);
 		assertActionDoesNothing(action, compUnTillDb);
 		checkUBLForked();
 		
 		// build UBL
-		action = getAndExecActionTreeBuild(compUBL);
-		assertActionDoesBuildBuild(action, compUBL);
+		action = execAndGetActionBuild(compUBL);
+		assertActionDoesBuild(action, compUBL);
 		assertActionDoesNothing(action, compUnTillDb);
 		checkUBLBuilt();
 	}
@@ -44,12 +51,12 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 	@Test
 	public void testBuildRootAndChildIfAllForkedAlready() throws Exception {
 		// fork unTillDb
-		IAction action = getAndExecActionTreeFork(compUnTillDb);
+		IAction action = execAndGetActionTreeFork(compUnTillDb);
 		assertActionDoesFork(action, compUnTillDb);
 		checkUnTillDbForked();
 		
 		// fork UBL
-		action = getAndExecActionTreeFork(compUBL);
+		action = execAndGetActionTreeFork(compUBL);
 		assertActionDoesFork(action, compUBL);
 		assertActionDoesNothing(action, BuildStatus.BUILD, null, compUnTillDb);
 		checkUBLForked();
@@ -57,8 +64,8 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		assertTrue(TestBuilder.getBuilders().isEmpty());
 		
 		// build UBL and unTillDb
-		action = getAndExecActionTreeBuild(compUBL);
-		assertActionDoesBuildBuild(action, compUnTillDb);
+		action = execAndGetActionBuild(compUBL);
+		assertActionDoesBuild(action, compUnTillDb);
 		assertActionDoesBuildBuild(action, compUBL, BuildStatus.BUILD_MDEPS);
 		checkUBLBuilt();
 	}
@@ -74,24 +81,37 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 	
 	@Test
 	public void testSkipBuildsOnFORKActionKind() throws Exception {
-		// fork all
-		IAction action = getAndExecActionTreeFork(compUnTill);
-		assertActionDoesForkAll(action);
-		checkUnTillForked();
+		fork(compUnTill);
 
 		// try to build with FORK target action kind. All builds should be skipped
-		action = getAndExecActionTreeFork(compUnTill);
+		IAction action = execAndGetActionTreeFork(compUnTill);
 		assertActionDoesNothing(action, BuildStatus.BUILD_MDEPS, null, compUnTill, compUBL);
 		assertActionDoesNothing(action, BuildStatus.BUILD, null, compUnTillDb);
 	}
 	
 	@Test
-	public void testBuildOnNotForkedComponent() {
+	public void testBuildOnNotForkedReleaseException() {
 		try {
-			getAndExecActionTreeBuild(compUnTill);
+			execAndGetActionBuild(compUnTill);
 			fail();
 		} catch (EBuildOnNotForkedRelease e) {
 			assertEquals(compUnTillDb, e.getComp());
+		}
+	}
+	
+	@SuppressWarnings("unchecked")
+	@Test
+	public void testNoBuilderException() throws Exception {
+		// simulate no builder
+		Yaml yaml = new Yaml();
+		Map<String, ?> content = (Map<String, String>) yaml.load(FileUtils.readFileToString(env.getReposFile(), StandardCharsets.UTF_8));
+		((Map<String, ?>) content.get("eu.untill:(.*)")).remove("releaseCommand");
+		FileUtils.writeStringToFile(env.getReposFile(), yaml.dumpAsMap(content), StandardCharsets.UTF_8);
+		
+		try {
+			forkAndBuild(compUnTillDb);
+			fail();
+		} catch (ENoBuilder e) {
 		}
 	}
 }

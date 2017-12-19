@@ -351,7 +351,7 @@ public class WorkflowTestBase {
 				hasProperty("bsTo", equalTo(BuildStatus.BUILD))), comp);
 	}
 	
-	protected void assertActionDoesBuildBuild(IAction action, Component... comps) {
+	protected void assertActionDoesBuild(IAction action, Component... comps) {
 		assertThatAction(action, allOf(
 				instanceOf(SCMActionRelease.class),
 				hasProperty("bsFrom", equalTo(BuildStatus.BUILD)), 
@@ -396,18 +396,20 @@ public class WorkflowTestBase {
 		assertThatAction(action, instanceOf(SCMActionTag.class), getAllComps());
 	}
 	
-	protected IAction getAndExecActionTreeFork(Component comp) {
+	protected IAction execAndGetActionTreeFork(Component comp) {
 		return getAndExecAction(CLICommand.FORK.getCmdLineStr(), comp.getCoords().toString());
 	}
 	
-	protected IAction getAndExecActionTreeBuild(Component comp) {
+	protected IAction execAndGetActionBuild(Component comp) {
 		return getAndExecAction(CLICommand.BUILD.getCmdLineStr(), comp.getCoords().toString());
 	}
-
-	private IAction getAndExecAction(Runnable preExec, String... args) {
+	
+	private IAction getAndExecAction(Runnable preExec, String... args)  {
 		CLI cli = new CLI();
 		cli.setPreExec(preExec);
-		cli.exec(args);
+		if (cli.exec(args) != CLI.EXIT_CODE_OK) {
+			throw cli.getLastException();
+		};
 		return cli.getAction();
 	}
 
@@ -415,11 +417,11 @@ public class WorkflowTestBase {
 		return getAndExecAction(null, args);
 	}
 	
-	protected IAction getAndExecActionTreeTag(Component comp, Runnable preExec) {
-		return getAndExecAction(CLICommand.TAG.getCmdLineStr(), comp.getCoords().toString());
+	protected IAction execAndGetActionTag(Component comp, Runnable preExec) {
+		return getAndExecAction(preExec, CLICommand.TAG.getCmdLineStr(), comp.getCoords().toString());
 	}
 	
-	protected IAction getAndExecActionDelayedTag(Component comp) {
+	protected IAction execAndGetActionBuildDelayedTag(Component comp) {
 		return getAndExecAction(CLICommand.BUILD.getCmdLineStr(), comp.getCoords().toString(), Option.DELAYED_TAG.getCmdLineStr());
 	}
 	
@@ -427,8 +429,16 @@ public class WorkflowTestBase {
 		forkAndBuild(comp, 1);
 	}
 	
-	protected void forkAndBuild(Component comp, int times) {
-		IAction action = getAndExecActionTreeFork(comp);
+	protected void fork(Component comp) {
+		fork(comp, 1);
+	}
+	
+	protected void build(Component comp) {
+		build(comp, 1);
+	}
+	
+	protected void fork(Component comp, int times) {
+		IAction action = execAndGetActionTreeFork(comp);
 		if (TestEnvironment.PRODUCT_UNTILL.contains(comp.getCoords().toString())) {
 			assertActionDoesForkAll(action);
 		} else if (TestEnvironment.PRODUCT_UBL.contains(comp.getCoords().toString())) {
@@ -450,15 +460,17 @@ public class WorkflowTestBase {
 		} else {
 			fail("unexpected coords: " + comp.getCoords());
 		}
-		
-		action = getAndExecActionTreeBuild(comp);
+	}
+	
+	protected void build(Component comp, int times) {
+		IAction action = execAndGetActionBuild(comp);
 		if (TestEnvironment.PRODUCT_UNTILL.contains(comp.getCoords().toString())) {
 			assertActionDoesBuildAll(action);
 		} else if (TestEnvironment.PRODUCT_UBL.contains(comp.getCoords().toString())) {
 			assertActionDoesBuildBuild(action, compUBL, BuildStatus.BUILD_MDEPS);
-			assertActionDoesBuildBuild(action, compUnTillDb);
+			assertActionDoesBuild(action, compUnTillDb);
 		} else if (TestEnvironment.PRODUCT_UNTILLDB.contains(comp.getCoords().toString())) {
-			assertActionDoesBuildBuild(action, compUnTillDb);
+			assertActionDoesBuild(action, compUnTillDb);
 		} else {
 			fail("unexpected coords: " + comp.getCoords());
 		}
@@ -474,5 +486,10 @@ public class WorkflowTestBase {
 		} else {
 			fail("unexpected coords: " + comp.getCoords());
 		}
+	}
+	
+	protected void forkAndBuild(Component comp, int times) {
+		fork(comp, times);
+		build(comp, times);
 	}
 }

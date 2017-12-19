@@ -19,18 +19,24 @@ public class CLI {
 	public static final int EXIT_CODE_OK = 0;
 	public static final int EXIT_CODE_ERROR = 1;
 
-	private PrintStream out = System.out;
-	private ActionTreeBuilder actionBuilder = new ActionTreeBuilder();
+	private static PrintStream out = System.out;
+	private static ActionTreeBuilder actionBuilder = new ActionTreeBuilder();
+	private static ExtendedStatusBuilder statusBuilder = new ExtendedStatusBuilder();
 	private IAction action;
+	private RuntimeException lastException;
 
 	private Runnable preExec = null;
 
-	void setOut(PrintStream out) {
-		this.out = out;
+	static void setOut(PrintStream out) {
+		CLI.out = out;
+	}
+	
+	static void setStatusTreeBuilder(ExtendedStatusBuilder statusBuilder) {
+		CLI.statusBuilder = statusBuilder;
 	}
 
-	public void setActionBuilder(ActionTreeBuilder actionBuilder) {
-		this.actionBuilder = actionBuilder;
+	static void setActionBuilder(ActionTreeBuilder actionBuilder) {
+		CLI.actionBuilder = actionBuilder;
 	}
 
 	public IAction getAction() {
@@ -55,12 +61,11 @@ public class CLI {
 		}
 	}
 
-	private ExtendedStatus getStatusTree(CommandLine cmd, CachedStatuses cache) {
-		ExtendedStatusBuilder statusBuilder = new ExtendedStatusBuilder();
+	public ExtendedStatus getStatusTree(CommandLine cmd, CachedStatuses cache) {
 		Component comp = new Component(cmd.getProductCoords());
-		return !comp.getVersion().isLocked() && cmd.getCommand() == CLICommand.BUILD ?
-				statusBuilder.getAndCacheMinorStatus(comp, cache) :
-				statusBuilder.getAndCachePatchStatus(comp, cache);
+		return comp.getVersion().isLocked() ?
+				statusBuilder.getAndCachePatchStatus(comp, cache) :
+				statusBuilder.getAndCacheMinorStatus(comp, cache);
 	}
 	
 	private IAction getActionTree(ExtendedStatus node, CachedStatuses cache, CommandLine cmd) {
@@ -87,12 +92,14 @@ public class CLI {
 			long startMS = System.currentTimeMillis();
 			CommandLine cmd = new CommandLine(args);
 			validateCommandLine(cmd);
+			
 			if (cmd.getCommand() == CLICommand.TAG) {
 				action = getTagAction(cmd);
+				execActionTree(action);
 			} else {
-				CachedStatuses cache = new CachedStatuses();
-				ExtendedStatus node = getStatusTree(cmd, cache);
 				if (cmd.getCommand() == CLICommand.STATUS) {
+					CachedStatuses cache = new CachedStatuses();
+					ExtendedStatus node = getStatusTree(cmd, cache);
 					printStatusTree(node);
 				} else {
 					action = getActionTree(cmd);
@@ -132,6 +139,9 @@ public class CLI {
 	}
 	
 	private void printException(String[] args, Exception e, PrintStream ps) {
+		if (e instanceof RuntimeException) {
+			lastException = (RuntimeException) e;
+		}
 		if (ArrayUtils.contains(args, Option.STACK_TRACE.getCmdLineStr())) {
 			e.printStackTrace(ps);
 		} else {
@@ -145,5 +155,9 @@ public class CLI {
 
 	public static void main(String[] args) throws Exception {
 		System.exit(new CLI().exec(args));
+	}
+
+	public RuntimeException getLastException() {
+		return lastException;
 	}
 }
