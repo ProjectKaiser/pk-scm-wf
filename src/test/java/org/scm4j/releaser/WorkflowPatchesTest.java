@@ -11,13 +11,19 @@ import org.scm4j.releaser.conf.MDepsFile;
 import org.scm4j.releaser.exceptions.ENoReleaseBranchForPatch;
 import org.scm4j.releaser.exceptions.ENoReleases;
 import org.scm4j.releaser.exceptions.EReleaseMDepsNotLocked;
+import org.scm4j.vcs.api.IVCS;
+import org.scm4j.vcs.api.VCSCommit;
+import org.scm4j.vcs.api.WalkDirection;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.spy;
 
 public class WorkflowPatchesTest extends WorkflowTestBase {
 
@@ -126,8 +132,42 @@ public class WorkflowPatchesTest extends WorkflowTestBase {
 			fail();
 		} catch (EReleaseMDepsNotLocked e) {
 			assertThat(e.getNonLockedMDeps(), Matchers.<Collection<Component>>allOf(
-					hasSize(1),
-					contains(nonLockedMDep)));
+					Matchers.hasSize(1),
+					Matchers.contains(nonLockedMDep)));
 		}
+	}
+
+	@Test
+	public void testPatchDONEIfLastCommitTagged() throws Exception {
+		// fork unTillDb
+		forkAndBuild(compUnTillDb);
+
+		// add an igonored feature and tag it
+		ReleaseBranchCurrent crb = ReleaseBranchFactory.getCRB(compUnTillDb);
+		Component compUnTillDbVersioned = compUnTillDb.clone(crb.getVersion());
+		env.generateFeatureCommit(env.getUnTillDbVCS(), crb.getName(), LogTag.SCM_IGNORE + " feature megred");
+		env.getUnTillDbVCS().createTag(crb.getName(), "tag", "tag", null);
+
+		ExtendedStatusBuilder statusBuilder = new ExtendedStatusBuilder();
+		ExtendedStatus status = statusBuilder.getAndCachePatchStatus(compUnTillDbVersioned, new CachedStatuses());
+		assertEquals(BuildStatus.DONE, status.getStatus());
+	}
+
+	@Test
+	public void testPatchDONEIfAllReleaseBranchCommitsIgnored() throws Exception {
+		forkAndBuild(compUnTillDb);
+
+		// simulate no commits left in release branch, i.e. all igonred and no tags.
+		// loop in noValueableCommitsAfterLastTag should be interrupted
+		ReleaseBranchCurrent crb = ReleaseBranchFactory.getCRB(compUnTillDb);
+		Component mockedCompVersioned = spy(compUnTillDb.clone(crb.getVersion()));
+		IVCS mockedVCS = spy(env.getUnTillDbVCS());
+		doReturn(mockedVCS).when(mockedCompVersioned).getVCS();
+		doReturn(new ArrayList<VCSCommit>()).when(mockedVCS)
+				.getCommitsRange(anyString(), (String) isNull(), any(WalkDirection.class), anyInt());
+
+		ExtendedStatusBuilder statusBuilder = new ExtendedStatusBuilder();
+		ExtendedStatus status = statusBuilder.getAndCachePatchStatus(mockedCompVersioned, new CachedStatuses());
+		assertEquals(BuildStatus.DONE, status.getStatus());
 	}
 }

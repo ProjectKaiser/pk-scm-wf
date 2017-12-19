@@ -1,11 +1,5 @@
 package org.scm4j.releaser;
 
-import static org.hamcrest.Matchers.allOf;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.hasProperty;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
 import org.junit.Test;
 import org.scm4j.commons.Version;
 import org.scm4j.releaser.actions.IAction;
@@ -13,6 +7,9 @@ import org.scm4j.releaser.branch.ReleaseBranchCurrent;
 import org.scm4j.releaser.branch.ReleaseBranchFactory;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.MDepsFile;
+
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.*;
 
 public class WorkflowForkTest extends WorkflowTestBase {
 	
@@ -104,7 +101,17 @@ public class WorkflowForkTest extends WorkflowTestBase {
 		for (Component mdep : mdf.getMDeps()) {
 			assertTrue(mdep.getVersion().isLocked());
 		}
-		
+	}
+
+	@Test
+	public void testForkRootIfNestedNotDone() throws Exception {
+		forkAndBuild(compUBL);
+
+		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevelopBranch(), "unTillDb feature added");
+
+		IAction action = execAndGetActionFork(compUBL);
+		assertActionDoesFork(action, compUBL, compUnTillDb);
+		checkUBLForked(2);
 	}
 }
 
