@@ -93,11 +93,13 @@ public class WorkflowForkTest extends WorkflowTestBase {
 		mdf.replaceMDep(mdf.getMDeps().get(0).clone(""));
 		env.getUblVCS().setFileContent(crb.getName(), Utils.MDEPS_FILE_NAME, mdf.toFileContent(), "mdeps not locked");
 		
+		// UBL should lock its mdeps
 		IAction action = execAndGetActionFork(compUBL);
 		assertThatAction(action, allOf(
 				hasProperty("bsFrom", equalTo(BuildStatus.LOCK)),
 				hasProperty("bsTo", equalTo(BuildStatus.LOCK))), compUBL);
 		
+		// check UBL mdeps locked
 		mdf = new MDepsFile(env.getUblVCS().getFileContent(crb.getName(), Utils.MDEPS_FILE_NAME, null));
 		for (Component mdep : mdf.getMDeps()) {
 			assertTrue(mdep.getVersion().isLocked());
