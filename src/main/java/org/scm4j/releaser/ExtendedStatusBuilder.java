@@ -44,15 +44,6 @@ public class ExtendedStatusBuilder {
 	public ExtendedStatus getAndCacheStatus(Component comp, CachedStatuses cache, IProgress progress, boolean patch) {
 		ExtendedStatus existing = cache.putIfAbsent(comp.getUrl(), ExtendedStatus.DUMMY);
 		
-		while (ExtendedStatus.DUMMY == existing) {
-			try {
-				Thread.sleep(PARALLEL_CALCULATION_AWAIT_TIME);
-				existing = cache.get(comp.getUrl());
-			} catch (InterruptedException e) {
-				throw new RuntimeException(e);
-			}
-		}
-
 		if (null != existing) {
 			return new ExtendedStatus(existing.getNextVersion(), existing.getStatus(), existing.getSubComponents(), comp);
 		}

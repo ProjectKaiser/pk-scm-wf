@@ -1,18 +1,18 @@
 package org.scm4j.releaser;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
+import java.nio.charset.StandardCharsets;
+import java.util.Map;
+
+import org.apache.commons.io.FileUtils;
 import org.junit.Test;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.exceptions.EBuildOnNotForkedRelease;
 import org.scm4j.releaser.exceptions.ENoBuilder;
 import org.yaml.snakeyaml.Yaml;
-
-import static org.junit.Assert.*;
-
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.Map;
-
-import org.apache.commons.io.FileUtils;
 public class WorkflowBuildTest extends WorkflowTestBase {
 	
 	@Test

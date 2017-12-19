@@ -38,21 +38,9 @@ public class ExtendedStatus {
 		return comp;
 	}
 	
-	private String getDescription(String status) {
-		String targetBranch = Utils.getReleaseBranchName(comp, nextVersion);
-		return String.format("%s %s, target version: %s, target branch: %s", status, comp.getCoords(), nextVersion, targetBranch);
-	}
-
-	public String getDesciption() {
-		if (status == BuildStatus.DONE) {
-			return getDescription("skip " + status.toString());
-		} else {
-			return getDescription(status.toString() + " -> " + BuildStatus.BUILD.toString());
-		}
-	}
-
 	@Override
 	public String toString() {
-		return getDescription(status.toString());
+		String targetBranch = Utils.getReleaseBranchName(comp, nextVersion);
+		return String.format("%s %s, target version: %s, target branch: %s", status, comp.getCoords(), nextVersion, targetBranch);
 	}
 }
