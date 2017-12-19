@@ -344,10 +344,10 @@ public class WorkflowTestBase {
 				hasProperty("bsTo", equalTo(BuildStatus.BUILD))), comps);
 	}
 
-	protected void assertActionDoesBuildBuild(IAction action, Component comp, BuildStatus mbs) {
+	protected void assertActionDoesBuild(IAction action, Component comp, BuildStatus fromStatus) {
 		assertThatAction(action, allOf(
 				instanceOf(SCMActionRelease.class),
-				hasProperty("bsFrom", equalTo(mbs)),
+				hasProperty("bsFrom", equalTo(fromStatus)),
 				hasProperty("bsTo", equalTo(BuildStatus.BUILD))), comp);
 	}
 	
@@ -387,16 +387,16 @@ public class WorkflowTestBase {
 	}
 
 	protected void assertActionDoesBuildAll(IAction action) {
-		assertActionDoesBuildBuild(action, compUnTillDb, BuildStatus.BUILD);
-		assertActionDoesBuildBuild(action, compUnTill, BuildStatus.BUILD_MDEPS);
-		assertActionDoesBuildBuild(action, compUBL, BuildStatus.BUILD_MDEPS);
+		assertActionDoesBuild(action, compUnTillDb, BuildStatus.BUILD);
+		assertActionDoesBuild(action, compUnTill, BuildStatus.BUILD_MDEPS);
+		assertActionDoesBuild(action, compUBL, BuildStatus.BUILD_MDEPS);
 	}
 
 	protected void assertIsGoingToTagAll(IAction action) {
 		assertThatAction(action, instanceOf(SCMActionTag.class), getAllComps());
 	}
 	
-	protected IAction execAndGetActionTreeFork(Component comp) {
+	protected IAction execAndGetActionFork(Component comp) {
 		return execAndGetAction(CLICommand.FORK.getCmdLineStr(), comp.getCoords().toString());
 	}
 	
@@ -438,24 +438,24 @@ public class WorkflowTestBase {
 	}
 	
 	protected void fork(Component comp, int times) {
-		IAction action = execAndGetActionTreeFork(comp);
-		if (TestEnvironment.PRODUCT_UNTILL.contains(comp.getCoords().toString())) {
+		IAction action = execAndGetActionFork(comp);
+		if (TestEnvironment.PRODUCT_UNTILL.contains(comp.getCoords().toString(""))) {
 			assertActionDoesForkAll(action);
-		} else if (TestEnvironment.PRODUCT_UBL.contains(comp.getCoords().toString())) {
+		} else if (TestEnvironment.PRODUCT_UBL.contains(comp.getCoords().toString(""))) {
 			assertActionDoesFork(action, compUBL, compUnTillDb);
-		} else if (TestEnvironment.PRODUCT_UNTILLDB.contains(comp.getCoords().toString())) {
+		} else if (TestEnvironment.PRODUCT_UNTILLDB.contains(comp.getCoords().toString(""))) {
 			assertActionDoesFork(action, compUnTillDb);
 		} else {
 			fail("unexpected coords: " + comp.getCoords());
 		}
-		if (TestEnvironment.PRODUCT_UNTILL.contains(comp.getCoords().toString())) {
+		if (TestEnvironment.PRODUCT_UNTILL.contains(comp.getCoords().toString(""))) {
 			if (times > 1) {
 				fail("unsupported check unTill builds amount: " + times);
 			}
 			checkUnTillForked();
-		} else if (TestEnvironment.PRODUCT_UBL.contains(comp.getCoords().toString())) {
+		} else if (TestEnvironment.PRODUCT_UBL.contains(comp.getCoords().toString(""))) {
 			checkUBLForked(times);
-		} else if (TestEnvironment.PRODUCT_UNTILLDB.contains(comp.getCoords().toString())) {
+		} else if (TestEnvironment.PRODUCT_UNTILLDB.contains(comp.getCoords().toString(""))) {
 			checkUnTillDbForked(times);
 		} else {
 			fail("unexpected coords: " + comp.getCoords());
@@ -464,24 +464,24 @@ public class WorkflowTestBase {
 	
 	protected void build(Component comp, int times) {
 		IAction action = execAndGetActionBuild(comp);
-		if (TestEnvironment.PRODUCT_UNTILL.contains(comp.getCoords().toString())) {
+		if (TestEnvironment.PRODUCT_UNTILL.contains(comp.getCoords().toString(""))) {
 			assertActionDoesBuildAll(action);
-		} else if (TestEnvironment.PRODUCT_UBL.contains(comp.getCoords().toString())) {
-			assertActionDoesBuildBuild(action, compUBL, BuildStatus.BUILD_MDEPS);
+		} else if (TestEnvironment.PRODUCT_UBL.contains(comp.getCoords().toString(""))) {
+			assertActionDoesBuild(action, compUBL, BuildStatus.BUILD_MDEPS);
 			assertActionDoesBuild(action, compUnTillDb);
-		} else if (TestEnvironment.PRODUCT_UNTILLDB.contains(comp.getCoords().toString())) {
+		} else if (TestEnvironment.PRODUCT_UNTILLDB.contains(comp.getCoords().toString(""))) {
 			assertActionDoesBuild(action, compUnTillDb);
 		} else {
 			fail("unexpected coords: " + comp.getCoords());
 		}
-		if (TestEnvironment.PRODUCT_UNTILL.contains(comp.getCoords().toString())) {
+		if (TestEnvironment.PRODUCT_UNTILL.contains(comp.getCoords().toString(""))) {
 			if (times > 1) {
 				fail("unsupported check unTill builds amount: " + times);
 			}
 			checkUnTillBuilt();
-		} else if (TestEnvironment.PRODUCT_UBL.contains(comp.getCoords().toString())) {
+		} else if (TestEnvironment.PRODUCT_UBL.contains(comp.getCoords().toString(""))) {
 			checkUBLBuilt(times);
-		} else if (TestEnvironment.PRODUCT_UNTILLDB.contains(comp.getCoords().toString())) {
+		} else if (TestEnvironment.PRODUCT_UNTILLDB.contains(comp.getCoords().toString(""))) {
 			checkUnTillDbBuilt(times);
 		} else {
 			fail("unexpected coords: " + comp.getCoords());

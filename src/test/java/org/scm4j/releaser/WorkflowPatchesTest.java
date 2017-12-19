@@ -42,8 +42,8 @@ public class WorkflowPatchesTest extends WorkflowTestBase {
 
 		// Existing unTill and UBL release branches should actualize its mdeps
 		action = execAndGetActionBuild(compUnTill.clone(env.getUnTillVer().toRelease()));
-		assertActionDoesBuildBuild(action, compUBL, BuildStatus.ACTUALIZE_PATCHES);
-		assertActionDoesBuildBuild(action, compUnTill, BuildStatus.BUILD_MDEPS);
+		assertActionDoesBuild(action, compUBL, BuildStatus.ACTUALIZE_PATCHES);
+		assertActionDoesBuild(action, compUnTill, BuildStatus.BUILD_MDEPS);
 		assertActionDoesNothing(action, compUnTillDb);
 
 		// check unTill uses new untillDb and UBL versions in existing unTill release branch.

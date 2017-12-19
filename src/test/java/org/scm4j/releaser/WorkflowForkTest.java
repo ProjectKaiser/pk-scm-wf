@@ -1,21 +1,29 @@
 package org.scm4j.releaser;
 
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasProperty;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 import org.scm4j.commons.Version;
 import org.scm4j.releaser.actions.IAction;
+import org.scm4j.releaser.branch.ReleaseBranchCurrent;
+import org.scm4j.releaser.branch.ReleaseBranchFactory;
+import org.scm4j.releaser.conf.Component;
+import org.scm4j.releaser.conf.MDepsFile;
 
 public class WorkflowForkTest extends WorkflowTestBase {
 	
 	@Test
 	public void testForkAll() throws Exception {
-		IAction action = execAndGetActionTreeFork(compUnTill);
+		IAction action = execAndGetActionFork(compUnTill);
 		assertActionDoesForkAll(action);
 		checkUnTillForked();
 		
 		// check nothing happens on next fork
-		action = execAndGetActionTreeFork(compUnTill);
+		action = execAndGetActionFork(compUnTill);
 		assertActionDoesSkipAll(action);
 		checkUnTillForked();
 	}
@@ -26,7 +34,7 @@ public class WorkflowForkTest extends WorkflowTestBase {
 
 		env.generateFeatureCommit(env.getUnTillVCS(), compUnTill.getVcsRepository().getDevelopBranch(), "feature added");
 		// fork untill only
-		IAction action = execAndGetActionTreeFork(compUnTill);
+		IAction action = execAndGetActionFork(compUnTill);
 		assertActionDoesFork(action, compUnTill);
 		assertActionDoesNothing(action, compUnTillDb, compUBL);
 		checkUnTillOnlyForked(2);
@@ -64,7 +72,7 @@ public class WorkflowForkTest extends WorkflowTestBase {
 		forkAndBuild(compUnTillDb, 2);
 
 		// UBL should be forked and built then
-		IAction action  = execAndGetActionTreeFork(compUBL);
+		IAction action  = execAndGetActionFork(compUBL);
 		assertActionDoesFork(action, compUBL);
 		assertActionDoesNothing(action, compUnTillDb);
 		checkUBLForked(2);
@@ -73,6 +81,28 @@ public class WorkflowForkTest extends WorkflowTestBase {
 		assertActionDoesBuild(action, compUBL);
 		assertActionDoesNothing(action, compUnTillDb);
 		checkUBLBuilt(2);
+	}
+	
+	@Test
+	public void testLockMDepsIfNotLocked() {
+		fork(compUBL);
+		
+		// simulate mdeps not locked
+		ReleaseBranchCurrent crb = ReleaseBranchFactory.getCRB(compUBL);
+		MDepsFile mdf = new MDepsFile(env.getUblVCS().getFileContent(crb.getName(), Utils.MDEPS_FILE_NAME, null));
+		mdf.replaceMDep(mdf.getMDeps().get(0).clone(""));
+		env.getUblVCS().setFileContent(crb.getName(), Utils.MDEPS_FILE_NAME, mdf.toFileContent(), "mdeps not locked");
+		
+		IAction action = execAndGetActionFork(compUBL);
+		assertThatAction(action, allOf(
+				hasProperty("bsFrom", equalTo(BuildStatus.LOCK)),
+				hasProperty("bsTo", equalTo(BuildStatus.LOCK))), compUBL);
+		
+		mdf = new MDepsFile(env.getUblVCS().getFileContent(crb.getName(), Utils.MDEPS_FILE_NAME, null));
+		for (Component mdep : mdf.getMDeps()) {
+			assertTrue(mdep.getVersion().isLocked());
+		}
+		
 	}
 }
 
