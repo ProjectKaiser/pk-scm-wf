@@ -6,6 +6,8 @@ import java.util.List;
 
 public class EReleaseMDepsNotLocked extends EReleaserException {
 
+	private static final long serialVersionUID = 1L;
+	
 	private final List<Component> nonLockedMDeps;
 
 	public EReleaseMDepsNotLocked(List<Component> nonlockedMDeps) {

@@ -1,116 +1,153 @@
 package org.scm4j.releaser;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Map;
+
+import org.apache.commons.io.FileUtils;
+import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.scm4j.releaser.actions.IAction;
+import org.scm4j.releaser.branch.ReleaseBranchCurrent;
+import org.scm4j.releaser.branch.ReleaseBranchFactory;
+import org.scm4j.releaser.conf.Component;
+import org.scm4j.releaser.conf.MDepsFile;
+import org.scm4j.releaser.exceptions.EBuildOnNotForkedRelease;
+import org.scm4j.releaser.exceptions.ENoBuilder;
+import org.yaml.snakeyaml.Yaml;
 public class WorkflowBuildTest extends WorkflowTestBase {
 	
 	@Test
 	public void testBuildAllAndTestIGNOREDDev() throws Exception {
-		IAction action = getActionTreeBuild(compUnTill);
-		assertIsGoingToForkAndBuild(action, compUnTill);
-		execAction(action);
-		checkUnTillBuilt();
+		forkAndBuild(compUnTill);
 		
 		// check nothing happens next time
-		action = getActionTreeBuild(compUnTill);
-		assertIsGoingToDoNothing(action, compUnTill);
-		execAction(action);
+		IAction action = execAndGetActionBuild(compUnTill);
+		assertActionDoesNothing(action, compUnTill);
 		checkUnTillBuilt();
 
 		// test IGNORED dev branch state
 		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevelopBranch(),
 				LogTag.SCM_IGNORE + " ignored feature commit added");
-		action = getActionTreeBuild(compUnTill);
-		assertIsGoingToDoNothing(action);
+		action = execAndGetActionBuild(compUnTill);
+		assertActionDoesNothing(action);
 	}
 
 	@Test
 	public void testBuildRootIfNestedIsBuiltAlready() throws Exception {
-		// build unTillDb
-		IAction action = getActionTreeBuild(compUnTillDb);
-		assertIsGoingToForkAndBuild(action, compUnTillDb);
-		execAction(action);
-		checkUnTillDbBuilt();
+		forkAndBuild(compUnTillDb);
+		
+		// fork UBL
+		IAction action = execAndGetActionFork(compUBL);
+		assertActionDoesFork(action, compUBL);
+		assertActionDoesNothing(action, compUnTillDb);
+		checkUBLForked();
 		
 		// build UBL
-		action = getActionTreeBuild(compUBL);
-		assertIsGoingToForkAndBuild(action, compUBL);
-		assertIsGoingToDoNothing(action, compUnTillDb);
-		execAction(action);
+		action = execAndGetActionBuild(compUBL);
+		assertActionDoesBuild(action, compUBL);
+		assertActionDoesNothing(action, compUnTillDb);
 		checkUBLBuilt();
 	}
 
 	@Test
 	public void testBuildRootAndChildIfAllForkedAlready() throws Exception {
 		// fork unTillDb
-		IAction action = getActionTreeFork(compUnTillDb);
-		assertIsGoingToFork(action, compUnTillDb);
-		execAction(action);
+		IAction action = execAndGetActionFork(compUnTillDb);
+		assertActionDoesFork(action, compUnTillDb);
 		checkUnTillDbForked();
 		
 		// fork UBL
-		action = getActionTreeFork(compUBL);
-		assertIsGoingToFork(action, compUBL);
-		assertIsGoingToDoNothing(action, BuildStatus.BUILD, null, compUnTillDb);
-		execAction(action);
+		action = execAndGetActionFork(compUBL);
+		assertActionDoesFork(action, compUBL);
+		assertActionDoesNothing(action, BuildStatus.BUILD, null, compUnTillDb);
 		checkUBLForked();
 		
 		assertTrue(TestBuilder.getBuilders().isEmpty());
 		
 		// build UBL and unTillDb
-		action = getActionTreeBuild(compUBL);
-		assertIsGoingToBuild(action, compUnTillDb);
-		assertIsGoingToBuild(action, compUBL, BuildStatus.BUILD_MDEPS);
-		execAction(action);
+		action = execAndGetActionBuild(compUBL);
+		assertActionDoesBuild(action, compUnTillDb);
+		assertActionDoesBuild(action, compUBL, BuildStatus.BUILD_MDEPS);
 		checkUBLBuilt();
 	}
 	
 	@Test
 	public void testBuildSingleComponentTwice() throws Exception {
-		// fork and build unTillDb
-		IAction action = getActionTreeBuild(compUnTillDb);
-		assertIsGoingToForkAndBuild(action, compUnTillDb);
-		execAction(action);
-		checkUnTillDbBuilt();
+		forkAndBuild(compUnTillDb);
 		
 		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevelopBranch(), "feature commit added");
-		
-		// fork and build unTillDb next release
-		action = getActionTreeBuild(compUnTillDb);
-		assertIsGoingToForkAndBuild(action, compUnTillDb);
-		execAction(action);
-		checkUnTillDbBuilt(2);
-	}
-	
-	@Test
-	public void testBuildAllIfNestedForked() throws Exception {
-		// fork unTillDb
-		IAction action = getActionTreeFork(compUnTillDb);
-		assertIsGoingToFork(action, compUnTillDb);
-		execAction(action);
-		checkUnTillDbForked();
-		
-		// unTillDb - build, unTill and UBl - fork and build
-		action = getActionTreeBuild(compUnTill);
-		assertIsGoingToForkAndBuild(action, compUnTill, compUBL);
-		assertIsGoingToBuild(action, compUnTillDb);
-		execAction(action);
-		checkUnTillBuilt();
+
+		forkAndBuild(compUnTillDb, 2);
 	}
 	
 	@Test
 	public void testSkipBuildsOnFORKActionKind() throws Exception {
-		// fork all
-		IAction action = getActionTreeFork(compUnTill);
-		assertIsGoingToForkAll(action);
-		execAction(action);
-		checkUnTillForked();
+		fork(compUnTill);
 
 		// try to build with FORK target action kind. All builds should be skipped
-		action = getActionTreeFork(compUnTill);
-		assertIsGoingToDoNothing(action, BuildStatus.BUILD_MDEPS, null, compUnTill, compUBL);
-		assertIsGoingToDoNothing(action, BuildStatus.BUILD, null, compUnTillDb);
+		IAction action = execAndGetActionFork(compUnTill);
+		assertActionDoesNothing(action, BuildStatus.BUILD_MDEPS, null, compUnTill, compUBL);
+		assertActionDoesNothing(action, BuildStatus.BUILD, null, compUnTillDb);
+	}
+	
+	@Test
+	public void testBuildOnNotForkedReleaseException() {
+		try {
+			execAndGetActionBuild(compUnTill);
+			fail();
+		} catch (EBuildOnNotForkedRelease e) {
+			assertEquals(compUnTillDb, e.getComp());
+		}
+	}
+	
+	@SuppressWarnings("unchecked")
+	@Test
+	public void testNoBuilderException() throws Exception {
+		// simulate no builder
+		Yaml yaml = new Yaml();
+		Map<String, ?> content = (Map<String, String>) yaml.load(FileUtils.readFileToString(env.getReposFile(), StandardCharsets.UTF_8));
+		((Map<String, ?>) content.get("eu.untill:(.*)")).remove("releaseCommand");
+		FileUtils.writeStringToFile(env.getReposFile(), yaml.dumpAsMap(content), StandardCharsets.UTF_8);
+		
+		try {
+			forkAndBuild(compUnTillDb);
+			fail();
+		} catch (ENoBuilder e) {
+		}
+	}
+	
+	@Test
+	public void testActualizePatches() {
+		fork(compUnTill);
+		build(compUnTillDb);
+		
+		// add feature to existing unTillDb release
+		ReleaseBranchCurrent crb = ReleaseBranchFactory.getCRB(compUnTillDb);
+		env.generateFeatureCommit(env.getUnTillDbVCS(), crb.getName(), "patch feature added");
+
+		// build unTillDb patch
+		Component compUnTillDbPatch = new Component(UNTILLDB + ":" + env.getUnTillDbVer().toRelease());
+		execAndGetActionBuild(compUnTillDbPatch);
+		
+		// UBL should actualize its mdeps
+		IAction action = execAndGetActionBuild(compUnTill);
+		assertActionDoesBuild(action, compUnTill, BuildStatus.BUILD_MDEPS);
+		assertActionDoesBuild(action, compUBL, BuildStatus.ACTUALIZE_PATCHES);
+		assertActionDoesNothing(action, compUnTillDb);
+		
+		// check unTill actualized unTillDb version
+		crb = ReleaseBranchFactory.getCRB(compUnTill);
+		MDepsFile mdf = new MDepsFile(env.getUnTillVCS().getFileContent(crb.getName(), Utils.MDEPS_FILE_NAME, null));
+		assertThat(mdf.getMDeps(), Matchers.hasItem(compUnTillDbPatch));
+		
+		// check UBL actualized unTillDb version
+		crb = ReleaseBranchFactory.getCRB(compUBL);
+		mdf = new MDepsFile(env.getUblVCS().getFileContent(crb.getName(), Utils.MDEPS_FILE_NAME, null));
+		assertThat(mdf.getMDeps(), Matchers.hasItem(compUnTillDbPatch));
 	}
 }

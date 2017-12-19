@@ -1,5 +1,11 @@
 package org.scm4j.releaser;
 
+import static org.scm4j.releaser.Utils.reportDuration;
+
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+
 import org.scm4j.commons.Version;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.commons.progress.ProgressConsole;
@@ -17,15 +23,8 @@ import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.vcs.api.VCSTag;
 import org.scm4j.vcs.api.WalkDirection;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-
-import static org.scm4j.releaser.Utils.reportDuration;
-
 public class ExtendedStatusBuilder {
 
-	private static final int PARALLEL_CALCULATION_AWAIT_TIME = 500;
 	private static final int COMMITS_RANGE_LIMIT = 10;
 	
 	public ExtendedStatus getAndCacheMinorStatus(Component comp) {
@@ -44,15 +43,6 @@ public class ExtendedStatusBuilder {
 	public ExtendedStatus getAndCacheStatus(Component comp, CachedStatuses cache, IProgress progress, boolean patch) {
 		ExtendedStatus existing = cache.putIfAbsent(comp.getUrl(), ExtendedStatus.DUMMY);
 		
-		while (ExtendedStatus.DUMMY == existing) {
-			try {
-				Thread.sleep(PARALLEL_CALCULATION_AWAIT_TIME);
-				existing = cache.get(comp.getUrl());
-			} catch (InterruptedException e) {
-				throw new RuntimeException(e);
-			}
-		}
-
 		if (null != existing) {
 			return new ExtendedStatus(existing.getNextVersion(), existing.getStatus(), existing.getSubComponents(), comp);
 		}
@@ -108,7 +98,7 @@ public class ExtendedStatusBuilder {
 
 		List<Component> nonlockedMDeps = new ArrayList<>();
 		if (!areMDepsLocked(rb.getMDeps(), nonlockedMDeps)) {
-			throw new EReleaseMDepsNotLocked(nonlockedMDeps); // TODO: add non-locked component output
+			throw new EReleaseMDepsNotLocked(nonlockedMDeps);
 		}
 		
 		LinkedHashMap<Component, ExtendedStatus> subComponentsLocal = new LinkedHashMap<>();
