@@ -16,7 +16,7 @@ public class WorkflowForkTest extends WorkflowTestBase {
 		
 		// check nothing happens on next fork
 		action = execAndGetActionTreeFork(compUnTill);
-		assertIsGoingToSkipAll(action);
+		assertActionDoesSkipAll(action);
 		checkUnTillForked();
 	}
 	

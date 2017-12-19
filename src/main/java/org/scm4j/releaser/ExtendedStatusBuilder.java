@@ -25,7 +25,6 @@ import org.scm4j.vcs.api.WalkDirection;
 
 public class ExtendedStatusBuilder {
 
-	private static final int PARALLEL_CALCULATION_AWAIT_TIME = 500;
 	private static final int COMMITS_RANGE_LIMIT = 10;
 	
 	public ExtendedStatus getAndCacheMinorStatus(Component comp) {

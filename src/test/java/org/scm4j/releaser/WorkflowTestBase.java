@@ -366,7 +366,7 @@ public class WorkflowTestBase {
 				hasProperty("procs", empty())), comps);
 	}
 	
-	protected void assertIsGoingToSkipAll(IAction action) {
+	protected void assertActionDoesSkipAll(IAction action) {
 		assertThatAction(action, allOf(
 				instanceOf(SCMActionRelease.class),
 				hasProperty("procs", empty())), getAllComps());
@@ -397,11 +397,11 @@ public class WorkflowTestBase {
 	}
 	
 	protected IAction execAndGetActionTreeFork(Component comp) {
-		return getAndExecAction(CLICommand.FORK.getCmdLineStr(), comp.getCoords().toString());
+		return execAndGetAction(CLICommand.FORK.getCmdLineStr(), comp.getCoords().toString());
 	}
 	
 	protected IAction execAndGetActionBuild(Component comp) {
-		return getAndExecAction(CLICommand.BUILD.getCmdLineStr(), comp.getCoords().toString());
+		return execAndGetAction(CLICommand.BUILD.getCmdLineStr(), comp.getCoords().toString());
 	}
 	
 	private IAction getAndExecAction(Runnable preExec, String... args)  {
@@ -413,7 +413,7 @@ public class WorkflowTestBase {
 		return cli.getAction();
 	}
 
-	private IAction getAndExecAction(String... args) {
+	private IAction execAndGetAction(String... args) {
 		return getAndExecAction(null, args);
 	}
 	
@@ -422,7 +422,7 @@ public class WorkflowTestBase {
 	}
 	
 	protected IAction execAndGetActionBuildDelayedTag(Component comp) {
-		return getAndExecAction(CLICommand.BUILD.getCmdLineStr(), comp.getCoords().toString(), Option.DELAYED_TAG.getCmdLineStr());
+		return execAndGetAction(CLICommand.BUILD.getCmdLineStr(), comp.getCoords().toString(), Option.DELAYED_TAG.getCmdLineStr());
 	}
 	
 	protected void forkAndBuild(Component comp) {
