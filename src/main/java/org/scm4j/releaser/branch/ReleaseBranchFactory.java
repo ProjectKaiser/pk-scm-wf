@@ -66,8 +66,4 @@ public final class ReleaseBranchFactory {
 		}
 		return res;
 	}
-	
-	private ReleaseBranchFactory() {
-		
-	}
 }

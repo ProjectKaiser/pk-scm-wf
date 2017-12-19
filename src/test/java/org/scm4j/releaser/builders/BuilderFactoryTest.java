@@ -1,10 +1,8 @@
 package org.scm4j.releaser.builders;
 
 import org.junit.Test;
-import org.scm4j.releaser.TestBuilder;
 
 import static org.junit.Assert.*;
-import static org.scm4j.releaser.UtilityClassMatcher.isUtilityClass;
 
 public class BuilderFactoryTest {
 	
@@ -23,7 +21,7 @@ public class BuilderFactoryTest {
 	}
 
 	@Test
-	public void testIsUtilityClass() {
-		assertThat(BuilderFactory.class, isUtilityClass());
+	public void cover() {
+		new BuilderFactory();
 	}
 }

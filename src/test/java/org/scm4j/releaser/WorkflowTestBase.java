@@ -7,6 +7,7 @@ import org.junit.Before;
 import org.scm4j.commons.Version;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.branch.DevelopBranch;
+import org.scm4j.releaser.builders.TestBuilder;
 import org.scm4j.releaser.cli.CLI;
 import org.scm4j.releaser.cli.CLICommand;
 import org.scm4j.releaser.cli.Option;

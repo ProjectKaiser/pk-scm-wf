@@ -1,13 +1,13 @@
 package org.scm4j.releaser;
 
-import java.io.File;
-import java.util.function.Supplier;
-
 import org.apache.commons.io.FileUtils;
 import org.scm4j.commons.Version;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.TagDesc;
+
+import java.io.File;
+import java.util.function.Supplier;
 
 public final class Utils {
 	
@@ -34,9 +34,6 @@ public final class Utils {
 			run.run();
 			return null;
 		}, message, comp, progress);
-	}
-
-	private Utils() {
 	}
 
 	public static String getReleaseBranchName(Component comp, Version forVersion) {

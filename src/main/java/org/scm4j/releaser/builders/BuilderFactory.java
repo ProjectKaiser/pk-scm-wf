@@ -18,7 +18,4 @@ public final class BuilderFactory {
 			throw new RuntimeException(e);
 		}
 	}
-	
-	private BuilderFactory() {
-	}
 }

@@ -11,7 +11,6 @@ import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
 import org.scm4j.vcs.svn.SVNVCS;
 
 import static org.junit.Assert.*;
-import static org.scm4j.releaser.UtilityClassMatcher.isUtilityClass;
 
 public class VCSFactoryTest {
 	
@@ -43,7 +42,7 @@ public class VCSFactoryTest {
 	}
 	
 	@Test
-	public void testIsUtilityClass() {
-		assertThat(VCSFactory.class, isUtilityClass());
+	public void cover() {
+		new VCSFactory();
 	}
 }

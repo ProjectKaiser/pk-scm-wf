@@ -30,7 +30,4 @@ public final class VCSFactory {
 		}
 		return vcs;
 	}
-	
-	private VCSFactory() {
-	}
 }

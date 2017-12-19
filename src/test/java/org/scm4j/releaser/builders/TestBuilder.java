@@ -1,12 +1,11 @@
-package org.scm4j.releaser;
+package org.scm4j.releaser.builders;
+
+import org.scm4j.commons.progress.IProgress;
+import org.scm4j.releaser.conf.Component;
+import org.scm4j.releaser.exceptions.EBuilder;
 
 import java.io.File;
 import java.util.Map;
-
-import org.scm4j.commons.progress.IProgress;
-import org.scm4j.releaser.builders.IBuilder;
-import org.scm4j.releaser.conf.Component;
-import org.scm4j.releaser.exceptions.EBuilder;
 
 public class TestBuilder implements IBuilder {
 

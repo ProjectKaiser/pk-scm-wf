@@ -4,6 +4,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.scm4j.commons.Version;
 import org.scm4j.releaser.builders.BuilderFactory;
+import org.scm4j.releaser.builders.TestBuilder;
 import org.scm4j.releaser.conf.EnvVarsConfigSource;
 import org.scm4j.releaser.conf.IConfigSource;
 import org.scm4j.releaser.conf.VCSRepositories;
