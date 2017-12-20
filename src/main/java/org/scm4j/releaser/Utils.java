@@ -23,7 +23,7 @@ public final class Utils {
 	public static final String DELAYED_TAGS_FILE_NAME = "delayed-tags.yml";
 	public static final File BASE_WORKING_DIR = new File(System.getProperty("user.home"), ".scm4j");
 
-	private static final int THREADS_AMOUNT = 10;
+	private static final int THREADS_AMOUNT = 64;
 
 	public static <T> T reportDuration(Supplier<T> sup, String message, Component comp, IProgress progress) {
 		if (progress == null) {
