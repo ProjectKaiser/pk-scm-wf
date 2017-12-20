@@ -58,8 +58,8 @@ public class CommandLine {
 		return "usage: groovy run.groovy " + printCommands() + " productCoords " + printOptions() + "\r\n"
 				+ "\r\n"
 				+ String.format("%-" + maxLen + "s - show actions will be made with product specified by productCoords\r\n", CLICommand.STATUS.getCmdLineStr())
-				+ String.format("%-" + maxLen + "s - create all necessary release branches for product specified by productCoords\r\n", CLICommand.FORK.getCmdLineStr())
-				+ String.format("%-" + maxLen + "s - execute production release action on product specified by productCoords.", CLICommand.BUILD.getCmdLineStr()) + "\r\n"
+				+ String.format("%-" + maxLen + "s - create all necessary release branches and lock mdeps versions for product specified by productCoords\r\n", CLICommand.FORK.getCmdLineStr())
+				+ String.format("%-" + maxLen + "s - build a release of product specified by productCoords. The product must be forked before.", CLICommand.BUILD.getCmdLineStr()) + "\r\n"
 				+ String.format("%-" + maxLen + "s   If " + Option.DELAYED_TAG.getCmdLineStr() + " option is provided then "
 						+ "tag will not be applied to a new release commit. Use " + CLICommand.TAG.getCmdLineStr() + " to command to apply delayed tags\r\n", "")
 				+ String.format("%-" + maxLen + "s - apply delayed tags on product specified by productCoords", CLICommand.TAG.getCmdLineStr())
