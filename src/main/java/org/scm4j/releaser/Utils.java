@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -27,6 +28,9 @@ public final class Utils {
 	public static final File BASE_WORKING_DIR = new File(System.getProperty("user.home"), ".scm4j");
 	
 	private static final boolean USE_PARALLEL_CALCULATIONS = true;
+	private static final int THREADS_AMOUNT = 1;
+	private static ForkJoinPool pool = new ForkJoinPool(THREADS_AMOUNT);
+	
 
 	public static <T> T reportDuration(Supplier<T> sup, String message, Component comp, IProgress progress) {
 		if (progress == null) {
@@ -57,27 +61,35 @@ public final class Utils {
 				if (collection.isEmpty()) {
 					return;
 				}
-				
-				ExecutorService executor = Executors.newFixedThreadPool(1);
-				List<Callable<T>> calls = new ArrayList<>();
-				for (T element : collection) {
-					//executor.execute(() -> action.accept(element));
-					
-					calls.add(() -> {
-						action.accept(element); 
-						return null;
-					});
-				}
-				executor.invokeAll(calls);
-				executor.shutdown();
+
+//				ExecutorService executor = Executors.newFixedThreadPool(1);
+//				List<Callable<T>> calls = new ArrayList<>();
 //				for (T element : collection) {
-//					executor.execute(() -> action.accept(element));
+//					//executor.execute(() -> action.accept(element));
+//					
+//					calls.add(() -> {
+//						action.accept(element); 
+//						return null;
+//					});
 //				}
-				//executor.awaitTermination(1000000, TimeUnit.HOURS);
-//				ForkJoinPool pool = new ForkJoinPool(10);
-//				pool.submit(() -> collection.parallelStream().forEach(action)).get();
-				//collection.parallelStream().forEach(action)
-				//collection.parallelStream().forEach(action);
+//				executor.invokeAll(calls);
+//				executor.shutdown();
+				
+				// http://jsr166-concurrency.10961.n7.nabble.com/ForkJoinPool-not-designed-for-nested-Java-8-streams-parallel-forEach-td10977.html
+//				pool.submit(() -> {
+//					collection.parallelStream().forEach(action);
+//				}).join();
+				
+				if (pool.getActiveThreadCount() < THREADS_AMOUNT) {
+					pool.submit(() -> {
+						System.out.println(Thread.currentThread().getName());
+						collection.parallelStream().forEach(action);
+					}).join();
+				} else {
+					for (T element : collection) {
+						action.accept(element);
+					}
+				}
 			} catch (Exception e) {
 				throw new RuntimeException(e);
 			}

@@ -2,6 +2,7 @@ package org.scm4j.releaser.actions;
 
 import lombok.SneakyThrows;
 import org.scm4j.commons.progress.IProgress;
+import org.scm4j.releaser.Utils;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.exceptions.EReleaserException;
 import org.scm4j.vcs.api.IVCS;
@@ -61,11 +62,18 @@ public abstract class ActionAbstract implements IAction {
 
 	@SneakyThrows
 	protected void executeChilds(IProgress progress) {
-		for (IAction action : childActions) {
+//		for (IAction action : childActions) {
+//			try (IProgress nestedProgress = progress.createNestedProgress(action.toStringAction())) {
+//				action.execute(nestedProgress);
+//			}
+//		}
+		Utils.async(childActions, (action) -> {
 			try (IProgress nestedProgress = progress.createNestedProgress(action.toStringAction())) {
 				action.execute(nestedProgress);
+			} catch (Exception e) {
+				throw new RuntimeException(e);
 			}
-		}
+		});
 	}
 
 	@Override
