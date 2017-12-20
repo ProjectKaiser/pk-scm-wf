@@ -1,14 +1,9 @@
 package org.scm4j.releaser;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ForkJoinTask;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -17,29 +12,27 @@ import org.scm4j.commons.Version;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.TagDesc;
+import org.scm4j.releaser.exceptions.EReleaserException;
 
 public final class Utils {
-	
+
 	public static final File RELEASES_DIR = new File(System.getProperty("user.dir"), "releases");
 	public static final String ZERO_PATCH = "0";
 	public static final String VER_FILE_NAME = "version";
 	public static final String MDEPS_FILE_NAME = "mdeps";
 	public static final String DELAYED_TAGS_FILE_NAME = "delayed-tags.yml";
 	public static final File BASE_WORKING_DIR = new File(System.getProperty("user.home"), ".scm4j");
-	
-	private static final boolean USE_PARALLEL_CALCULATIONS = true;
-	private static final int THREADS_AMOUNT = 1;
-	private static ForkJoinPool pool = new ForkJoinPool(THREADS_AMOUNT);
-	
+
+	private static final int THREADS_AMOUNT = 10;
 
 	public static <T> T reportDuration(Supplier<T> sup, String message, Component comp, IProgress progress) {
 		if (progress == null) {
 			return sup.get();
 		}
 		long start = System.currentTimeMillis();
-		progress.startTrace(message + ": " + (comp == null ? "" : comp.getCoordsNoComment() + "..."));
 		T res = sup.get();
-		progress.endTrace(" in " + (System.currentTimeMillis() - start) + "ms");
+		progress.reportStatus(String.format("%s: %s in %dms", message, comp == null ? "" : comp.getCoordsNoComment(),
+				System.currentTimeMillis() - start));
 		return res;
 	}
 
@@ -50,53 +43,29 @@ public final class Utils {
 		}, message, comp, progress);
 	}
 
-	
-
 	private Utils() {
 	}
 
 	public static <T> void async(Collection<T> collection, Consumer<? super T> action) {
-		if (USE_PARALLEL_CALCULATIONS) {
-			try {
-				if (collection.isEmpty()) {
-					return;
-				}
+		async(collection, action, new ForkJoinPool(THREADS_AMOUNT));
+	}
 
-//				ExecutorService executor = Executors.newFixedThreadPool(1);
-//				List<Callable<T>> calls = new ArrayList<>();
-//				for (T element : collection) {
-//					//executor.execute(() -> action.accept(element));
-//					
-//					calls.add(() -> {
-//						action.accept(element); 
-//						return null;
-//					});
-//				}
-//				executor.invokeAll(calls);
-//				executor.shutdown();
-				
-				// http://jsr166-concurrency.10961.n7.nabble.com/ForkJoinPool-not-designed-for-nested-Java-8-streams-parallel-forEach-td10977.html
-//				pool.submit(() -> {
-//					collection.parallelStream().forEach(action);
-//				}).join();
-				
-				if (pool.getActiveThreadCount() < THREADS_AMOUNT) {
-					pool.submit(() -> {
-						System.out.println(Thread.currentThread().getName());
-						collection.parallelStream().forEach(action);
-					}).join();
-				} else {
-					for (T element : collection) {
-						action.accept(element);
-					}
-				}
-			} catch (Exception e) {
-				throw new RuntimeException(e);
-			}
-			//pool.shutdown();
-		} else {
+	public static <T> void async(Collection<T> collection, Consumer<? super T> action, ForkJoinPool pool) {
+		if (collection.isEmpty()) {
+			return;
+		}
+		// http://jsr166-concurrency.10961.n7.nabble.com/ForkJoinPool-not-designed-for-nested-Java-8-streams-parallel-forEach-td10977.html
+		if (pool.getParallelism() == 1) {
 			for (T element : collection) {
 				action.accept(element);
+			}
+		} else {
+			ForkJoinTask<?> task = pool.submit(() -> {
+				collection.parallelStream().forEach(action);
+			});
+			task.invoke();
+			if (task.getException() != null) {
+				throw new EReleaserException(task.getException());
 			}
 		}
 	}
@@ -104,22 +73,23 @@ public final class Utils {
 	public static String getReleaseBranchName(Component comp, Version forVersion) {
 		return comp.getVcsRepository().getReleaseBranchPrefix() + forVersion.getReleaseNoPatchString();
 	}
-	
+
 	public static File getBuildDir(Component comp, Version forVersion) {
 		File buildDir = new File(RELEASES_DIR, comp.getUrl().replaceAll("[^a-zA-Z0-9.-]", "_"));
 		buildDir = new File(buildDir, getReleaseBranchName(comp, forVersion).replaceAll("[^a-zA-Z0-9.-]", "_"));
 		return buildDir;
 	}
-	
+
 	public static TagDesc getTagDesc(String verStr) {
 		String tagMessage = verStr + " release";
 		return new TagDesc(verStr, tagMessage);
 	}
-	
+
 	public static Version getDevVersion(Component comp) {
-		return new Version(comp.getVCS().getFileContent(comp.getVcsRepository().getDevelopBranch(), Utils.VER_FILE_NAME, null));
+		return new Version(
+				comp.getVCS().getFileContent(comp.getVcsRepository().getDevelopBranch(), Utils.VER_FILE_NAME, null));
 	}
-	
+
 	public static void waitForDeleteDir(File dir) throws Exception {
 		for (Integer i = 1; i <= 10; i++) {
 			try {
@@ -133,5 +103,4 @@ public final class Utils {
 			throw new Exception("failed to delete " + dir);
 		}
 	}
-	
 }

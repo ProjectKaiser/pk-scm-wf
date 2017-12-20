@@ -214,7 +214,7 @@ public class ExtendedStatusBuilder {
 		}
 		
 		// develop branch has valuable commits => YES
-		if (reportDuration(() -> new DevelopBranch(comp).isModified(), "develop modified", comp, progress)) {
+		if (reportDuration(() -> new DevelopBranch(comp).isModified(), "is develop modified determined", comp, progress)) {
 			return true;
 		}
 		
