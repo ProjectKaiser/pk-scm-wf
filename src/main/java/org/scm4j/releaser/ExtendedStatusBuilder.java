@@ -25,6 +25,7 @@ import org.scm4j.vcs.api.WalkDirection;
 
 public class ExtendedStatusBuilder {
 
+	private static final int PARALLEL_CALCULATION_AWAIT_TIME = 500;
 	private static final int COMMITS_RANGE_LIMIT = 10;
 	
 	public ExtendedStatus getAndCacheMinorStatus(Component comp) {
@@ -42,6 +43,15 @@ public class ExtendedStatusBuilder {
 
 	public ExtendedStatus getAndCacheStatus(Component comp, CachedStatuses cache, IProgress progress, boolean patch) {
 		ExtendedStatus existing = cache.putIfAbsent(comp.getUrl(), ExtendedStatus.DUMMY);
+		
+		while (ExtendedStatus.DUMMY == existing) {
+			try {
+				Thread.sleep(PARALLEL_CALCULATION_AWAIT_TIME);
+				existing = cache.get(comp.getUrl());
+			} catch (InterruptedException e) {
+				throw new RuntimeException(e);
+			}
+		}
 		
 		if (null != existing) {
 			return new ExtendedStatus(existing.getNextVersion(), existing.getStatus(), existing.getSubComponents(), comp);
@@ -101,9 +111,13 @@ public class ExtendedStatusBuilder {
 			throw new EReleaseMDepsNotLocked(nonlockedMDeps);
 		}
 		
-		for (Component mdep : rb.getMDeps()) {
+		LinkedHashMap<Component, ExtendedStatus> subComponentsLocal = new LinkedHashMap<>();
+		Utils.async(rb.getMDeps(), (mdep) -> {
 			ExtendedStatus status = getAndCacheStatus(mdep, cache, progress, true);
-			subComponents.put(mdep, status);
+			subComponentsLocal.put(mdep, status);
+		});
+		for (Component mdep : rb.getMDeps()) {
+			subComponents.put(mdep, subComponentsLocal.get(mdep));
 		}
 		
 		if (hasMDepsNotInDONEStatus(rb.getMDeps(), cache)) {
@@ -181,9 +195,14 @@ public class ExtendedStatusBuilder {
 
 	private Boolean isNeedToFork(Component comp, ReleaseBranchCurrent rb, CachedStatuses cache, IProgress progress, LinkedHashMap<Component, ExtendedStatus> subComponents) {
 		
-		for (Component mdep : rb.getMDeps()) {
+		LinkedHashMap<Component, ExtendedStatus> subComponentsLocal = new LinkedHashMap<>();
+		Utils.async(rb.getMDeps(), (mdep) -> {
 			ExtendedStatus status = getAndCacheStatus(mdep, cache, progress, false);
-			subComponents.put(mdep, status);
+			subComponentsLocal.put(mdep, status);
+		});
+		
+		for (Component mdep : rb.getMDeps()) {
+			subComponents.put(mdep, subComponentsLocal.get(mdep));
 		}
 	
 		if (!rb.exists()) {
@@ -195,7 +214,7 @@ public class ExtendedStatusBuilder {
 		}
 		
 		// develop branch has valuable commits => YES
-		if (reportDuration(() -> new DevelopBranch(comp).isModified(), "develop modified", comp, progress)) {
+		if (reportDuration(() -> new DevelopBranch(comp).isModified(), "is develop modified determined", comp, progress)) {
 			return true;
 		}
 		

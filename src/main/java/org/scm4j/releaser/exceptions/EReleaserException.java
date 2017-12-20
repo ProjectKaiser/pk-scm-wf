@@ -15,4 +15,8 @@ public class EReleaserException extends RuntimeException {
 	public EReleaserException(String message, Throwable t) {
 		super(message, t);
 	}
+
+	public EReleaserException(Throwable t) {
+		super(t);
+	}
 }
