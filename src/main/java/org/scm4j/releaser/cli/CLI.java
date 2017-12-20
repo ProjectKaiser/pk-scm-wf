@@ -143,6 +143,8 @@ public class CLI {
 		if (e instanceof RuntimeException) {
 			lastException = (RuntimeException) e;
 		}
+		ps.println();
+		ps.print("EXECUTION FAILED: ");
 		if (ArrayUtils.contains(args, Option.STACK_TRACE.getCmdLineStr())) {
 			e.printStackTrace(ps);
 		} else {
