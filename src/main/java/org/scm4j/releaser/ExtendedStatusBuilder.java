@@ -1,11 +1,5 @@
 package org.scm4j.releaser;
 
-import static org.scm4j.releaser.Utils.reportDuration;
-
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-
 import org.scm4j.commons.Version;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.commons.progress.ProgressConsole;
@@ -22,6 +16,12 @@ import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.vcs.api.VCSTag;
 import org.scm4j.vcs.api.WalkDirection;
+
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+
+import static org.scm4j.releaser.Utils.reportDuration;
 
 public class ExtendedStatusBuilder {
 
@@ -94,7 +94,8 @@ public class ExtendedStatusBuilder {
 	}
 
 	private ExtendedStatus getPatchStatus(Component comp, CachedStatuses cache, IProgress progress) {
-		ReleaseBranchPatch rb = ReleaseBranchFactory.getReleaseBranchPatch(comp);
+		ReleaseBranchPatch rb = reportDuration(() -> ReleaseBranchFactory.getReleaseBranchPatch(comp),
+				"RB created", comp, progress);
 		LinkedHashMap<Component, ExtendedStatus> subComponents = new LinkedHashMap<>();
 		
 		BuildStatus buildStatus;
@@ -106,9 +107,9 @@ public class ExtendedStatusBuilder {
 			throw new ENoReleases("Release Branch version patch is " + rb.getVersion().getPatch() + ". Component release should be created before patch");
 		}
 
-		List<Component> nonlockedMDeps = new ArrayList<>();
-		if (!areMDepsLocked(rb.getMDeps(), nonlockedMDeps)) {
-			throw new EReleaseMDepsNotLocked(nonlockedMDeps);
+		List<Component> nonLockedMDeps = new ArrayList<>();
+		if (!areMDepsLocked(rb.getMDeps(), nonLockedMDeps)) {
+			throw new EReleaseMDepsNotLocked(nonLockedMDeps);
 		}
 		
 		LinkedHashMap<Component, ExtendedStatus> subComponentsLocal = new LinkedHashMap<>();
@@ -124,7 +125,7 @@ public class ExtendedStatusBuilder {
 			buildStatus = BuildStatus.BUILD_MDEPS;
 		} else if (!areMDepsPatchesActual(rb.getMDeps(), cache)) {
 			buildStatus = BuildStatus.ACTUALIZE_PATCHES;
-		} else if (noValueableCommitsAfterLastTag(comp, rb)) {
+		} else if (reportDuration(() -> noValueableCommitsAfterLastTag(comp, rb), "is release branch modified check", comp, progress)) {
 			buildStatus = BuildStatus.DONE;
 		} else {
 			buildStatus = BuildStatus.BUILD;
@@ -214,7 +215,7 @@ public class ExtendedStatusBuilder {
 		}
 		
 		// develop branch has valuable commits => YES
-		if (reportDuration(() -> new DevelopBranch(comp).isModified(), "is develop modified determined", comp, progress)) {
+		if (reportDuration(() -> new DevelopBranch(comp).isModified(), "is develop modified check", comp, progress)) {
 			return true;
 		}
 		

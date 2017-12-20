@@ -43,7 +43,7 @@ public class ReleaseBranchCurrent {
 	}
 
 	public List<Component> getCRBMDeps(IProgress progress) {
-		return reportDuration(() -> ReleaseBranchFactory.getMDepsRelease(comp, name), "getMDepsRelease", comp, progress);
+		return reportDuration(() -> ReleaseBranchFactory.getMDepsRelease(comp, name), "get CRB mdeps", comp, progress);
 	}
 
 	public Version getDevVersion() {
