@@ -14,6 +14,7 @@ import org.scm4j.releaser.exceptions.EReleaserException;
 import org.scm4j.releaser.exceptions.cmdline.*;
 
 import java.io.PrintStream;
+import java.util.concurrent.ForkJoinPool;
 
 public class CLI {
 	public static final int EXIT_CODE_OK = 0;
@@ -90,6 +91,7 @@ public class CLI {
 	public int exec(String[] args) {
 		try {
 			out.println("scm4j-releaser " + CLI.class.getPackage().getSpecificationVersion());
+			out.println("parallelism: " + ForkJoinPool.commonPool().getParallelism());
 			long startMS = System.currentTimeMillis();
 			CommandLine cmd = new CommandLine(args);
 			validateCommandLine(cmd);
