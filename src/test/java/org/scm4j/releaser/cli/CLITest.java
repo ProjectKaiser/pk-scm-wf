@@ -1,6 +1,7 @@
 package org.scm4j.releaser.cli;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
@@ -11,8 +12,13 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 
+import java.io.File;
 import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.List;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -24,8 +30,10 @@ import org.scm4j.releaser.CachedStatuses;
 import org.scm4j.releaser.ExtendedStatus;
 import org.scm4j.releaser.ExtendedStatusBuilder;
 import org.scm4j.releaser.TestEnvironment;
+import org.scm4j.releaser.Utils;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.conf.Component;
+import org.scm4j.releaser.conf.IConfigSource;
 import org.scm4j.releaser.conf.VCSRepositories;
 import org.scm4j.releaser.exceptions.EComponentConfig;
 import org.scm4j.releaser.exceptions.cmdline.ECmdLineNoCommand;
@@ -309,5 +317,39 @@ public class CLITest {
 			resetCLIBuilders();
 			CLI.main(new String[] { CLICommand.STATUS.getCmdLineStr(), TestEnvironment.PRODUCT_UNTILL });
 		}
+	}
+	
+	@Test
+	public void testInitWorkingFolder() throws Exception {
+		CLI.setConfigSource(new IConfigSource() {
+			
+			@Override
+			public String getCredentialsLocations() {
+				return null;
+			}
+			
+			@Override
+			public String getCompConfigLocations() {
+				return null;
+			}
+		});
+		
+		String[] args = new String[] {};
+		Utils.waitForDeleteDir(Utils.BASE_WORKING_DIR);
+		
+		new CLI().exec(args);
+		Utils.BASE_WORKING_DIR.mkdirs();
+		List<String> srcFileNames = new ArrayList<>();
+		for (File srcFile : FileUtils.listFiles(Utils.getResourceFile(CLI.class, CLI.CONFIG_TEMPLATES), FileFilterUtils.trueFileFilter(), FileFilterUtils.trueFileFilter())) {
+			srcFileNames.add(srcFile.getName());
+		}
+		
+		List<String> dstFileNames = new ArrayList<>();
+		for (File dstFile : FileUtils.listFiles(Utils.BASE_WORKING_DIR, FileFilterUtils.trueFileFilter(), FileFilterUtils.trueFileFilter())) {
+			dstFileNames.add(dstFile.getName());
+		}
+		
+		assertTrue(dstFileNames.containsAll(srcFileNames));
+		assertEquals(srcFileNames.size(), dstFileNames.size());
 	}
 }

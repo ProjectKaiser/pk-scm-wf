@@ -16,6 +16,7 @@ import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.actions.PrintStatus;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.EnvVarsConfigSource;
+import org.scm4j.releaser.conf.IConfigSource;
 import org.scm4j.releaser.exceptions.EReleaserException;
 import org.scm4j.releaser.exceptions.cmdline.ECmdLine;
 import org.scm4j.releaser.exceptions.cmdline.ECmdLineNoCommand;
@@ -31,8 +32,10 @@ public class CLI {
 	private static PrintStream out = System.out;
 	private static ActionTreeBuilder actionBuilder = new ActionTreeBuilder();
 	private static ExtendedStatusBuilder statusBuilder = new ExtendedStatusBuilder();
+	private static IConfigSource configSource = new EnvVarsConfigSource();
 	private IAction action;
 	private RuntimeException lastException;
+	
 
 	private Runnable preExec = null;
 
@@ -130,20 +133,15 @@ public class CLI {
 	}
 
 	private void initWorkingDir() throws Exception {
-		EnvVarsConfigSource configSource = new EnvVarsConfigSource();
 		if (Utils.BASE_WORKING_DIR.exists() || configSource.getCredentialsLocations() != null || configSource.getCompConfigLocations() != null) {
 			return;
 		}
 		
 		Utils.BASE_WORKING_DIR.mkdirs();
-		File resourcesFrom = getResourceFile(CONFIG_TEMPLATES);
+		File resourcesFrom = Utils.getResourceFile(this.getClass(), CONFIG_TEMPLATES);
 		FileUtils.copyDirectory(resourcesFrom, Utils.BASE_WORKING_DIR);
 	}
 	
-	private File getResourceFile(String path) throws Exception{
-		return new File(getClass().getResource(path).toURI());
-	}
-
 	void validateCommandLine(CommandLine cmd) {
 		for (String optionArg : cmd.getOptionArgs()) {
 			if (Option.fromCmdLineStr(optionArg) == Option.UNKNOWN) {
@@ -190,5 +188,9 @@ public class CLI {
 
 	public RuntimeException getLastException() {
 		return lastException;
+	}
+
+	public static void setConfigSource(IConfigSource configSource) {
+		CLI.configSource = configSource;
 	}
 }

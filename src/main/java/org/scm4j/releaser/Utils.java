@@ -98,4 +98,8 @@ public final class Utils {
 			throw new Exception("failed to delete " + dir);
 		}
 	}
+	
+	public static File getResourceFile(Class<?> forClass, String path) throws Exception{
+		return new File(forClass.getResource(path).toURI());
+	}
 }
