@@ -85,37 +85,9 @@ public class VCSRepositories {
 		return DEFAULT_VCS_TYPE;
 	}
 
-	@SuppressWarnings("unchecked")
-	private <T> T getPropByName(Map<?, ?> map, String name, Object propName, T defaultValue) {
-		if (map != null) {
-			for (Object key : map.keySet()) {
-				if (key == null || name.matches((String) key)) {
-					Map<?, ?> props = (Map<?, ?>) map.get(key);
-					if (props.containsKey(propName))
-						return (T) props.get(propName);
-				}
-			}
-		}
-		return defaultValue;
-	}
 
-	private String getPropByNameAsStringWithReplace(Map<?, ?> map, String name, Object propName, String defaultValue) {
-		String result = defaultValue;
-		if (map != null) {
-			for (Object key : map.keySet()) {
-				if (key == null || name.matches((String) key)) {
-					Map<?, ?> props = (Map<?, ?>) map.get(key);
-					if (props.containsKey(propName)) {
-						result = (String) props.get(propName);
-						if (result != null)
-							result = name.replaceFirst(key == null ? ".*" : (String) key, result);
-						break;
-					}
-				}
-			}
-		}
-		return result;
-	}
+
+
 
 	private static VCSRepositories loadVCSRepositories() throws EConfig {
 		URLContentLoader reposLoader = new URLContentLoader();
@@ -136,19 +108,6 @@ public class VCSRepositories {
 		} catch (Exception e) {
 			throw new EConfig("Failed to read config", e);
 		}
-	}
-
-	public static VCSRepositories getDefault() {
-		VCSRepositories localInstance = instance;
-		if (localInstance == null) {
-			synchronized (VCSRepositories.class) {
-				localInstance = instance;
-				if (localInstance == null) {
-					instance = localInstance = VCSRepositories.loadVCSRepositories();
-				}
-			}
-		}
-		return localInstance;
 	}
 
 	public static void resetDefault() {
