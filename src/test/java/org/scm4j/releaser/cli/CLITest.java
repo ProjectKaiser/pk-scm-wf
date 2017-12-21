@@ -4,7 +4,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.atLeast;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.calls;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -24,6 +28,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.contrib.java.lang.system.ExpectedSystemExit;
+import org.mockito.Matchers;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.releaser.ActionTreeBuilder;
 import org.scm4j.releaser.CachedStatuses;
@@ -33,6 +38,7 @@ import org.scm4j.releaser.TestEnvironment;
 import org.scm4j.releaser.Utils;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.conf.Component;
+import org.scm4j.releaser.conf.EnvVarsConfigSource;
 import org.scm4j.releaser.conf.IConfigSource;
 import org.scm4j.releaser.conf.VCSRepositories;
 import org.scm4j.releaser.exceptions.EComponentConfig;
@@ -188,7 +194,9 @@ public class CLITest {
 		}
 
 		assertEquals(CLI.EXIT_CODE_ERROR, mockedCLI.exec(args));
-		verify(mockedPS).println(thrown.getMessage());
+		verify(mockedPS, atLeastOnce()).println(anyString());
+		verify(mockedPS, atLeastOnce()).println();
+		verify(mockedPS).println(Matchers.contains(thrown.getMessage()));
 		verify(mockedPS).println(CommandLine.getUsage());
 
 		exit.expectSystemExitWithStatus(CLI.EXIT_CODE_ERROR);
@@ -208,7 +216,9 @@ public class CLITest {
 		}
 
 		assertEquals(CLI.EXIT_CODE_ERROR, mockedCLI.exec(args));
-		verify(mockedPS).println(thrown.getMessage());
+		verify(mockedPS, atLeastOnce()).println(anyString());
+		verify(mockedPS, atLeastOnce()).println();
+		verify(mockedPS).println(Matchers.contains(thrown.getMessage()));
 		verify(mockedPS).println(CommandLine.getUsage());
 
 		exit.expectSystemExitWithStatus(CLI.EXIT_CODE_ERROR);
@@ -228,7 +238,9 @@ public class CLITest {
 		}
 
 		assertEquals(CLI.EXIT_CODE_ERROR, mockedCLI.exec(args));
-		verify(mockedPS).println(thrown.getMessage());
+		verify(mockedPS, atLeastOnce()).println(anyString());
+		verify(mockedPS, atLeastOnce()).println();
+		verify(mockedPS).println(Matchers.contains(thrown.getMessage()));
 		verify(mockedPS).println(CommandLine.getUsage());
 
 		exit.expectSystemExitWithStatus(CLI.EXIT_CODE_ERROR);
@@ -249,7 +261,9 @@ public class CLITest {
 		}
 
 		assertEquals(CLI.EXIT_CODE_ERROR, mockedCLI.exec(args));
-		verify(mockedPS).println(thrown.getMessage());
+		verify(mockedPS, atLeastOnce()).println(anyString());
+		verify(mockedPS, atLeastOnce()).println();
+		verify(mockedPS).println(Matchers.contains(thrown.getMessage()));
 		verify(mockedPS).println(CommandLine.getUsage());
 
 		exit.expectSystemExitWithStatus(CLI.EXIT_CODE_ERROR);
@@ -272,7 +286,10 @@ public class CLITest {
 			}
 
 			assertEquals(CLI.EXIT_CODE_ERROR, mockedCLI.exec(args));
-			verify(mockedPS).println(thrown.getMessage());
+			// FIXME: get rid of unneccessary verifications
+			verify(mockedPS, atLeastOnce()).println(anyString());
+			verify(mockedPS, atLeastOnce()).println();
+			verify(mockedPS).println(Matchers.contains(thrown.getMessage()));
 			verify(mockedPS, never()).println(CommandLine.getUsage());
 
 			exit.expectSystemExitWithStatus(CLI.EXIT_CODE_ERROR);
@@ -305,7 +322,9 @@ public class CLITest {
 
 		assertEquals(CLI.EXIT_CODE_ERROR, mockedCLI.exec(args));
 
-		verify(mockedPS).println(mockedException.toString());
+		verify(mockedPS, atLeastOnce()).println(anyString());
+		verify(mockedPS, atLeastOnce()).println();
+		verify(mockedPS).println(Matchers.contains(mockedException.getMessage()));
 		verify(mockedAction, never()).execute(any(IProgress.class));
 	}
 
@@ -333,23 +352,27 @@ public class CLITest {
 				return null;
 			}
 		});
-		
-		String[] args = new String[] {};
-		Utils.waitForDeleteDir(Utils.BASE_WORKING_DIR);
-		
-		new CLI().exec(args);
-		Utils.BASE_WORKING_DIR.mkdirs();
-		List<String> srcFileNames = new ArrayList<>();
-		for (File srcFile : FileUtils.listFiles(Utils.getResourceFile(CLI.class, CLI.CONFIG_TEMPLATES), FileFilterUtils.trueFileFilter(), FileFilterUtils.trueFileFilter())) {
-			srcFileNames.add(srcFile.getName());
+		try {
+			
+			String[] args = new String[] {};
+			Utils.waitForDeleteDir(Utils.BASE_WORKING_DIR);
+			
+			new CLI().exec(args);
+			Utils.BASE_WORKING_DIR.mkdirs();
+			List<String> srcFileNames = new ArrayList<>();
+			for (File srcFile : FileUtils.listFiles(Utils.getResourceFile(CLI.class, CLI.CONFIG_TEMPLATES), FileFilterUtils.trueFileFilter(), FileFilterUtils.trueFileFilter())) {
+				srcFileNames.add(srcFile.getName());
+			}
+			
+			List<String> dstFileNames = new ArrayList<>();
+			for (File dstFile : FileUtils.listFiles(Utils.BASE_WORKING_DIR, FileFilterUtils.trueFileFilter(), FileFilterUtils.trueFileFilter())) {
+				dstFileNames.add(dstFile.getName());
+			}
+			
+			assertTrue(dstFileNames.containsAll(srcFileNames));
+			assertEquals(srcFileNames.size(), dstFileNames.size());
+		} finally {
+			CLI.setConfigSource(new EnvVarsConfigSource());
 		}
-		
-		List<String> dstFileNames = new ArrayList<>();
-		for (File dstFile : FileUtils.listFiles(Utils.BASE_WORKING_DIR, FileFilterUtils.trueFileFilter(), FileFilterUtils.trueFileFilter())) {
-			dstFileNames.add(dstFile.getName());
-		}
-		
-		assertTrue(dstFileNames.containsAll(srcFileNames));
-		assertEquals(srcFileNames.size(), dstFileNames.size());
 	}
 }
