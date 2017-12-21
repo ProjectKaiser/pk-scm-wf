@@ -16,7 +16,7 @@ public class EnvVarsConfigSourceTest {
 	
 	@Test
 	public void testEnvVars() {
-		environmentVariables.set(EnvVarsConfigSource.REPOS_LOCATION_ENV_VAR_DEPRECATED, REPOS_URL);
+		environmentVariables.set(EnvVarsConfigSource.CC_LOCATION_ENV_VAR, REPOS_URL);
 		environmentVariables.set(EnvVarsConfigSource.CREDENTIALS_LOCATION_ENV_VAR, CREDS_URL);
 		assertEquals(REPOS_URL, new EnvVarsConfigSource().getCompConfigLocations());
 		assertEquals(CREDS_URL, new EnvVarsConfigSource().getCredentialsLocations());
