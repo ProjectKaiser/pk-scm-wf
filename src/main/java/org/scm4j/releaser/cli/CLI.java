@@ -148,15 +148,18 @@ public class CLI {
 			lastException = (RuntimeException) e;
 		}
 		ps.println();
-		ps.print("EXECUTION FAILED: ");
+		String prefixMessage = "EXECUTION FAILED: ";
 		if (ArrayUtils.contains(args, Option.STACK_TRACE.getCmdLineStr())) {
+			ps.println(prefixMessage);
 			e.printStackTrace(ps);
 		} else {
-			if (e instanceof EReleaserException) {
-				ps.println((e.getMessage() == null || e.getMessage().isEmpty()) ? (e.getCause() != null ? e.getCause().toString() : "") : e.getMessage());
-			} else {
-				ps.println(e.toString());
-			}
+			ps.println(prefixMessage + (e instanceof EReleaserException ?
+					e.getMessage() == null || e.getMessage().isEmpty() ? 
+							e.getCause() != null ? 
+									e.getCause().toString() : 
+									"" : 
+							e.getMessage() :
+					e.toString()));
 		}
 	}
 
