@@ -119,9 +119,9 @@ public class VCSRepositories {
 
 	private static VCSRepositories loadVCSRepositories() throws EConfig {
 		URLContentLoader reposLoader = new URLContentLoader();
-		String separatedReposUrlsStr = configSource.getReposLocations();
+		String separatedReposUrlsStr = configSource.getCompConfigLocations();
 		if (separatedReposUrlsStr == null) {
-			throw new EEnvVarConfig(EnvVarsConfigSource.REPOS_LOCATION_ENV_VAR
+			throw new EEnvVarConfig(EnvVarsConfigSource.CC_LOCATION_ENV_VAR
 					+ " environment var must contain a valid config path");
 		}
 		String separatedCredsUrlsStr = configSource.getCredentialsLocations();

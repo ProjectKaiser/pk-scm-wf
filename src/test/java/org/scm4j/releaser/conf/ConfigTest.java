@@ -30,7 +30,7 @@ public class ConfigTest {
 		creds = null;
 		VCSRepositories.setConfigSource(new IConfigSource() {
 			@Override
-			public String getReposLocations() {
+			public String getCompConfigLocations() {
 				return repos;
 			}
 

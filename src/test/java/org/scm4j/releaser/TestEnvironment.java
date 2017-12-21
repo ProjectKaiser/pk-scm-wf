@@ -72,7 +72,7 @@ public class TestEnvironment implements AutoCloseable {
 
 		VCSRepositories.setConfigSource(new IConfigSource() {
 			@Override
-			public String getReposLocations() {
+			public String getCompConfigLocations() {
 				return getReposFile().toString().replace("\\", "/");
 			}
 

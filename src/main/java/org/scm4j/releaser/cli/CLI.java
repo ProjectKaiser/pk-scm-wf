@@ -131,7 +131,7 @@ public class CLI {
 
 	private void initWorkingDir() throws Exception {
 		EnvVarsConfigSource configSource = new EnvVarsConfigSource();
-		if (Utils.BASE_WORKING_DIR.exists() || configSource.getCredentialsLocations() != null || configSource.getReposLocations() != null) {
+		if (Utils.BASE_WORKING_DIR.exists() || configSource.getCredentialsLocations() != null || configSource.getCompConfigLocations() != null) {
 			return;
 		}
 		
