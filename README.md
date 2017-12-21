@@ -23,13 +23,14 @@ For version definitions ref. [semantic Versioning 2.0.0](http://semver.org/).
 
 # Usage
 
-1. Add [`version`](docs/data-structure.md#version-file) file to your repository, optionally [`mdeps`](docs/data-structure.md#mdeps-file), configure [`SCM4J_VCS_REPOS`](docs/data-structure-SCM4J_VCS_REPOS.md) and [`SCM4J_CREDENTIALS`](docs/data-structure-SCM4J_CREDENTIALS.md) environment variables. Ref. [data-structure](docs/data-structure.md) for more details
+1. Add [`version`](docs/data-structure.md#version-file) file to your repository, optionally [`mdeps`](docs/data-structure.md#mdeps-file)
 1. Install groovy
 1. Download [run.grovy](https://raw.githubusercontent.com/scm4j/scm4j-releaser/master/run.groovy)
+1. Execute groovy run.groovy, it will create `cc`, `cc.yml`, `credentials.yml` files in $user.home/.scm4j folder. Edit these files (ref. comments there)
 1. Run `groovy run.groovy status com.mycompany:my-root-component` to view status of your project
 1. Run `groovy run.groovy build com.mycompany:my-root-component` to build your project (and all mdeps)
 
-# How It Works
+# Under the Hood
 
 __Overview__
 
