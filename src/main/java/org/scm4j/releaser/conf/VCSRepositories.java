@@ -31,7 +31,7 @@ public class VCSRepositories {
 	public static void setConfigSource(IConfigSource configSource) {
 		VCSRepositories.configSource = configSource;
 	}
-
+	
 	public VCSRepositories(String urlsStr, String credsStr) {
 		this(urlsStr, credsStr, new VCSWorkspace(DEFAULT_VCS_WORKSPACE_DIR));
 	}

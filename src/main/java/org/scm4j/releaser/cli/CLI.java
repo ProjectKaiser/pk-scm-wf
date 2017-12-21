@@ -1,7 +1,9 @@
 package org.scm4j.releaser.cli;
 
+import java.io.File;
 import java.io.PrintStream;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.commons.progress.ProgressConsole;
@@ -9,9 +11,11 @@ import org.scm4j.releaser.ActionTreeBuilder;
 import org.scm4j.releaser.CachedStatuses;
 import org.scm4j.releaser.ExtendedStatus;
 import org.scm4j.releaser.ExtendedStatusBuilder;
+import org.scm4j.releaser.Utils;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.actions.PrintStatus;
 import org.scm4j.releaser.conf.Component;
+import org.scm4j.releaser.conf.EnvVarsConfigSource;
 import org.scm4j.releaser.exceptions.EReleaserException;
 import org.scm4j.releaser.exceptions.cmdline.ECmdLine;
 import org.scm4j.releaser.exceptions.cmdline.ECmdLineNoCommand;
@@ -20,6 +24,7 @@ import org.scm4j.releaser.exceptions.cmdline.ECmdLineUnknownCommand;
 import org.scm4j.releaser.exceptions.cmdline.ECmdLineUnknownOption;
 
 public class CLI {
+	public static final String CONFIG_TEMPLATES = "config-templates";
 	public static final int EXIT_CODE_OK = 0;
 	public static final int EXIT_CODE_ERROR = 1;
 
@@ -94,6 +99,7 @@ public class CLI {
 	public int exec(String[] args) {
 		try {
 			out.println("scm4j-releaser " + CLI.class.getPackage().getSpecificationVersion());
+			initWorkingDir();
 			long startMS = System.currentTimeMillis();
 			CommandLine cmd = new CommandLine(args);
 			validateCommandLine(cmd);
@@ -121,6 +127,21 @@ public class CLI {
 			printException(args, e, out);
 			return EXIT_CODE_ERROR;
 		}
+	}
+
+	private void initWorkingDir() throws Exception {
+		EnvVarsConfigSource configSource = new EnvVarsConfigSource();
+		if (Utils.BASE_WORKING_DIR.exists() || configSource.getCredentialsLocations() != null || configSource.getReposLocations() != null) {
+			return;
+		}
+		
+		Utils.BASE_WORKING_DIR.mkdirs();
+		File resourcesFrom = getResourceFile(CONFIG_TEMPLATES);
+		FileUtils.copyDirectory(resourcesFrom, Utils.BASE_WORKING_DIR);
+	}
+	
+	private File getResourceFile(String path) throws Exception{
+		return new File(getClass().getResource(path).toURI());
 	}
 
 	void validateCommandLine(CommandLine cmd) {

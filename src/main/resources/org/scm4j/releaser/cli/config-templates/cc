@@ -1,0 +1,6 @@
+# This file contains urls of component configuration files. One url per line, #-commented.
+# Components configs = cc.yaml(if exists) + content from url1 + content from url2 + ...
+#
+# https://mycompany.com/project1/cc.yml
+# https://mycompany.com/project2/project2-cc.yml
+# c:/my/local/project/local-project-cc.yml  # file:/// could be omitted
