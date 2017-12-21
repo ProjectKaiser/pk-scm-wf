@@ -29,26 +29,24 @@ public class CLI {
 	public static final int EXIT_CODE_OK = 0;
 	public static final int EXIT_CODE_ERROR = 1;
 
-	private static PrintStream out = System.out;
-	private static ActionTreeBuilder actionBuilder = new ActionTreeBuilder();
-	private static ExtendedStatusBuilder statusBuilder = new ExtendedStatusBuilder();
-	private static IConfigSource configSource = new EnvVarsConfigSource();
+	private final PrintStream out;
+	private final ActionTreeBuilder actionBuilder;
+	private final ExtendedStatusBuilder statusBuilder;
+	private IConfigSource configSource;
+	private static ICLIFactory cliFactory = new CLIFactory();
 	private IAction action;
 	private RuntimeException lastException;
-	
-
 	private Runnable preExec = null;
-
-	static void setOut(PrintStream out) {
-		CLI.out = out;
+	
+	public CLI() {
+		this(System.out, new ExtendedStatusBuilder(), new ActionTreeBuilder(), new EnvVarsConfigSource());
 	}
 	
-	static void setStatusTreeBuilder(ExtendedStatusBuilder statusBuilder) {
-		CLI.statusBuilder = statusBuilder;
-	}
-
-	static void setActionBuilder(ActionTreeBuilder actionBuilder) {
-		CLI.actionBuilder = actionBuilder;
+	public CLI(PrintStream out, ExtendedStatusBuilder statusBuilder, ActionTreeBuilder actionBuilder, IConfigSource configSource) {
+		this.out = out;
+		this.statusBuilder = statusBuilder;
+		this.actionBuilder = actionBuilder;
+		this.configSource = configSource;
 	}
 
 	public IAction getAction() {
@@ -183,14 +181,19 @@ public class CLI {
 	}
 
 	public static void main(String[] args) throws Exception {
-		System.exit(new CLI().exec(args));
+		System.exit(cliFactory.getCLI().exec(args));
 	}
 
 	public RuntimeException getLastException() {
 		return lastException;
 	}
 
-	public static void setConfigSource(IConfigSource configSource) {
-		CLI.configSource = configSource;
+	public static void setCLIFactory(ICLIFactory cliFactory) {
+		CLI.cliFactory = cliFactory;
+	}
+
+	public void setConfigSource(IConfigSource configSource) {
+		this.configSource = configSource;
+		
 	}
 }

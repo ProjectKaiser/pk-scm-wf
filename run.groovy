@@ -6,6 +6,6 @@ import org.scm4j.releaser.cli.CLI;
 class CLIRunner {
 	static void main(args) {
 		System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "64");
-		System.exit(new CLI().exec(args));
+		CLI.main(args);
 	}
 }

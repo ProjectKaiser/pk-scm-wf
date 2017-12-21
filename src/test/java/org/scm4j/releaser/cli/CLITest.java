@@ -2,13 +2,10 @@ package org.scm4j.releaser.cli;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.atLeastOnce;
-import static org.mockito.Mockito.calls;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -38,10 +35,8 @@ import org.scm4j.releaser.TestEnvironment;
 import org.scm4j.releaser.Utils;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.conf.Component;
-import org.scm4j.releaser.conf.EnvVarsConfigSource;
 import org.scm4j.releaser.conf.IConfigSource;
 import org.scm4j.releaser.conf.VCSRepositories;
-import org.scm4j.releaser.exceptions.EComponentConfig;
 import org.scm4j.releaser.exceptions.cmdline.ECmdLineNoCommand;
 import org.scm4j.releaser.exceptions.cmdline.ECmdLineNoProduct;
 import org.scm4j.releaser.exceptions.cmdline.ECmdLineUnknownCommand;
@@ -56,30 +51,41 @@ public class CLITest {
 	private CLI mockedCLI;
 	private ActionTreeBuilder mockedActionTreeBuilder;
 	private ExtendedStatusBuilder mockedStatusTreeBuilder;
+	private ExtendedStatus mockedStatus;
 
 	@Rule
 	public final ExpectedSystemExit exit = ExpectedSystemExit.none();
-	private ExtendedStatus mockedStatus;
 
 	@Before
 	public void setUp() throws Exception {
 		mockedAction = mock(IAction.class);
 		mockedPS = mock(PrintStream.class);
-
-		mockedCLI = spy(new CLI());
 		mockedActionTreeBuilder = mock(ActionTreeBuilder.class);
 		mockedStatusTreeBuilder = mock(ExtendedStatusBuilder.class);
 		mockedStatus = mock(ExtendedStatus.class);
-		CLI.setActionBuilder(mockedActionTreeBuilder);
-		CLI.setStatusTreeBuilder(mockedStatusTreeBuilder);
-		CLI.setOut(mockedPS);
+		mockedCLI = spy(new CLI(mockedPS, mockedStatusTreeBuilder, mockedActionTreeBuilder, null));
 	}
 
 	@After
 	public void tearDown() {
 		VCSRepositories.resetDefault();
-		CLI.setOut(System.out);
-		resetCLIBuilders();
+	}
+	
+	@Test
+	public void testSystemExit() throws Exception {
+		CLI.setCLIFactory(new ICLIFactory() {
+			@Override
+			public CLI getCLI() {
+				return mockedCLI;
+			}
+		});
+		try {
+			doReturn(CLI.EXIT_CODE_ERROR).when(mockedCLI).exec(any(String[].class));
+			exit.expectSystemExitWithStatus(CLI.EXIT_CODE_ERROR);
+			CLI.main(new String[] {});
+		} finally {
+			CLI.setCLIFactory(new CLIFactory());
+		}
 	}
 
 	@Test
@@ -88,14 +94,11 @@ public class CLITest {
 		doReturn(mockedStatus).when(mockedStatusTreeBuilder).getAndCacheMinorStatus(eq(new Component(UNTILL)), any(CachedStatuses.class));
 
 		assertEquals(CLI.EXIT_CODE_OK, mockedCLI.exec(args));
-
+		
 		verify(mockedAction, never()).execute(any(IProgress.class));
 		verify(mockedActionTreeBuilder, never()).getActionTreeForkOnly(any(ExtendedStatus.class), any(CachedStatuses.class));
 		verify(mockedStatusTreeBuilder).getAndCacheMinorStatus(eq(new Component(UNTILL)), any(CachedStatuses.class));
 		verify(mockedCLI).printStatusTree(any(ExtendedStatus.class));
-
-		exit.expectSystemExitWithStatus(CLI.EXIT_CODE_OK);
-		CLI.main(args);
 	}
 
 	@Test
@@ -110,9 +113,6 @@ public class CLITest {
 		verify(mockedStatusTreeBuilder).getAndCacheMinorStatus(eq(new Component(UNTILL)), any(CachedStatuses.class));
 		verify(mockedAction).execute(any(IProgress.class));
 		verify(mockedCLI, never()).printStatusTree(any(ExtendedStatus.class));
-
-		exit.expectSystemExitWithStatus(CLI.EXIT_CODE_OK);
-		CLI.main(args);
 	}
 
 	@Test
@@ -127,9 +127,6 @@ public class CLITest {
 		verify(mockedStatusTreeBuilder).getAndCacheMinorStatus(eq(new Component(UNTILL)), any(CachedStatuses.class));
 		verify(mockedAction).execute(any(IProgress.class));
 		verify(mockedCLI, never()).printStatusTree(any(ExtendedStatus.class));
-		
-		exit.expectSystemExitWithStatus(CLI.EXIT_CODE_OK);
-		CLI.main(args);
 	}
 	
 	@Test
@@ -145,9 +142,6 @@ public class CLITest {
 		verify(mockedStatusTreeBuilder).getAndCachePatchStatus(eq(new Component(coords)), any(CachedStatuses.class));
 		verify(mockedAction).execute(any(IProgress.class));
 		verify(mockedCLI, never()).printStatusTree(any(ExtendedStatus.class));
-		
-		exit.expectSystemExitWithStatus(CLI.EXIT_CODE_OK);
-		CLI.main(args);
 	}
 
 	@Test
@@ -161,13 +155,10 @@ public class CLITest {
 		verify(mockedStatusTreeBuilder, never()).getAndCachePatchStatus(any(Component.class), any(CachedStatuses.class));
 		verify(mockedAction).execute(any(IProgress.class));
 		verify(mockedCLI, never()).printStatusTree(any(ExtendedStatus.class));
-		
-		exit.expectSystemExitWithStatus(CLI.EXIT_CODE_OK);
-		CLI.main(args);
 	}
 
 	@Test
-	public void testExceptionsWorkflow() throws Exception {
+	public void testRuntimeExceptionsWorkflow() throws Exception {
 		RuntimeException mockedException = spy(new RuntimeException(TEST_EXCEPTION));
 		String[] args = new String[] { CLICommand.STATUS.getCmdLineStr(), UNTILL };
 		doThrow(mockedException).when(mockedCLI).getActionTree(any(CommandLine.class));
@@ -176,130 +167,63 @@ public class CLITest {
 
 		verify(mockedAction, never()).execute(any(IProgress.class));
 		verify(mockedException, never()).printStackTrace(mockedPS);
-
-		exit.expectSystemExitWithStatus(CLI.EXIT_CODE_ERROR);
-		CLI.main(args);
 	}
 
 	@Test
-	public void testExceptionUnknownCommand() throws Exception {
-		Exception thrown = null;
+	public void testCmdLineExceptionUnknownCommand() throws Exception {
 		String[] args = new String[] { "wrong command", UNTILL };
-		CommandLine cmd = new CommandLine(args);
-		try {
-			new CLI().validateCommandLine(cmd);
-			fail();
-		} catch (ECmdLineUnknownCommand e) {
-			thrown = e;
-		}
 
 		assertEquals(CLI.EXIT_CODE_ERROR, mockedCLI.exec(args));
-		verify(mockedPS, atLeastOnce()).println(anyString());
-		verify(mockedPS, atLeastOnce()).println();
-		verify(mockedPS).println(Matchers.contains(thrown.getMessage()));
-		verify(mockedPS).println(CommandLine.getUsage());
-
-		exit.expectSystemExitWithStatus(CLI.EXIT_CODE_ERROR);
-		CLI.main(args);
+		
+		assertTrue(mockedCLI.getLastException() instanceof ECmdLineUnknownCommand);
+		verifyCmdLineException();
 	}
 
 	@Test
-	public void testExceptionNoCommand() throws Exception {
-		Exception thrown = null;
+	public void testCmdLineExceptionNoCommand() throws Exception {
 		String[] args = new String[0];
-		CommandLine cmd = new CommandLine(args);
-		try {
-			new CLI().validateCommandLine(cmd);
-			fail();
-		} catch (ECmdLineNoCommand e) {
-			thrown = e;
-		}
-
+		
 		assertEquals(CLI.EXIT_CODE_ERROR, mockedCLI.exec(args));
-		verify(mockedPS, atLeastOnce()).println(anyString());
-		verify(mockedPS, atLeastOnce()).println();
-		verify(mockedPS).println(Matchers.contains(thrown.getMessage()));
-		verify(mockedPS).println(CommandLine.getUsage());
-
-		exit.expectSystemExitWithStatus(CLI.EXIT_CODE_ERROR);
-		CLI.main(args);
+		
+		assertTrue(mockedCLI.getLastException() instanceof ECmdLineNoCommand);
+		verifyCmdLineException();
 	}
 
 	@Test
-	public void testExceptionNoProduct() throws Exception {
-		Exception thrown = null;
+	public void testCmdLineExceptionNoProduct() throws Exception {
 		String[] args = new String[] { CLICommand.STATUS.getCmdLineStr() };
-		CommandLine cmd = new CommandLine(args);
-		try {
-			new CLI().validateCommandLine(cmd);
-			fail();
-		} catch (ECmdLineNoProduct e) {
-			thrown = e;
-		}
-
+		
 		assertEquals(CLI.EXIT_CODE_ERROR, mockedCLI.exec(args));
-		verify(mockedPS, atLeastOnce()).println(anyString());
-		verify(mockedPS, atLeastOnce()).println();
-		verify(mockedPS).println(Matchers.contains(thrown.getMessage()));
-		verify(mockedPS).println(CommandLine.getUsage());
-
-		exit.expectSystemExitWithStatus(CLI.EXIT_CODE_ERROR);
-		CLI.main(args);
+		
+		assertTrue(mockedCLI.getLastException() instanceof ECmdLineNoProduct);
+		verifyCmdLineException();
 	}
 
 	@Test
-	public void testExceptionUnknownOption() throws Exception {
-		Exception thrown = null;
+	public void testCmdLineExceptionUnknownOption() throws Exception {
 		String[] args = new String[] { CLICommand.STATUS.getCmdLineStr(), TestEnvironment.PRODUCT_UNTILL,
 				"unknown-option" };
-		CommandLine cmd = new CommandLine(args);
-		try {
-			new CLI().validateCommandLine(cmd);
-			fail();
-		} catch (ECmdLineUnknownOption e) {
-			thrown = e;
-		}
 
 		assertEquals(CLI.EXIT_CODE_ERROR, mockedCLI.exec(args));
-		verify(mockedPS, atLeastOnce()).println(anyString());
-		verify(mockedPS, atLeastOnce()).println();
-		verify(mockedPS).println(Matchers.contains(thrown.getMessage()));
-		verify(mockedPS).println(CommandLine.getUsage());
-
-		exit.expectSystemExitWithStatus(CLI.EXIT_CODE_ERROR);
-		CLI.main(args);
+		
+		assertTrue(mockedCLI.getLastException() instanceof ECmdLineUnknownOption);
+		verifyCmdLineException();
 	}
 
 	@Test
 	public void testExceptionUnknownComponent() throws Exception {
-		Exception thrown = null;
 		String[] args = new String[] { CLICommand.STATUS.getCmdLineStr(), "unknown:component" };
-		CommandLine cmd = new CommandLine(args);
-		resetCLIBuilders();
 		try (TestEnvironment te = new TestEnvironment()) {
 			te.generateTestEnvironmentNoVCS();
-			try {
-				new CLI().getActionTree(cmd);
-				fail();
-			} catch (EComponentConfig e) {
-				thrown = e;
-			}
-
 			assertEquals(CLI.EXIT_CODE_ERROR, mockedCLI.exec(args));
+			
 			// FIXME: get rid of unneccessary verifications
 			verify(mockedPS, atLeastOnce()).println(anyString());
 			verify(mockedPS, atLeastOnce()).println();
-			verify(mockedPS).println(Matchers.contains(thrown.getMessage()));
+			Exception lastException = mockedCLI.getLastException();
+			verify(mockedPS).println(Matchers.contains(lastException.getMessage() == null ? lastException.toString() : lastException.getMessage()));
 			verify(mockedPS, never()).println(CommandLine.getUsage());
-
-			exit.expectSystemExitWithStatus(CLI.EXIT_CODE_ERROR);
-			CLI.main(args);
 		}
-	}
-
-	private void resetCLIBuilders() {
-		CLI.setActionBuilder(new ActionTreeBuilder());
-		CLI.setStatusTreeBuilder(new ExtendedStatusBuilder());
 	}
 
 	@Test
@@ -329,18 +253,17 @@ public class CLITest {
 	}
 
 	@Test
-	public void testMainExitCodeOK() throws Exception {
+	public void testSuccessfulExecution() throws Exception {
 		try (TestEnvironment env = new TestEnvironment()) {
 			env.generateTestEnvironment();
 			exit.expectSystemExitWithStatus(CLI.EXIT_CODE_OK);
-			resetCLIBuilders();
 			CLI.main(new String[] { CLICommand.STATUS.getCmdLineStr(), TestEnvironment.PRODUCT_UNTILL });
 		}
 	}
 	
 	@Test
 	public void testInitWorkingFolder() throws Exception {
-		CLI.setConfigSource(new IConfigSource() {
+		mockedCLI.setConfigSource(new IConfigSource() {
 			
 			@Override
 			public String getCredentialsLocations() {
@@ -352,27 +275,29 @@ public class CLITest {
 				return null;
 			}
 		});
-		try {
-			
-			String[] args = new String[] {};
-			Utils.waitForDeleteDir(Utils.BASE_WORKING_DIR);
-			
-			new CLI().exec(args);
-			Utils.BASE_WORKING_DIR.mkdirs();
-			List<String> srcFileNames = new ArrayList<>();
-			for (File srcFile : FileUtils.listFiles(Utils.getResourceFile(CLI.class, CLI.CONFIG_TEMPLATES), FileFilterUtils.trueFileFilter(), FileFilterUtils.trueFileFilter())) {
-				srcFileNames.add(srcFile.getName());
-			}
-			
-			List<String> dstFileNames = new ArrayList<>();
-			for (File dstFile : FileUtils.listFiles(Utils.BASE_WORKING_DIR, FileFilterUtils.trueFileFilter(), FileFilterUtils.trueFileFilter())) {
-				dstFileNames.add(dstFile.getName());
-			}
-			
-			assertTrue(dstFileNames.containsAll(srcFileNames));
-			assertEquals(srcFileNames.size(), dstFileNames.size());
-		} finally {
-			CLI.setConfigSource(new EnvVarsConfigSource());
+		String[] args = new String[] {};
+		Utils.waitForDeleteDir(Utils.BASE_WORKING_DIR);
+		
+		mockedCLI.exec(args);
+		Utils.BASE_WORKING_DIR.mkdirs();
+		List<String> srcFileNames = new ArrayList<>();
+		for (File srcFile : FileUtils.listFiles(Utils.getResourceFile(CLI.class, CLI.CONFIG_TEMPLATES), FileFilterUtils.trueFileFilter(), FileFilterUtils.trueFileFilter())) {
+			srcFileNames.add(srcFile.getName());
 		}
+		
+		List<String> dstFileNames = new ArrayList<>();
+		for (File dstFile : FileUtils.listFiles(Utils.BASE_WORKING_DIR, FileFilterUtils.trueFileFilter(), FileFilterUtils.trueFileFilter())) {
+			dstFileNames.add(dstFile.getName());
+		}
+		
+		assertTrue(dstFileNames.containsAll(srcFileNames));
+		assertEquals(srcFileNames.size(), dstFileNames.size());
+	}
+	
+	private void verifyCmdLineException() {
+		verify(mockedPS, atLeastOnce()).println(anyString());
+		verify(mockedPS, atLeastOnce()).println();
+		verify(mockedPS).println(Matchers.contains(mockedCLI.getLastException().getMessage()));
+		verify(mockedPS).println(CommandLine.getUsage());
 	}
 }
