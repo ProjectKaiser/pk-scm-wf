@@ -28,7 +28,7 @@ public class ConfigTest {
 	public void setUp() {
 		repos = null;
 		creds = null;
-		VCSRepositories.setConfigSource(new IConfigSource() {
+		VCSRepositories.setConfigSource(new IConfig() {
 			@Override
 			public String getCompConfigLocations() {
 				return repos;
@@ -45,7 +45,7 @@ public class ConfigTest {
 	@After
 	public void tearDown() {
 		VCSRepositories.resetDefault();
-		VCSRepositories.setConfigSource(new EnvVarsConfigSource());
+		VCSRepositories.setConfig(new EnvVarsConfigSource());
 	}
 	
 	@Test

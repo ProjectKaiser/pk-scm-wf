@@ -3,6 +3,7 @@ package org.scm4j.releaser.branch;
 import org.scm4j.commons.Version;
 import org.scm4j.releaser.Utils;
 import org.scm4j.releaser.conf.Component;
+import org.scm4j.releaser.conf.VCSRepositoryFactory;
 import org.scm4j.releaser.conf.MDepsFile;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.exceptions.EVCSBranchNotFound;
@@ -13,7 +14,7 @@ import java.util.List;
 
 public final class ReleaseBranchFactory {
 	
-	public static ReleaseBranchPatch getReleaseBranchPatch(Component comp) {
+	public static ReleaseBranchPatch getReleaseBranchPatch(Component comp, VCSRepositoryFactory repoFactory) {
 		IVCS vcs = comp.getVCS();
 		String name = Utils.getReleaseBranchName(comp, comp.getVersion());
 		boolean exists;
@@ -22,7 +23,7 @@ public final class ReleaseBranchFactory {
 		try {
 			version = new Version(vcs.getFileContent(name, Utils.VER_FILE_NAME, null)).toRelease();
 			exists = true;
-			mdeps = getMDepsRelease(comp, name);
+			mdeps = getMDepsRelease(comp, name, repoFactory);
 		} catch (EVCSBranchNotFound e) {
 			exists = false;
 			version = null;
@@ -32,7 +33,7 @@ public final class ReleaseBranchFactory {
 		return new ReleaseBranchPatch(mdeps, exists, name, version);
 	}
 	
-	public static ReleaseBranchCurrent getCRB(Component comp) {
+	public static ReleaseBranchCurrent getCRB(Component comp, VCSRepositoryFactory repoFactory) {
 		IVCS vcs = comp.getVCS();
 		Version devVersion = Utils.getDevVersion(comp);
 		Version version;
@@ -45,23 +46,23 @@ public final class ReleaseBranchFactory {
 			version = devVersion.toReleaseZeroPatch();
 			exists = false;
 		}
-		List<Component> mdeps = exists && version.getPatch().equals(Utils.ZERO_PATCH) ? getMDepsRelease(comp, name) : getMDepsDevelop(comp);
+		List<Component> mdeps = exists && version.getPatch().equals(Utils.ZERO_PATCH) ? getMDepsRelease(comp, name, repoFactory) : getMDepsDevelop(comp, repoFactory);
 	
 		return new ReleaseBranchCurrent(mdeps, exists, name, version, comp, devVersion);
 	}
 	
-	public static List<Component> getMDepsRelease(Component comp, String releaseBranchName) {
+	public static List<Component> getMDepsRelease(Component comp, String releaseBranchName, VCSRepositoryFactory repoFactory) {
 		try {
 			String mDepsFileContent = comp.getVCS().getFileContent(releaseBranchName, Utils.MDEPS_FILE_NAME, null);
-			return new MDepsFile(mDepsFileContent).getMDeps();
+			return new MDepsFile(mDepsFileContent, repoFactory).getMDeps();
 		} catch (EVCSFileNotFound e) {
 			return new ArrayList<>();
 		}
 	}
 	
-	public static List<Component> getMDepsDevelop(Component comp) {
+	public static List<Component> getMDepsDevelop(Component comp, VCSRepositoryFactory compConfig) {
 		List<Component> res = new ArrayList<>();
-		for (Component mDep : getMDepsRelease(comp, null)) {
+		for (Component mDep : getMDepsRelease(comp, null, compConfig)) {
 			res.add(mDep.clone(""));
 		}
 		return res;

@@ -12,14 +12,16 @@ public class MDepsFile {
 
 	private final List<Object> lines = new ArrayList<>();
 
-	public MDepsFile(String content) {
+	public MDepsFile(String content, VCSRepositoryFactory repoFactory) {
 		if (content == null || content.isEmpty()) {
 			return;
 		}
 		String[] strs = content.split("\\r?\\n", -1);
 		for (String str : strs) {
-			if (new CommentedString(str).isValuable()) {
-				lines.add(new Component(str));
+			CommentedString cs = new CommentedString(str);
+			if (cs.isValuable()) {
+				String coords = cs.getStrNoComment();
+				lines.add(new Component(coords, repoFactory));
 			} else {
 				lines.add(str);
 			}

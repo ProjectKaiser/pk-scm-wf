@@ -5,6 +5,8 @@ import java.io.PrintStream;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.ArrayUtils;
+import org.scm4j.commons.coords.Coords;
+import org.scm4j.commons.coords.CoordsGradle;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.commons.progress.ProgressConsole;
 import org.scm4j.releaser.ActionTreeBuilder;
@@ -14,9 +16,8 @@ import org.scm4j.releaser.ExtendedStatusBuilder;
 import org.scm4j.releaser.Utils;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.actions.PrintStatus;
-import org.scm4j.releaser.conf.Component;
-import org.scm4j.releaser.conf.EnvVarsConfigSource;
-import org.scm4j.releaser.conf.IConfigSource;
+import org.scm4j.releaser.conf.IConfig;
+import org.scm4j.releaser.conf.VCSRepositoryFactory;
 import org.scm4j.releaser.exceptions.EReleaserException;
 import org.scm4j.releaser.exceptions.cmdline.ECmdLine;
 import org.scm4j.releaser.exceptions.cmdline.ECmdLineNoCommand;
@@ -32,21 +33,34 @@ public class CLI {
 	private final PrintStream out;
 	private final ActionTreeBuilder actionBuilder;
 	private final ExtendedStatusBuilder statusBuilder;
-	private IConfigSource configSource;
+	private final IConfig config;
 	private static ICLIFactory cliFactory = new CLIFactory();
 	private IAction action;
 	private RuntimeException lastException;
 	private Runnable preExec = null;
 	
+	
 	public CLI() {
-		this(System.out, new ExtendedStatusBuilder(), new ActionTreeBuilder(), new EnvVarsConfigSource());
+		this(System.out, new DefaultConfig());
 	}
 	
-	public CLI(PrintStream out, ExtendedStatusBuilder statusBuilder, ActionTreeBuilder actionBuilder, IConfigSource configSource) {
+	public CLI(IConfig config) {
+		this(System.out, config);
+	}
+	
+	public CLI(PrintStream out, IConfig config) {
+		this.out = out;
+		VCSRepositoryFactory repoFactory = new VCSRepositoryFactory(config);
+		this.statusBuilder = new ExtendedStatusBuilder(repoFactory);
+		this.actionBuilder = new ActionTreeBuilder(repoFactory);
+		this.config = config;
+	}
+	
+	public CLI(PrintStream out, ExtendedStatusBuilder statusBuilder, ActionTreeBuilder actionBuilder) {
 		this.out = out;
 		this.statusBuilder = statusBuilder;
 		this.actionBuilder = actionBuilder;
-		this.configSource = configSource;
+		this.config = null;
 	}
 
 	public IAction getAction() {
@@ -72,10 +86,10 @@ public class CLI {
 	}
 
 	public ExtendedStatus getStatusTree(CommandLine cmd, CachedStatuses cache) {
-		Component comp = new Component(cmd.getProductCoords());
-		return comp.getVersion().isLocked() ?
-				statusBuilder.getAndCachePatchStatus(comp, cache) :
-				statusBuilder.getAndCacheMinorStatus(comp, cache);
+		Coords coords = new CoordsGradle(cmd.getProductCoords());
+		return coords.getVersion().isLocked() ?
+				statusBuilder.getAndCachePatchStatus(cmd.getProductCoords(), cache) :
+				statusBuilder.getAndCacheMinorStatus(cmd.getProductCoords(), cache);
 	}
 	
 	private IAction getActionTree(ExtendedStatus node, CachedStatuses cache, CommandLine cmd) {
@@ -131,7 +145,7 @@ public class CLI {
 	}
 
 	private void initWorkingDir() throws Exception {
-		if (Utils.BASE_WORKING_DIR.exists() || configSource.getCredentialsLocations() != null || configSource.getCompConfigLocations() != null) {
+		if (Utils.BASE_WORKING_DIR.exists() || config.isConfiguredByEnvironment()) {
 			return;
 		}
 		
@@ -190,10 +204,5 @@ public class CLI {
 
 	public static void setCLIFactory(ICLIFactory cliFactory) {
 		CLI.cliFactory = cliFactory;
-	}
-
-	public void setConfigSource(IConfigSource configSource) {
-		this.configSource = configSource;
-		
 	}
 }

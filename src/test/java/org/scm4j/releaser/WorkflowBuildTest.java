@@ -17,6 +17,7 @@ import org.scm4j.releaser.branch.ReleaseBranchFactory;
 import org.scm4j.releaser.builders.TestBuilder;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.MDepsFile;
+import org.scm4j.releaser.conf.VCSRepositoryFactory;
 import org.scm4j.releaser.exceptions.EBuildOnNotForkedRelease;
 import org.scm4j.releaser.exceptions.ENoBuilder;
 import org.yaml.snakeyaml.Yaml;
@@ -114,6 +115,7 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		Map<String, ?> content = (Map<String, String>) yaml.load(FileUtils.readFileToString(env.getReposFile(), StandardCharsets.UTF_8));
 		((Map<String, ?>) content.get("eu.untill:(.*)")).remove("releaseCommand");
 		FileUtils.writeStringToFile(env.getReposFile(), yaml.dumpAsMap(content), StandardCharsets.UTF_8);
+		repoFactory = new VCSRepositoryFactory(env.getConfig());
 		
 		try {
 			forkAndBuild(compUnTillDb);
@@ -128,11 +130,11 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		build(compUnTillDb);
 		
 		// add feature to existing unTillDb release
-		ReleaseBranchCurrent crb = ReleaseBranchFactory.getCRB(compUnTillDb);
+		ReleaseBranchCurrent crb = ReleaseBranchFactory.getCRB(compUnTillDb, repoFactory);
 		env.generateFeatureCommit(env.getUnTillDbVCS(), crb.getName(), "patch feature added");
 
 		// build unTillDb patch
-		Component compUnTillDbPatch = new Component(UNTILLDB + ":" + env.getUnTillDbVer().toRelease());
+		Component compUnTillDbPatch = new Component(UNTILLDB + ":" + env.getUnTillDbVer().toRelease(), repoFactory);
 		execAndGetActionBuild(compUnTillDbPatch);
 		
 		// UBL should actualize its mdeps
@@ -142,13 +144,13 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		assertActionDoesNothing(action, compUnTillDb);
 		
 		// check unTill actualized unTillDb version
-		crb = ReleaseBranchFactory.getCRB(compUnTill);
-		MDepsFile mdf = new MDepsFile(env.getUnTillVCS().getFileContent(crb.getName(), Utils.MDEPS_FILE_NAME, null));
+		crb = ReleaseBranchFactory.getCRB(compUnTill, repoFactory);
+		MDepsFile mdf = new MDepsFile(env.getUnTillVCS().getFileContent(crb.getName(), Utils.MDEPS_FILE_NAME, null), repoFactory);
 		assertThat(mdf.getMDeps(), Matchers.hasItem(compUnTillDbPatch));
 		
 		// check UBL actualized unTillDb version
-		crb = ReleaseBranchFactory.getCRB(compUBL);
-		mdf = new MDepsFile(env.getUblVCS().getFileContent(crb.getName(), Utils.MDEPS_FILE_NAME, null));
+		crb = ReleaseBranchFactory.getCRB(compUBL, repoFactory);
+		mdf = new MDepsFile(env.getUblVCS().getFileContent(crb.getName(), Utils.MDEPS_FILE_NAME, null), repoFactory);
 		assertThat(mdf.getMDeps(), Matchers.hasItem(compUnTillDbPatch));
 	}
 }

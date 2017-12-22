@@ -3,6 +3,7 @@ package org.scm4j.releaser.branch;
 import org.scm4j.commons.Version;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.releaser.conf.Component;
+import org.scm4j.releaser.conf.VCSRepositoryFactory;
 
 import java.util.List;
 
@@ -42,14 +43,11 @@ public class ReleaseBranchCurrent {
 		return version;
 	}
 
-	public List<Component> getCRBMDeps(IProgress progress) {
-		return reportDuration(() -> ReleaseBranchFactory.getMDepsRelease(comp, name), "get CRB mdeps", comp, progress);
+	public List<Component> getCRBMDeps(IProgress progress, VCSRepositoryFactory repoFactory) {
+		return reportDuration(() -> ReleaseBranchFactory.getMDepsRelease(comp, name, repoFactory), "get CRB mdeps", comp, progress);
 	}
 
 	public Version getDevVersion() {
 		return devVersion;
 	}
-
-
-
 }

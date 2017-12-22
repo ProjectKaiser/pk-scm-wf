@@ -1,25 +1,32 @@
 package org.scm4j.releaser.conf;
 
+import java.util.Objects;
+
 import org.scm4j.commons.Version;
 import org.scm4j.commons.coords.Coords;
 import org.scm4j.commons.coords.CoordsGradle;
 import org.scm4j.vcs.api.IVCS;
 
-import java.util.Objects;
-
 public class Component {
 	private final Coords coords;
-	private VCSRepository repo = null;
+	private final VCSRepository repo;
 	
 	public VCSRepository getVcsRepository() {
-		if (repo == null) {
-			repo = VCSRepositories.getDefault().getByName(coords.getName());
-		}
 		return repo;
 	}
+	
+	public Component(String coords) {
+		this(coords, (VCSRepository) null);
+	}
+	
+	public Component(String coords, VCSRepositoryFactory repoFactory) {
+		this.coords = new CoordsGradle(coords);
+		repo = repoFactory.getVCSRepository(this.coords.getName());
+	}
 
-	public Component(String coordsStr) {
+	public Component(String coordsStr, VCSRepository repo) {
 		coords = new CoordsGradle(coordsStr);
+		this.repo = repo;
 	}
 	
 	public IVCS getVCS() {
@@ -48,7 +55,7 @@ public class Component {
 	}
 
 	public Component clone(String newVersion) {
-		return new Component(coords.toString(newVersion));
+		return new Component(coords.toString(newVersion), repo);
 	}
 	
 	public Component clone(Version newVersion) {

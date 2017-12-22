@@ -20,7 +20,6 @@ import java.util.List;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.FileFilterUtils;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -35,8 +34,6 @@ import org.scm4j.releaser.TestEnvironment;
 import org.scm4j.releaser.Utils;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.conf.Component;
-import org.scm4j.releaser.conf.IConfigSource;
-import org.scm4j.releaser.conf.VCSRepositories;
 import org.scm4j.releaser.exceptions.cmdline.ECmdLineNoCommand;
 import org.scm4j.releaser.exceptions.cmdline.ECmdLineNoProduct;
 import org.scm4j.releaser.exceptions.cmdline.ECmdLineUnknownCommand;
@@ -63,14 +60,9 @@ public class CLITest {
 		mockedActionTreeBuilder = mock(ActionTreeBuilder.class);
 		mockedStatusTreeBuilder = mock(ExtendedStatusBuilder.class);
 		mockedStatus = mock(ExtendedStatus.class);
-		mockedCLI = spy(new CLI(mockedPS, mockedStatusTreeBuilder, mockedActionTreeBuilder, null));
+		mockedCLI = spy(new CLI(mockedPS, mockedStatusTreeBuilder, mockedActionTreeBuilder));
 	}
 
-	@After
-	public void tearDown() {
-		VCSRepositories.resetDefault();
-	}
-	
 	@Test
 	public void testSystemExit() throws Exception {
 		CLI.setCLIFactory(new ICLIFactory() {
@@ -91,26 +83,26 @@ public class CLITest {
 	@Test
 	public void testCommandSTATUS() throws Exception {
 		String[] args = new String[] { CLICommand.STATUS.getCmdLineStr(), UNTILL };
-		doReturn(mockedStatus).when(mockedStatusTreeBuilder).getAndCacheMinorStatus(eq(new Component(UNTILL)), any(CachedStatuses.class));
+		doReturn(mockedStatus).when(mockedStatusTreeBuilder).getAndCacheMinorStatus(eq(UNTILL), any(CachedStatuses.class));
 
 		assertEquals(CLI.EXIT_CODE_OK, mockedCLI.exec(args));
 		
 		verify(mockedAction, never()).execute(any(IProgress.class));
 		verify(mockedActionTreeBuilder, never()).getActionTreeForkOnly(any(ExtendedStatus.class), any(CachedStatuses.class));
-		verify(mockedStatusTreeBuilder).getAndCacheMinorStatus(eq(new Component(UNTILL)), any(CachedStatuses.class));
+		verify(mockedStatusTreeBuilder).getAndCacheMinorStatus(eq(UNTILL), any(CachedStatuses.class));
 		verify(mockedCLI).printStatusTree(any(ExtendedStatus.class));
 	}
 
 	@Test
 	public void testCommandFORK() throws Exception {
 		String[] args = new String[] { CLICommand.FORK.getCmdLineStr(), UNTILL };
-		doReturn(mockedStatus).when(mockedStatusTreeBuilder).getAndCacheMinorStatus(eq(new Component(UNTILL)), any(CachedStatuses.class));
+		doReturn(mockedStatus).when(mockedStatusTreeBuilder).getAndCacheMinorStatus(eq(UNTILL), any(CachedStatuses.class));
 		doReturn(mockedAction).when(mockedActionTreeBuilder).getActionTreeForkOnly(any(ExtendedStatus.class), any(CachedStatuses.class));
 
 		assertEquals(CLI.EXIT_CODE_OK, mockedCLI.exec(args));
 
 		verify(mockedActionTreeBuilder).getActionTreeForkOnly(any(ExtendedStatus.class), any(CachedStatuses.class));
-		verify(mockedStatusTreeBuilder).getAndCacheMinorStatus(eq(new Component(UNTILL)), any(CachedStatuses.class));
+		verify(mockedStatusTreeBuilder).getAndCacheMinorStatus(eq(UNTILL), any(CachedStatuses.class));
 		verify(mockedAction).execute(any(IProgress.class));
 		verify(mockedCLI, never()).printStatusTree(any(ExtendedStatus.class));
 	}
@@ -118,13 +110,13 @@ public class CLITest {
 	@Test
 	public void testCommandBUILDMinor() throws Exception {
 		String[] args = new String[] { CLICommand.BUILD.getCmdLineStr(), UNTILL };
-		doReturn(mockedStatus).when(mockedStatusTreeBuilder).getAndCacheMinorStatus(eq(new Component(UNTILL)), any(CachedStatuses.class));
+		doReturn(mockedStatus).when(mockedStatusTreeBuilder).getAndCacheMinorStatus(eq(UNTILL), any(CachedStatuses.class));
 		doReturn(mockedAction).when(mockedActionTreeBuilder).getActionTreeFull(any(ExtendedStatus.class), any(CachedStatuses.class));
 
 		assertEquals(CLI.EXIT_CODE_OK, mockedCLI.exec(args));
 
 		verify(mockedActionTreeBuilder).getActionTreeFull(any(ExtendedStatus.class), any(CachedStatuses.class));
-		verify(mockedStatusTreeBuilder).getAndCacheMinorStatus(eq(new Component(UNTILL)), any(CachedStatuses.class));
+		verify(mockedStatusTreeBuilder).getAndCacheMinorStatus(eq(UNTILL), any(CachedStatuses.class));
 		verify(mockedAction).execute(any(IProgress.class));
 		verify(mockedCLI, never()).printStatusTree(any(ExtendedStatus.class));
 	}
@@ -133,13 +125,13 @@ public class CLITest {
 	public void testCommandBUILDPatch() throws Exception {
 		String coords = UNTILL + ":123.9";
 		String[] args = new String[] { CLICommand.BUILD.getCmdLineStr(), coords };
-		doReturn(mockedStatus).when(mockedStatusTreeBuilder).getAndCachePatchStatus(eq(new Component(coords)), any(CachedStatuses.class));
+		doReturn(mockedStatus).when(mockedStatusTreeBuilder).getAndCachePatchStatus(eq(coords), any(CachedStatuses.class));
 		doReturn(mockedAction).when(mockedActionTreeBuilder).getActionTreeFull(any(ExtendedStatus.class), any(CachedStatuses.class));
 
 		assertEquals(CLI.EXIT_CODE_OK, mockedCLI.exec(args));
 
 		verify(mockedActionTreeBuilder).getActionTreeFull(any(ExtendedStatus.class), any(CachedStatuses.class));
-		verify(mockedStatusTreeBuilder).getAndCachePatchStatus(eq(new Component(coords)), any(CachedStatuses.class));
+		verify(mockedStatusTreeBuilder).getAndCachePatchStatus(eq(coords), any(CachedStatuses.class));
 		verify(mockedAction).execute(any(IProgress.class));
 		verify(mockedCLI, never()).printStatusTree(any(ExtendedStatus.class));
 	}
@@ -257,29 +249,27 @@ public class CLITest {
 		try (TestEnvironment env = new TestEnvironment()) {
 			env.generateTestEnvironment();
 			exit.expectSystemExitWithStatus(CLI.EXIT_CODE_OK);
-			CLI.main(new String[] { CLICommand.STATUS.getCmdLineStr(), TestEnvironment.PRODUCT_UNTILL });
+			CLI.setCLIFactory(new ICLIFactory() {
+				@Override
+				public CLI getCLI() {
+					return new CLI(env.getConfig());
+				}
+			});
+			try {
+				CLI.main(new String[] { CLICommand.STATUS.getCmdLineStr(), TestEnvironment.PRODUCT_UNTILL });
+			} finally {
+				CLI.setCLIFactory(new CLIFactory());
+			}
 		}
 	}
 	
 	@Test
 	public void testInitWorkingFolder() throws Exception {
-		mockedCLI.setConfigSource(new IConfigSource() {
-			
-			@Override
-			public String getCredentialsLocations() {
-				return null;
-			}
-			
-			@Override
-			public String getCompConfigLocations() {
-				return null;
-			}
-		});
 		String[] args = new String[] {};
 		Utils.waitForDeleteDir(Utils.BASE_WORKING_DIR);
 		
-		mockedCLI.exec(args);
-		Utils.BASE_WORKING_DIR.mkdirs();
+		new CLI(new DefaultConfig(new FilesAsEnvVarsSource(null, null))).exec(args);
+		
 		List<String> srcFileNames = new ArrayList<>();
 		for (File srcFile : FileUtils.listFiles(Utils.getResourceFile(CLI.class, CLI.CONFIG_TEMPLATES), FileFilterUtils.trueFileFilter(), FileFilterUtils.trueFileFilter())) {
 			srcFileNames.add(srcFile.getName());

@@ -11,7 +11,7 @@ import java.util.List;
 
 public class URLContentLoader {
 	
-	private static final String URL_SEPARATOR = ";";
+	public static final String URL_SEPARATOR = ";";
 	public static final String DEFAULT_PROTOCOL = "file:///";
 
 	public List<String> getContentsFromUrls(List<String> separatedUrls) throws IOException {

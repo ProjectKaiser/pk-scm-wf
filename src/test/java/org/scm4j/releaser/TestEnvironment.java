@@ -1,13 +1,18 @@
 package org.scm4j.releaser;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.UUID;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.scm4j.commons.Version;
 import org.scm4j.releaser.builders.BuilderFactory;
 import org.scm4j.releaser.builders.TestBuilder;
-import org.scm4j.releaser.conf.EnvVarsConfigSource;
-import org.scm4j.releaser.conf.IConfigSource;
-import org.scm4j.releaser.conf.VCSRepositories;
+import org.scm4j.releaser.cli.DefaultConfig;
+import org.scm4j.releaser.cli.FilesAsEnvVarsSource;
+import org.scm4j.releaser.conf.IConfig;
 import org.scm4j.releaser.conf.VCSType;
 import org.scm4j.vcs.GitVCS;
 import org.scm4j.vcs.GitVCSUtils;
@@ -18,11 +23,6 @@ import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
 import org.scm4j.vcs.api.workingcopy.VCSWorkspace;
 import org.scm4j.vcs.svn.SVNVCS;
 import org.scm4j.vcs.svn.SVNVCSUtils;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.UUID;
 
 public class TestEnvironment implements AutoCloseable {
 	public static final String TEST_REPOS_FILE_NAME = "repos";
@@ -50,6 +50,7 @@ public class TestEnvironment implements AutoCloseable {
 	private final Version ublVer = new Version("1.18.5-SNAPSHOT");
 	private final Version unTillDbVer = new Version("2.59.1-SNAPSHOT");
 	private File envDir;
+	private IConfig config;
 
 	public TestEnvironment() {
 		RANDOM_VCS_NAME_SUFFIX = UUID.randomUUID().toString();
@@ -69,18 +70,7 @@ public class TestEnvironment implements AutoCloseable {
 		createCredentialsFile();
 
 		createReposFile();
-
-		VCSRepositories.setConfigSource(new IConfigSource() {
-			@Override
-			public String getCompConfigLocations() {
-				return getReposFile().toString().replace("\\", "/");
-			}
-
-			@Override
-			public String getCredentialsLocations() {
-				return getCredsFile().toString().replace("\\", "/");
-			}
-		});
+		config = new DefaultConfig(new FilesAsEnvVarsSource(reposFile, credsFile));
 	}
 
 	private void createReposFile() throws IOException {
@@ -229,7 +219,9 @@ public class TestEnvironment implements AutoCloseable {
 		if (envDir != null && envDir.exists()) {
 			Utils.waitForDeleteDir(envDir);
 		}
-		VCSRepositories.setConfigSource(new EnvVarsConfigSource());
-		VCSRepositories.resetDefault();
+	}
+	
+	public IConfig getConfig() {
+		return config;
 	}
 }

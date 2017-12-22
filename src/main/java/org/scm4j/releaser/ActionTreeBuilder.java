@@ -9,14 +9,21 @@ import org.scm4j.releaser.actions.ActionSet;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.branch.DevelopBranch;
 import org.scm4j.releaser.conf.Component;
+import org.scm4j.releaser.conf.VCSRepositoryFactory;
 import org.scm4j.releaser.exceptions.EBuildOnNotForkedRelease;
 import org.scm4j.releaser.scmactions.SCMActionRelease;
 import org.scm4j.releaser.scmactions.SCMActionTag;
 
 public class ActionTreeBuilder {
+	
+	private final VCSRepositoryFactory repoFactory;
+
+	public ActionTreeBuilder(VCSRepositoryFactory repoFactory) {
+		this.repoFactory = repoFactory;
+	}
 
 	public IAction getTagAction(String coords) {
-		return getTagAction(new Component(coords));
+		return getTagAction(new Component(coords, repoFactory));
 	}
 	
 	public IAction getActionTreeDelayedTag(ExtendedStatus node, CachedStatuses cache) {
