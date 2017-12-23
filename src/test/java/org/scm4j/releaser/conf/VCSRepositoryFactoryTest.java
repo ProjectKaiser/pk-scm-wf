@@ -1,29 +1,35 @@
 package org.scm4j.releaser.conf;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
+import com.google.common.io.Resources;
+import org.junit.Before;
+import org.junit.Test;
 
 import java.io.File;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.scm4j.releaser.cli.DefaultConfig;
-import org.scm4j.releaser.cli.FilesAsEnvVarsSource;
-
-import com.google.common.io.Resources;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.*;
 
 public class VCSRepositoryFactoryTest {
 	
-	private IConfig config;
+	private IConfigUrls configUrls;
 	private VCSRepositoryFactory repoFactory;
 	
 	@Before
 	public void setUp() throws Exception {
-		File reposFile = new File(Resources.getResource(this.getClass(), "urls-omap.yml").toURI());
+		File ccFile = new File(Resources.getResource(this.getClass(), "urls-omap.yml").toURI());
 		File credsFile = new File(Resources.getResource(this.getClass(), "creds.yml").toURI());
-		config = new DefaultConfig(new FilesAsEnvVarsSource(reposFile, credsFile));
-		repoFactory = new VCSRepositoryFactory(config);
+		IConfigUrls configUrls = new IConfigUrls() {
+			@Override
+			public String getCCUrls() {
+				return ccFile.toString();
+			}
+
+			@Override
+			public String getCredsUrl() {
+				return credsFile.toString();
+			}
+		};
+		repoFactory = new VCSRepositoryFactory(configUrls);
 	}
 
 	@Test

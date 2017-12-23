@@ -1,18 +1,11 @@
 package org.scm4j.releaser;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.UUID;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.scm4j.commons.Version;
 import org.scm4j.releaser.builders.BuilderFactory;
 import org.scm4j.releaser.builders.TestBuilder;
-import org.scm4j.releaser.cli.DefaultConfig;
-import org.scm4j.releaser.cli.FilesAsEnvVarsSource;
-import org.scm4j.releaser.conf.IConfig;
+import org.scm4j.releaser.conf.IConfigUrls;
 import org.scm4j.releaser.conf.VCSType;
 import org.scm4j.vcs.GitVCS;
 import org.scm4j.vcs.GitVCSUtils;
@@ -24,8 +17,13 @@ import org.scm4j.vcs.api.workingcopy.VCSWorkspace;
 import org.scm4j.vcs.svn.SVNVCS;
 import org.scm4j.vcs.svn.SVNVCSUtils;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.UUID;
+
 public class TestEnvironment implements AutoCloseable {
-	public static final String TEST_REPOS_FILE_NAME = "repos";
+	public static final String TEST_CC_FILE_NAME = "repos";
 	public static final String TEST_CREDENTIALS_FILE_NAME = "credentials";
 	public static final String TEST_ENVIRONMENT_DIR = new File(System.getProperty("java.io.tmpdir"),
 			"scm4j-releaser-test").getPath();
@@ -45,12 +43,12 @@ public class TestEnvironment implements AutoCloseable {
 	private IVCS ublVCS;
 	private IVCS unTillDbVCS;
 	private File credsFile;
-	private File reposFile;
+	private File ccFile;
 	private final Version unTillVer = new Version("1.123.3-SNAPSHOT");
 	private final Version ublVer = new Version("1.18.5-SNAPSHOT");
 	private final Version unTillDbVer = new Version("2.59.1-SNAPSHOT");
 	private File envDir;
-	private IConfig config;
+	private IConfigUrls	configUrls;
 
 	public TestEnvironment() {
 		RANDOM_VCS_NAME_SUFFIX = UUID.randomUUID().toString();
@@ -69,18 +67,29 @@ public class TestEnvironment implements AutoCloseable {
 
 		createCredentialsFile();
 
-		createReposFile();
-		config = new DefaultConfig(new FilesAsEnvVarsSource(reposFile, credsFile));
+		createCCFile();
+
+		configUrls = new IConfigUrls() {
+			@Override
+			public String getCCUrls() {
+				return ccFile.toString();
+			}
+
+			@Override
+			public String getCredsUrl() {
+				return credsFile.toString();
+			}
+		};
 	}
 
-	private void createReposFile() throws IOException {
-		reposFile = new File(TEST_ENVIRONMENT_DIR, TEST_REPOS_FILE_NAME);
-		reposFile.createNewFile();
+	private void createCCFile() throws IOException {
+		ccFile = new File(TEST_ENVIRONMENT_DIR, TEST_CC_FILE_NAME);
+		ccFile.createNewFile();
 		String url = new File(TEST_REMOTE_REPO_DIR, "$1-" + RANDOM_VCS_NAME_SUFFIX).toURI().toURL().toString();
 		if (TESTING_VCS == VCSType.SVN) {
 			url = url.replace("file:/", "file://");
 		}
-		FileUtils.writeLines(reposFile, Arrays.asList(
+		FileUtils.writeLines(ccFile, Arrays.asList(
 				"!!omap", 
 				"- eu.untill:(.*):", 
 				"   url: " + url,
@@ -184,8 +193,8 @@ public class TestEnvironment implements AutoCloseable {
 		return credsFile;
 	}
 
-	public File getReposFile() {
-		return reposFile;
+	public File getCcFile() {
+		return ccFile;
 	}
 
 	public VCSCommit generateFeatureCommit(IVCS vcs, String branchName, String commitMessage) {
@@ -221,7 +230,7 @@ public class TestEnvironment implements AutoCloseable {
 		}
 	}
 	
-	public IConfig getConfig() {
-		return config;
+	public IConfigUrls getConfigUrls() {
+		return configUrls;
 	}
 }

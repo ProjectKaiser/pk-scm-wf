@@ -18,11 +18,10 @@ public class ActionAbstractTest extends WorkflowTestBase {
 
 	@Test
 	public void testExceptions() throws Exception {
-		Component comp = new Component(TestEnvironment.PRODUCT_UNTILL);
+		Component comp = new Component(TestEnvironment.PRODUCT_UNTILL, repoFactory);
 		ActionAbstract aa = spy(new ActionAbstract(comp, new ArrayList<>()) {
 			@Override
 			protected void executeAction(IProgress progress) throws Exception {
-
 			}
 
 			@Override

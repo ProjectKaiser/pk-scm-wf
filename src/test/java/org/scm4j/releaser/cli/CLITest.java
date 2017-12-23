@@ -1,23 +1,5 @@
 package org.scm4j.releaser.cli;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.atLeastOnce;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.verify;
-
-import java.io.File;
-import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.junit.Before;
@@ -26,18 +8,25 @@ import org.junit.Test;
 import org.junit.contrib.java.lang.system.ExpectedSystemExit;
 import org.mockito.Matchers;
 import org.scm4j.commons.progress.IProgress;
-import org.scm4j.releaser.ActionTreeBuilder;
-import org.scm4j.releaser.CachedStatuses;
-import org.scm4j.releaser.ExtendedStatus;
-import org.scm4j.releaser.ExtendedStatusBuilder;
-import org.scm4j.releaser.TestEnvironment;
-import org.scm4j.releaser.Utils;
+import org.scm4j.releaser.*;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.conf.Component;
+import org.scm4j.releaser.conf.IConfigUrls;
 import org.scm4j.releaser.exceptions.cmdline.ECmdLineNoCommand;
 import org.scm4j.releaser.exceptions.cmdline.ECmdLineNoProduct;
 import org.scm4j.releaser.exceptions.cmdline.ECmdLineUnknownCommand;
 import org.scm4j.releaser.exceptions.cmdline.ECmdLineUnknownOption;
+
+import java.io.File;
+import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.*;
 
 public class CLITest {
 
@@ -252,7 +241,7 @@ public class CLITest {
 			CLI.setCLIFactory(new ICLIFactory() {
 				@Override
 				public CLI getCLI() {
-					return new CLI(env.getConfig());
+					return new CLI(env.getConfigUrls());
 				}
 			});
 			try {
@@ -268,7 +257,17 @@ public class CLITest {
 		String[] args = new String[] {};
 		Utils.waitForDeleteDir(Utils.BASE_WORKING_DIR);
 		
-		new CLI(new DefaultConfig(new FilesAsEnvVarsSource(null, null))).exec(args);
+		new CLI(new IConfigUrls() {
+			@Override
+			public String getCCUrls() {
+				return null;
+			}
+
+			@Override
+			public String getCredsUrl() {
+				return null;
+			}
+		}).exec(args);
 		
 		List<String> srcFileNames = new ArrayList<>();
 		for (File srcFile : FileUtils.listFiles(Utils.getResourceFile(CLI.class, CLI.CONFIG_TEMPLATES), FileFilterUtils.trueFileFilter(), FileFilterUtils.trueFileFilter())) {

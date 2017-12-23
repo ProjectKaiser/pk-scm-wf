@@ -1,49 +1,53 @@
 package org.scm4j.releaser.conf;
 
 import org.scm4j.commons.RegexConfig;
+import org.scm4j.releaser.Utils;
 import org.scm4j.releaser.VCSFactory;
 import org.scm4j.releaser.builders.BuilderFactory;
 import org.scm4j.releaser.exceptions.EComponentConfig;
 import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
+import org.scm4j.vcs.api.workingcopy.VCSWorkspace;
+
+import java.io.File;
 
 public class VCSRepositoryFactory {
 	
 	public static final VCSType DEFAULT_VCS_TYPE = VCSType.GIT;
+	public static final String DEFAULT_VCS_WORKSPACE_DIR = new File(Utils.BASE_WORKING_DIR,
+			"releaser-vcs-workspaces").getPath();
+	private final RegexConfig cc = new RegexConfig();
+	private final RegexConfig creds = new RegexConfig();
+	private final IVCSWorkspace ws = new VCSWorkspace(DEFAULT_VCS_WORKSPACE_DIR);
 	
-	private final RegexConfig repoConfig;
-	private final RegexConfig credentialsConfig;
-	private final IVCSWorkspace ws;
-	
-	public VCSRepositoryFactory(IConfig config) {
-		this(config.getRepoConfig(), config.getCredentialsConfig(), config.getWS());
+	public VCSRepositoryFactory(IConfigUrls configUrls) {
+		try {
+			cc.loadFromYamlUrls(configUrls.getCCUrls());
+			creds.loadFromYamlUrls(configUrls.getCredsUrl());
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
 	}
 
-	public VCSRepositoryFactory(RegexConfig repoConfig, RegexConfig credentialsConfig, IVCSWorkspace ws) {
-		this.repoConfig = repoConfig;
-		this.credentialsConfig = credentialsConfig;
-		this.ws = ws;
-	}
-	
 	public VCSRepository getVCSRepository(String componentName) {
-		String url = repoConfig.getPlaceholderedStringByName(componentName, "url", null);
+		String url = cc.getPlaceholderedStringByName(componentName, "url", null);
 		if (url == null) {
 			throw new EComponentConfig("no repo url for: " + componentName);
 		}
 
 		Credentials credentials;
-		String user = credentialsConfig.getPropByName(url, "name", null);
+		String user = creds.getPropByName(url, "name", null);
 		if (user != null) {
-			String pass = credentialsConfig.getPropByName(url, "password", null);
-			Boolean isDefault = credentialsConfig.getPropByName(url, "isDefault", false);
+			String pass = creds.getPropByName(url, "password", null);
+			Boolean isDefault = creds.getPropByName(url, "isDefault", false);
 			credentials = new Credentials(user, pass, isDefault);
 		} else {
 			credentials = new Credentials(null, null, false);
 		}
-		VCSType type = getVCSType(repoConfig.getPropByName(componentName, "type", null), url);
-		String developBranch = repoConfig.getPropByName(componentName, "developBranch", VCSRepository.DEFAULT_DEVELOP_BRANCH);
-		String releaseBranchPrefix = repoConfig.getPropByName(componentName, "releaseBranchPrefix",
+		VCSType type = getVCSType(cc.getPropByName(componentName, "type", null), url);
+		String developBranch = cc.getPropByName(componentName, "developBranch", VCSRepository.DEFAULT_DEVELOP_BRANCH);
+		String releaseBranchPrefix = cc.getPropByName(componentName, "releaseBranchPrefix",
 				VCSRepository.DEFAULT_RELEASE_BRANCH_PREFIX);
-		String releaseCommand = repoConfig.getPropByName(componentName, "releaseCommand", null);
+		String releaseCommand = cc.getPropByName(componentName, "releaseCommand", null);
 		return new VCSRepository(componentName, url, credentials, type, developBranch, releaseBranchPrefix,
 				VCSFactory.getVCS(type, credentials, url, ws), BuilderFactory.getBuilder(releaseCommand));
 	}

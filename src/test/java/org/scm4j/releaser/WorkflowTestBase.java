@@ -1,18 +1,5 @@
 package org.scm4j.releaser;
 
-import static org.hamcrest.Matchers.allOf;
-import static org.hamcrest.Matchers.empty;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.hasProperty;
-import static org.hamcrest.Matchers.instanceOf;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
-import java.util.HashMap;
-import java.util.List;
-
 import org.hamcrest.Matcher;
 import org.junit.After;
 import org.junit.Assert;
@@ -37,6 +24,12 @@ import org.scm4j.vcs.api.WalkDirection;
 import org.scm4j.vcs.api.exceptions.EVCSBranchNotFound;
 import org.scm4j.vcs.api.exceptions.EVCSFileNotFound;
 
+import java.util.HashMap;
+import java.util.List;
+
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.*;
+
 public class WorkflowTestBase {
 	protected TestEnvironment env;
 	protected static final String UNTILL = TestEnvironment.PRODUCT_UNTILL;
@@ -54,7 +47,7 @@ public class WorkflowTestBase {
 	public void setUp() throws Exception {
 		env = new TestEnvironment();
 		env.generateTestEnvironment();
-		repoFactory = new VCSRepositoryFactory(env.getConfig());
+		repoFactory = new VCSRepositoryFactory(env.getConfigUrls());
 		compUnTill = new Component(UNTILL, repoFactory);
 		compUnTillDb = new Component(UNTILLDB, repoFactory);
 		compUBL = new Component(UBL, repoFactory);
@@ -416,7 +409,7 @@ public class WorkflowTestBase {
 	}
 	
 	private IAction getAndExecAction(Runnable preExec, String... args)  {
-		CLI cli = new CLI(System.out, env.getConfig());
+		CLI cli = new CLI(System.out, env.getConfigUrls());
 		cli.setPreExec(preExec);
 		if (cli.exec(args) != CLI.EXIT_CODE_OK) {
 			throw cli.getLastException();

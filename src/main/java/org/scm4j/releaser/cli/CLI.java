@@ -1,29 +1,22 @@
 package org.scm4j.releaser.cli;
 
-import java.io.File;
-import java.io.PrintStream;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.scm4j.commons.coords.Coords;
 import org.scm4j.commons.coords.CoordsGradle;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.commons.progress.ProgressConsole;
-import org.scm4j.releaser.ActionTreeBuilder;
-import org.scm4j.releaser.CachedStatuses;
-import org.scm4j.releaser.ExtendedStatus;
-import org.scm4j.releaser.ExtendedStatusBuilder;
-import org.scm4j.releaser.Utils;
+import org.scm4j.releaser.*;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.actions.PrintStatus;
-import org.scm4j.releaser.conf.IConfig;
+import org.scm4j.releaser.conf.DefaultConfigUrls;
+import org.scm4j.releaser.conf.IConfigUrls;
 import org.scm4j.releaser.conf.VCSRepositoryFactory;
 import org.scm4j.releaser.exceptions.EReleaserException;
-import org.scm4j.releaser.exceptions.cmdline.ECmdLine;
-import org.scm4j.releaser.exceptions.cmdline.ECmdLineNoCommand;
-import org.scm4j.releaser.exceptions.cmdline.ECmdLineNoProduct;
-import org.scm4j.releaser.exceptions.cmdline.ECmdLineUnknownCommand;
-import org.scm4j.releaser.exceptions.cmdline.ECmdLineUnknownOption;
+import org.scm4j.releaser.exceptions.cmdline.*;
+
+import java.io.File;
+import java.io.PrintStream;
 
 public class CLI {
 	public static final String CONFIG_TEMPLATES = "config-templates";
@@ -33,34 +26,34 @@ public class CLI {
 	private final PrintStream out;
 	private final ActionTreeBuilder actionBuilder;
 	private final ExtendedStatusBuilder statusBuilder;
-	private final IConfig config;
 	private static ICLIFactory cliFactory = new CLIFactory();
 	private IAction action;
 	private RuntimeException lastException;
 	private Runnable preExec = null;
+	private IConfigUrls configUrls;
 	
 	
 	public CLI() {
-		this(System.out, new DefaultConfig());
+		this(System.out, new DefaultConfigUrls());
+	}
+
+	public CLI(IConfigUrls configUrls) {
+		this(System.out, configUrls);
 	}
 	
-	public CLI(IConfig config) {
-		this(System.out, config);
-	}
-	
-	public CLI(PrintStream out, IConfig config) {
+	public CLI(PrintStream out, IConfigUrls configUrls) {
 		this.out = out;
-		VCSRepositoryFactory repoFactory = new VCSRepositoryFactory(config);
+		VCSRepositoryFactory repoFactory = new VCSRepositoryFactory(configUrls);
 		this.statusBuilder = new ExtendedStatusBuilder(repoFactory);
 		this.actionBuilder = new ActionTreeBuilder(repoFactory);
-		this.config = config;
+		this.configUrls = configUrls;
 	}
 	
 	public CLI(PrintStream out, ExtendedStatusBuilder statusBuilder, ActionTreeBuilder actionBuilder) {
 		this.out = out;
 		this.statusBuilder = statusBuilder;
 		this.actionBuilder = actionBuilder;
-		this.config = null;
+		this.configUrls = null;
 	}
 
 	public IAction getAction() {
@@ -145,7 +138,7 @@ public class CLI {
 	}
 
 	private void initWorkingDir() throws Exception {
-		if (Utils.BASE_WORKING_DIR.exists() || config.isConfiguredByEnvironment()) {
+		if (Utils.BASE_WORKING_DIR.exists() || configUrls.getCCUrls() != null || configUrls.getCredsUrl() != null) {
 			return;
 		}
 		

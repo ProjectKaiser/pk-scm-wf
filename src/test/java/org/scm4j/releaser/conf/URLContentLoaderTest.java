@@ -1,11 +1,10 @@
 package org.scm4j.releaser.conf;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import org.junit.Test;
 
 import java.io.IOException;
 
-import org.junit.Test;
+import static org.junit.Assert.*;
 
 public class URLContentLoaderTest {
 	
@@ -14,7 +13,7 @@ public class URLContentLoaderTest {
 	@Test
 	public void testNullContent() throws IOException {
 		assertNull(new URLContentLoader().getContentFromUrl(null));
-		assertNull(new URLContentLoader().getContentFromUrls(null));
+		assertNull(new URLContentLoader().getContentsFromUrls(null));
 	}
 	
 	@Test

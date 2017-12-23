@@ -1,13 +1,5 @@
 package org.scm4j.releaser;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
-import java.nio.charset.StandardCharsets;
-import java.util.Map;
-
 import org.apache.commons.io.FileUtils;
 import org.hamcrest.Matchers;
 import org.junit.Test;
@@ -21,6 +13,11 @@ import org.scm4j.releaser.conf.VCSRepositoryFactory;
 import org.scm4j.releaser.exceptions.EBuildOnNotForkedRelease;
 import org.scm4j.releaser.exceptions.ENoBuilder;
 import org.yaml.snakeyaml.Yaml;
+
+import java.nio.charset.StandardCharsets;
+import java.util.Map;
+
+import static org.junit.Assert.*;
 public class WorkflowBuildTest extends WorkflowTestBase {
 	
 	@Test
@@ -112,10 +109,10 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 	public void testNoBuilderException() throws Exception {
 		// simulate no builder
 		Yaml yaml = new Yaml();
-		Map<String, ?> content = (Map<String, String>) yaml.load(FileUtils.readFileToString(env.getReposFile(), StandardCharsets.UTF_8));
+		Map<String, ?> content = (Map<String, String>) yaml.load(FileUtils.readFileToString(env.getCcFile(), StandardCharsets.UTF_8));
 		((Map<String, ?>) content.get("eu.untill:(.*)")).remove("releaseCommand");
-		FileUtils.writeStringToFile(env.getReposFile(), yaml.dumpAsMap(content), StandardCharsets.UTF_8);
-		repoFactory = new VCSRepositoryFactory(env.getConfig());
+		FileUtils.writeStringToFile(env.getCcFile(), yaml.dumpAsMap(content), StandardCharsets.UTF_8);
+		repoFactory = new VCSRepositoryFactory(env.getConfigUrls());
 		
 		try {
 			forkAndBuild(compUnTillDb);
