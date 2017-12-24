@@ -1,18 +1,18 @@
 package org.scm4j.releaser;
 
-import java.io.File;
-import java.util.Collection;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.ForkJoinTask;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
-
 import org.apache.commons.io.FileUtils;
 import org.scm4j.commons.Version;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.TagDesc;
 import org.scm4j.releaser.exceptions.EReleaserException;
+
+import java.io.File;
+import java.util.Collection;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ForkJoinTask;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 public final class Utils {
 	
@@ -101,5 +101,9 @@ public final class Utils {
 	
 	public static File getResourceFile(Class<?> forClass, String path) throws Exception{
 		return new File(forClass.getResource(path).toURI());
+	}
+
+	public static String getReleaseBranchName(Component comp) {
+		return getReleaseBranchName(comp, comp.getVersion());
 	}
 }

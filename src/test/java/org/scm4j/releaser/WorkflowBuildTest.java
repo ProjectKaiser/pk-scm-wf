@@ -142,12 +142,12 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		
 		// check unTill actualized unTillDb version
 		crb = ReleaseBranchFactory.getCRB(compUnTill, repoFactory);
-		MDepsFile mdf = new MDepsFile(env.getUnTillVCS().getFileContent(crb.getName(), Utils.MDEPS_FILE_NAME, null), repoFactory);
-		assertThat(mdf.getMDeps(), Matchers.hasItem(compUnTillDbPatch));
+		MDepsFile mdf = new MDepsFile(env.getUnTillVCS().getFileContent(crb.getName(), Utils.MDEPS_FILE_NAME, null));
+		assertThat(mdf.getMDeps(repoFactory), Matchers.hasItem(compUnTillDbPatch));
 		
 		// check UBL actualized unTillDb version
 		crb = ReleaseBranchFactory.getCRB(compUBL, repoFactory);
-		mdf = new MDepsFile(env.getUblVCS().getFileContent(crb.getName(), Utils.MDEPS_FILE_NAME, null), repoFactory);
-		assertThat(mdf.getMDeps(), Matchers.hasItem(compUnTillDbPatch));
+		mdf = new MDepsFile(env.getUblVCS().getFileContent(crb.getName(), Utils.MDEPS_FILE_NAME, null));
+		assertThat(mdf.getMDeps(repoFactory), Matchers.hasItem(compUnTillDbPatch));
 	}
 }

@@ -1,5 +1,7 @@
 package org.scm4j.releaser.conf;
 
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.scm4j.releaser.TestEnvironment;
 
@@ -11,8 +13,22 @@ import static org.junit.Assert.*;
 
 public class MDepsFileTest {
 
+	private static TestEnvironment env = new TestEnvironment();
+	private static VCSRepositoryFactory repoFactory;
+
+	@BeforeClass
+	public static void setUp() throws Exception {
+		env.generateTestEnvironmentNoVCS();
+		repoFactory = new VCSRepositoryFactory(env.getConfigUrls());
+	}
+
+	@AfterClass
+	public static void tearDown() throws Exception {
+		env.close();
+	}
+
 	private MDepsFile getMDF(String content) {
-		return new MDepsFile(content, null);
+		return new MDepsFile(content);
 	}
 
 	@Test
@@ -20,45 +36,40 @@ public class MDepsFileTest {
 		assertFalse(getMDF("").hasMDeps());
 		assertFalse(getMDF("# non-component").hasMDeps());
 		assertFalse(getMDF(null).hasMDeps());
-		assertFalse(new MDepsFile(null).hasMDeps());
 		assertTrue(getMDF(TestEnvironment.PRODUCT_UNTILL).hasMDeps());
-		assertTrue(new MDepsFile(Arrays.asList(new Component(TestEnvironment.PRODUCT_UNTILL)))
-				.hasMDeps());
 	}
 
 	@Test
 	public void testGetMDeps() {
-		assertTrue(getMDF("").getMDeps().isEmpty());
-		assertTrue(getMDF(null).getMDeps().isEmpty());
-		assertTrue(new MDepsFile(null).getMDeps().isEmpty());
-		Component comp = new Component(TestEnvironment.PRODUCT_UNTILL);
-		assertTrue(getMDF(TestEnvironment.PRODUCT_UNTILL).getMDeps().contains(comp));
-		assertTrue(new MDepsFile(Arrays.asList(comp)).getMDeps().contains(comp));
+		assertTrue(getMDF("").getMDeps(repoFactory).isEmpty());
+		assertTrue(getMDF(null).getMDeps(repoFactory).isEmpty());
+		Component comp = new Component(TestEnvironment.PRODUCT_UNTILL, repoFactory);
+		assertTrue(getMDF(TestEnvironment.PRODUCT_UNTILL).getMDeps(repoFactory).contains(comp));
+		assertTrue(getMDF(comp.getCoords().toString()).getMDeps(repoFactory).contains(comp));
 	}
 
 	@Test
 	public void testToFileContent() {
 		assertTrue(getMDF("").toFileContent().isEmpty());
 		assertTrue(getMDF(null).toFileContent().isEmpty());
-		assertTrue(new MDepsFile(null).toFileContent().isEmpty());
-		Component comp = new Component(TestEnvironment.PRODUCT_UNTILL);
+		Component comp = new Component(TestEnvironment.PRODUCT_UNTILL, repoFactory);
 		assertTrue(getMDF(TestEnvironment.PRODUCT_UNTILL).toFileContent().equals(comp.toString()));
-		assertTrue(new MDepsFile(Arrays.asList(comp)).toFileContent().equals(comp.toString()));
+		assertTrue(getMDF(comp.getCoords().toString()).toFileContent().equals(comp.toString()));
 	}
 
 	@Test
 	public void testReplace() {
-		Component comp = new Component(TestEnvironment.PRODUCT_UNTILL);
-		MDepsFile mdf = new MDepsFile(Arrays.asList(comp));
+		Component comp = new Component(TestEnvironment.PRODUCT_UNTILL, repoFactory);
+		MDepsFile mdf = getMDF(comp.getCoords().toString());
 		Component modifiedComp = comp.clone("11.12.13");
 		mdf.replaceMDep(modifiedComp);
-		assertTrue(mdf.getMDeps().size() == 1);
-		assertTrue(mdf.getMDeps().contains(modifiedComp));
+		assertTrue(mdf.getMDeps(repoFactory).size() == 1);
+		assertTrue(mdf.getMDeps(repoFactory).contains(modifiedComp));
 
-		Component wrongComp = new Component("wrong.comp:none");
+		Component wrongComp = new Component("wrong.comp:none", repoFactory);
 		mdf.replaceMDep(wrongComp);
-		assertTrue(mdf.getMDeps().size() == 1);
-		assertTrue(mdf.getMDeps().contains(modifiedComp));
+		assertTrue(mdf.getMDeps(repoFactory).size() == 1);
+		assertTrue(mdf.getMDeps(repoFactory).contains(modifiedComp));
 	}
 	
 	@Test
@@ -80,8 +91,8 @@ public class MDepsFileTest {
 		pw.print("  ");
 		
 		MDepsFile mdf = getMDF(sw.toString());
-		assertTrue(mdf.getMDeps().size() == 4);
-		assertTrue(mdf.getMDeps().containsAll(Arrays.asList(comp1, comp2, comp3, comp4)));
+		assertTrue(mdf.getMDeps(repoFactory).size() == 4);
+		assertTrue(mdf.getMDeps(repoFactory).containsAll(Arrays.asList(comp1, comp2, comp3, comp4)));
 		assertEquals(sw.toString(), mdf.toFileContent());
 		
 		Component comp1Versioned = comp1.clone("12.13");
@@ -94,8 +105,8 @@ public class MDepsFileTest {
 		mdf.replaceMDep(comp3Versioned);
 		mdf.replaceMDep(comp4Versioned);
 		
-		assertTrue(mdf.getMDeps().size() == 4);
-		assertTrue(mdf.getMDeps().containsAll(Arrays.asList(comp1Versioned, comp2Versioned, comp3Versioned, comp4Versioned)));
+		assertTrue(mdf.getMDeps(repoFactory).size() == 4);
+		assertTrue(mdf.getMDeps(repoFactory).containsAll(Arrays.asList(comp1Versioned, comp2Versioned, comp3Versioned, comp4Versioned)));
 		assertEquals(sw.toString()
 				.replace(comp1.toString(), comp1Versioned.toString())
 				.replace(comp2.toString(), comp2Versioned.toString())
@@ -106,6 +117,6 @@ public class MDepsFileTest {
 	@Test
 	public void coverToString() {
 		MDepsFile mdf = getMDF("");
-		assertNotNull(mdf.toString());
+		mdf.toString();
 	}
 }

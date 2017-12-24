@@ -1,12 +1,12 @@
 package org.scm4j.releaser.builders;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.verify;
+import org.apache.commons.io.input.ReaderInputStream;
+import org.apache.commons.lang3.StringUtils;
+import org.junit.Test;
+import org.scm4j.commons.progress.IProgress;
+import org.scm4j.releaser.TestEnvironment;
+import org.scm4j.releaser.conf.Component;
+import org.scm4j.releaser.exceptions.EBuilder;
 
 import java.io.File;
 import java.io.InputStream;
@@ -15,13 +15,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 
-import org.apache.commons.io.input.ReaderInputStream;
-import org.apache.commons.lang3.StringUtils;
-import org.junit.Test;
-import org.scm4j.commons.progress.IProgress;
-import org.scm4j.releaser.TestEnvironment;
-import org.scm4j.releaser.conf.Component;
-import org.scm4j.releaser.exceptions.EBuilder;
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
 public class CmdLineBuilderTest {
 	
@@ -32,7 +27,12 @@ public class CmdLineBuilderTest {
 	@Test
 	public void testBuild() throws Exception {
 		CmdLineBuilder clb = spy(new CmdLineBuilder(TEST_CMD_LINE));
-		Component comp = new Component(TestEnvironment.PRODUCT_UNTILLDB);
+		Component comp;
+		try (TestEnvironment env = new TestEnvironment()) {
+			env.generateTestEnvironmentNoVCS();
+			comp = new Component(TestEnvironment.PRODUCT_UNTILLDB, env.getRepoFactory());
+		}
+
 		File workingFolder = new File(TestEnvironment.TEST_REMOTE_REPO_DIR); 
 		StringReader procOutputReader = new StringReader(TEST_PROCESS_OUTPUT);
 		InputStream processOutputStream = new ReaderInputStream(procOutputReader, StandardCharsets.UTF_8);

@@ -10,6 +10,7 @@ import org.scm4j.releaser.actions.ActionAbstract;
 import org.scm4j.releaser.actions.ActionSet;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.conf.Component;
+import org.scm4j.releaser.conf.VCSRepositoryFactory;
 import org.scm4j.releaser.scmactions.procs.*;
 
 import java.util.ArrayList;
@@ -22,7 +23,8 @@ public class SCMActionRelease extends ActionAbstract {
 	private final BuildStatus bsTo;
 	private final Version targetVersion;
 	
-	public SCMActionRelease(Component comp, List<IAction> childActions, CachedStatuses cache, ActionSet actionSet, boolean delayedTag) {
+	public SCMActionRelease(Component comp, List<IAction> childActions, CachedStatuses cache, VCSRepositoryFactory repoFactory,
+							ActionSet actionSet, boolean delayedTag) {
 		super(comp, childActions);
 		ExtendedStatus status = cache.get(comp.getUrl());
 		this.bsFrom = status.getStatus();
@@ -33,7 +35,7 @@ public class SCMActionRelease extends ActionAbstract {
 		case FORK:
 			procs.add(new SCMProcForkBranch(comp, cache));
 		case LOCK:
-			getProcs().add(new SCMProcLockMDeps(comp, cache));
+			getProcs().add(new SCMProcLockMDeps(comp, cache, repoFactory));
 			bsTo = BuildStatus.LOCK;
 			if (actionSet == ActionSet.FORK_ONLY) {
 				break;
@@ -41,7 +43,7 @@ public class SCMActionRelease extends ActionAbstract {
 		case BUILD_MDEPS:
 		case ACTUALIZE_PATCHES:
 			if (bsFrom.ordinal() > BuildStatus.LOCK.ordinal() && actionSet == ActionSet.FULL) {
-				getProcs().add(new SCMProcActualizePatches(comp, cache));
+				getProcs().add(new SCMProcActualizePatches(comp, cache, repoFactory));
 			}
 		case BUILD:
 			if (actionSet == ActionSet.FULL) {

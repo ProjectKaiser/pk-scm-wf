@@ -54,7 +54,7 @@ public final class ReleaseBranchFactory {
 	public static List<Component> getMDepsRelease(Component comp, String releaseBranchName, VCSRepositoryFactory repoFactory) {
 		try {
 			String mDepsFileContent = comp.getVCS().getFileContent(releaseBranchName, Utils.MDEPS_FILE_NAME, null);
-			return new MDepsFile(mDepsFileContent, repoFactory).getMDeps();
+			return new MDepsFile(mDepsFileContent).getMDeps(repoFactory);
 		} catch (EVCSFileNotFound e) {
 			return new ArrayList<>();
 		}

@@ -166,8 +166,9 @@ public class WorkflowTestBase {
 
 	protected List<Component> getReleaseBranchMDeps(Component comp, Version forVersion) {
 		try {
-			return new MDepsFile(comp.getVCS().getFileContent(Utils.getReleaseBranchName(comp, forVersion), Utils.MDEPS_FILE_NAME, null), repoFactory).getMDeps();
-		} catch(EVCSFileNotFound | EVCSBranchNotFound e) {
+			return new MDepsFile(comp.getVCS().getFileContent(Utils.getReleaseBranchName(comp, forVersion),
+					Utils.MDEPS_FILE_NAME, null)).getMDeps(repoFactory);
+		} catch (EVCSFileNotFound | EVCSBranchNotFound e) {
 			throw new RuntimeException(Utils.getReleaseBranchName(comp, forVersion) + " branch does not exist");
 		}
 	}

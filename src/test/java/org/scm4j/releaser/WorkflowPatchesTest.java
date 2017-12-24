@@ -16,7 +16,6 @@ import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.vcs.api.WalkDirection;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -94,7 +93,7 @@ public class WorkflowPatchesTest extends WorkflowTestBase {
 	@Test
 	public void testExceptionOnPatchOnUnexistingBranch() {
 		// try do build a patch for unreleased version
-		Component compWithUnexistingVersion = new Component(UNTILLDB + ":2.70.0");
+		Component compWithUnexistingVersion = new Component(UNTILLDB + ":2.70.0", repoFactory);
 		try {
 			execAndGetActionBuild(compWithUnexistingVersion);
 			fail();
@@ -120,8 +119,8 @@ public class WorkflowPatchesTest extends WorkflowTestBase {
 		forkAndBuild(compUnTillDb);
 
 		// simulate non-locked mdep
-		Component nonLockedMDep = new Component(UNTILL);
-		MDepsFile mdf = new MDepsFile(Arrays.asList(nonLockedMDep));
+		Component nonLockedMDep = new Component(UNTILL, repoFactory);
+		MDepsFile mdf = new MDepsFile(UNTILL);
 		ReleaseBranchCurrent rb = ReleaseBranchFactory.getCRB(compUnTillDb, repoFactory);
 		env.getUnTillDbVCS().setFileContent(rb.getName(), Utils.MDEPS_FILE_NAME,
 				mdf.toFileContent(), "mdeps file added");
