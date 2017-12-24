@@ -6,6 +6,7 @@ import org.scm4j.commons.Version;
 import org.scm4j.releaser.builders.BuilderFactory;
 import org.scm4j.releaser.builders.TestBuilder;
 import org.scm4j.releaser.conf.IConfigUrls;
+import org.scm4j.releaser.conf.VCSRepositoryFactory;
 import org.scm4j.releaser.conf.VCSType;
 import org.scm4j.vcs.GitVCS;
 import org.scm4j.vcs.GitVCSUtils;
@@ -49,6 +50,7 @@ public class TestEnvironment implements AutoCloseable {
 	private final Version unTillDbVer = new Version("2.59.1-SNAPSHOT");
 	private File envDir;
 	private IConfigUrls	configUrls;
+	private VCSRepositoryFactory repoFactory;
 
 	public TestEnvironment() {
 		RANDOM_VCS_NAME_SUFFIX = UUID.randomUUID().toString();
@@ -80,6 +82,7 @@ public class TestEnvironment implements AutoCloseable {
 				return credsFile.toString();
 			}
 		};
+		repoFactory = new VCSRepositoryFactory(configUrls);
 	}
 
 	private void createCCFile() throws IOException {
@@ -232,5 +235,9 @@ public class TestEnvironment implements AutoCloseable {
 	
 	public IConfigUrls getConfigUrls() {
 		return configUrls;
+	}
+
+	public VCSRepositoryFactory getRepoFactory() {
+		return repoFactory;
 	}
 }

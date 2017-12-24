@@ -47,7 +47,7 @@ public class WorkflowTestBase {
 	public void setUp() throws Exception {
 		env = new TestEnvironment();
 		env.generateTestEnvironment();
-		repoFactory = new VCSRepositoryFactory(env.getConfigUrls());
+		repoFactory = env.getRepoFactory();
 		compUnTill = new Component(UNTILL, repoFactory);
 		compUnTillDb = new Component(UNTILLDB, repoFactory);
 		compUBL = new Component(UBL, repoFactory);

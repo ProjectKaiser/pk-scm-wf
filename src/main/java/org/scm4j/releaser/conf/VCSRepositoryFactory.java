@@ -17,12 +17,17 @@ public class VCSRepositoryFactory {
 			"releaser-vcs-workspaces").getPath();
 	private final RegexConfig cc = new RegexConfig();
 	private final RegexConfig creds = new RegexConfig();
-	private final IVCSWorkspace ws = new VCSWorkspace(DEFAULT_VCS_WORKSPACE_DIR);
-	
+
 	public VCSRepositoryFactory(IConfigUrls configUrls) {
 		try {
-			cc.loadFromYamlUrls(configUrls.getCCUrls());
-			creds.loadFromYamlUrls(configUrls.getCredsUrl());
+			String ccUrls = configUrls.getCCUrls();
+			if (ccUrls != null) {
+				cc.loadFromYamlUrls(configUrls.getCCUrls());
+			}
+			String credsUrls = configUrls.getCredsUrl();
+			if (credsUrls != null) {
+				creds.loadFromYamlUrls(configUrls.getCredsUrl());
+			}
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
@@ -48,6 +53,7 @@ public class VCSRepositoryFactory {
 		String releaseBranchPrefix = cc.getPropByName(componentName, "releaseBranchPrefix",
 				VCSRepository.DEFAULT_RELEASE_BRANCH_PREFIX);
 		String releaseCommand = cc.getPropByName(componentName, "releaseCommand", null);
+		IVCSWorkspace ws = new VCSWorkspace(DEFAULT_VCS_WORKSPACE_DIR);
 		return new VCSRepository(componentName, url, credentials, type, developBranch, releaseBranchPrefix,
 				VCSFactory.getVCS(type, credentials, url, ws), BuilderFactory.getBuilder(releaseCommand));
 	}

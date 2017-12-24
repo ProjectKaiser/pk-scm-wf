@@ -253,7 +253,7 @@ public class CLITest {
 	}
 	
 	@Test
-	public void testInitWorkingFolder() throws Exception {
+	public void testInitWorkingDir() throws Exception {
 		String[] args = new String[] {};
 		Utils.waitForDeleteDir(Utils.BASE_WORKING_DIR);
 		

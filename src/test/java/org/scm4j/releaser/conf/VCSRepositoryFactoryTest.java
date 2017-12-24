@@ -10,8 +10,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.*;
 
 public class VCSRepositoryFactoryTest {
-	
-	private IConfigUrls configUrls;
+
 	private VCSRepositoryFactory repoFactory;
 	
 	@Before
@@ -75,6 +74,23 @@ public class VCSRepositoryFactoryTest {
 	public void testSVNAlternativeDetermination() {
 		VCSRepository repo = repoFactory.getVCSRepository("svn1");
 		assertEquals(VCSType.SVN, repo.getType());
+	}
+
+	@Test
+	public void testNullConfigUrls() {
+		IConfigUrls configUrls = new IConfigUrls() {
+			@Override
+			public String getCCUrls() {
+				return null;
+			}
+
+			@Override
+			public String getCredsUrl() {
+				return null;
+			}
+		};
+		// expect no exceptions
+		repoFactory = new VCSRepositoryFactory(configUrls);
 	}
 }
 
