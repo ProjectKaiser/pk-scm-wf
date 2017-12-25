@@ -6,6 +6,9 @@ import org.scm4j.commons.progress.IProgress;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.TagDesc;
 import org.scm4j.releaser.exceptions.EReleaserException;
+import org.scm4j.vcs.api.workingcopy.IVCSRepositoryWorkspace;
+import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
+import org.scm4j.vcs.api.workingcopy.VCSWorkspace;
 
 import java.io.File;
 import java.util.Collection;
@@ -70,9 +73,9 @@ public final class Utils {
 	}
 	
 	public static File getBuildDir(Component comp, Version forVersion) {
-		File buildDir = new File(RELEASES_DIR, comp.getUrl().replaceAll("[^a-zA-Z0-9.-]", "_"));
-		buildDir = new File(buildDir, getReleaseBranchName(comp, forVersion).replaceAll("[^a-zA-Z0-9.-]", "_"));
-		return buildDir;
+		IVCSWorkspace ws = new VCSWorkspace(RELEASES_DIR.toString());
+		IVCSRepositoryWorkspace rws = ws.getVCSRepositoryWorkspace(comp.getUrl());
+		return rws.getRepoFolder();
 	}
 	
 	public static TagDesc getTagDesc(String verStr) {
