@@ -1,10 +1,17 @@
 package org.scm4j.releaser;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.UUID;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.junit.contrib.java.lang.system.EnvironmentVariables;
 import org.scm4j.commons.Version;
 import org.scm4j.releaser.builders.BuilderFactory;
 import org.scm4j.releaser.builders.TestBuilder;
+import org.scm4j.releaser.conf.DefaultConfigUrls;
 import org.scm4j.releaser.conf.IConfigUrls;
 import org.scm4j.releaser.conf.VCSRepositoryFactory;
 import org.scm4j.releaser.conf.VCSType;
@@ -17,11 +24,6 @@ import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
 import org.scm4j.vcs.api.workingcopy.VCSWorkspace;
 import org.scm4j.vcs.svn.SVNVCS;
 import org.scm4j.vcs.svn.SVNVCSUtils;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.UUID;
 
 public class TestEnvironment implements AutoCloseable {
 	public static final String TEST_CC_FILE_NAME = "repos";
@@ -50,7 +52,7 @@ public class TestEnvironment implements AutoCloseable {
 	private final Version unTillDbVer = new Version("2.59.1-SNAPSHOT");
 	private File envDir;
 	private IConfigUrls	configUrls;
-	private VCSRepositoryFactory repoFactory;
+	private EnvironmentVariables ev = new EnvironmentVariables();
 
 	public TestEnvironment() {
 		RANDOM_VCS_NAME_SUFFIX = UUID.randomUUID().toString();
@@ -71,18 +73,7 @@ public class TestEnvironment implements AutoCloseable {
 
 		createCCFile();
 
-		configUrls = new IConfigUrls() {
-			@Override
-			public String getCCUrls() {
-				return ccFile.toString();
-			}
-
-			@Override
-			public String getCredsUrl() {
-				return credsFile.toString();
-			}
-		};
-		repoFactory = new VCSRepositoryFactory(configUrls);
+		initEnvVars();
 	}
 
 	private void createCCFile() throws IOException {
@@ -238,6 +229,15 @@ public class TestEnvironment implements AutoCloseable {
 	}
 
 	public VCSRepositoryFactory getRepoFactory() {
+		VCSRepositoryFactory repoFactory = new VCSRepositoryFactory();
+		repoFactory.load(new DefaultConfigUrls());
 		return repoFactory;
+	}
+
+	@SuppressWarnings("deprecation")
+	private void initEnvVars() {
+		ev.set(DefaultConfigUrls.REPOS_LOCATION_ENV_VAR, null);
+		ev.set(DefaultConfigUrls.CC_URLS_ENV_VAR, ccFile.toString());
+		ev.set(DefaultConfigUrls.CREDENTIALS_URL_ENV_VAR, credsFile.toString());
 	}
 }

@@ -1,25 +1,27 @@
 package org.scm4j.releaser.conf;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.scm4j.releaser.TestEnvironment;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Arrays;
 
-import static org.junit.Assert.*;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.scm4j.releaser.TestEnvironment;
 
 public class MDepsFileTest {
 
 	private static TestEnvironment env = new TestEnvironment();
 	private static VCSRepositoryFactory repoFactory;
-
+	
 	@BeforeClass
 	public static void setUp() throws Exception {
 		env.generateTestEnvironmentNoVCS();
-		repoFactory = new VCSRepositoryFactory(env.getConfigUrls());
+		repoFactory = env.getRepoFactory();
 	}
 
 	@AfterClass
@@ -43,23 +45,23 @@ public class MDepsFileTest {
 	public void testGetMDeps() {
 		assertTrue(getMDF("").getMDeps(repoFactory).isEmpty());
 		assertTrue(getMDF(null).getMDeps(repoFactory).isEmpty());
-		Component comp = new Component(TestEnvironment.PRODUCT_UNTILL, repoFactory);
-		assertTrue(getMDF(TestEnvironment.PRODUCT_UNTILL).getMDeps(repoFactory).contains(comp));
-		assertTrue(getMDF(comp.getCoords().toString()).getMDeps(repoFactory).contains(comp));
+		Component comp = new Component(TestEnvironment.PRODUCT_UNTILL);
+		assertTrue(getMDF(TestEnvironment.PRODUCT_UNTILL).getMDeps().contains(comp));
+		assertTrue(getMDF(comp.getCoords().toString()).getMDeps().contains(comp));
 	}
 
 	@Test
 	public void testToFileContent() {
 		assertTrue(getMDF("").toFileContent().isEmpty());
 		assertTrue(getMDF(null).toFileContent().isEmpty());
-		Component comp = new Component(TestEnvironment.PRODUCT_UNTILL, repoFactory);
+		Component comp = new Component(TestEnvironment.PRODUCT_UNTILL);
 		assertTrue(getMDF(TestEnvironment.PRODUCT_UNTILL).toFileContent().equals(comp.toString()));
 		assertTrue(getMDF(comp.getCoords().toString()).toFileContent().equals(comp.toString()));
 	}
 
 	@Test
 	public void testReplace() {
-		Component comp = new Component(TestEnvironment.PRODUCT_UNTILL, repoFactory);
+		Component comp = new Component(TestEnvironment.PRODUCT_UNTILL);
 		MDepsFile mdf = getMDF(comp.getCoords().toString());
 		Component modifiedComp = comp.clone("11.12.13");
 		mdf.replaceMDep(modifiedComp);

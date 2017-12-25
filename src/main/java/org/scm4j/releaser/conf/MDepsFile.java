@@ -18,17 +18,6 @@ public class MDepsFile {
 		Collections.addAll(lines, content.split("\\r?\\n", -1));
 	}
 
-//	public MDepsFile (Component... comps) {
-//		this(Arrays.asList(comps));
-//	}
-//
-//	public MDepsFile (Collection<Component> mDeps) {
-//		StringBuilder sb = new StringBuilder();
-//		for (Component mDep : mDeps) {
-//			lines.add(mDep.getCoords().toString());
-//		}
-//	}
-
 	public void replaceMDep(Component newMDep) {
 		ListIterator<String> it = lines.listIterator();
 		while (it.hasNext()) {

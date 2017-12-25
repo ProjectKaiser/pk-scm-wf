@@ -6,6 +6,7 @@ import org.scm4j.commons.URLContentLoader;
 import org.scm4j.releaser.Utils;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
@@ -16,7 +17,7 @@ public class DefaultConfigUrls implements IConfigUrls {
 	public static final File CREDENTIALS_FILE = new File(Utils.BASE_WORKING_DIR, "credentials.yml");
 	public static final String CC_URLS_ENV_VAR = "SCM4J_CC";
 	public static final String CREDENTIALS_URL_ENV_VAR = "SCM4J_CREDENTIALS";
-	private static final String URL_SEPARATOR = URLContentLoader.URL_SEPARATOR;
+	public static final String URL_SEPARATOR = URLContentLoader.URL_SEPARATOR;
 
 	@Deprecated
 	public static final String REPOS_LOCATION_ENV_VAR = "SCM4J_VCS_REPOS";
@@ -36,11 +37,11 @@ public class DefaultConfigUrls implements IConfigUrls {
 			}
 			
 			if (CC_URLS_FILE.exists()) {
-				List<String> lines = FileUtils.readLines(CC_URLS_FILE, StandardCharsets.UTF_8);
+				List<String> lines = getLinesFromCCFile();
 				for (String line : lines) {
 					CommentedString cs = new CommentedString(line);
 					if (cs.isValuable()) {
-						urlsSB.append(cs.getStrNoComment() + URL_SEPARATOR);
+						urlsSB.append(cs.getStrNoComment().trim() + URL_SEPARATOR);
 					}
 				}
 			}
@@ -55,27 +56,31 @@ public class DefaultConfigUrls implements IConfigUrls {
 			throw new RuntimeException(e);
 		}
 	}
+
+	List<String> getLinesFromCCFile() throws IOException {
+		return FileUtils.readLines(CC_URLS_FILE, StandardCharsets.UTF_8);
+	}
 	
 	@Override
 	public String getCredsUrl() {
-		String credentialsUrl = System.getenv(CREDENTIALS_URL_ENV_VAR);
-		try {
-			if (credentialsUrl != null) {
-				return credentialsUrl;
-			}
-			if (CREDENTIALS_FILE.exists()) {
-				return CREDENTIALS_FILE.toString();
-			}
-			return null;
-		} catch (Exception e) {
-			throw new RuntimeException(e);
+		String credentialsUrl = getEnv(CREDENTIALS_URL_ENV_VAR);
+		if (credentialsUrl != null) {
+			return credentialsUrl;
 		}
+		if (CREDENTIALS_FILE.exists()) {
+			return CREDENTIALS_FILE.toString();
+		}
+		return null;
+	}
+
+	String getEnv(String name) {
+		return System.getenv(name);
 	}
 
 	private String getCCUrlsFromEnvVar() {
-		String res = System.getenv(REPOS_LOCATION_ENV_VAR);
+		String res = getEnv(REPOS_LOCATION_ENV_VAR);
 		if (res == null) {
-			res = System.getenv(CC_URLS_ENV_VAR);
+			res = getEnv(CC_URLS_ENV_VAR);
 		}
 		return res;
 	}

@@ -1,32 +1,45 @@
 package org.scm4j.releaser.cli;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.filefilter.FileFilterUtils;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.contrib.java.lang.system.ExpectedSystemExit;
-import org.mockito.Matchers;
-import org.scm4j.commons.progress.IProgress;
-import org.scm4j.releaser.*;
-import org.scm4j.releaser.actions.IAction;
-import org.scm4j.releaser.conf.Component;
-import org.scm4j.releaser.conf.IConfigUrls;
-import org.scm4j.releaser.exceptions.cmdline.ECmdLineNoCommand;
-import org.scm4j.releaser.exceptions.cmdline.ECmdLineNoProduct;
-import org.scm4j.releaser.exceptions.cmdline.ECmdLineUnknownCommand;
-import org.scm4j.releaser.exceptions.cmdline.ECmdLineUnknownOption;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
 
 import java.io.File;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.*;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.filefilter.FileFilterUtils;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.contrib.java.lang.system.EnvironmentVariables;
+import org.junit.contrib.java.lang.system.ExpectedSystemExit;
+import org.mockito.Matchers;
+import org.scm4j.commons.progress.IProgress;
+import org.scm4j.releaser.ActionTreeBuilder;
+import org.scm4j.releaser.CachedStatuses;
+import org.scm4j.releaser.ExtendedStatus;
+import org.scm4j.releaser.ExtendedStatusBuilder;
+import org.scm4j.releaser.TestEnvironment;
+import org.scm4j.releaser.Utils;
+import org.scm4j.releaser.actions.IAction;
+import org.scm4j.releaser.conf.Component;
+import org.scm4j.releaser.conf.DefaultConfigUrls;
+import org.scm4j.releaser.exceptions.cmdline.ECmdLineNoCommand;
+import org.scm4j.releaser.exceptions.cmdline.ECmdLineNoProduct;
+import org.scm4j.releaser.exceptions.cmdline.ECmdLineUnknownCommand;
+import org.scm4j.releaser.exceptions.cmdline.ECmdLineUnknownOption;
 
 public class CLITest {
 
@@ -41,7 +54,7 @@ public class CLITest {
 
 	@Rule
 	public final ExpectedSystemExit exit = ExpectedSystemExit.none();
-
+	
 	@Before
 	public void setUp() throws Exception {
 		mockedAction = mock(IAction.class);
@@ -54,19 +67,10 @@ public class CLITest {
 
 	@Test
 	public void testSystemExit() throws Exception {
-		CLI.setCLIFactory(new ICLIFactory() {
-			@Override
-			public CLI getCLI() {
-				return mockedCLI;
-			}
-		});
-		try {
-			doReturn(CLI.EXIT_CODE_ERROR).when(mockedCLI).exec(any(String[].class));
-			exit.expectSystemExitWithStatus(CLI.EXIT_CODE_ERROR);
-			CLI.main(new String[] {});
-		} finally {
-			CLI.setCLIFactory(new CLIFactory());
-		}
+		doReturn(CLI.EXIT_CODE_ERROR).when(mockedCLI).exec(any(String[].class));
+		clearEnvVars();
+		exit.expectSystemExitWithStatus(CLI.EXIT_CODE_ERROR);
+		CLI.main(new String[] {});
 	}
 
 	@Test
@@ -238,42 +242,23 @@ public class CLITest {
 		try (TestEnvironment env = new TestEnvironment()) {
 			env.generateTestEnvironment();
 			exit.expectSystemExitWithStatus(CLI.EXIT_CODE_OK);
-			CLI.setCLIFactory(new ICLIFactory() {
-				@Override
-				public CLI getCLI() {
-					return new CLI(env.getConfigUrls());
-				}
-			});
-			try {
-				CLI.main(new String[] { CLICommand.STATUS.getCmdLineStr(), TestEnvironment.PRODUCT_UNTILL });
-			} finally {
-				CLI.setCLIFactory(new CLIFactory());
-			}
+			CLI.main(new String[] { CLICommand.STATUS.getCmdLineStr(), TestEnvironment.PRODUCT_UNTILL });
 		}
 	}
+	
 	
 	@Test
 	public void testInitWorkingDir() throws Exception {
 		String[] args = new String[] {};
 		Utils.waitForDeleteDir(Utils.BASE_WORKING_DIR);
-		
-		new CLI(new IConfigUrls() {
-			@Override
-			public String getCCUrls() {
-				return null;
-			}
-
-			@Override
-			public String getCredsUrl() {
-				return null;
-			}
-		}).exec(args);
+		clearEnvVars();
+		new CLI().exec(args);
 		
 		List<String> srcFileNames = new ArrayList<>();
 		for (File srcFile : FileUtils.listFiles(Utils.getResourceFile(CLI.class, CLI.CONFIG_TEMPLATES), FileFilterUtils.trueFileFilter(), FileFilterUtils.trueFileFilter())) {
 			srcFileNames.add(srcFile.getName());
 		}
-		
+
 		List<String> dstFileNames = new ArrayList<>();
 		for (File dstFile : FileUtils.listFiles(Utils.BASE_WORKING_DIR, FileFilterUtils.trueFileFilter(), FileFilterUtils.trueFileFilter())) {
 			dstFileNames.add(dstFile.getName());
@@ -281,6 +266,14 @@ public class CLITest {
 		
 		assertTrue(dstFileNames.containsAll(srcFileNames));
 		assertEquals(srcFileNames.size(), dstFileNames.size());
+	}
+
+	@SuppressWarnings("deprecation")
+	void clearEnvVars() {
+		EnvironmentVariables ev = new EnvironmentVariables();
+		ev.set(DefaultConfigUrls.REPOS_LOCATION_ENV_VAR, null);
+		ev.set(DefaultConfigUrls.CC_URLS_ENV_VAR, null);
+		ev.set(DefaultConfigUrls.CREDENTIALS_URL_ENV_VAR, null);
 	}
 	
 	private void verifyCmdLineException() {

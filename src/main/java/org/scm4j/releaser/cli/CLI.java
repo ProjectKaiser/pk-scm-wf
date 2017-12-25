@@ -1,22 +1,30 @@
 package org.scm4j.releaser.cli;
 
+import java.io.File;
+import java.io.PrintStream;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.scm4j.commons.coords.Coords;
 import org.scm4j.commons.coords.CoordsGradle;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.commons.progress.ProgressConsole;
-import org.scm4j.releaser.*;
+import org.scm4j.releaser.ActionTreeBuilder;
+import org.scm4j.releaser.CachedStatuses;
+import org.scm4j.releaser.ExtendedStatus;
+import org.scm4j.releaser.ExtendedStatusBuilder;
+import org.scm4j.releaser.Utils;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.actions.PrintStatus;
 import org.scm4j.releaser.conf.DefaultConfigUrls;
 import org.scm4j.releaser.conf.IConfigUrls;
 import org.scm4j.releaser.conf.VCSRepositoryFactory;
 import org.scm4j.releaser.exceptions.EReleaserException;
-import org.scm4j.releaser.exceptions.cmdline.*;
-
-import java.io.File;
-import java.io.PrintStream;
+import org.scm4j.releaser.exceptions.cmdline.ECmdLine;
+import org.scm4j.releaser.exceptions.cmdline.ECmdLineNoCommand;
+import org.scm4j.releaser.exceptions.cmdline.ECmdLineNoProduct;
+import org.scm4j.releaser.exceptions.cmdline.ECmdLineUnknownCommand;
+import org.scm4j.releaser.exceptions.cmdline.ECmdLineUnknownOption;
 
 public class CLI {
 	public static final String CONFIG_TEMPLATES = "config-templates";
@@ -26,24 +34,19 @@ public class CLI {
 	private final PrintStream out;
 	private final ActionTreeBuilder actionBuilder;
 	private final ExtendedStatusBuilder statusBuilder;
-	private static ICLIFactory cliFactory = new CLIFactory();
 	private IAction action;
 	private RuntimeException lastException;
 	private Runnable preExec = null;
 	private IConfigUrls configUrls;
 	
-	
 	public CLI() {
 		this(System.out, new DefaultConfigUrls());
-	}
-
-	public CLI(IConfigUrls configUrls) {
-		this(System.out, configUrls);
 	}
 	
 	public CLI(PrintStream out, IConfigUrls configUrls) {
 		this.out = out;
-		VCSRepositoryFactory repoFactory = new VCSRepositoryFactory(configUrls);
+		VCSRepositoryFactory repoFactory = new VCSRepositoryFactory();
+		repoFactory.load(configUrls);
 		this.statusBuilder = new ExtendedStatusBuilder(repoFactory);
 		this.actionBuilder = new ActionTreeBuilder(repoFactory);
 		this.configUrls = configUrls;
@@ -53,7 +56,7 @@ public class CLI {
 		this.out = out;
 		this.statusBuilder = statusBuilder;
 		this.actionBuilder = actionBuilder;
-		this.configUrls = null;
+		this.configUrls = new DefaultConfigUrls();
 	}
 
 	public IAction getAction() {
@@ -188,14 +191,10 @@ public class CLI {
 	}
 
 	public static void main(String[] args) throws Exception {
-		System.exit(cliFactory.getCLI().exec(args));
+		System.exit(new CLI().exec(args));
 	}
 
 	public RuntimeException getLastException() {
 		return lastException;
-	}
-
-	public static void setCLIFactory(ICLIFactory cliFactory) {
-		CLI.cliFactory = cliFactory;
 	}
 }

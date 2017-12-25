@@ -17,16 +17,16 @@ public class VCSRepositoryFactory {
 			"releaser-vcs-workspaces").getPath();
 	private final RegexConfig cc = new RegexConfig();
 	private final RegexConfig creds = new RegexConfig();
-
-	public VCSRepositoryFactory(IConfigUrls configUrls) {
+	
+	public void load(IConfigUrls configUrls) {
 		try {
 			String ccUrls = configUrls.getCCUrls();
 			if (ccUrls != null) {
-				cc.loadFromYamlUrls(configUrls.getCCUrls());
+				cc.loadFromYamlUrls(ccUrls);
 			}
 			String credsUrls = configUrls.getCredsUrl();
 			if (credsUrls != null) {
-				creds.loadFromYamlUrls(configUrls.getCredsUrl());
+				creds.loadFromYamlUrls(credsUrls);
 			}
 		} catch (Exception e) {
 			throw new RuntimeException(e);

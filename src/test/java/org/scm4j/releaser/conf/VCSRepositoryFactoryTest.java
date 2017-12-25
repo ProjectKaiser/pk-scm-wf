@@ -1,13 +1,15 @@
 package org.scm4j.releaser.conf;
 
-import com.google.common.io.Resources;
-import org.junit.Before;
-import org.junit.Test;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 import java.io.File;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.*;
+import org.junit.Before;
+import org.junit.Test;
+
+import com.google.common.io.Resources;
 
 public class VCSRepositoryFactoryTest {
 
@@ -28,7 +30,8 @@ public class VCSRepositoryFactoryTest {
 				return credsFile.toString();
 			}
 		};
-		repoFactory = new VCSRepositoryFactory(configUrls);
+		repoFactory = new VCSRepositoryFactory();
+		repoFactory.load(configUrls);
 	}
 
 	@Test
@@ -90,7 +93,8 @@ public class VCSRepositoryFactoryTest {
 			}
 		};
 		// expect no exceptions
-		repoFactory = new VCSRepositoryFactory(configUrls);
+		repoFactory = new VCSRepositoryFactory();
+		repoFactory.load(configUrls);
 	}
 }
 
