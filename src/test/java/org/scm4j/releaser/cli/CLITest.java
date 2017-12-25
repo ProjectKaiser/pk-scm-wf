@@ -36,6 +36,7 @@ import org.scm4j.releaser.Utils;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.DefaultConfigUrls;
+import org.scm4j.releaser.exceptions.EReleaserException;
 import org.scm4j.releaser.exceptions.cmdline.ECmdLineNoCommand;
 import org.scm4j.releaser.exceptions.cmdline.ECmdLineNoProduct;
 import org.scm4j.releaser.exceptions.cmdline.ECmdLineUnknownCommand;
@@ -144,14 +145,15 @@ public class CLITest {
 
 	@Test
 	public void testRuntimeExceptionsWorkflow() throws Exception {
-		RuntimeException mockedException = spy(new RuntimeException(TEST_EXCEPTION));
+		EReleaserException mockedException = spy(new EReleaserException(new NullPointerException()));
 		String[] args = new String[] { CLICommand.STATUS.getCmdLineStr(), UNTILL };
-		doThrow(mockedException).when(mockedCLI).getActionTree(any(CommandLine.class));
+		doThrow(mockedException).when(mockedCLI).getStatusTree(any(CommandLine.class), any(CachedStatuses.class));
 
 		assertEquals(CLI.EXIT_CODE_ERROR, mockedCLI.exec(args));
 
 		verify(mockedAction, never()).execute(any(IProgress.class));
 		verify(mockedException, never()).printStackTrace(mockedPS);
+		verifyException();
 	}
 
 	@Test
@@ -276,10 +278,14 @@ public class CLITest {
 		ev.set(DefaultConfigUrls.CREDENTIALS_URL_ENV_VAR, null);
 	}
 	
-	private void verifyCmdLineException() {
+	private void verifyException() {
 		verify(mockedPS, atLeastOnce()).println(anyString());
 		verify(mockedPS, atLeastOnce()).println();
 		verify(mockedPS).println(Matchers.contains(mockedCLI.getLastException().getMessage()));
+	}
+	
+	private void verifyCmdLineException() {
+		verifyException();
 		verify(mockedPS).println(CommandLine.getUsage());
 	}
 }

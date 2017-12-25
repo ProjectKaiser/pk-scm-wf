@@ -19,7 +19,6 @@ import org.scm4j.releaser.actions.PrintStatus;
 import org.scm4j.releaser.conf.DefaultConfigUrls;
 import org.scm4j.releaser.conf.IConfigUrls;
 import org.scm4j.releaser.conf.VCSRepositoryFactory;
-import org.scm4j.releaser.exceptions.EReleaserException;
 import org.scm4j.releaser.exceptions.cmdline.ECmdLine;
 import org.scm4j.releaser.exceptions.cmdline.ECmdLineNoCommand;
 import org.scm4j.releaser.exceptions.cmdline.ECmdLineNoProduct;
@@ -180,13 +179,7 @@ public class CLI {
 			ps.println(prefixMessage);
 			e.printStackTrace(ps);
 		} else {
-			ps.println(prefixMessage + (e instanceof EReleaserException ?
-					e.getMessage() == null || e.getMessage().isEmpty() ? 
-							e.getCause() != null ? 
-									e.getCause().toString() : 
-									"" : 
-							e.getMessage() :
-					e.toString()));
+			ps.println(prefixMessage + (e.getMessage() == null ? e.toString() : e.getMessage()));
 		}
 	}
 

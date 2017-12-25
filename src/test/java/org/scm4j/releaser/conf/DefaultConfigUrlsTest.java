@@ -130,6 +130,5 @@ public class DefaultConfigUrlsTest {
 		} catch (RuntimeException e1) {
 			assertEquals(e, e1.getCause());
 		}
-		
 	}
 }
