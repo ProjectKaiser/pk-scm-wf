@@ -19,4 +19,11 @@ public class CommandLineTest {
 	public void testPrintUsage() {
 		System.out.println(CommandLine.getUsage())	;
 	}
+	
+	@Test
+	public void testTrimSpaces() {
+		CommandLine cmd = new CommandLine(new String[] {" " + CLICommand.STATUS.getCmdLineStr() + " ", TEST_COORDS, " " + Option.DELAYED_TAG.getCmdLineStr() + " "});
+		assertEquals(CLICommand.STATUS, cmd.getCommand());
+		assertTrue(cmd.isDelayedTag());
+	}
 }
