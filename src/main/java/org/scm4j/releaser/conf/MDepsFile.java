@@ -31,10 +31,9 @@ public class MDepsFile {
 
 	public void replaceMDep(Component newMDep) {
 		ListIterator<String> it = lines.listIterator();
-		String str;
 		while (it.hasNext()) {
-			str = it.next();
-			if (new CoordsGradle(str).toString("").equals(newMDep.getCoordsNoVersion())) {
+			CommentedString cs = new CommentedString(it.next());
+			if (cs.isValuable() && new CoordsGradle(cs.toString()).toString("").equals(newMDep.getCoordsNoVersion())) {
 				it.set(newMDep.getCoords().toString());
 				return;
 			}
@@ -53,7 +52,18 @@ public class MDepsFile {
 		}
 		return sw.toString();
 	}
-
+	
+	public List<Component> getMDeps() {
+		List<Component> res = new ArrayList<>();
+		for (String line : lines) {
+			CommentedString cs = new CommentedString(line);
+			if (cs.isValuable()) {
+				res.add(new Component(line));
+			}
+		}
+		return res;
+	}
+	
 	public List<Component> getMDeps(VCSRepositoryFactory repoFactory) {
 		List<Component> res = new ArrayList<>();
 		for (String line : lines) {

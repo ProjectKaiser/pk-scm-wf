@@ -63,13 +63,13 @@ public class MDepsFileTest {
 		MDepsFile mdf = getMDF(comp.getCoords().toString());
 		Component modifiedComp = comp.clone("11.12.13");
 		mdf.replaceMDep(modifiedComp);
-		assertTrue(mdf.getMDeps(repoFactory).size() == 1);
-		assertTrue(mdf.getMDeps(repoFactory).contains(modifiedComp));
+		assertTrue(mdf.getMDeps().size() == 1);
+		assertTrue(mdf.getMDeps().contains(modifiedComp));
 
-		Component wrongComp = new Component("wrong.comp:none", repoFactory);
+		Component wrongComp = new Component("wrong.comp:none");
 		mdf.replaceMDep(wrongComp);
-		assertTrue(mdf.getMDeps(repoFactory).size() == 1);
-		assertTrue(mdf.getMDeps(repoFactory).contains(modifiedComp));
+		assertTrue(mdf.getMDeps().size() == 1);
+		assertTrue(mdf.getMDeps().contains(modifiedComp));
 	}
 	
 	@Test
@@ -91,8 +91,8 @@ public class MDepsFileTest {
 		pw.print("  ");
 		
 		MDepsFile mdf = getMDF(sw.toString());
-		assertTrue(mdf.getMDeps(repoFactory).size() == 4);
-		assertTrue(mdf.getMDeps(repoFactory).containsAll(Arrays.asList(comp1, comp2, comp3, comp4)));
+		assertTrue(mdf.getMDeps().size() == 4);
+		assertTrue(mdf.getMDeps().containsAll(Arrays.asList(comp1, comp2, comp3, comp4)));
 		assertEquals(sw.toString(), mdf.toFileContent());
 		
 		Component comp1Versioned = comp1.clone("12.13");
@@ -105,8 +105,8 @@ public class MDepsFileTest {
 		mdf.replaceMDep(comp3Versioned);
 		mdf.replaceMDep(comp4Versioned);
 		
-		assertTrue(mdf.getMDeps(repoFactory).size() == 4);
-		assertTrue(mdf.getMDeps(repoFactory).containsAll(Arrays.asList(comp1Versioned, comp2Versioned, comp3Versioned, comp4Versioned)));
+		assertTrue(mdf.getMDeps().size() == 4);
+		assertTrue(mdf.getMDeps().containsAll(Arrays.asList(comp1Versioned, comp2Versioned, comp3Versioned, comp4Versioned)));
 		assertEquals(sw.toString()
 				.replace(comp1.toString(), comp1Versioned.toString())
 				.replace(comp2.toString(), comp2Versioned.toString())

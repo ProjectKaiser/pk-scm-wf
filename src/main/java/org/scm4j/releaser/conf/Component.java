@@ -19,7 +19,7 @@ public class Component {
 		this.coords = new CoordsGradle(coords);
 		repo = repoFactory.getVCSRepository(this.coords.getName());
 	}
-
+	
 	public Component(String coords) {
 		this.coords = new CoordsGradle(coords);
 		repo = null;
