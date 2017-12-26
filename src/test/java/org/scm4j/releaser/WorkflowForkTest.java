@@ -85,9 +85,9 @@ public class WorkflowForkTest extends WorkflowTestBase {
 		fork(compUBL);
 		
 		// simulate mdeps not locked
-		ReleaseBranchCurrent crb = ReleaseBranchFactory.getCRB(compUBL);
+		ReleaseBranchCurrent crb = ReleaseBranchFactory.getCRB(compUBL, repoFactory);
 		MDepsFile mdf = new MDepsFile(env.getUblVCS().getFileContent(crb.getName(), Utils.MDEPS_FILE_NAME, null));
-		mdf.replaceMDep(mdf.getMDeps().get(0).clone(""));
+		mdf.replaceMDep(mdf.getMDeps(repoFactory).get(0).clone(""));
 		env.getUblVCS().setFileContent(crb.getName(), Utils.MDEPS_FILE_NAME, mdf.toFileContent(), "mdeps not locked");
 		
 		// UBL should lock its mdeps
@@ -98,7 +98,7 @@ public class WorkflowForkTest extends WorkflowTestBase {
 		
 		// check UBL mdeps locked
 		mdf = new MDepsFile(env.getUblVCS().getFileContent(crb.getName(), Utils.MDEPS_FILE_NAME, null));
-		for (Component mdep : mdf.getMDeps()) {
+		for (Component mdep : mdf.getMDeps(repoFactory)) {
 			assertTrue(mdep.getVersion().isLocked());
 		}
 	}

@@ -1,18 +1,21 @@
 package org.scm4j.releaser;
 
-import java.io.File;
-import java.util.Collection;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.ForkJoinTask;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
-
 import org.apache.commons.io.FileUtils;
 import org.scm4j.commons.Version;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.TagDesc;
 import org.scm4j.releaser.exceptions.EReleaserException;
+import org.scm4j.vcs.api.workingcopy.IVCSRepositoryWorkspace;
+import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
+import org.scm4j.vcs.api.workingcopy.VCSWorkspace;
+
+import java.io.File;
+import java.util.Collection;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ForkJoinTask;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 public final class Utils {
 	
@@ -70,9 +73,9 @@ public final class Utils {
 	}
 	
 	public static File getBuildDir(Component comp, Version forVersion) {
-		File buildDir = new File(RELEASES_DIR, comp.getUrl().replaceAll("[^a-zA-Z0-9.-]", "_"));
-		buildDir = new File(buildDir, getReleaseBranchName(comp, forVersion).replaceAll("[^a-zA-Z0-9.-]", "_"));
-		return buildDir;
+		IVCSWorkspace ws = new VCSWorkspace(RELEASES_DIR.toString());
+		IVCSRepositoryWorkspace rws = ws.getVCSRepositoryWorkspace(comp.getUrl());
+		return rws.getRepoFolder();
 	}
 	
 	public static TagDesc getTagDesc(String verStr) {
@@ -97,5 +100,13 @@ public final class Utils {
 		if (dir.exists()) {
 			throw new Exception("failed to delete " + dir);
 		}
+	}
+	
+	public static File getResourceFile(Class<?> forClass, String path) throws Exception{
+		return new File(forClass.getResource(path).toURI());
+	}
+
+	public static String getReleaseBranchName(Component comp) {
+		return getReleaseBranchName(comp, comp.getVersion());
 	}
 }

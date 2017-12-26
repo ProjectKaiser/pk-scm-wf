@@ -10,11 +10,11 @@ public class CommandLine {
 	private final List<Option> options = new ArrayList<>();
 
 	public CLICommand getCommand() {
-		return args.length < 1 ? null : CLICommand.fromCmdLineStr(args[0]);
+		return args.length < 1 ? null : CLICommand.fromCmdLineStr(args[0].trim());
 	}
 	
 	public String getCommandStr() {
-		return args.length < 1 ? null : args[0]; 
+		return args.length < 1 ? null : args[0].trim(); 
 	}
 
 	public String getProductCoords() {
@@ -26,7 +26,7 @@ public class CommandLine {
 		if (args.length > 2) {
 			String[] optionArgs = Arrays.copyOfRange(args, 2, args.length);
 			for (String optionArg : optionArgs) {
-				options.add(Option.fromCmdLineStr(optionArg));
+				options.add(Option.fromCmdLineStr(optionArg.trim()));
 			}
 		}
 	}

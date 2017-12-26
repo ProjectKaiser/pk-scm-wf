@@ -1,5 +1,18 @@
 package org.scm4j.releaser;
 
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasProperty;
+import static org.hamcrest.Matchers.instanceOf;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
+import java.util.HashMap;
+import java.util.List;
+
 import org.hamcrest.Matcher;
 import org.junit.After;
 import org.junit.Assert;
@@ -14,6 +27,7 @@ import org.scm4j.releaser.cli.Option;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.DelayedTagsFile;
 import org.scm4j.releaser.conf.MDepsFile;
+import org.scm4j.releaser.conf.VCSRepositoryFactory;
 import org.scm4j.releaser.scmactions.SCMActionRelease;
 import org.scm4j.releaser.scmactions.SCMActionTag;
 import org.scm4j.vcs.api.IVCS;
@@ -22,12 +36,6 @@ import org.scm4j.vcs.api.VCSTag;
 import org.scm4j.vcs.api.WalkDirection;
 import org.scm4j.vcs.api.exceptions.EVCSBranchNotFound;
 import org.scm4j.vcs.api.exceptions.EVCSFileNotFound;
-
-import java.util.HashMap;
-import java.util.List;
-
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
 
 public class WorkflowTestBase {
 	protected TestEnvironment env;
@@ -40,14 +48,16 @@ public class WorkflowTestBase {
 	protected DevelopBranch dbUnTill;
 	protected DevelopBranch dbUnTillDb;
 	protected DevelopBranch dbUBL;
-
+	protected VCSRepositoryFactory repoFactory;
+	
 	@Before
 	public void setUp() throws Exception {
 		env = new TestEnvironment();
 		env.generateTestEnvironment();
-		compUnTill = new Component(UNTILL);
-		compUnTillDb = new Component(UNTILLDB);
-		compUBL = new Component(UBL);
+		repoFactory = env.getRepoFactory();
+		compUnTill = new Component(UNTILL, repoFactory);
+		compUnTillDb = new Component(UNTILLDB, repoFactory);
+		compUBL = new Component(UBL, repoFactory);
 		dbUnTill = new DevelopBranch(compUnTill);
 		dbUnTillDb = new DevelopBranch(compUnTillDb);
 		dbUBL = new DevelopBranch(compUBL);
@@ -163,8 +173,9 @@ public class WorkflowTestBase {
 
 	protected List<Component> getReleaseBranchMDeps(Component comp, Version forVersion) {
 		try {
-			return new MDepsFile(comp.getVCS().getFileContent(Utils.getReleaseBranchName(comp, forVersion), Utils.MDEPS_FILE_NAME, null)).getMDeps();
-		} catch(EVCSFileNotFound | EVCSBranchNotFound e) {
+			return new MDepsFile(comp.getVCS().getFileContent(Utils.getReleaseBranchName(comp, forVersion),
+					Utils.MDEPS_FILE_NAME, null)).getMDeps(repoFactory);
+		} catch (EVCSFileNotFound | EVCSBranchNotFound e) {
 			throw new RuntimeException(Utils.getReleaseBranchName(comp, forVersion) + " branch does not exist");
 		}
 	}

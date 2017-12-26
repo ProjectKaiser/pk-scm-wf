@@ -1,50 +1,32 @@
 package org.scm4j.releaser.conf;
 
 import org.scm4j.commons.CommentedString;
+import org.scm4j.commons.coords.CoordsGradle;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.ListIterator;
+import java.util.*;
 
 public class MDepsFile {
 
-	private final List<Object> lines = new ArrayList<>();
+	private final List<String> lines = new ArrayList<>();
 
 	public MDepsFile(String content) {
 		if (content == null || content.isEmpty()) {
 			return;
 		}
-		String[] strs = content.split("\\r?\\n", -1);
-		for (String str : strs) {
-			if (new CommentedString(str).isValuable()) {
-				lines.add(new Component(str));
-			} else {
-				lines.add(str);
-			}
-		}
+		Collections.addAll(lines, content.split("\\r?\\n", -1));
 	}
 
 	public void replaceMDep(Component newMDep) {
-		ListIterator<Object> it = lines.listIterator();
-		Object obj;
+		ListIterator<String> it = lines.listIterator();
 		while (it.hasNext()) {
-			obj = it.next();
-			if (obj instanceof Component) {
-				if (((Component) obj).getCoordsNoVersion().equals(newMDep.getCoordsNoVersion())) {
-					it.set(newMDep);
-					return;
-				}
+			CommentedString cs = new CommentedString(it.next());
+			if (cs.isValuable() && new CoordsGradle(cs.toString()).toString("").equals(newMDep.getCoordsNoVersion())) {
+				it.set(newMDep.getCoords().toString());
+				return;
 			}
 		}
-	}
-
-	public MDepsFile(List<Component> mDeps) {
-		if (mDeps == null) {
-			return;
-		}
-		lines.addAll(mDeps);
 	}
 
 	public String toFileContent() {
@@ -52,19 +34,31 @@ public class MDepsFile {
 		PrintWriter pw = new PrintWriter(sw);
 		for (int i = 0; i < lines.size(); i++) {
 			if (i == lines.size() - 1) {
-				pw.print(lines.get(i).toString());
+				pw.print(lines.get(i));
 			} else {
-				pw.println(lines.get(i).toString());
+				pw.println(lines.get(i));
 			}
 		}
 		return sw.toString();
 	}
-
+	
 	public List<Component> getMDeps() {
 		List<Component> res = new ArrayList<>();
-		for (Object obj : lines) {
-			if (obj instanceof Component) {
-				res.add((Component) obj);
+		for (String line : lines) {
+			CommentedString cs = new CommentedString(line);
+			if (cs.isValuable()) {
+				res.add(new Component(line));
+			}
+		}
+		return res;
+	}
+	
+	public List<Component> getMDeps(VCSRepositoryFactory repoFactory) {
+		List<Component> res = new ArrayList<>();
+		for (String line : lines) {
+			CommentedString cs = new CommentedString(line);
+			if (cs.isValuable()) {
+				res.add(new Component(line, repoFactory));
 			}
 		}
 		return res;
@@ -76,11 +70,14 @@ public class MDepsFile {
 	}
 
 	public boolean hasMDeps() {
-		for (Object obj : lines) {
-			if (obj instanceof Component) {
+		for (String line : lines) {
+			CommentedString cs = new CommentedString(line);
+			if (cs.isValuable()) {
 				return true;
 			}
 		}
 		return false;
 	}
+
+
 }

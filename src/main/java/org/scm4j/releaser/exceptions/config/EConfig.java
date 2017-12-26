@@ -1,4 +1,6 @@
-package org.scm4j.releaser.exceptions;
+package org.scm4j.releaser.exceptions.config;
+
+import org.scm4j.releaser.exceptions.EReleaserException;
 
 public class EConfig extends EReleaserException {
 
@@ -7,9 +9,4 @@ public class EConfig extends EReleaserException {
 	public EConfig(String message) {
 		super(message);
 	}
-
-	public EConfig(String message, Exception e) {
-		super(message, e);
-	}
-
 }

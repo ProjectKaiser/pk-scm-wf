@@ -16,7 +16,6 @@ import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.vcs.api.WalkDirection;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -32,18 +31,18 @@ public class WorkflowPatchesTest extends WorkflowTestBase {
 		forkAndBuild(compUnTill);
 
 		// add feature to existing unTillDb release
-		ReleaseBranchCurrent crb = ReleaseBranchFactory.getCRB(compUnTillDb);
+		ReleaseBranchCurrent crb = ReleaseBranchFactory.getCRB(compUnTillDb, repoFactory);
 		env.generateFeatureCommit(env.getUnTillDbVCS(), crb.getName(), "patch feature added");
 
 		// build unTillDb patch
-		Component compUnTillDbPatch = new Component(UNTILLDB + ":" + env.getUnTillDbVer().toRelease());
+		Component compUnTillDbPatch = new Component(UNTILLDB + ":" + env.getUnTillDbVer().toRelease(), repoFactory);
 		IAction action = execAndGetActionBuild(compUnTillDbPatch);
 		assertActionDoesBuild(action, compUnTillDb);
 
-		ReleaseBranchPatch rb = ReleaseBranchFactory.getReleaseBranchPatch(compUnTillDbPatch);
+		ReleaseBranchPatch rb = ReleaseBranchFactory.getReleaseBranchPatch(compUnTillDbPatch, repoFactory);
 		assertEquals(env.getUnTillDbVer().toReleaseZeroPatch().toNextPatch().toNextPatch(),
 				rb.getVersion());
-		ExtendedStatusBuilder builder = new ExtendedStatusBuilder();
+		ExtendedStatusBuilder builder = new ExtendedStatusBuilder(repoFactory);
 		assertEquals(BuildStatus.DONE, builder.getAndCacheMinorStatus(compUnTillDbPatch).getStatus());
 
 		// Existing unTill and UBL release branches should actualize its mdeps
@@ -53,7 +52,7 @@ public class WorkflowPatchesTest extends WorkflowTestBase {
 		assertActionDoesNothing(action, compUnTillDb);
 
 		// check unTill uses new untillDb and UBL versions in existing unTill release branch.
-		rb = ReleaseBranchFactory.getReleaseBranchPatch(compUnTill.clone(env.getUnTillVer().toRelease()));
+		rb = ReleaseBranchFactory.getReleaseBranchPatch(compUnTill.clone(env.getUnTillVer().toRelease()), repoFactory);
 		
 		List<Component> mdeps = rb.getMDeps();
 		for (Component mdep : mdeps) {
@@ -76,25 +75,25 @@ public class WorkflowPatchesTest extends WorkflowTestBase {
 		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevelopBranch(), "feature added");
 		forkAndBuild(compUnTillDb, 2);
 
-		ReleaseBranchCurrent crb = ReleaseBranchFactory.getCRB(compUnTillDb);
+		ReleaseBranchCurrent crb = ReleaseBranchFactory.getCRB(compUnTillDb, repoFactory);
 		assertEquals(env.getUnTillDbVer().toNextMinor().toRelease(), crb.getVersion());
 
 		// add feature for 2.59.1
-		Component compToPatch = new Component(UNTILLDB + ":2.59.1");
-		ReleaseBranchPatch rb = ReleaseBranchFactory.getReleaseBranchPatch(compToPatch);
+		Component compToPatch = new Component(UNTILLDB + ":2.59.1", repoFactory);
+		ReleaseBranchPatch rb = ReleaseBranchFactory.getReleaseBranchPatch(compToPatch, repoFactory);
 		env.generateFeatureCommit(env.getUnTillDbVCS(), rb.getName(), "2.59.1 feature merged");
 
 		// build new unTillDb patch 2.59.1
 		IAction action = execAndGetActionBuild(compToPatch);
 		assertActionDoesBuild(action, compUnTillDb);
-		rb = ReleaseBranchFactory.getReleaseBranchPatch(compToPatch);
+		rb = ReleaseBranchFactory.getReleaseBranchPatch(compToPatch, repoFactory);
 		assertEquals(dbUnTillDb.getVersion().toPreviousMinor().toPreviousMinor().toNextPatch().toRelease(), rb.getVersion());
 	}
 	
 	@Test
 	public void testExceptionOnPatchOnUnexistingBranch() {
 		// try do build a patch for unreleased version
-		Component compWithUnexistingVersion = new Component(UNTILLDB + ":2.70.0");
+		Component compWithUnexistingVersion = new Component(UNTILLDB + ":2.70.0", repoFactory);
 		try {
 			execAndGetActionBuild(compWithUnexistingVersion);
 			fail();
@@ -119,10 +118,10 @@ public class WorkflowPatchesTest extends WorkflowTestBase {
 	public void testExceptionMDepsNotLockedOnPatch() {
 		forkAndBuild(compUnTillDb);
 
-		// simulate not locked mdep
-		Component nonLockedMDep = new Component("unexisting.com:unexisting");
-		MDepsFile mdf = new MDepsFile(Arrays.asList(nonLockedMDep));
-		ReleaseBranchCurrent rb = ReleaseBranchFactory.getCRB(compUnTillDb);
+		// simulate non-locked mdep
+		Component nonLockedMDep = new Component(UNTILL, repoFactory);
+		MDepsFile mdf = new MDepsFile(UNTILL);
+		ReleaseBranchCurrent rb = ReleaseBranchFactory.getCRB(compUnTillDb, repoFactory);
 		env.getUnTillDbVCS().setFileContent(rb.getName(), Utils.MDEPS_FILE_NAME,
 				mdf.toFileContent(), "mdeps file added");
 
@@ -143,12 +142,12 @@ public class WorkflowPatchesTest extends WorkflowTestBase {
 		forkAndBuild(compUnTillDb);
 
 		// add an igonored feature and tag it
-		ReleaseBranchCurrent crb = ReleaseBranchFactory.getCRB(compUnTillDb);
+		ReleaseBranchCurrent crb = ReleaseBranchFactory.getCRB(compUnTillDb, repoFactory);
 		Component compUnTillDbVersioned = compUnTillDb.clone(crb.getVersion());
 		env.generateFeatureCommit(env.getUnTillDbVCS(), crb.getName(), LogTag.SCM_IGNORE + " feature megred");
 		env.getUnTillDbVCS().createTag(crb.getName(), "tag", "tag", null);
 
-		ExtendedStatusBuilder statusBuilder = new ExtendedStatusBuilder();
+		ExtendedStatusBuilder statusBuilder = new ExtendedStatusBuilder(repoFactory);
 		ExtendedStatus status = statusBuilder.getAndCachePatchStatus(compUnTillDbVersioned, new CachedStatuses());
 		assertEquals(BuildStatus.DONE, status.getStatus());
 	}
@@ -159,14 +158,14 @@ public class WorkflowPatchesTest extends WorkflowTestBase {
 
 		// simulate no commits left in release branch, i.e. all igonred and no tags.
 		// loop in noValueableCommitsAfterLastTag should be interrupted
-		ReleaseBranchCurrent crb = ReleaseBranchFactory.getCRB(compUnTillDb);
+		ReleaseBranchCurrent crb = ReleaseBranchFactory.getCRB(compUnTillDb, repoFactory);
 		Component mockedCompVersioned = spy(compUnTillDb.clone(crb.getVersion()));
 		IVCS mockedVCS = spy(env.getUnTillDbVCS());
 		doReturn(mockedVCS).when(mockedCompVersioned).getVCS();
 		doReturn(new ArrayList<VCSCommit>()).when(mockedVCS)
 				.getCommitsRange(anyString(), (String) isNull(), any(WalkDirection.class), anyInt());
 
-		ExtendedStatusBuilder statusBuilder = new ExtendedStatusBuilder();
+		ExtendedStatusBuilder statusBuilder = new ExtendedStatusBuilder(repoFactory);
 		ExtendedStatus status = statusBuilder.getAndCachePatchStatus(mockedCompVersioned, new CachedStatuses());
 		assertEquals(BuildStatus.DONE, status.getStatus());
 	}

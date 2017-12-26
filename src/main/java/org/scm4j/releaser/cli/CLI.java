@@ -1,18 +1,24 @@
 package org.scm4j.releaser.cli;
 
+import java.io.File;
 import java.io.PrintStream;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.ArrayUtils;
+import org.scm4j.commons.coords.Coords;
+import org.scm4j.commons.coords.CoordsGradle;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.commons.progress.ProgressConsole;
 import org.scm4j.releaser.ActionTreeBuilder;
 import org.scm4j.releaser.CachedStatuses;
 import org.scm4j.releaser.ExtendedStatus;
 import org.scm4j.releaser.ExtendedStatusBuilder;
+import org.scm4j.releaser.Utils;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.actions.PrintStatus;
-import org.scm4j.releaser.conf.Component;
-import org.scm4j.releaser.exceptions.EReleaserException;
+import org.scm4j.releaser.conf.DefaultConfigUrls;
+import org.scm4j.releaser.conf.IConfigUrls;
+import org.scm4j.releaser.conf.VCSRepositoryFactory;
 import org.scm4j.releaser.exceptions.cmdline.ECmdLine;
 import org.scm4j.releaser.exceptions.cmdline.ECmdLineNoCommand;
 import org.scm4j.releaser.exceptions.cmdline.ECmdLineNoProduct;
@@ -20,27 +26,36 @@ import org.scm4j.releaser.exceptions.cmdline.ECmdLineUnknownCommand;
 import org.scm4j.releaser.exceptions.cmdline.ECmdLineUnknownOption;
 
 public class CLI {
+	public static final String CONFIG_TEMPLATES = "config-templates";
 	public static final int EXIT_CODE_OK = 0;
 	public static final int EXIT_CODE_ERROR = 1;
 
-	private static PrintStream out = System.out;
-	private static ActionTreeBuilder actionBuilder = new ActionTreeBuilder();
-	private static ExtendedStatusBuilder statusBuilder = new ExtendedStatusBuilder();
+	private final PrintStream out;
+	private final ActionTreeBuilder actionBuilder;
+	private final ExtendedStatusBuilder statusBuilder;
 	private IAction action;
 	private RuntimeException lastException;
-
 	private Runnable preExec = null;
-
-	static void setOut(PrintStream out) {
-		CLI.out = out;
+	private IConfigUrls configUrls;
+	
+	public CLI() {
+		this(System.out, new DefaultConfigUrls());
 	}
 	
-	static void setStatusTreeBuilder(ExtendedStatusBuilder statusBuilder) {
-		CLI.statusBuilder = statusBuilder;
+	public CLI(PrintStream out, IConfigUrls configUrls) {
+		this.out = out;
+		VCSRepositoryFactory repoFactory = new VCSRepositoryFactory();
+		repoFactory.load(configUrls);
+		this.statusBuilder = new ExtendedStatusBuilder(repoFactory);
+		this.actionBuilder = new ActionTreeBuilder(repoFactory);
+		this.configUrls = configUrls;
 	}
-
-	static void setActionBuilder(ActionTreeBuilder actionBuilder) {
-		CLI.actionBuilder = actionBuilder;
+	
+	public CLI(PrintStream out, ExtendedStatusBuilder statusBuilder, ActionTreeBuilder actionBuilder) {
+		this.out = out;
+		this.statusBuilder = statusBuilder;
+		this.actionBuilder = actionBuilder;
+		this.configUrls = new DefaultConfigUrls();
 	}
 
 	public IAction getAction() {
@@ -66,10 +81,10 @@ public class CLI {
 	}
 
 	public ExtendedStatus getStatusTree(CommandLine cmd, CachedStatuses cache) {
-		Component comp = new Component(cmd.getProductCoords());
-		return comp.getVersion().isLocked() ?
-				statusBuilder.getAndCachePatchStatus(comp, cache) :
-				statusBuilder.getAndCacheMinorStatus(comp, cache);
+		Coords coords = new CoordsGradle(cmd.getProductCoords());
+		return coords.getVersion().isLocked() ?
+				statusBuilder.getAndCachePatchStatus(cmd.getProductCoords(), cache) :
+				statusBuilder.getAndCacheMinorStatus(cmd.getProductCoords(), cache);
 	}
 	
 	private IAction getActionTree(ExtendedStatus node, CachedStatuses cache, CommandLine cmd) {
@@ -94,6 +109,7 @@ public class CLI {
 	public int exec(String[] args) {
 		try {
 			out.println("scm4j-releaser " + CLI.class.getPackage().getSpecificationVersion());
+			initWorkingDir();
 			long startMS = System.currentTimeMillis();
 			CommandLine cmd = new CommandLine(args);
 			validateCommandLine(cmd);
@@ -123,6 +139,16 @@ public class CLI {
 		}
 	}
 
+	private void initWorkingDir() throws Exception {
+		if (Utils.BASE_WORKING_DIR.exists() || configUrls.getCCUrls() != null || configUrls.getCredsUrl() != null) {
+			return;
+		}
+		
+		Utils.BASE_WORKING_DIR.mkdirs();
+		File resourcesFrom = Utils.getResourceFile(this.getClass(), CONFIG_TEMPLATES);
+		FileUtils.copyDirectory(resourcesFrom, Utils.BASE_WORKING_DIR);
+	}
+	
 	void validateCommandLine(CommandLine cmd) {
 		for (String optionArg : cmd.getOptionArgs()) {
 			if (Option.fromCmdLineStr(optionArg) == Option.UNKNOWN) {
@@ -148,15 +174,12 @@ public class CLI {
 			lastException = (RuntimeException) e;
 		}
 		ps.println();
-		ps.print("EXECUTION FAILED: ");
+		String prefixMessage = "EXECUTION FAILED: ";
 		if (ArrayUtils.contains(args, Option.STACK_TRACE.getCmdLineStr())) {
+			ps.println(prefixMessage);
 			e.printStackTrace(ps);
 		} else {
-			if (e instanceof EReleaserException) {
-				ps.println((e.getMessage() == null || e.getMessage().isEmpty()) ? (e.getCause() != null ? e.getCause().toString() : "") : e.getMessage());
-			} else {
-				ps.println(e.toString());
-			}
+			ps.println(prefixMessage + (e.getMessage() == null ? e.toString() : e.getMessage()));
 		}
 	}
 

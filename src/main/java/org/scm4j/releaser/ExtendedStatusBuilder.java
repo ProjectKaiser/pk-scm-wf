@@ -15,6 +15,7 @@ import org.scm4j.releaser.branch.ReleaseBranchFactory;
 import org.scm4j.releaser.branch.ReleaseBranchPatch;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.DelayedTagsFile;
+import org.scm4j.releaser.conf.VCSRepositoryFactory;
 import org.scm4j.releaser.exceptions.ENoReleaseBranchForPatch;
 import org.scm4j.releaser.exceptions.ENoReleases;
 import org.scm4j.releaser.exceptions.EReleaseMDepsNotLocked;
@@ -28,6 +29,12 @@ public class ExtendedStatusBuilder {
 	private static final int PARALLEL_CALCULATION_AWAIT_TIME = 500;
 	private static final int COMMITS_RANGE_LIMIT = 10;
 	
+	private final VCSRepositoryFactory repoFactory;
+	
+	public ExtendedStatusBuilder(VCSRepositoryFactory repoFactory) {
+		this.repoFactory = repoFactory;
+	}
+
 	public ExtendedStatus getAndCacheMinorStatus(Component comp) {
 		CachedStatuses cache = new CachedStatuses();
 		return getAndCacheMinorStatus(comp, cache);
@@ -36,9 +43,18 @@ public class ExtendedStatusBuilder {
 	public ExtendedStatus getAndCacheMinorStatus(Component comp, CachedStatuses cache) {
 		return getAndCacheStatus(comp, cache, new ProgressConsole(), false);
 	}
+
+	public ExtendedStatus getAndCacheMinorStatus(String coords, CachedStatuses cache) {
+		return getAndCacheMinorStatus(new Component(coords, repoFactory), cache);
+	}
 	
 	public ExtendedStatus getAndCachePatchStatus(Component comp, CachedStatuses cache) {
 		return getAndCacheStatus(comp, cache, new ProgressConsole(), true);
+	}
+	
+	public ExtendedStatus getAndCachePatchStatus(String coords, CachedStatuses cache) {
+		Component comp = new Component(coords, repoFactory);
+		return getAndCachePatchStatus(comp, cache);
 	}
 
 	public ExtendedStatus getAndCacheStatus(Component comp, CachedStatuses cache, IProgress progress, boolean patch) {
@@ -66,7 +82,7 @@ public class ExtendedStatusBuilder {
 	}
 	
 	private ExtendedStatus getMinorStatus(Component comp, CachedStatuses cache, IProgress progress) {
-		ReleaseBranchCurrent rb = reportDuration(() -> ReleaseBranchFactory.getCRB(comp), "CRB created", comp, progress);
+		ReleaseBranchCurrent rb = reportDuration(() -> ReleaseBranchFactory.getCRB(comp, repoFactory), "CRB created", comp, progress);
 		LinkedHashMap<Component, ExtendedStatus> subComponents = new LinkedHashMap<>();
 		
 		BuildStatus status;
@@ -94,7 +110,8 @@ public class ExtendedStatusBuilder {
 	}
 
 	private ExtendedStatus getPatchStatus(Component comp, CachedStatuses cache, IProgress progress) {
-		ReleaseBranchPatch rb = ReleaseBranchFactory.getReleaseBranchPatch(comp);
+		ReleaseBranchPatch rb = reportDuration(() -> ReleaseBranchFactory.getReleaseBranchPatch(comp, repoFactory),
+				"RB created", comp, progress);
 		LinkedHashMap<Component, ExtendedStatus> subComponents = new LinkedHashMap<>();
 		
 		BuildStatus buildStatus;
@@ -106,9 +123,9 @@ public class ExtendedStatusBuilder {
 			throw new ENoReleases("Release Branch version patch is " + rb.getVersion().getPatch() + ". Component release should be created before patch");
 		}
 
-		List<Component> nonlockedMDeps = new ArrayList<>();
-		if (!areMDepsLocked(rb.getMDeps(), nonlockedMDeps)) {
-			throw new EReleaseMDepsNotLocked(nonlockedMDeps);
+		List<Component> nonLockedMDeps = new ArrayList<>();
+		if (!areMDepsLocked(rb.getMDeps(), nonLockedMDeps)) {
+			throw new EReleaseMDepsNotLocked(nonLockedMDeps);
 		}
 		
 		LinkedHashMap<Component, ExtendedStatus> subComponentsLocal = new LinkedHashMap<>();
@@ -124,7 +141,7 @@ public class ExtendedStatusBuilder {
 			buildStatus = BuildStatus.BUILD_MDEPS;
 		} else if (!areMDepsPatchesActual(rb.getMDeps(), cache)) {
 			buildStatus = BuildStatus.ACTUALIZE_PATCHES;
-		} else if (noValueableCommitsAfterLastTag(comp, rb)) {
+		} else if (reportDuration(() -> noValueableCommitsAfterLastTag(comp, rb), "is release branch modified check", comp, progress)) {
 			buildStatus = BuildStatus.DONE;
 		} else {
 			buildStatus = BuildStatus.BUILD;
@@ -214,12 +231,12 @@ public class ExtendedStatusBuilder {
 		}
 		
 		// develop branch has valuable commits => YES
-		if (reportDuration(() -> new DevelopBranch(comp).isModified(), "is develop modified determined", comp, progress)) {
+		if (reportDuration(() -> new DevelopBranch(comp).isModified(), "is develop modified check", comp, progress)) {
 			return true;
 		}
 		
 		ExtendedStatus mdepStatus;
-		for (Component mdep : rb.getCRBMDeps(progress)) {
+		for (Component mdep : rb.getCRBMDeps(progress, repoFactory)) {
 			mdepStatus = cache.get(mdep.getUrl());
 			// any mdeps needs FORK => YES
 			if (mdepStatus.getStatus() != BuildStatus.DONE) {

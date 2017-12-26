@@ -1,52 +1,68 @@
 package org.scm4j.releaser.conf;
 
-import org.junit.Test;
-import org.scm4j.releaser.TestEnvironment;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Arrays;
-import java.util.List;
 
-import static org.junit.Assert.*;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.scm4j.releaser.TestEnvironment;
 
 public class MDepsFileTest {
 
+	private static TestEnvironment env = new TestEnvironment();
+	private static VCSRepositoryFactory repoFactory;
+	
+	@BeforeClass
+	public static void setUp() throws Exception {
+		env.generateTestEnvironmentNoVCS();
+		repoFactory = env.getRepoFactory();
+	}
+
+	@AfterClass
+	public static void tearDown() throws Exception {
+		env.close();
+	}
+
+	private MDepsFile getMDF(String content) {
+		return new MDepsFile(content);
+	}
+
 	@Test
 	public void testHasMDeps() {
-		assertFalse(new MDepsFile("").hasMDeps());
-		assertFalse(new MDepsFile("# non-component").hasMDeps());
-		assertFalse(new MDepsFile((String) null).hasMDeps());
-		assertFalse(new MDepsFile((List<Component>) null).hasMDeps());
-		assertTrue(new MDepsFile(TestEnvironment.PRODUCT_UNTILL).hasMDeps());
-		assertTrue(new MDepsFile(Arrays.asList(new Component(TestEnvironment.PRODUCT_UNTILL)))
-				.hasMDeps());
+		assertFalse(getMDF("").hasMDeps());
+		assertFalse(getMDF("# non-component").hasMDeps());
+		assertFalse(getMDF(null).hasMDeps());
+		assertTrue(getMDF(TestEnvironment.PRODUCT_UNTILL).hasMDeps());
 	}
 
 	@Test
 	public void testGetMDeps() {
-		assertTrue(new MDepsFile("").getMDeps().isEmpty());
-		assertTrue(new MDepsFile((String) null).getMDeps().isEmpty());
-		assertTrue(new MDepsFile((List<Component>) null).getMDeps().isEmpty());
+		assertTrue(getMDF("").getMDeps(repoFactory).isEmpty());
+		assertTrue(getMDF(null).getMDeps(repoFactory).isEmpty());
 		Component comp = new Component(TestEnvironment.PRODUCT_UNTILL);
-		assertTrue(new MDepsFile(TestEnvironment.PRODUCT_UNTILL).getMDeps().contains(comp));
-		assertTrue(new MDepsFile(Arrays.asList(comp)).getMDeps().contains(comp));
+		assertTrue(getMDF(TestEnvironment.PRODUCT_UNTILL).getMDeps().contains(comp));
+		assertTrue(getMDF(comp.getCoords().toString()).getMDeps().contains(comp));
 	}
 
 	@Test
 	public void testToFileContent() {
-		assertTrue(new MDepsFile("").toFileContent().isEmpty());
-		assertTrue(new MDepsFile((String) null).toFileContent().isEmpty());
-		assertTrue(new MDepsFile((List<Component>) null).toFileContent().isEmpty());
+		assertTrue(getMDF("").toFileContent().isEmpty());
+		assertTrue(getMDF(null).toFileContent().isEmpty());
 		Component comp = new Component(TestEnvironment.PRODUCT_UNTILL);
-		assertTrue(new MDepsFile(TestEnvironment.PRODUCT_UNTILL).toFileContent().equals(comp.toString()));
-		assertTrue(new MDepsFile(Arrays.asList(comp)).toFileContent().equals(comp.toString()));
+		assertTrue(getMDF(TestEnvironment.PRODUCT_UNTILL).toFileContent().equals(comp.toString()));
+		assertTrue(getMDF(comp.getCoords().toString()).toFileContent().equals(comp.toString()));
 	}
 
 	@Test
 	public void testReplace() {
 		Component comp = new Component(TestEnvironment.PRODUCT_UNTILL);
-		MDepsFile mdf = new MDepsFile(Arrays.asList(comp));
+		MDepsFile mdf = getMDF(comp.getCoords().toString());
 		Component modifiedComp = comp.clone("11.12.13");
 		mdf.replaceMDep(modifiedComp);
 		assertTrue(mdf.getMDeps().size() == 1);
@@ -76,7 +92,7 @@ public class MDepsFileTest {
 		pw.println(comp4.toString());
 		pw.print("  ");
 		
-		MDepsFile mdf = new MDepsFile(sw.toString());
+		MDepsFile mdf = getMDF(sw.toString());
 		assertTrue(mdf.getMDeps().size() == 4);
 		assertTrue(mdf.getMDeps().containsAll(Arrays.asList(comp1, comp2, comp3, comp4)));
 		assertEquals(sw.toString(), mdf.toFileContent());
@@ -101,8 +117,8 @@ public class MDepsFileTest {
 	}
 	
 	@Test
-	public void testToString() {
-		MDepsFile mdf = new MDepsFile("");
-		assertNotNull(mdf.toString());
+	public void coverToString() {
+		MDepsFile mdf = getMDF("");
+		mdf.toString();
 	}
 }

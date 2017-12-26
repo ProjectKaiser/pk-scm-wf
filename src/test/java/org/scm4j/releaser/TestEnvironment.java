@@ -1,13 +1,19 @@
 package org.scm4j.releaser;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.UUID;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.junit.contrib.java.lang.system.EnvironmentVariables;
 import org.scm4j.commons.Version;
 import org.scm4j.releaser.builders.BuilderFactory;
 import org.scm4j.releaser.builders.TestBuilder;
-import org.scm4j.releaser.conf.EnvVarsConfigSource;
-import org.scm4j.releaser.conf.IConfigSource;
-import org.scm4j.releaser.conf.VCSRepositories;
+import org.scm4j.releaser.conf.DefaultConfigUrls;
+import org.scm4j.releaser.conf.IConfigUrls;
+import org.scm4j.releaser.conf.VCSRepositoryFactory;
 import org.scm4j.releaser.conf.VCSType;
 import org.scm4j.vcs.GitVCS;
 import org.scm4j.vcs.GitVCSUtils;
@@ -19,13 +25,8 @@ import org.scm4j.vcs.api.workingcopy.VCSWorkspace;
 import org.scm4j.vcs.svn.SVNVCS;
 import org.scm4j.vcs.svn.SVNVCSUtils;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.UUID;
-
 public class TestEnvironment implements AutoCloseable {
-	public static final String TEST_REPOS_FILE_NAME = "repos";
+	public static final String TEST_CC_FILE_NAME = "repos";
 	public static final String TEST_CREDENTIALS_FILE_NAME = "credentials";
 	public static final String TEST_ENVIRONMENT_DIR = new File(System.getProperty("java.io.tmpdir"),
 			"scm4j-releaser-test").getPath();
@@ -45,11 +46,13 @@ public class TestEnvironment implements AutoCloseable {
 	private IVCS ublVCS;
 	private IVCS unTillDbVCS;
 	private File credsFile;
-	private File reposFile;
+	private File ccFile;
 	private final Version unTillVer = new Version("1.123.3-SNAPSHOT");
 	private final Version ublVer = new Version("1.18.5-SNAPSHOT");
 	private final Version unTillDbVer = new Version("2.59.1-SNAPSHOT");
 	private File envDir;
+	private IConfigUrls	configUrls;
+	private EnvironmentVariables ev = new EnvironmentVariables();
 
 	public TestEnvironment() {
 		RANDOM_VCS_NAME_SUFFIX = UUID.randomUUID().toString();
@@ -68,29 +71,19 @@ public class TestEnvironment implements AutoCloseable {
 
 		createCredentialsFile();
 
-		createReposFile();
+		createCCFile();
 
-		VCSRepositories.setConfigSource(new IConfigSource() {
-			@Override
-			public String getReposLocations() {
-				return getReposFile().toString().replace("\\", "/");
-			}
-
-			@Override
-			public String getCredentialsLocations() {
-				return getCredsFile().toString().replace("\\", "/");
-			}
-		});
+		initEnvVars();
 	}
 
-	private void createReposFile() throws IOException {
-		reposFile = new File(TEST_ENVIRONMENT_DIR, TEST_REPOS_FILE_NAME);
-		reposFile.createNewFile();
+	private void createCCFile() throws IOException {
+		ccFile = new File(TEST_ENVIRONMENT_DIR, TEST_CC_FILE_NAME);
+		ccFile.createNewFile();
 		String url = new File(TEST_REMOTE_REPO_DIR, "$1-" + RANDOM_VCS_NAME_SUFFIX).toURI().toURL().toString();
 		if (TESTING_VCS == VCSType.SVN) {
 			url = url.replace("file:/", "file://");
 		}
-		FileUtils.writeLines(reposFile, Arrays.asList(
+		FileUtils.writeLines(ccFile, Arrays.asList(
 				"!!omap", 
 				"- eu.untill:(.*):", 
 				"   url: " + url,
@@ -194,8 +187,8 @@ public class TestEnvironment implements AutoCloseable {
 		return credsFile;
 	}
 
-	public File getReposFile() {
-		return reposFile;
+	public File getCcFile() {
+		return ccFile;
 	}
 
 	public VCSCommit generateFeatureCommit(IVCS vcs, String branchName, String commitMessage) {
@@ -229,7 +222,22 @@ public class TestEnvironment implements AutoCloseable {
 		if (envDir != null && envDir.exists()) {
 			Utils.waitForDeleteDir(envDir);
 		}
-		VCSRepositories.setConfigSource(new EnvVarsConfigSource());
-		VCSRepositories.resetDefault();
+	}
+	
+	public IConfigUrls getConfigUrls() {
+		return configUrls;
+	}
+
+	public VCSRepositoryFactory getRepoFactory() {
+		VCSRepositoryFactory repoFactory = new VCSRepositoryFactory();
+		repoFactory.load(new DefaultConfigUrls());
+		return repoFactory;
+	}
+
+	@SuppressWarnings("deprecation")
+	private void initEnvVars() {
+		ev.set(DefaultConfigUrls.REPOS_LOCATION_ENV_VAR, null);
+		ev.set(DefaultConfigUrls.CC_URLS_ENV_VAR, ccFile.toString());
+		ev.set(DefaultConfigUrls.CREDENTIALS_URL_ENV_VAR, credsFile.toString());
 	}
 }
