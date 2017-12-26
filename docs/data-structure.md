@@ -38,10 +38,12 @@ Contains a single line.
 `develop` branch:
 
 ```
-com.mycompany:component-one:-SNAPSHOT
-com.mycompany:component-two:-SNAPSHOT
-com.mycompany:component-three:-SNAPSHOT
+com.mycompany:component-one:
+com.mycompany:component-two:master-SNAPSHOT
+com.mycompany:component-three:
 ```
+
+Note: `master-SNAPSHOT` must be used for components which use jitpack
 
 `release` branch:
 

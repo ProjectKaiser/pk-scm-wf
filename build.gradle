@@ -82,6 +82,18 @@ task sourcesJar(type: Jar, dependsOn: classes) {
 	from sourceSets.main.allSource
 }
 
+task fatJar(type: Jar) {
+	manifest.attributes (
+			'Specification-Title': project.name,
+			'Specification-Version': version,
+			'Implementation-Title': project.name,
+			'Implementation-Version': "$version (${new Date().format('yyyy-MM-dd')})",
+	)
+    baseName = 'fat-' + project.name
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    with jar
+}
+
 task javadocJar(type: Jar, dependsOn: javadoc) {
 	classifier = 'javadoc'
 	from javadoc.destinationDir
