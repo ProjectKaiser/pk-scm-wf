@@ -65,7 +65,7 @@ dependencies {
 	compile 'com.google.guava:guava:23.0'
 	compile 'org.yaml:snakeyaml:1.18'
 	compile 'org.slf4j:slf4j-simple:1.7.21'
-	compile 'org.projectlombok:lombok:1.16.18'
+	compileOnly 'org.projectlombok:lombok:1.16.18'
 }
 
 jar {
