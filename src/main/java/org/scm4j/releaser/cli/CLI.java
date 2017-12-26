@@ -41,6 +41,7 @@ public class CLI {
 	private RuntimeException lastException;
 	private Runnable preExec = null;
 	private IConfigUrls configUrls;
+	private VCSRepositoryFactory repoFactory;
 	
 	public CLI() {
 		this(System.out, new DefaultConfigUrls());
@@ -48,8 +49,7 @@ public class CLI {
 	
 	public CLI(PrintStream out, IConfigUrls configUrls) {
 		this.out = out;
-		VCSRepositoryFactory repoFactory = new VCSRepositoryFactory();
-		repoFactory.load(configUrls);
+		repoFactory = new VCSRepositoryFactory();
 		this.statusBuilder = new ExtendedStatusBuilder(repoFactory);
 		this.actionBuilder = new ActionTreeBuilder(repoFactory);
 		this.configUrls = configUrls;
@@ -114,6 +114,9 @@ public class CLI {
 		try {
 			try {
 				out.println("scm4j-releaser " + CLI.class.getPackage().getSpecificationVersion());
+				if (repoFactory != null) {
+					repoFactory.load(configUrls);
+				}
 				try {
 					initWorkingDir();
 				} catch (Exception e) {
@@ -192,11 +195,15 @@ public class CLI {
 	}
 	
 	void printExceptionExecution(String[] args, Exception e, PrintStream ps) {
-		printException("EXECUTION FIALED: ", args, e, ps);
+		printException("EXECUTION FAILED: ", args, e, ps);
 	}
 	
 	void printExceptionInitDir(String[] args, Exception e, PrintStream ps) {
 		printException("FAILED TO INIT WORKING FOLDER: ", args, e, ps);
+	}
+	
+	void printExceptionConfig(String[] args, Exception e, PrintStream ps) {
+		printException("FAILED TO LOAD CONFIG: ", args, e, ps);
 	}
 	
 	private void printException(String prefixMessage, String[] args, Exception e, PrintStream ps) {
