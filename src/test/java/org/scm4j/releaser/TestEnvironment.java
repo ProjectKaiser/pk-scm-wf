@@ -1,10 +1,5 @@
 package org.scm4j.releaser;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.UUID;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.contrib.java.lang.system.EnvironmentVariables;
@@ -12,7 +7,6 @@ import org.scm4j.commons.Version;
 import org.scm4j.releaser.builders.BuilderFactory;
 import org.scm4j.releaser.builders.TestBuilder;
 import org.scm4j.releaser.conf.DefaultConfigUrls;
-import org.scm4j.releaser.conf.IConfigUrls;
 import org.scm4j.releaser.conf.VCSRepositoryFactory;
 import org.scm4j.releaser.conf.VCSType;
 import org.scm4j.vcs.GitVCS;
@@ -24,6 +18,11 @@ import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
 import org.scm4j.vcs.api.workingcopy.VCSWorkspace;
 import org.scm4j.vcs.svn.SVNVCS;
 import org.scm4j.vcs.svn.SVNVCSUtils;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.UUID;
 
 public class TestEnvironment implements AutoCloseable {
 	public static final String TEST_CC_FILE_NAME = "repos";
@@ -51,7 +50,6 @@ public class TestEnvironment implements AutoCloseable {
 	private final Version ublVer = new Version("1.18.5-SNAPSHOT");
 	private final Version unTillDbVer = new Version("2.59.1-SNAPSHOT");
 	private File envDir;
-	private IConfigUrls	configUrls;
 	private EnvironmentVariables ev = new EnvironmentVariables();
 
 	public TestEnvironment() {
@@ -224,13 +222,13 @@ public class TestEnvironment implements AutoCloseable {
 		}
 	}
 	
-	public IConfigUrls getConfigUrls() {
-		return configUrls;
-	}
-
 	public VCSRepositoryFactory getRepoFactory() {
 		VCSRepositoryFactory repoFactory = new VCSRepositoryFactory();
-		repoFactory.load(new DefaultConfigUrls());
+		try {
+			repoFactory.load(new DefaultConfigUrls());
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
 		return repoFactory;
 	}
 

@@ -28,18 +28,14 @@ public class VCSRepositoryFactory {
 		this.creds = creds;
 	}
 
-	public void load(IConfigUrls configUrls) {
-		try {
-			String ccUrls = configUrls.getCCUrls();
-			if (ccUrls != null) {
-				cc.loadFromYamlUrls(ccUrls);
-			} 
-			String credsUrls = configUrls.getCredsUrl();
-			if (credsUrls != null) {
-				creds.loadFromYamlUrls(credsUrls);
-			}
-		} catch (IOException e) {
-			throw new RuntimeException(e);
+	public void load(IConfigUrls configUrls) throws IOException {
+		String ccUrls = configUrls.getCCUrls();
+		if (ccUrls != null) {
+			cc.loadFromYamlUrls(ccUrls);
+		}
+		String credsUrls = configUrls.getCredsUrl();
+		if (credsUrls != null) {
+			creds.loadFromYamlUrls(credsUrls);
 		}
 	}
 

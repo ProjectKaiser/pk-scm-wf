@@ -116,7 +116,12 @@ public class CLI {
 				validateCommandLine(cmd);
 
 				long startMS = System.currentTimeMillis();
-				repoFactory.load(configUrls);
+				try {
+					repoFactory.load(configUrls);
+				} catch (Exception e) {
+					printExceptionConfig(args, e, out);
+					return EXIT_CODE_ERROR;
+				}
 				if (cmd.getCommand() == CLICommand.TAG) {
 					action = getTagAction(cmd);
 					execActionTree(action);

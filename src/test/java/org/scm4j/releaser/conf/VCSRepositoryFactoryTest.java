@@ -3,17 +3,13 @@ package org.scm4j.releaser.conf;
 import com.google.common.io.Resources;
 import org.junit.Before;
 import org.junit.Test;
-import org.scm4j.commons.RegexConfig;
 import org.scm4j.releaser.exceptions.EComponentConfigNoUrl;
 
 import java.io.File;
 import java.io.IOException;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.mockito.Matchers.any;
 import static org.junit.Assert.*;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
 
 public class VCSRepositoryFactoryTest {
 
@@ -84,7 +80,7 @@ public class VCSRepositoryFactoryTest {
 	}
 
 	@Test
-	public void testNullConfigUrls() {
+	public void testNullConfigUrls() throws IOException {
 		IConfigUrls configUrls = new IConfigUrls() {
 			@Override
 			public String getCCUrls() {
@@ -102,7 +98,7 @@ public class VCSRepositoryFactoryTest {
 	}
 
 	@Test
-	public void testNoRepoUrlException() {
+	public void testNoRepoUrlException() throws IOException {
 		IConfigUrls configUrls = new IConfigUrls() {
 			@Override
 			public String getCCUrls() {
@@ -120,30 +116,6 @@ public class VCSRepositoryFactoryTest {
 			repoFactory.getUrl("wrong comp");
 			fail();
 		} catch (EComponentConfigNoUrl e) {
-		}
-	}
-
-	@Test
-	public void testIOExceptionOnLoad() throws IOException {
-		RegexConfig mockedCC = mock(RegexConfig.class);
-		IOException testException = new IOException("test exception");
-		doThrow(testException).when(mockedCC).loadFromYamlUrls(any(String[].class));
-		VCSRepositoryFactory repoFactory = new VCSRepositoryFactory(mockedCC, new RegexConfig());
-		IConfigUrls cu = new IConfigUrls() {
-			@Override
-			public String getCCUrls() {
-				return "";
-			}
-
-			@Override
-			public String getCredsUrl() {
-				return "";
-			}
-		};
-		try {
-			repoFactory.load(cu);
-		} catch (RuntimeException e) {
-			assertEquals(testException, e.getCause());
 		}
 	}
 }
