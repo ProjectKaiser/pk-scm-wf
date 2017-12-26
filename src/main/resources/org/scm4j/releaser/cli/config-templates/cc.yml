@@ -2,18 +2,15 @@
 # Config of the first regex entry which matches the component coords will be used.
 # If cc file exists then contents of the cc.yml file will be used first, then contents of cc file will be used.
 
-#mycompany:component1:
-#  url: http://mycompany.com/repos/component1
-#  releaseCommand: cmd /c gradlew.bat upload
+# Coordinates which matches `org.scm4j:(.*):`. Repository name is constructed from coorinates name using regular expression
+
+#org.scm4j:(.*):
+#  url: https://github.com/scm4j/$1\.git
 
 # Two components in the same repository
 #component1|component2:
 #  url: http://mycompany.com/repos/components
 
-# Coordinates which matches `my.*`. Repository name is constructed from coorinates name using regular expression
-#my(.*):
-#  url: http://mycompany.com/git/myProj$1
-  
 # `svn` type repository (`git` is default)
 #mycompany:component3:
 #  url: http://mycompany.com/repos/component3
@@ -31,7 +28,3 @@
 # All repos will have `rel` as a `release` branch prefix by default, if not specified above
 #~:
 #  releaseBranchPrefix: rel/
-
-# Component with `afterTag` hook (ref. issue #8)
-#mycompany:component5:
-#  afterTag: cmd /c gradlew.bat afterTag
