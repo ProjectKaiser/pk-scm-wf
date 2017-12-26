@@ -82,7 +82,7 @@ task sourcesJar(type: Jar, dependsOn: classes) {
 	from sourceSets.main.allSource
 }
 
-task fatJar(type: Jar) {
+task fatJar(type: Jar, dependsOn: classes) {
 	manifest.attributes (
 			'Specification-Title': project.name,
 			'Specification-Version': version,
