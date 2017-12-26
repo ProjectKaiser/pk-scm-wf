@@ -38,6 +38,7 @@ import org.scm4j.releaser.Utils;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.DefaultConfigUrls;
+import org.scm4j.releaser.conf.VCSRepositoryFactory;
 import org.scm4j.releaser.exceptions.EReleaserException;
 import org.scm4j.releaser.exceptions.cmdline.ECmdLineNoCommand;
 import org.scm4j.releaser.exceptions.cmdline.ECmdLineNoProduct;
@@ -66,7 +67,8 @@ public class CLITest {
 		mockedActionTreeBuilder = mock(ActionTreeBuilder.class);
 		mockedStatusTreeBuilder = mock(ExtendedStatusBuilder.class);
 		mockedStatus = mock(ExtendedStatus.class);
-		mockedCLI = spy(new CLI(mockedPS, mockedStatusTreeBuilder, mockedActionTreeBuilder));
+		VCSRepositoryFactory mockedRepoFactory = mock(VCSRepositoryFactory.class);
+		mockedCLI = spy(new CLI(mockedPS, mockedStatusTreeBuilder, mockedActionTreeBuilder, mockedRepoFactory));
 	}
 
 	@Test

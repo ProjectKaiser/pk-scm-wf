@@ -37,11 +37,11 @@ public class CLI {
 	private final PrintStream out;
 	private final ActionTreeBuilder actionBuilder;
 	private final ExtendedStatusBuilder statusBuilder;
+	private final IConfigUrls configUrls;
+	private final VCSRepositoryFactory repoFactory;
 	private IAction action;
 	private RuntimeException lastException;
 	private Runnable preExec = null;
-	private IConfigUrls configUrls;
-	private VCSRepositoryFactory repoFactory;
 	
 	public CLI() {
 		this(System.out, new DefaultConfigUrls());
@@ -55,10 +55,11 @@ public class CLI {
 		this.configUrls = configUrls;
 	}
 	
-	public CLI(PrintStream out, ExtendedStatusBuilder statusBuilder, ActionTreeBuilder actionBuilder) {
+	public CLI(PrintStream out, ExtendedStatusBuilder statusBuilder, ActionTreeBuilder actionBuilder, VCSRepositoryFactory repoFactory) {
 		this.out = out;
 		this.statusBuilder = statusBuilder;
 		this.actionBuilder = actionBuilder;
+		this.repoFactory = repoFactory;
 		this.configUrls = new DefaultConfigUrls();
 	}
 
@@ -114,9 +115,7 @@ public class CLI {
 		try {
 			try {
 				out.println("scm4j-releaser " + CLI.class.getPackage().getSpecificationVersion());
-				if (repoFactory != null) {
-					repoFactory.load(configUrls);
-				}
+				repoFactory.load(configUrls);
 				try {
 					initWorkingDir();
 				} catch (Exception e) {
