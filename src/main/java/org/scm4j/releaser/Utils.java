@@ -103,7 +103,8 @@ public final class Utils {
 	}
 	
 	public static File getResourceFile(Class<?> forClass, String path) throws Exception{
-		return new File(forClass.getResource(path).toURI());
+		System.out.println(forClass.getResource(path).getPath());
+		return new File(forClass.getResource(path).getPath());
 	}
 
 	public static String getReleaseBranchName(Component comp) {

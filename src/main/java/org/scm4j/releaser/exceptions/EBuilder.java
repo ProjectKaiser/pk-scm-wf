@@ -8,7 +8,7 @@ public class EBuilder extends EReleaserException {
 	private final Component comp;
 
 	public EBuilder(String message, Component comp) {
-		super(message);
+		super(comp + " build failed: " + message);
 		this.comp = comp;
 	}
 

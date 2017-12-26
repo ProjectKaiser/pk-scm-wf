@@ -108,38 +108,47 @@ public class CLI {
 
 	public int exec(String[] args) {
 		try {
-			out.println("scm4j-releaser " + CLI.class.getPackage().getSpecificationVersion());
-			initWorkingDir();
-			long startMS = System.currentTimeMillis();
-			CommandLine cmd = new CommandLine(args);
-			validateCommandLine(cmd);
-			
-			if (cmd.getCommand() == CLICommand.TAG) {
-				action = getTagAction(cmd);
-				execActionTree(action);
-			} else {
-				if (cmd.getCommand() == CLICommand.STATUS) {
-					CachedStatuses cache = new CachedStatuses();
-					ExtendedStatus node = getStatusTree(cmd, cache);
-					printStatusTree(node);
-				} else {
-					action = getActionTree(cmd);
-					execActionTree(action);
+			try {
+				out.println("scm4j-releaser " + CLI.class.getPackage().getSpecificationVersion());
+				try {
+					initWorkingDir();
+				} catch (Exception e) {
+					printExceptionInitDir(args, e, out);
 				}
+				long startMS = System.currentTimeMillis();
+				CommandLine cmd = new CommandLine(args);
+				validateCommandLine(cmd);
+				
+				if (cmd.getCommand() == CLICommand.TAG) {
+					action = getTagAction(cmd);
+					execActionTree(action);
+				} else {
+					if (cmd.getCommand() == CLICommand.STATUS) {
+						CachedStatuses cache = new CachedStatuses();
+						ExtendedStatus node = getStatusTree(cmd, cache);
+						printStatusTree(node);
+					} else {
+						action = getActionTree(cmd);
+						execActionTree(action);
+					}
+				}
+				out.println("elapsed time: " + (System.currentTimeMillis() - startMS));
+				return EXIT_CODE_OK;
+			} catch (RuntimeException e) {
+				lastException = e;
+				throw e;
 			}
-			out.println("elapsed time: " + (System.currentTimeMillis() - startMS));
-			return EXIT_CODE_OK;
 		} catch (ECmdLine e) {
-			printException(args, e, out);
+			printExceptionCmdLine(args, e, out);
 			out.println(CommandLine.getUsage());
 			return EXIT_CODE_ERROR;
 		} catch (Exception e) {
-			printException(args, e, out);
+			printExceptionExecution(args, e, out);
 			return EXIT_CODE_ERROR;
 		}
 	}
 
-	private void initWorkingDir() throws Exception {
+	void initWorkingDir() throws Exception {
 		if (Utils.BASE_WORKING_DIR.exists() || configUrls.getCCUrls() != null || configUrls.getCredsUrl() != null) {
 			return;
 		}
@@ -169,12 +178,20 @@ public class CLI {
 		}
 	}
 	
-	private void printException(String[] args, Exception e, PrintStream ps) {
-		if (e instanceof RuntimeException) {
-			lastException = (RuntimeException) e;
-		}
+	void printExceptionCmdLine(String[] args, Exception e, PrintStream ps) {
+		printException("", args, e, ps);
+	}
+	
+	void printExceptionExecution(String[] args, Exception e, PrintStream ps) {
+		printException("EXECUTION FIALED: ", args, e, ps);
+	}
+	
+	void printExceptionInitDir(String[] args, Exception e, PrintStream ps) {
+		printException("FAILED TO INIT WORKING FOLDER: ", args, e, ps);
+	}
+	
+	private void printException(String prefixMessage, String[] args, Exception e, PrintStream ps) {
 		ps.println();
-		String prefixMessage = "EXECUTION FAILED: ";
 		if (ArrayUtils.contains(args, Option.STACK_TRACE.getCmdLineStr())) {
 			ps.println(prefixMessage);
 			e.printStackTrace(ps);

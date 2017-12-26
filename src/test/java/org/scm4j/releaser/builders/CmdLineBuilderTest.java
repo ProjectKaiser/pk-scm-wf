@@ -1,12 +1,13 @@
 package org.scm4j.releaser.builders;
 
-import org.apache.commons.io.input.ReaderInputStream;
-import org.apache.commons.lang3.StringUtils;
-import org.junit.Test;
-import org.scm4j.commons.progress.IProgress;
-import org.scm4j.releaser.TestEnvironment;
-import org.scm4j.releaser.conf.Component;
-import org.scm4j.releaser.exceptions.EBuilder;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
 
 import java.io.File;
 import java.io.InputStream;
@@ -15,8 +16,15 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import org.apache.commons.io.input.ReaderInputStream;
+import org.apache.commons.lang3.StringUtils;
+import org.hamcrest.Matchers;
+import org.junit.Test;
+import org.scm4j.commons.progress.IProgress;
+import org.scm4j.releaser.TestEnvironment;
+import org.scm4j.releaser.conf.Component;
+import org.scm4j.releaser.exceptions.EBuilder;
+
 
 public class CmdLineBuilderTest {
 	
@@ -53,7 +61,9 @@ public class CmdLineBuilderTest {
 			clb.build(comp, workingFolder, mockedProgress);
 			fail();
 		} catch (EBuilder e) {
-			assertEquals(TEST_PROCESS_ERROR, e.getMessage());
+			assertThat(e.getMessage(), Matchers.allOf(
+					Matchers.containsString(TEST_PROCESS_ERROR),
+					Matchers.containsString(comp.toString())));
 			assertEquals(comp, e.getComp());
 		}
 	}

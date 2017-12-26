@@ -248,6 +248,20 @@ public class CLITest {
 		}
 	}
 	
+	@Test
+	public void testSuccessfulExecutionWithWorkingDirInitFailure() throws Exception {
+		String[] args = new String[] { CLICommand.STATUS.getCmdLineStr(), TestEnvironment.PRODUCT_UNTILL };
+		Utils.waitForDeleteDir(Utils.BASE_WORKING_DIR);
+		clearEnvVars();
+		Exception testException = new Exception("test exception");
+		try (TestEnvironment env = new TestEnvironment()) {
+			env.generateTestEnvironment();
+			CLI mockedCLI = spy(new CLI());
+			doThrow(testException).when(mockedCLI).initWorkingDir();
+			assertEquals(CLI.EXIT_CODE_OK, mockedCLI.exec(args));
+			verify(mockedCLI).printExceptionInitDir(eq(args), eq(testException), any(PrintStream.class));
+		}
+	}
 	
 	@Test
 	public void testInitWorkingDir() throws Exception {
@@ -269,7 +283,7 @@ public class CLITest {
 		assertTrue(dstFileNames.containsAll(srcFileNames));
 		assertEquals(srcFileNames.size(), dstFileNames.size());
 	}
-
+	
 	@SuppressWarnings("deprecation")
 	void clearEnvVars() {
 		EnvironmentVariables ev = new EnvironmentVariables();
@@ -288,4 +302,6 @@ public class CLITest {
 		verifyException();
 		verify(mockedPS).println(CommandLine.getUsage());
 	}
+	
+	
 }
