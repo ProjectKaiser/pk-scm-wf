@@ -11,6 +11,7 @@ import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
 import org.scm4j.vcs.api.workingcopy.VCSWorkspace;
 
 import java.io.File;
+import java.net.URL;
 import java.util.Collection;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinTask;
@@ -104,7 +105,8 @@ public final class Utils {
 	
 	public static File getResourceFile(Class<?> forClass, String path) throws Exception{
 		System.out.println(forClass.getResource(path).getPath());
-		return new File(forClass.getResource(path).getPath());
+		URL url = forClass.getResource(path);
+		return new File(url.toURI());
 	}
 
 	public static String getReleaseBranchName(Component comp) {
