@@ -1,6 +1,7 @@
 #
 # This file contains urls of component configuration files, one url per line
-# Components configuration is taken from cc.yaml first then from urls below:
+
+# Note that components configuration is taken from `cc.yml` then from `cc`
 #
 # https://mycompany.com/project1/cc.yml
 # https://mycompany.com/project2/project2-cc.yml

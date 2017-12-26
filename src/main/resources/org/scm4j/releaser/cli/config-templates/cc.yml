@@ -1,6 +1,8 @@
-# This yaml file contains components configuration.
-# Config of the first regex entry which matches the component coords will be used.
-# If cc file exists then contents of the cc.yml file will be used first, then contents of cc file will be used.
+#
+# Components configuration file. Maps coordinates to repository properties
+#
+# Note that components configuration is taken from `cc.yml` then from `cc`
+#
 
 # Coordinates which matches `org.scm4j:(.*):`. Repository name is constructed from coorinates name using regular expression
 
@@ -21,8 +23,8 @@
 # Repository where 
 # a) `release` branches are prefixed with `B` (default is `release/`) 
 # b) `develop` branch is named `branches/develop` (by default it is `trunk` or `master` according to the repository type).
-#mycompany:component4:
 
+#mycompany:component4:
 #  url: http://mycompany.com/repos/component4
 #  type: svn
 #  releaseBranchPrefix: B
