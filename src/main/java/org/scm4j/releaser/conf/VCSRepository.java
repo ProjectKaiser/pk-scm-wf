@@ -84,7 +84,7 @@ public class VCSRepository {
 		return "VCSRepository [url=" + url + "]";
 	}
 
-	public IVCS getVcs() {
+	public IVCS getVCS() {
 		return vcs;
 	}
 	

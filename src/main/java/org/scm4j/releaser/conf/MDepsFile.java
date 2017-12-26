@@ -53,17 +53,6 @@ public class MDepsFile {
 		return res;
 	}
 	
-	public List<Component> getMDeps(VCSRepositoryFactory repoFactory) {
-		List<Component> res = new ArrayList<>();
-		for (String line : lines) {
-			CommentedString cs = new CommentedString(line);
-			if (cs.isValuable()) {
-				res.add(new Component(line, repoFactory));
-			}
-		}
-		return res;
-	}
-
 	@Override
 	public String toString() {
 		return "MDepsFile [mDeps=" + lines + "]";

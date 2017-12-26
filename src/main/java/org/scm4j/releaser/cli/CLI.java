@@ -1,32 +1,24 @@
 package org.scm4j.releaser.cli;
 
-import java.io.File;
-import java.io.InputStream;
-import java.io.PrintStream;
-import java.util.Arrays;
-import java.util.List;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.scm4j.commons.coords.Coords;
 import org.scm4j.commons.coords.CoordsGradle;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.commons.progress.ProgressConsole;
-import org.scm4j.releaser.ActionTreeBuilder;
-import org.scm4j.releaser.CachedStatuses;
-import org.scm4j.releaser.ExtendedStatus;
-import org.scm4j.releaser.ExtendedStatusBuilder;
-import org.scm4j.releaser.Utils;
+import org.scm4j.releaser.*;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.actions.PrintStatus;
 import org.scm4j.releaser.conf.DefaultConfigUrls;
 import org.scm4j.releaser.conf.IConfigUrls;
 import org.scm4j.releaser.conf.VCSRepositoryFactory;
-import org.scm4j.releaser.exceptions.cmdline.ECmdLine;
-import org.scm4j.releaser.exceptions.cmdline.ECmdLineNoCommand;
-import org.scm4j.releaser.exceptions.cmdline.ECmdLineNoProduct;
-import org.scm4j.releaser.exceptions.cmdline.ECmdLineUnknownCommand;
-import org.scm4j.releaser.exceptions.cmdline.ECmdLineUnknownOption;
+import org.scm4j.releaser.exceptions.cmdline.*;
+
+import java.io.File;
+import java.io.InputStream;
+import java.io.PrintStream;
+import java.util.Arrays;
+import java.util.List;
 
 public class CLI {
 	public static final String CONFIG_TEMPLATES_PATH = "config-templates/";
@@ -115,16 +107,16 @@ public class CLI {
 		try {
 			try {
 				out.println("scm4j-releaser " + CLI.class.getPackage().getSpecificationVersion());
-				repoFactory.load(configUrls);
 				try {
 					initWorkingDir();
 				} catch (Exception e) {
 					printExceptionInitDir(args, e, out);
 				}
-				long startMS = System.currentTimeMillis();
 				CommandLine cmd = new CommandLine(args);
 				validateCommandLine(cmd);
-				
+
+				long startMS = System.currentTimeMillis();
+				repoFactory.load(configUrls);
 				if (cmd.getCommand() == CLICommand.TAG) {
 					action = getTagAction(cmd);
 					execActionTree(action);
@@ -171,7 +163,7 @@ public class CLI {
 	
 	void validateCommandLine(CommandLine cmd) {
 		for (String optionArg : cmd.getOptionArgs()) {
-			if (Option.fromCmdLineStr(optionArg) == Option.UNKNOWN) {
+			if (Option.fromCmdLineStr(optionArg) == null) {
 				throw new ECmdLineUnknownOption(optionArg);
 			}
 		}

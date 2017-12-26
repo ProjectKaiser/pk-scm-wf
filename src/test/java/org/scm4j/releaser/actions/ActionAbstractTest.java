@@ -3,23 +3,19 @@ package org.scm4j.releaser.actions;
 import org.junit.Test;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.commons.progress.ProgressConsole;
-import org.scm4j.releaser.TestEnvironment;
 import org.scm4j.releaser.WorkflowTestBase;
-import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.exceptions.EReleaserException;
 
 import java.util.ArrayList;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 public class ActionAbstractTest extends WorkflowTestBase {
 
 	@Test
 	public void testExceptions() throws Exception {
-		Component comp = new Component(TestEnvironment.PRODUCT_UNTILL, repoFactory);
-		ActionAbstract aa = spy(new ActionAbstract(comp, new ArrayList<>()) {
+		ActionAbstract aa = spy(new ActionAbstract(compUnTill, new ArrayList<>(), repoUnTill) {
 			@Override
 			protected void executeAction(IProgress progress) throws Exception {
 			}

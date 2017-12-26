@@ -1,18 +1,5 @@
 package org.scm4j.releaser;
 
-import static org.hamcrest.Matchers.allOf;
-import static org.hamcrest.Matchers.empty;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.hasProperty;
-import static org.hamcrest.Matchers.instanceOf;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
-import java.util.HashMap;
-import java.util.List;
-
 import org.hamcrest.Matcher;
 import org.junit.After;
 import org.junit.Assert;
@@ -24,18 +11,20 @@ import org.scm4j.releaser.builders.TestBuilder;
 import org.scm4j.releaser.cli.CLI;
 import org.scm4j.releaser.cli.CLICommand;
 import org.scm4j.releaser.cli.Option;
-import org.scm4j.releaser.conf.Component;
-import org.scm4j.releaser.conf.DelayedTagsFile;
-import org.scm4j.releaser.conf.MDepsFile;
-import org.scm4j.releaser.conf.VCSRepositoryFactory;
+import org.scm4j.releaser.conf.*;
 import org.scm4j.releaser.scmactions.SCMActionRelease;
 import org.scm4j.releaser.scmactions.SCMActionTag;
-import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.vcs.api.VCSTag;
 import org.scm4j.vcs.api.WalkDirection;
 import org.scm4j.vcs.api.exceptions.EVCSBranchNotFound;
 import org.scm4j.vcs.api.exceptions.EVCSFileNotFound;
+
+import java.util.HashMap;
+import java.util.List;
+
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.*;
 
 public class WorkflowTestBase {
 	protected TestEnvironment env;
@@ -48,6 +37,9 @@ public class WorkflowTestBase {
 	protected DevelopBranch dbUnTill;
 	protected DevelopBranch dbUnTillDb;
 	protected DevelopBranch dbUBL;
+	protected VCSRepository repoUnTill;
+	protected VCSRepository repoUnTillDb;
+	protected VCSRepository repoUBL;
 	protected VCSRepositoryFactory repoFactory;
 	
 	@Before
@@ -55,12 +47,16 @@ public class WorkflowTestBase {
 		env = new TestEnvironment();
 		env.generateTestEnvironment();
 		repoFactory = env.getRepoFactory();
-		compUnTill = new Component(UNTILL, repoFactory);
-		compUnTillDb = new Component(UNTILLDB, repoFactory);
-		compUBL = new Component(UBL, repoFactory);
-		dbUnTill = new DevelopBranch(compUnTill);
-		dbUnTillDb = new DevelopBranch(compUnTillDb);
-		dbUBL = new DevelopBranch(compUBL);
+		compUnTill = new Component(UNTILL);
+		compUnTillDb = new Component(UNTILLDB);
+		compUBL = new Component(UBL);
+		repoUnTill = repoFactory.getVCSRepository(compUnTill);
+		repoUnTillDb = repoFactory.getVCSRepository(compUnTillDb);
+		repoUBL = repoFactory.getVCSRepository(compUBL);
+		repoUnTill = repoFactory.getVCSRepository(compUnTill);
+		dbUnTill = new DevelopBranch(compUnTill, repoUnTill);
+		dbUnTillDb = new DevelopBranch(compUnTillDb, repoUnTillDb);
+		dbUBL = new DevelopBranch(compUBL, repoUBL);
 		TestBuilder.setBuilders(new HashMap<>());
 		new DelayedTagsFile().delete();
 		Utils.waitForDeleteDir(Utils.RELEASES_DIR);
@@ -76,11 +72,11 @@ public class WorkflowTestBase {
 	}
 
 	protected Version getCrbNextVersion(Component comp) {
-		IVCS vcs = comp.getVCS();
-		Version crbFirstVersion = Utils.getDevVersion(comp).toPreviousMinor().toReleaseZeroPatch();
+		VCSRepository repo = repoFactory.getVCSRepository(comp);
+		Version crbFirstVersion = Utils.getDevVersion(repo).toPreviousMinor().toReleaseZeroPatch();
 		Version latestVersion;
 		try {
-			latestVersion = new Version(vcs.getFileContent(Utils.getReleaseBranchName(comp, crbFirstVersion), Utils.VER_FILE_NAME, null));
+			latestVersion = new Version(repo.getVCS().getFileContent(Utils.getReleaseBranchName(repo, crbFirstVersion), Utils.VER_FILE_NAME, null));
 		} catch (EVCSBranchNotFound | EVCSFileNotFound e) {
 			latestVersion = crbFirstVersion;
 		}
@@ -92,7 +88,7 @@ public class WorkflowTestBase {
 		
 		assertNotNull(TestBuilder.getBuilders().get(UNTILLDB));
 		
-		assertTrue(Utils.getBuildDir(compUnTillDb, latestVersion).exists());
+		assertTrue(Utils.getBuildDir(repoUnTillDb, latestVersion).exists());
 
 		// check versions
 		Version expectedReleaseVer = env.getUnTillDbVer().toReleaseZeroPatch().toPreviousMinor().toNextPatch();
@@ -102,7 +98,7 @@ public class WorkflowTestBase {
 		assertEquals(expectedReleaseVer, latestVersion);
 
 		// check tags
-		List<VCSCommit> commits = env.getUnTillDbVCS().getCommitsRange(Utils.getReleaseBranchName(compUnTillDb, latestVersion), null, WalkDirection.DESC, 2);
+		List<VCSCommit> commits = env.getUnTillDbVCS().getCommitsRange(Utils.getReleaseBranchName(repoUnTillDb, latestVersion), null, WalkDirection.DESC, 2);
 		List<VCSTag> tags = env.getUnTillDbVCS().getTagsOnRevision(commits.get(1).getRevision());
 		assertTrue(tags.size() == 1);
 		VCSTag tag = tags.get(0);
@@ -120,7 +116,7 @@ public class WorkflowTestBase {
 		assertNotNull(TestBuilder.getBuilders());
 		assertNotNull(TestBuilder.getBuilders().get(UBL));
 
-		assertTrue(Utils.getBuildDir(compUBL, latestVersion).exists());
+		assertTrue(Utils.getBuildDir(repoUBL, latestVersion).exists());
 		
 		// check UBL versions
 		Version expectedReleaseVer = env.getUblVer().toReleaseZeroPatch().toPreviousMinor().toNextPatch();
@@ -152,7 +148,7 @@ public class WorkflowTestBase {
 		
 		// check if the pre-last commit of each release branch is tagged 
 		for (VCSTag tag : tags) {
-			List<VCSCommit> commits = env.getUblVCS().getCommitsRange(Utils.getReleaseBranchName(compUBL, new Version(tag.getTagName())), null, WalkDirection.DESC, 2);
+			List<VCSCommit> commits = env.getUblVCS().getCommitsRange(Utils.getReleaseBranchName(repoUBL, new Version(tag.getTagName())), null, WalkDirection.DESC, 2);
 			assertEquals(commits.get(1), tag.getRelatedCommit());	
 		}
 		
@@ -172,11 +168,12 @@ public class WorkflowTestBase {
 	}
 
 	protected List<Component> getReleaseBranchMDeps(Component comp, Version forVersion) {
+		VCSRepository repo = repoFactory.getVCSRepository(comp);
 		try {
-			return new MDepsFile(comp.getVCS().getFileContent(Utils.getReleaseBranchName(comp, forVersion),
-					Utils.MDEPS_FILE_NAME, null)).getMDeps(repoFactory);
+			return new MDepsFile(repo.getVCS().getFileContent(Utils.getReleaseBranchName(repo, forVersion),
+					Utils.MDEPS_FILE_NAME, null)).getMDeps();
 		} catch (EVCSFileNotFound | EVCSBranchNotFound e) {
-			throw new RuntimeException(Utils.getReleaseBranchName(comp, forVersion) + " branch does not exist");
+			throw new RuntimeException(Utils.getReleaseBranchName(repo, forVersion) + " branch does not exist");
 		}
 	}
 
@@ -187,7 +184,8 @@ public class WorkflowTestBase {
 	public void checkUBLForked(int times) {
 		Version latestVersion = getCrbNextVersion(compUBL);
 		// check branches
-		assertTrue(env.getUblVCS().getBranches(compUBL.getVcsRepository().getReleaseBranchPrefix()).contains(Utils.getReleaseBranchName(compUBL, latestVersion)));
+		assertTrue(env.getUblVCS().getBranches(repoUBL.getReleaseBranchPrefix()).contains(
+				Utils.getReleaseBranchName(repoUBL, latestVersion)));
 
 		// check versions
 		Version trunkVersion = dbUBL.getVersion();
@@ -211,7 +209,8 @@ public class WorkflowTestBase {
 	public void checkUnTillDbForked(int times) {
 		Version latestVersion = getCrbNextVersion(compUnTillDb);
 		// check branches
-		assertTrue(env.getUnTillDbVCS().getBranches(compUnTillDb.getVcsRepository().getReleaseBranchPrefix()).contains(Utils.getReleaseBranchName(compUnTillDb, latestVersion)));
+		assertTrue(env.getUnTillDbVCS().getBranches(repoUnTillDb.getReleaseBranchPrefix()).contains(
+				Utils.getReleaseBranchName(repoUnTillDb, latestVersion)));
 
 		// check versions.
 		Version trunkVersion = dbUnTillDb.getVersion();
@@ -233,7 +232,8 @@ public class WorkflowTestBase {
 		Version latestVersion = getCrbNextVersion(compUnTill);
 
 		// check branches
-		assertTrue(env.getUnTillVCS().getBranches(compUnTill.getVcsRepository().getReleaseBranchPrefix()).contains(Utils.getReleaseBranchName(compUnTill, latestVersion)));
+		assertTrue(env.getUnTillVCS().getBranches(repoUnTill.getReleaseBranchPrefix()).contains(
+				Utils.getReleaseBranchName(repoUnTill, latestVersion)));
 
 		// check versions
 		Version trunkVersion = dbUnTill.getVersion();
@@ -283,7 +283,7 @@ public class WorkflowTestBase {
 		checkUBLBuilt();
 		Version latestVersion = getCrbNextVersion(compUnTill);
 		
-		assertTrue(Utils.getBuildDir(compUnTill, latestVersion).exists());
+		assertTrue(Utils.getBuildDir(repoUnTill, latestVersion).exists());
 		
 		// check versions
 		assertEquals(env.getUnTillVer().toNextMinor(), dbUnTill.getVersion());
@@ -302,7 +302,7 @@ public class WorkflowTestBase {
 		assertTrue(tags.size() == 1);
 		VCSTag tag = tags.get(0);
 		assertEquals(dbUnTill.getVersion().toPreviousMinor().toReleaseZeroPatch().toString(), tag.getTagName());
-		List<VCSCommit> commits = env.getUnTillVCS().getCommitsRange(Utils.getReleaseBranchName(compUnTill, latestVersion), null, WalkDirection.DESC, 2);
+		List<VCSCommit> commits = env.getUnTillVCS().getCommitsRange(Utils.getReleaseBranchName(repoUnTill, latestVersion), null, WalkDirection.DESC, 2);
 		assertEquals(commits.get(1), tag.getRelatedCommit());
 	}
 	

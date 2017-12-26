@@ -5,6 +5,7 @@ import org.scm4j.releaser.actions.ActionSet;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.branch.DevelopBranch;
 import org.scm4j.releaser.conf.Component;
+import org.scm4j.releaser.conf.VCSRepository;
 import org.scm4j.releaser.conf.VCSRepositoryFactory;
 import org.scm4j.releaser.exceptions.EBuildOnNotForkedRelease;
 import org.scm4j.releaser.scmactions.SCMActionRelease;
@@ -23,7 +24,7 @@ public class ActionTreeBuilder {
 	}
 
 	public IAction getTagAction(String coords) {
-		return getTagAction(new Component(coords, repoFactory));
+		return getTagAction(new Component(coords));
 	}
 	
 	public IAction getActionTreeDelayedTag(ExtendedStatus node, CachedStatuses cache) {
@@ -47,13 +48,15 @@ public class ActionTreeBuilder {
 		if (node.getStatus() == BuildStatus.FORK && actionSet == ActionSet.FULL) {
 			throw new EBuildOnNotForkedRelease(node.getComp());
 		}
-		
-		return new SCMActionRelease(node.getComp(), childActions, cache, repoFactory, actionSet, delayedTag);
+
+		VCSRepository repo = repoFactory.getVCSRepository(node.getComp());
+		return new SCMActionRelease(node.getComp(), childActions, cache, repoFactory, actionSet, delayedTag, repo);
 	}
 
 	public IAction getTagAction(Component comp) {
 		List<IAction> childActions = new ArrayList<>();
-		Version lastReleaseVersion = new DevelopBranch(comp).getVersion().toPreviousMinor();
-		return new SCMActionTag(comp, childActions, Utils.getReleaseBranchName(comp, lastReleaseVersion));
+		VCSRepository repo = repoFactory.getVCSRepository(comp);
+		Version lastReleaseVersion = new DevelopBranch(comp, repo).getVersion().toPreviousMinor();
+		return new SCMActionTag(comp, childActions, Utils.getReleaseBranchName(repo, lastReleaseVersion), repo);
 	}
 }

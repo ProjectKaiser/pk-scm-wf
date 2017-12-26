@@ -10,6 +10,7 @@ import org.scm4j.releaser.actions.ActionAbstract;
 import org.scm4j.releaser.actions.ActionSet;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.conf.Component;
+import org.scm4j.releaser.conf.VCSRepository;
 import org.scm4j.releaser.conf.VCSRepositoryFactory;
 import org.scm4j.releaser.scmactions.procs.*;
 
@@ -24,18 +25,18 @@ public class SCMActionRelease extends ActionAbstract {
 	private final Version targetVersion;
 	
 	public SCMActionRelease(Component comp, List<IAction> childActions, CachedStatuses cache, VCSRepositoryFactory repoFactory,
-							ActionSet actionSet, boolean delayedTag) {
-		super(comp, childActions);
-		ExtendedStatus status = cache.get(comp.getUrl());
+							ActionSet actionSet, boolean delayedTag, VCSRepository repo) {
+		super(comp, childActions, repo);
+		ExtendedStatus status = cache.get(repo.getUrl());
 		this.bsFrom = status.getStatus();
 		targetVersion = status.getNextVersion();
 		
 		BuildStatus bsTo = null;
 		switch(bsFrom) {
 		case FORK:
-			procs.add(new SCMProcForkBranch(comp, cache));
+			procs.add(new SCMProcForkBranch(comp, cache, repo));
 		case LOCK:
-			getProcs().add(new SCMProcLockMDeps(comp, cache, repoFactory));
+			getProcs().add(new SCMProcLockMDeps(comp, cache, repoFactory, repo));
 			bsTo = BuildStatus.LOCK;
 			if (actionSet == ActionSet.FORK_ONLY) {
 				break;
@@ -43,11 +44,11 @@ public class SCMActionRelease extends ActionAbstract {
 		case BUILD_MDEPS:
 		case ACTUALIZE_PATCHES:
 			if (bsFrom.ordinal() > BuildStatus.LOCK.ordinal() && actionSet == ActionSet.FULL) {
-				getProcs().add(new SCMProcActualizePatches(comp, cache, repoFactory));
+				getProcs().add(new SCMProcActualizePatches(comp, cache, repoFactory, repo));
 			}
 		case BUILD:
 			if (actionSet == ActionSet.FULL) {
-				getProcs().add(new SCMProcBuild(comp, cache, delayedTag));
+				getProcs().add(new SCMProcBuild(comp, cache, delayedTag, repo));
 				bsTo = BuildStatus.BUILD;
 			}
 		case DONE:
@@ -71,7 +72,8 @@ public class SCMActionRelease extends ActionAbstract {
 	}
 
 	private String getDescription(String status) {
-		return String.format("%s %s, target version: %s, target branch: %s", status, comp.getCoords(), targetVersion, Utils.getReleaseBranchName(comp, targetVersion));
+		return String.format("%s %s, target version: %s, target branch: %s", status, comp.getCoords(), targetVersion,
+				Utils.getReleaseBranchName(repo, targetVersion));
 	}
 
 	private String getDetailedStatus() {

@@ -4,6 +4,7 @@ import org.scm4j.commons.Version;
 import org.scm4j.releaser.LogTag;
 import org.scm4j.releaser.Utils;
 import org.scm4j.releaser.conf.Component;
+import org.scm4j.releaser.conf.VCSRepository;
 import org.scm4j.releaser.exceptions.EComponentConfig;
 import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.vcs.api.exceptions.EVCSFileNotFound;
@@ -11,15 +12,17 @@ import org.scm4j.vcs.api.exceptions.EVCSFileNotFound;
 import java.util.List;
 
 public class DevelopBranch {
-	
+
+	private final VCSRepository repo;
 	private final Component comp;
 	
-	public DevelopBranch(Component comp) {
+	public DevelopBranch(Component comp, VCSRepository repo) {
 		this.comp = comp;
+		this.repo = repo;
 	}
 	
 	public boolean isModified() {
-		List<VCSCommit> log = comp.getVCS().log(comp.getVcsRepository().getDevelopBranch(), 1);
+		List<VCSCommit> log = repo.getVCS().log(repo.getDevelopBranch(), 1);
 		if (log.isEmpty()) {
 			return false;
 		}
@@ -29,7 +32,7 @@ public class DevelopBranch {
 	
 	public Version getVersion() {
 		try {
-			String verFileContent = comp.getVCS().getFileContent(comp.getVcsRepository().getDevelopBranch(), Utils.VER_FILE_NAME, null);
+			String verFileContent = repo.getVCS().getFileContent(repo.getDevelopBranch(), Utils.VER_FILE_NAME, null);
 			return new Version(verFileContent.trim());
 		} catch (EVCSFileNotFound e) {
 			throw new EComponentConfig(Utils.VER_FILE_NAME + " file is missing in develop branch of " + comp);

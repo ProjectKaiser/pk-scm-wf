@@ -18,10 +18,10 @@ public class SCMActionReleaseTest extends WorkflowTestBase {
 	@Test
 	public void testUnsupportedBuildStatus() throws Exception {
 		CachedStatuses cache = new CachedStatuses();
-		ExtendedStatus node = new ExtendedStatus(env.getUnTillVer(), BuildStatus.ERROR, new LinkedHashMap<>(), compUnTill);
-		cache.put(compUnTill.getUrl(), node);
+		ExtendedStatus node = new ExtendedStatus(env.getUnTillVer(), BuildStatus.ERROR, new LinkedHashMap<>(), compUnTill, repoUnTill);
+		cache.put(repoUnTill.getUrl(), node);
 		try {
-			new SCMActionRelease(compUnTill, new ArrayList<>(), cache, repoFactory, ActionSet.FULL, false);
+			new SCMActionRelease(compUnTill, new ArrayList<>(), cache, repoFactory, ActionSet.FULL, false, repoUnTill);
 			fail();
 		} catch (IllegalArgumentException e) {
 
@@ -29,10 +29,10 @@ public class SCMActionReleaseTest extends WorkflowTestBase {
 	}
 	
 	@Test
-	public void testToString() {
+	public void coverToString() {
 		CachedStatuses cache = new CachedStatuses();
-		ExtendedStatus node = new ExtendedStatus(env.getUnTillVer(), BuildStatus.DONE, new LinkedHashMap<>(), compUnTill);
-		cache.put(compUnTill.getUrl(), node);
-		new SCMActionRelease(compUnTill, new ArrayList<>(), cache, repoFactory, ActionSet.FULL, false).toString();
+		ExtendedStatus node = new ExtendedStatus(env.getUnTillVer(), BuildStatus.DONE, new LinkedHashMap<>(), compUnTill, repoUnTill);
+		cache.put(repoUnTill.getUrl(), node);
+		new SCMActionRelease(compUnTill, new ArrayList<>(), cache, repoFactory, ActionSet.FULL, false, repoUnTill).toString();
 	}
 }

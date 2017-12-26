@@ -1,21 +1,22 @@
 package org.scm4j.releaser;
 
+import org.apache.commons.io.FileUtils;
+import org.scm4j.commons.Version;
+import org.scm4j.commons.progress.IProgress;
+import org.scm4j.releaser.conf.Component;
+import org.scm4j.releaser.conf.TagDesc;
+import org.scm4j.releaser.conf.VCSRepository;
+import org.scm4j.releaser.exceptions.EReleaserException;
+import org.scm4j.vcs.api.workingcopy.IVCSRepositoryWorkspace;
+import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
+import org.scm4j.vcs.api.workingcopy.VCSWorkspace;
+
 import java.io.File;
 import java.util.Collection;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinTask;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-
-import org.apache.commons.io.FileUtils;
-import org.scm4j.commons.Version;
-import org.scm4j.commons.progress.IProgress;
-import org.scm4j.releaser.conf.Component;
-import org.scm4j.releaser.conf.TagDesc;
-import org.scm4j.releaser.exceptions.EReleaserException;
-import org.scm4j.vcs.api.workingcopy.IVCSRepositoryWorkspace;
-import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
-import org.scm4j.vcs.api.workingcopy.VCSWorkspace;
 
 
 public final class Utils {
@@ -69,14 +70,14 @@ public final class Utils {
 		}
 	}
 
-	public static String getReleaseBranchName(Component comp, Version forVersion) {
-		return comp.getVcsRepository().getReleaseBranchPrefix() + forVersion.getReleaseNoPatchString();
+	public static String getReleaseBranchName(VCSRepository repo, Version forVersion) {
+		return repo.getReleaseBranchPrefix() + forVersion.getReleaseNoPatchString();
 	}
 
-	public static File getBuildDir(Component comp, Version forVersion) {
+	public static File getBuildDir(VCSRepository repo, Version forVersion) {
 		IVCSWorkspace ws = new VCSWorkspace(RELEASES_DIR.toString());
-		IVCSRepositoryWorkspace rws = ws.getVCSRepositoryWorkspace(comp.getUrl());
-		return rws.getRepoFolder();
+		IVCSRepositoryWorkspace rws = ws.getVCSRepositoryWorkspace(repo.getUrl());
+		return new File(rws.getRepoFolder(), getReleaseBranchName(repo, forVersion).replaceAll("[^a-zA-Z0-9.-]", "_"));
 	}
 
 	public static TagDesc getTagDesc(String verStr) {
@@ -84,9 +85,9 @@ public final class Utils {
 		return new TagDesc(verStr, tagMessage);
 	}
 
-	public static Version getDevVersion(Component comp) {
+	public static Version getDevVersion(VCSRepository repo) {
 		return new Version(
-				comp.getVCS().getFileContent(comp.getVcsRepository().getDevelopBranch(), Utils.VER_FILE_NAME, null));
+				repo.getVCS().getFileContent(repo.getDevelopBranch(), Utils.VER_FILE_NAME, null));
 	}
 
 	public static void waitForDeleteDir(File dir) throws Exception {
@@ -101,9 +102,5 @@ public final class Utils {
 		if (dir.exists()) {
 			throw new Exception("failed to delete " + dir);
 		}
-	}
-
-	public static String getReleaseBranchName(Component comp) {
-		return getReleaseBranchName(comp, comp.getVersion());
 	}
 }

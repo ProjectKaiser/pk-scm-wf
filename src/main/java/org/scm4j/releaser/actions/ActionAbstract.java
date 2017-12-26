@@ -1,14 +1,14 @@
 package org.scm4j.releaser.actions;
 
-import java.util.ArrayList;
-import java.util.List;
-
+import lombok.SneakyThrows;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.releaser.conf.Component;
+import org.scm4j.releaser.conf.VCSRepository;
 import org.scm4j.releaser.exceptions.EReleaserException;
 import org.scm4j.vcs.api.IVCS;
 
-import lombok.SneakyThrows;
+import java.util.ArrayList;
+import java.util.List;
 
 public abstract class ActionAbstract implements IAction {
 
@@ -16,14 +16,16 @@ public abstract class ActionAbstract implements IAction {
 	protected final Component comp;
 	protected final List<String> processedUrls = new ArrayList<>();
 	protected IAction parent = null;
+	protected final VCSRepository repo;
 
 	public IVCS getVCS() {
-		return comp.getVCS();
+		return repo.getVCS();
 	}
 
-	public ActionAbstract(Component comp, List<IAction> childActions) {
+	public ActionAbstract(Component comp, List<IAction> childActions, VCSRepository repo) {
 		this.comp = comp;
 		this.childActions = childActions;
+		this.repo = repo;
 		for (IAction childAction : childActions) {
 			childAction.setParent(this);
 		}
@@ -76,7 +78,7 @@ public abstract class ActionAbstract implements IAction {
 	
 	@Override
 	public void execute(IProgress progress) {
-		if (isUrlProcessed(comp.getVcsRepository().getUrl())) {
+		if (isUrlProcessed(repo.getUrl())) {
 			progress.reportStatus("already executed");
 			return;
 		}
@@ -85,7 +87,7 @@ public abstract class ActionAbstract implements IAction {
 		
 		try {
 			executeAction(progress);
-			addProcessedUrl(comp.getVcsRepository().getUrl());
+			addProcessedUrl(repo.getUrl());
 		} catch (Exception e) {
 			progress.error("execution error: " + e.toString());
 			if (!(e instanceof EReleaserException)) {

@@ -7,33 +7,35 @@ import org.scm4j.releaser.LogTag;
 import org.scm4j.releaser.Utils;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.MDepsFile;
+import org.scm4j.releaser.conf.VCSRepository;
 import org.scm4j.releaser.conf.VCSRepositoryFactory;
 import org.scm4j.vcs.api.IVCS;
 
 public class SCMProcActualizePatches implements ISCMProc {
 	
-	private final IVCS vcs;
 	private final Component comp;
 	private final CachedStatuses cache;
 	private final VCSRepositoryFactory repoFactory;
+	private final VCSRepository repo;
  
-	public SCMProcActualizePatches(Component comp, CachedStatuses cache, VCSRepositoryFactory repoFactory) {
+	public SCMProcActualizePatches(Component comp, CachedStatuses cache, VCSRepositoryFactory repoFactory, VCSRepository repo) {
 		this.cache = cache;
 		this.comp = comp;
-		vcs = comp.getVCS();
 		this.repoFactory = repoFactory;
+		this.repo = repo;
 	}
 
 	@Override
 	public void execute(IProgress progress) {
-		MDepsFile currentMDepsFile = new MDepsFile(comp.getVCS().getFileContent(
-				Utils.getReleaseBranchName(comp, cache.get(comp.getUrl()).getNextVersion()),
+		IVCS vcs = repo.getVCS();
+		MDepsFile currentMDepsFile = new MDepsFile(vcs.getFileContent(
+				Utils.getReleaseBranchName(repo, cache.get(repo.getUrl()).getNextVersion()),
 				Utils.MDEPS_FILE_NAME, null));//cache.get(comp.getUrl()).getSubComponents().keySet());
 		//TODO: add workflow test mdeps file format saving
 		StringBuilder sb = new StringBuilder();
 		Version newVersion;
-		for (Component currentMDep : currentMDepsFile.getMDeps(repoFactory)) {
-			newVersion = cache.get(currentMDep.getUrl()).getNextVersion();
+		for (Component currentMDep : currentMDepsFile.getMDeps()) {
+			newVersion = cache.get(repoFactory.getUrl(currentMDep)).getNextVersion();
 			if (!newVersion.getPatch().equals(Utils.ZERO_PATCH)) {
 				newVersion = newVersion.toPreviousPatch();
 			}
@@ -45,7 +47,7 @@ public class SCMProcActualizePatches implements ISCMProc {
 		if (sb.length() > 0) {
 			sb.setLength(sb.length() - 2);
 			progress.reportStatus("patches to actualize:\r\n" + sb.toString());
-			Utils.reportDuration(() -> vcs.setFileContent(Utils.getReleaseBranchName(comp, cache.get(comp.getUrl()).getNextVersion()), Utils.MDEPS_FILE_NAME, currentMDepsFile.toFileContent(), LogTag.SCM_MDEPS),
+			Utils.reportDuration(() -> vcs.setFileContent(Utils.getReleaseBranchName(repo, cache.get(repo.getUrl()).getNextVersion()), Utils.MDEPS_FILE_NAME, currentMDepsFile.toFileContent(), LogTag.SCM_MDEPS),
 					"writting mdeps", null, progress);
 		} else {
 			progress.reportStatus("mdeps patches are actual already");

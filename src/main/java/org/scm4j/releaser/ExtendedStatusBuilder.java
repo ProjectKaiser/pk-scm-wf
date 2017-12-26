@@ -1,11 +1,5 @@
 package org.scm4j.releaser;
 
-import static org.scm4j.releaser.Utils.reportDuration;
-
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-
 import org.scm4j.commons.Version;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.commons.progress.ProgressConsole;
@@ -15,6 +9,7 @@ import org.scm4j.releaser.branch.ReleaseBranchFactory;
 import org.scm4j.releaser.branch.ReleaseBranchPatch;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.DelayedTagsFile;
+import org.scm4j.releaser.conf.VCSRepository;
 import org.scm4j.releaser.conf.VCSRepositoryFactory;
 import org.scm4j.releaser.exceptions.ENoReleaseBranchForPatch;
 import org.scm4j.releaser.exceptions.ENoReleases;
@@ -23,6 +18,12 @@ import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.vcs.api.VCSTag;
 import org.scm4j.vcs.api.WalkDirection;
+
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+
+import static org.scm4j.releaser.Utils.reportDuration;
 
 public class ExtendedStatusBuilder {
 
@@ -45,7 +46,7 @@ public class ExtendedStatusBuilder {
 	}
 
 	public ExtendedStatus getAndCacheMinorStatus(String coords, CachedStatuses cache) {
-		return getAndCacheMinorStatus(new Component(coords, repoFactory), cache);
+		return getAndCacheMinorStatus(new Component(coords), cache);
 	}
 	
 	public ExtendedStatus getAndCachePatchStatus(Component comp, CachedStatuses cache) {
@@ -53,40 +54,41 @@ public class ExtendedStatusBuilder {
 	}
 	
 	public ExtendedStatus getAndCachePatchStatus(String coords, CachedStatuses cache) {
-		Component comp = new Component(coords, repoFactory);
+		Component comp = new Component(coords);
 		return getAndCachePatchStatus(comp, cache);
 	}
 
 	public ExtendedStatus getAndCacheStatus(Component comp, CachedStatuses cache, IProgress progress, boolean patch) {
-		ExtendedStatus existing = cache.putIfAbsent(comp.getUrl(), ExtendedStatus.DUMMY);
+		VCSRepository repo = repoFactory.getVCSRepository(comp);
+		ExtendedStatus existing = cache.putIfAbsent(repo.getUrl(), ExtendedStatus.DUMMY);
 		
 		while (ExtendedStatus.DUMMY == existing) {
 			try {
 				Thread.sleep(PARALLEL_CALCULATION_AWAIT_TIME);
-				existing = cache.get(comp.getUrl());
+				existing = cache.get(repo.getUrl());
 			} catch (InterruptedException e) {
 				throw new RuntimeException(e);
 			}
 		}
 		
 		if (null != existing) {
-			return new ExtendedStatus(existing.getNextVersion(), existing.getStatus(), existing.getSubComponents(), comp);
+			return new ExtendedStatus(existing.getNextVersion(), existing.getStatus(), existing.getSubComponents(), comp, repo);
 		}
 
 		ExtendedStatus res = patch ? 
-			getPatchStatus(comp, cache, progress) :
-			getMinorStatus(comp, cache, progress);
+			getPatchStatus(comp, cache, progress, repo) :
+			getMinorStatus(comp, cache, progress, repo);
 		
-		cache.replace(comp.getUrl(), res);
+		cache.replace(repo.getUrl(), res);
 		return res;
 	}
 	
-	private ExtendedStatus getMinorStatus(Component comp, CachedStatuses cache, IProgress progress) {
-		ReleaseBranchCurrent rb = reportDuration(() -> ReleaseBranchFactory.getCRB(comp, repoFactory), "CRB created", comp, progress);
+	private ExtendedStatus getMinorStatus(Component comp, CachedStatuses cache, IProgress progress, VCSRepository repo) {
+		ReleaseBranchCurrent rb = reportDuration(() -> ReleaseBranchFactory.getCRB(comp, repo), "CRB created", comp, progress);
 		LinkedHashMap<Component, ExtendedStatus> subComponents = new LinkedHashMap<>();
 		
 		BuildStatus status;
-		if (isNeedToFork(comp, rb, cache, progress, subComponents)) {
+		if (isNeedToFork(comp, rb, cache, progress, subComponents, repo)) {
 			status = BuildStatus.FORK;
 		} else if (Integer.parseInt(rb.getVersion().getPatch()) > 0) {
 			status = BuildStatus.DONE;
@@ -106,11 +108,11 @@ public class ExtendedStatusBuilder {
 		} else {
 			nextVersion = rb.getVersion();
 		}
-		return new ExtendedStatus(nextVersion, status, subComponents, comp);
+		return new ExtendedStatus(nextVersion, status, subComponents, comp, repo);
 	}
 
-	private ExtendedStatus getPatchStatus(Component comp, CachedStatuses cache, IProgress progress) {
-		ReleaseBranchPatch rb = reportDuration(() -> ReleaseBranchFactory.getReleaseBranchPatch(comp, repoFactory),
+	private ExtendedStatus getPatchStatus(Component comp, CachedStatuses cache, IProgress progress, VCSRepository repo) {
+		ReleaseBranchPatch rb = reportDuration(() -> ReleaseBranchFactory.getReleaseBranchPatch(comp, repo),
 				"RB created", comp, progress);
 		LinkedHashMap<Component, ExtendedStatus> subComponents = new LinkedHashMap<>();
 		
@@ -141,31 +143,31 @@ public class ExtendedStatusBuilder {
 			buildStatus = BuildStatus.BUILD_MDEPS;
 		} else if (!areMDepsPatchesActual(rb.getMDeps(), cache)) {
 			buildStatus = BuildStatus.ACTUALIZE_PATCHES;
-		} else if (reportDuration(() -> noValueableCommitsAfterLastTag(comp, rb), "is release branch modified check", comp, progress)) {
+		} else if (reportDuration(() -> noValueableCommitsAfterLastTag(repo, rb), "is release branch modified check", comp, progress)) {
 			buildStatus = BuildStatus.DONE;
 		} else {
 			buildStatus = BuildStatus.BUILD;
 		}
 		
 		Version nextVersion = rb.getVersion();
-		return new ExtendedStatus(nextVersion, buildStatus, subComponents, comp);
+		return new ExtendedStatus(nextVersion, buildStatus, subComponents, comp, repo);
 	}
 
 	private boolean hasMDepsNotInDONEStatus(List<Component> mDeps, CachedStatuses cache) {
 		for (Component mDep : mDeps) {
-			if (cache.get(mDep.getUrl()).getStatus() != BuildStatus.DONE) {
+			if (cache.get(repoFactory.getUrl(mDep)).getStatus() != BuildStatus.DONE) {
 				return true;
 			}
 		}
 		return false;
 	}
 
-	private boolean noValueableCommitsAfterLastTag(Component comp, ReleaseBranchPatch rb) {
-		IVCS vcs = comp.getVCS();
+	private boolean noValueableCommitsAfterLastTag(VCSRepository repo, ReleaseBranchPatch rb) {
+		IVCS vcs = repo.getVCS();
 		String startingFromRevision = null;
 
 		DelayedTagsFile dtf = new DelayedTagsFile();
-		String delayedTagRevision = dtf.getRevisitonByUrl(comp.getVcsRepository().getUrl());
+		String delayedTagRevision = dtf.getRevisitonByUrl(repo.getUrl());
 		List<VCSCommit> commits;
 		String branchName;
 		branchName = rb.getName();
@@ -190,7 +192,7 @@ public class ExtendedStatusBuilder {
 
 	private boolean areMDepsPatchesActual(List<Component> mDeps, CachedStatuses cache) {
 		for (Component mDep : mDeps) {
-			if (!cache.get(mDep.getUrl()).getNextVersion().equals(mDep.getVersion().toNextPatch())) {
+			if (!cache.get(repoFactory.getUrl(mDep)).getNextVersion().equals(mDep.getVersion().toNextPatch())) {
 				return false;
 			}
 		}
@@ -210,7 +212,8 @@ public class ExtendedStatusBuilder {
 		return nonlockedMDeps.isEmpty();
 	}
 
-	private Boolean isNeedToFork(Component comp, ReleaseBranchCurrent rb, CachedStatuses cache, IProgress progress, LinkedHashMap<Component, ExtendedStatus> subComponents) {
+	private Boolean isNeedToFork(Component comp, ReleaseBranchCurrent rb, CachedStatuses cache, IProgress progress,
+								 LinkedHashMap<Component, ExtendedStatus> subComponents, VCSRepository repo) {
 		
 		LinkedHashMap<Component, ExtendedStatus> subComponentsLocal = new LinkedHashMap<>();
 		Utils.async(rb.getMDeps(), (mdep) -> {
@@ -231,13 +234,14 @@ public class ExtendedStatusBuilder {
 		}
 		
 		// develop branch has valuable commits => YES
-		if (reportDuration(() -> new DevelopBranch(comp).isModified(), "is develop modified check", comp, progress)) {
+
+		if (reportDuration(() -> new DevelopBranch(comp, repo).isModified(), "is develop modified check", comp, progress)) {
 			return true;
 		}
 		
 		ExtendedStatus mdepStatus;
-		for (Component mdep : rb.getCRBMDeps(progress, repoFactory)) {
-			mdepStatus = cache.get(mdep.getUrl());
+		for (Component mdep : rb.getCRBMDeps(progress, repo)) {
+			mdepStatus = cache.get(repoFactory.getUrl(mdep));
 			// any mdeps needs FORK => YES
 			if (mdepStatus.getStatus() != BuildStatus.DONE) {
 				return true;

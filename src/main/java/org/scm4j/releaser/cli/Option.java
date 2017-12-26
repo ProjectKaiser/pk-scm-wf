@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public enum Option {
-	UNKNOWN(null), DELAYED_TAG("--delayed-tag"), STACK_TRACE("--stacktrace");
+	DELAYED_TAG("--delayed-tag"), STACK_TRACE("--stacktrace");
 	
 	private static final Map<String, Option> map = new HashMap<>();
 
@@ -25,7 +25,6 @@ public enum Option {
 	}
 	
 	public static Option fromCmdLineStr(String strValue) {
-		Option res = map.get(strValue);
-		return res == null ? UNKNOWN : res;
+		return map.get(strValue);
 	}
 }

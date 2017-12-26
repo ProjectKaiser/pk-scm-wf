@@ -1,17 +1,15 @@
 package org.scm4j.releaser.conf;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.scm4j.releaser.TestEnvironment;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Arrays;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.scm4j.releaser.TestEnvironment;
+import static org.junit.Assert.*;
 
 public class MDepsFileTest {
 
@@ -43,8 +41,8 @@ public class MDepsFileTest {
 
 	@Test
 	public void testGetMDeps() {
-		assertTrue(getMDF("").getMDeps(repoFactory).isEmpty());
-		assertTrue(getMDF(null).getMDeps(repoFactory).isEmpty());
+		assertTrue(getMDF("").getMDeps().isEmpty());
+		assertTrue(getMDF(null).getMDeps().isEmpty());
 		Component comp = new Component(TestEnvironment.PRODUCT_UNTILL);
 		assertTrue(getMDF(TestEnvironment.PRODUCT_UNTILL).getMDeps().contains(comp));
 		assertTrue(getMDF(comp.getCoords().toString()).getMDeps().contains(comp));

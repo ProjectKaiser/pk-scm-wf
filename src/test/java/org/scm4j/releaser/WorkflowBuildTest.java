@@ -1,13 +1,5 @@
 package org.scm4j.releaser;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
-import java.nio.charset.StandardCharsets;
-import java.util.Map;
-
 import org.apache.commons.io.FileUtils;
 import org.hamcrest.Matchers;
 import org.junit.Test;
@@ -20,6 +12,11 @@ import org.scm4j.releaser.conf.MDepsFile;
 import org.scm4j.releaser.exceptions.EBuildOnNotForkedRelease;
 import org.scm4j.releaser.exceptions.ENoBuilder;
 import org.yaml.snakeyaml.Yaml;
+
+import java.nio.charset.StandardCharsets;
+import java.util.Map;
+
+import static org.junit.Assert.*;
 public class WorkflowBuildTest extends WorkflowTestBase {
 	
 	@Test
@@ -32,7 +29,7 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		checkUnTillBuilt();
 
 		// test IGNORED dev branch state
-		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevelopBranch(),
+		env.generateFeatureCommit(env.getUnTillDbVCS(), repoUnTillDb.getDevelopBranch(),
 				LogTag.SCM_IGNORE + " ignored feature commit added");
 		action = execAndGetActionBuild(compUnTill);
 		assertActionDoesNothing(action);
@@ -81,7 +78,7 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 	public void testBuildSingleComponentTwice() throws Exception {
 		forkAndBuild(compUnTillDb);
 		
-		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevelopBranch(), "feature commit added");
+		env.generateFeatureCommit(env.getUnTillDbVCS(), repoUnTillDb.getDevelopBranch(), "feature commit added");
 
 		forkAndBuild(compUnTillDb, 2);
 	}
@@ -129,11 +126,11 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		build(compUnTillDb);
 		
 		// add feature to existing unTillDb release
-		ReleaseBranchCurrent crb = ReleaseBranchFactory.getCRB(compUnTillDb, repoFactory);
+		ReleaseBranchCurrent crb = ReleaseBranchFactory.getCRB(compUnTillDb, repoUnTillDb);
 		env.generateFeatureCommit(env.getUnTillDbVCS(), crb.getName(), "patch feature added");
 
 		// build unTillDb patch
-		Component compUnTillDbPatch = new Component(UNTILLDB + ":" + env.getUnTillDbVer().toRelease(), repoFactory);
+		Component compUnTillDbPatch = new Component(UNTILLDB + ":" + env.getUnTillDbVer().toRelease());
 		execAndGetActionBuild(compUnTillDbPatch);
 		
 		// UBL should actualize its mdeps
@@ -143,13 +140,13 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		assertActionDoesNothing(action, compUnTillDb);
 		
 		// check unTill actualized unTillDb version
-		crb = ReleaseBranchFactory.getCRB(compUnTill, repoFactory);
+		crb = ReleaseBranchFactory.getCRB(compUnTill, repoUnTill);
 		MDepsFile mdf = new MDepsFile(env.getUnTillVCS().getFileContent(crb.getName(), Utils.MDEPS_FILE_NAME, null));
-		assertThat(mdf.getMDeps(repoFactory), Matchers.hasItem(compUnTillDbPatch));
+		assertThat(mdf.getMDeps(), Matchers.hasItem(compUnTillDbPatch));
 		
 		// check UBL actualized unTillDb version
-		crb = ReleaseBranchFactory.getCRB(compUBL, repoFactory);
+		crb = ReleaseBranchFactory.getCRB(compUBL, repoUBL);
 		mdf = new MDepsFile(env.getUblVCS().getFileContent(crb.getName(), Utils.MDEPS_FILE_NAME, null));
-		assertThat(mdf.getMDeps(repoFactory), Matchers.hasItem(compUnTillDbPatch));
+		assertThat(mdf.getMDeps(), Matchers.hasItem(compUnTillDbPatch));
 	}
 }

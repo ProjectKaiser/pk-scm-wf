@@ -34,9 +34,7 @@ public class CommandLine {
 	private static String printOptions() {
 		StringBuilder sb = new StringBuilder();
 		for (Option opt : Option.values()) {
-			if (opt != Option.UNKNOWN) {
-				sb.append("[").append(opt.getCmdLineStr()).append("] ");
-			}
+			sb.append("[").append(opt.getCmdLineStr()).append("] ");
 		}
 		sb.deleteCharAt(sb.length() - 1);
 		return sb.toString();
@@ -45,9 +43,7 @@ public class CommandLine {
 	private static String printCommands() {
 		StringBuilder sb = new StringBuilder();
 		for (CLICommand cmd : CLICommand.values()) {
-			if (cmd != CLICommand.UNKNOWN) {
-				sb.append(cmd.getCmdLineStr() + "|");
-			}
+			sb.append(cmd.getCmdLineStr() + "|");
 		}
 		sb.deleteCharAt(sb.length() - 1);
 		return sb.toString();

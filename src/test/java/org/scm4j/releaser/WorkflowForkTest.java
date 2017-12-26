@@ -29,7 +29,7 @@ public class WorkflowForkTest extends WorkflowTestBase {
 	public void testForkRootOnly() throws Exception {
 		forkAndBuild(compUnTill);
 
-		env.generateFeatureCommit(env.getUnTillVCS(), compUnTill.getVcsRepository().getDevelopBranch(), "feature added");
+		env.generateFeatureCommit(env.getUnTillVCS(), repoUnTill.getDevelopBranch(), "feature added");
 		// fork untill only
 		IAction action = execAndGetActionFork(compUnTill);
 		assertActionDoesFork(action, compUnTill);
@@ -65,7 +65,7 @@ public class WorkflowForkTest extends WorkflowTestBase {
 		forkAndBuild(compUBL);
 
 		// next fork unTillDb
-		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevelopBranch(), "feature added");
+		env.generateFeatureCommit(env.getUnTillDbVCS(), repoUnTillDb.getDevelopBranch(), "feature added");
 		forkAndBuild(compUnTillDb, 2);
 
 		// UBL should be forked and built then
@@ -85,9 +85,9 @@ public class WorkflowForkTest extends WorkflowTestBase {
 		fork(compUBL);
 		
 		// simulate mdeps not locked
-		ReleaseBranchCurrent crb = ReleaseBranchFactory.getCRB(compUBL, repoFactory);
+		ReleaseBranchCurrent crb = ReleaseBranchFactory.getCRB(compUBL, repoUBL);
 		MDepsFile mdf = new MDepsFile(env.getUblVCS().getFileContent(crb.getName(), Utils.MDEPS_FILE_NAME, null));
-		mdf.replaceMDep(mdf.getMDeps(repoFactory).get(0).clone(""));
+		mdf.replaceMDep(mdf.getMDeps().get(0).clone(""));
 		env.getUblVCS().setFileContent(crb.getName(), Utils.MDEPS_FILE_NAME, mdf.toFileContent(), "mdeps not locked");
 		
 		// UBL should lock its mdeps
@@ -98,7 +98,7 @@ public class WorkflowForkTest extends WorkflowTestBase {
 		
 		// check UBL mdeps locked
 		mdf = new MDepsFile(env.getUblVCS().getFileContent(crb.getName(), Utils.MDEPS_FILE_NAME, null));
-		for (Component mdep : mdf.getMDeps(repoFactory)) {
+		for (Component mdep : mdf.getMDeps()) {
 			assertTrue(mdep.getVersion().isLocked());
 		}
 	}
@@ -107,7 +107,7 @@ public class WorkflowForkTest extends WorkflowTestBase {
 	public void testForkRootIfNestedNotDone() throws Exception {
 		forkAndBuild(compUBL);
 
-		env.generateFeatureCommit(env.getUnTillDbVCS(), compUnTillDb.getVcsRepository().getDevelopBranch(), "unTillDb feature added");
+		env.generateFeatureCommit(env.getUnTillDbVCS(), repoUnTillDb.getDevelopBranch(), "unTillDb feature added");
 
 		IAction action = execAndGetActionFork(compUBL);
 		assertActionDoesFork(action, compUBL, compUnTillDb);

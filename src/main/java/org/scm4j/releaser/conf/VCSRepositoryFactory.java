@@ -36,11 +36,25 @@ public class VCSRepositoryFactory {
 		}
 	}
 
-	public VCSRepository getVCSRepository(String componentName) {
+	public String getUrl(Component comp) {
+		String componentName = comp.getName();
+		return getUrl(componentName);
+	}
+
+	public String getUrl(String componentName) {
 		String url = cc.getPlaceholderedStringByName(componentName, "url", null);
 		if (url == null) {
 			throw new EComponentConfig("no repo url for: " + componentName);
 		}
+		return url;
+	}
+
+	public VCSRepository getVCSRepository(Component comp) {
+		return getVCSRepository(comp.getName());
+	}
+
+	public VCSRepository getVCSRepository(String componentName) {
+		String url = getUrl(componentName);
 
 		Credentials credentials;
 		String user = creds.getPropByName(url, "name", null);
