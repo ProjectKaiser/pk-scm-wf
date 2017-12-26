@@ -24,11 +24,9 @@ For version definitions ref. [semantic Versioning 2.0.0](http://semver.org/).
 # Usage
 
 1. Add [`version`](docs/data-structure.md#version-file) file to your repository, optionally [`mdeps`](docs/data-structure.md#mdeps-file)
-1. Install groovy
 1. Clone https://github.com/scm4j/scm4j-releaser-shell
 1. Execute `releaser`, it will create `cc`, `cc.yml`, `credentials.yml` files in $user.home/.scm4j folder. Edit these files (ref. comments there)
-1. Run `releaser status com.mycompany:my-root-component` to view status of your project
-1. Run `releaser build com.mycompany:my-root-component` to build your project (and all mdeps)
+1. Run `releaser (status|fork|build) com.mycompany:my-root-component`
 
 # Under the Hood
 
