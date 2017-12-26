@@ -9,6 +9,7 @@ import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
 import org.scm4j.vcs.api.workingcopy.VCSWorkspace;
 
 import java.io.File;
+import java.io.IOException;
 
 public class VCSRepositoryFactory {
 	
@@ -17,18 +18,20 @@ public class VCSRepositoryFactory {
 			"releaser-vcs-workspaces").getPath();
 	private final RegexConfig cc = new RegexConfig();
 	private final RegexConfig creds = new RegexConfig();
+	private boolean isLoaded;
 	
 	public void load(IConfigUrls configUrls) {
 		try {
 			String ccUrls = configUrls.getCCUrls();
 			if (ccUrls != null) {
 				cc.loadFromYamlUrls(ccUrls);
-			}
+			} 
 			String credsUrls = configUrls.getCredsUrl();
 			if (credsUrls != null) {
 				creds.loadFromYamlUrls(credsUrls);
 			}
-		} catch (Exception e) {
+			isLoaded = true;
+		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
 	}
@@ -68,5 +71,9 @@ public class VCSRepositoryFactory {
 			return VCSType.GIT;
 		}
 		return DEFAULT_VCS_TYPE;
+	}
+
+	public boolean isLoaded() {
+		return isLoaded;
 	}
 }

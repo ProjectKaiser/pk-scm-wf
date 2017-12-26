@@ -33,7 +33,7 @@ public final class Utils {
 		}
 		long start = System.currentTimeMillis();
 		T res = sup.get();
-		progress.reportStatus(String.format("%s: %s in %dms", message, comp == null ? "" : comp.getCoordsNoComment(),
+		progress.reportStatus(String.format("%s:%s in %dms", message, comp == null ? "" : " " + comp.getCoordsNoComment(),
 				System.currentTimeMillis() - start));
 		return res;
 	}

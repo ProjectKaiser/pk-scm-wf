@@ -38,6 +38,7 @@ import org.scm4j.releaser.Utils;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.DefaultConfigUrls;
+import org.scm4j.releaser.conf.VCSRepositoryFactory;
 import org.scm4j.releaser.exceptions.EReleaserException;
 import org.scm4j.releaser.exceptions.cmdline.ECmdLineNoCommand;
 import org.scm4j.releaser.exceptions.cmdline.ECmdLineNoProduct;
@@ -66,7 +67,8 @@ public class CLITest {
 		mockedActionTreeBuilder = mock(ActionTreeBuilder.class);
 		mockedStatusTreeBuilder = mock(ExtendedStatusBuilder.class);
 		mockedStatus = mock(ExtendedStatus.class);
-		mockedCLI = spy(new CLI(mockedPS, mockedStatusTreeBuilder, mockedActionTreeBuilder));
+		VCSRepositoryFactory mockedRepoFactory = mock(VCSRepositoryFactory.class);
+		mockedCLI = spy(new CLI(mockedPS, mockedStatusTreeBuilder, mockedActionTreeBuilder, mockedRepoFactory));
 	}
 
 	@Test
@@ -110,7 +112,7 @@ public class CLITest {
 		doReturn(mockedStatus).when(mockedStatusTreeBuilder).getAndCacheMinorStatus(eq(UNTILL), any(CachedStatuses.class));
 		doReturn(mockedAction).when(mockedActionTreeBuilder).getActionTreeFull(any(ExtendedStatus.class), any(CachedStatuses.class));
 
-		assertEquals(CLI.EXIT_CODE_OK, mockedCLI.exec(args));
+		assertEquals(CLI.EXIT_CODE_OK, mockedCLIExec(args));
 
 		verify(mockedActionTreeBuilder).getActionTreeFull(any(ExtendedStatus.class), any(CachedStatuses.class));
 		verify(mockedStatusTreeBuilder).getAndCacheMinorStatus(eq(UNTILL), any(CachedStatuses.class));
@@ -125,7 +127,7 @@ public class CLITest {
 		doReturn(mockedStatus).when(mockedStatusTreeBuilder).getAndCachePatchStatus(eq(coords), any(CachedStatuses.class));
 		doReturn(mockedAction).when(mockedActionTreeBuilder).getActionTreeFull(any(ExtendedStatus.class), any(CachedStatuses.class));
 
-		assertEquals(CLI.EXIT_CODE_OK, mockedCLI.exec(args));
+		assertEquals(CLI.EXIT_CODE_OK, mockedCLIExec(args));
 
 		verify(mockedActionTreeBuilder).getActionTreeFull(any(ExtendedStatus.class), any(CachedStatuses.class));
 		verify(mockedStatusTreeBuilder).getAndCachePatchStatus(eq(coords), any(CachedStatuses.class));
@@ -138,7 +140,7 @@ public class CLITest {
 		String[] args = new String[] { CLICommand.TAG.getCmdLineStr(), UNTILL };
 		doReturn(mockedAction).when(mockedActionTreeBuilder).getTagAction(UNTILL);
 
-		assertEquals(CLI.EXIT_CODE_OK, mockedCLI.exec(args));
+		assertEquals(CLI.EXIT_CODE_OK, mockedCLIExec(args));
 
 		verify(mockedActionTreeBuilder).getTagAction(UNTILL);
 		verify(mockedStatusTreeBuilder, never()).getAndCachePatchStatus(any(Component.class), any(CachedStatuses.class));
@@ -314,5 +316,11 @@ public class CLITest {
 		verify(mockedPS).println(CommandLine.getUsage());
 	}
 	
-	
+	int mockedCLIExec(String[] args) {
+		int res = mockedCLI.exec(args);
+		if (mockedCLI.getLastException() != null) {
+			throw mockedCLI.getLastException(); 
+		}
+		return res;
+	}
 }

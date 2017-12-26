@@ -37,10 +37,11 @@ public class CLI {
 	private final PrintStream out;
 	private final ActionTreeBuilder actionBuilder;
 	private final ExtendedStatusBuilder statusBuilder;
+	private final IConfigUrls configUrls;
+	private final VCSRepositoryFactory repoFactory;
 	private IAction action;
 	private RuntimeException lastException;
 	private Runnable preExec = null;
-	private IConfigUrls configUrls;
 	
 	public CLI() {
 		this(System.out, new DefaultConfigUrls());
@@ -48,17 +49,17 @@ public class CLI {
 	
 	public CLI(PrintStream out, IConfigUrls configUrls) {
 		this.out = out;
-		VCSRepositoryFactory repoFactory = new VCSRepositoryFactory();
-		repoFactory.load(configUrls);
+		repoFactory = new VCSRepositoryFactory();
 		this.statusBuilder = new ExtendedStatusBuilder(repoFactory);
 		this.actionBuilder = new ActionTreeBuilder(repoFactory);
 		this.configUrls = configUrls;
 	}
 	
-	public CLI(PrintStream out, ExtendedStatusBuilder statusBuilder, ActionTreeBuilder actionBuilder) {
+	public CLI(PrintStream out, ExtendedStatusBuilder statusBuilder, ActionTreeBuilder actionBuilder, VCSRepositoryFactory repoFactory) {
 		this.out = out;
 		this.statusBuilder = statusBuilder;
 		this.actionBuilder = actionBuilder;
+		this.repoFactory = repoFactory;
 		this.configUrls = new DefaultConfigUrls();
 	}
 
@@ -114,6 +115,7 @@ public class CLI {
 		try {
 			try {
 				out.println("scm4j-releaser " + CLI.class.getPackage().getSpecificationVersion());
+				repoFactory.load(configUrls);
 				try {
 					initWorkingDir();
 				} catch (Exception e) {
@@ -192,11 +194,15 @@ public class CLI {
 	}
 	
 	void printExceptionExecution(String[] args, Exception e, PrintStream ps) {
-		printException("EXECUTION FIALED: ", args, e, ps);
+		printException("EXECUTION FAILED: ", args, e, ps);
 	}
 	
 	void printExceptionInitDir(String[] args, Exception e, PrintStream ps) {
 		printException("FAILED TO INIT WORKING FOLDER: ", args, e, ps);
+	}
+	
+	void printExceptionConfig(String[] args, Exception e, PrintStream ps) {
+		printException("FAILED TO LOAD CONFIG: ", args, e, ps);
 	}
 	
 	private void printException(String prefixMessage, String[] args, Exception e, PrintStream ps) {
