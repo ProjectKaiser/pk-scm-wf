@@ -16,6 +16,7 @@ import static org.mockito.Mockito.verify;
 import java.io.File;
 import java.io.PrintStream;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -45,6 +46,7 @@ import org.scm4j.releaser.exceptions.cmdline.ECmdLineUnknownOption;
 
 public class CLITest {
 
+	private static final String TEST_CONFIG_CONTENT = "# test config content";
 	private static final String TEST_EXCEPTION = "test exception";
 	private static final String UNTILL = "eu.untill:unTill";
 	private IAction mockedAction;
@@ -269,10 +271,12 @@ public class CLITest {
 		String[] args = new String[] {};
 		Utils.waitForDeleteDir(Utils.BASE_WORKING_DIR);
 		clearEnvVars();
+		File customConfigTemplateFile = new File(Utils.BASE_WORKING_DIR, CLI.CONFIG_TEMPLATES.get(0));
+		FileUtils.writeStringToFile(customConfigTemplateFile, TEST_CONFIG_CONTENT, StandardCharsets.UTF_8);
 		new CLI().exec(args);
 		
 		List<String> srcFileNames = new ArrayList<>();
-		for (File srcFile : FileUtils.listFiles(getResourceFile(CLI.class, CLI.CONFIG_TEMPLATES), FileFilterUtils.trueFileFilter(), FileFilterUtils.trueFileFilter())) {
+		for (File srcFile : FileUtils.listFiles(getResourceFile(CLI.class, CLI.CONFIG_TEMPLATES_PATH), FileFilterUtils.trueFileFilter(), FileFilterUtils.trueFileFilter())) {
 			srcFileNames.add(srcFile.getName());
 		}
 
@@ -283,6 +287,7 @@ public class CLITest {
 		
 		assertTrue(dstFileNames.containsAll(srcFileNames));
 		assertEquals(srcFileNames.size(), dstFileNames.size());
+		assertEquals(TEST_CONFIG_CONTENT, FileUtils.readFileToString(customConfigTemplateFile, StandardCharsets.UTF_8));
 	}
 	
 	private File getResourceFile(Class<?> forClass, String path) throws Exception {

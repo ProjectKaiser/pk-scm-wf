@@ -3,6 +3,8 @@ package org.scm4j.releaser.cli;
 import java.io.File;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.util.Arrays;
+import java.util.List;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.ArrayUtils;
@@ -27,9 +29,10 @@ import org.scm4j.releaser.exceptions.cmdline.ECmdLineUnknownCommand;
 import org.scm4j.releaser.exceptions.cmdline.ECmdLineUnknownOption;
 
 public class CLI {
-	public static final String CONFIG_TEMPLATES = "config-templates";
+	public static final String CONFIG_TEMPLATES_PATH = "config-templates/";
 	public static final int EXIT_CODE_OK = 0;
 	public static final int EXIT_CODE_ERROR = 1;
+	public static final List<String> CONFIG_TEMPLATES = Arrays.asList("cc", "cc.yml", "credentials.yml");
 
 	private final PrintStream out;
 	private final ActionTreeBuilder actionBuilder;
@@ -150,20 +153,18 @@ public class CLI {
 	}
 
 	void initWorkingDir() throws Exception {
-		if (Utils.BASE_WORKING_DIR.exists() || configUrls.getCCUrls() != null || configUrls.getCredsUrl() != null) {
+		if (configUrls.getCCUrls() != null || configUrls.getCredsUrl() != null) {
 			return;
 		}
 		
 		Utils.BASE_WORKING_DIR.mkdirs();
-		InputStream is = this.getClass().getResourceAsStream(CONFIG_TEMPLATES + "/cc");
-		FileUtils.copyInputStreamToFile(is, new File(Utils.BASE_WORKING_DIR, "cc"));
-		
-		is = this.getClass().getResourceAsStream(CONFIG_TEMPLATES + "/cc.yml");
-		FileUtils.copyInputStreamToFile(is, new File(Utils.BASE_WORKING_DIR, "cc.yml"));
-		
-		is = this.getClass().getResourceAsStream(CONFIG_TEMPLATES + "/credentials.yml");
-		FileUtils.copyInputStreamToFile(is, new File(Utils.BASE_WORKING_DIR, "credentials.yml"));
-		
+		for (String ct : CONFIG_TEMPLATES) {
+			File ctFile = new File(Utils.BASE_WORKING_DIR, ct);
+			if (!ctFile.exists()) {
+				InputStream is = this.getClass().getResourceAsStream(CONFIG_TEMPLATES_PATH + ct);
+				FileUtils.copyInputStreamToFile(is, ctFile);
+			}
+		}
 	}
 	
 	void validateCommandLine(CommandLine cmd) {
