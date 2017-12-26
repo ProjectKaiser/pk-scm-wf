@@ -1,6 +1,7 @@
 package org.scm4j.releaser.cli;
 
 import java.io.File;
+import java.io.InputStream;
 import java.io.PrintStream;
 
 import org.apache.commons.io.FileUtils;
@@ -154,8 +155,15 @@ public class CLI {
 		}
 		
 		Utils.BASE_WORKING_DIR.mkdirs();
-		File resourcesFrom = Utils.getResourceFile(this.getClass(), CONFIG_TEMPLATES);
-		FileUtils.copyDirectory(resourcesFrom, Utils.BASE_WORKING_DIR);
+		InputStream is = this.getClass().getResourceAsStream(CONFIG_TEMPLATES + "/cc");
+		FileUtils.copyInputStreamToFile(is, new File(Utils.BASE_WORKING_DIR, "cc"));
+		
+		is = this.getClass().getResourceAsStream(CONFIG_TEMPLATES + "/cc.yml");
+		FileUtils.copyInputStreamToFile(is, new File(Utils.BASE_WORKING_DIR, "cc.yml"));
+		
+		is = this.getClass().getResourceAsStream(CONFIG_TEMPLATES + "/credentials.yml");
+		FileUtils.copyInputStreamToFile(is, new File(Utils.BASE_WORKING_DIR, "credentials.yml"));
+		
 	}
 	
 	void validateCommandLine(CommandLine cmd) {

@@ -15,6 +15,7 @@ import static org.mockito.Mockito.verify;
 
 import java.io.File;
 import java.io.PrintStream;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -271,7 +272,7 @@ public class CLITest {
 		new CLI().exec(args);
 		
 		List<String> srcFileNames = new ArrayList<>();
-		for (File srcFile : FileUtils.listFiles(Utils.getResourceFile(CLI.class, CLI.CONFIG_TEMPLATES), FileFilterUtils.trueFileFilter(), FileFilterUtils.trueFileFilter())) {
+		for (File srcFile : FileUtils.listFiles(getResourceFile(CLI.class, CLI.CONFIG_TEMPLATES), FileFilterUtils.trueFileFilter(), FileFilterUtils.trueFileFilter())) {
 			srcFileNames.add(srcFile.getName());
 		}
 
@@ -282,6 +283,11 @@ public class CLITest {
 		
 		assertTrue(dstFileNames.containsAll(srcFileNames));
 		assertEquals(srcFileNames.size(), dstFileNames.size());
+	}
+	
+	private File getResourceFile(Class<?> forClass, String path) throws Exception {
+		URL url = forClass.getResource(path);
+		return new File(url.toURI());
 	}
 	
 	@SuppressWarnings("deprecation")

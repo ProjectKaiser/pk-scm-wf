@@ -1,5 +1,12 @@
 package org.scm4j.releaser;
 
+import java.io.File;
+import java.util.Collection;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ForkJoinTask;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
+
 import org.apache.commons.io.FileUtils;
 import org.scm4j.commons.Version;
 import org.scm4j.commons.progress.IProgress;
@@ -10,16 +17,9 @@ import org.scm4j.vcs.api.workingcopy.IVCSRepositoryWorkspace;
 import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
 import org.scm4j.vcs.api.workingcopy.VCSWorkspace;
 
-import java.io.File;
-import java.net.URL;
-import java.util.Collection;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.ForkJoinTask;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 public final class Utils {
-	
+
 	public static final File RELEASES_DIR = new File(System.getProperty("user.dir"), "releases");
 	public static final String ZERO_PATCH = "0";
 	public static final String VER_FILE_NAME = "version";
@@ -48,7 +48,7 @@ public final class Utils {
 	public static <T> void async(Collection<T> collection, Consumer<? super T> action) {
 		async(collection, action, ForkJoinPool.commonPool());
 	}
-	
+
 	public static <T> void async(Collection<T> collection, Consumer<? super T> action, ForkJoinPool pool) {
 		if (collection.isEmpty()) {
 			return;
@@ -72,23 +72,23 @@ public final class Utils {
 	public static String getReleaseBranchName(Component comp, Version forVersion) {
 		return comp.getVcsRepository().getReleaseBranchPrefix() + forVersion.getReleaseNoPatchString();
 	}
-	
+
 	public static File getBuildDir(Component comp, Version forVersion) {
 		IVCSWorkspace ws = new VCSWorkspace(RELEASES_DIR.toString());
 		IVCSRepositoryWorkspace rws = ws.getVCSRepositoryWorkspace(comp.getUrl());
 		return rws.getRepoFolder();
 	}
-	
+
 	public static TagDesc getTagDesc(String verStr) {
 		String tagMessage = verStr + " release";
 		return new TagDesc(verStr, tagMessage);
 	}
-	
+
 	public static Version getDevVersion(Component comp) {
 		return new Version(
 				comp.getVCS().getFileContent(comp.getVcsRepository().getDevelopBranch(), Utils.VER_FILE_NAME, null));
 	}
-	
+
 	public static void waitForDeleteDir(File dir) throws Exception {
 		for (Integer i = 1; i <= 10; i++) {
 			try {
@@ -101,12 +101,6 @@ public final class Utils {
 		if (dir.exists()) {
 			throw new Exception("failed to delete " + dir);
 		}
-	}
-	
-	public static File getResourceFile(Class<?> forClass, String path) throws Exception{
-		System.out.println(forClass.getResource(path).getPath());
-		URL url = forClass.getResource(path);
-		return new File(url.toURI());
 	}
 
 	public static String getReleaseBranchName(Component comp) {
