@@ -4,7 +4,7 @@ import org.scm4j.commons.RegexConfig;
 import org.scm4j.releaser.Utils;
 import org.scm4j.releaser.VCSFactory;
 import org.scm4j.releaser.builders.BuilderFactory;
-import org.scm4j.releaser.exceptions.EComponentConfig;
+import org.scm4j.releaser.exceptions.EComponentConfigNoUrl;
 import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
 import org.scm4j.vcs.api.workingcopy.VCSWorkspace;
 
@@ -16,10 +16,18 @@ public class VCSRepositoryFactory {
 	public static final VCSType DEFAULT_VCS_TYPE = VCSType.GIT;
 	public static final String DEFAULT_VCS_WORKSPACE_DIR = new File(Utils.BASE_WORKING_DIR,
 			"releaser-vcs-workspaces").getPath();
-	private final RegexConfig cc = new RegexConfig();
-	private final RegexConfig creds = new RegexConfig();
-	private boolean isLoaded;
-	
+	private final RegexConfig cc;
+	private final RegexConfig creds;
+
+	public VCSRepositoryFactory() {
+		this(new RegexConfig(), new RegexConfig());
+	}
+
+	public VCSRepositoryFactory(RegexConfig cc, RegexConfig creds) {
+		this.cc = cc;
+		this.creds = creds;
+	}
+
 	public void load(IConfigUrls configUrls) {
 		try {
 			String ccUrls = configUrls.getCCUrls();
@@ -30,7 +38,6 @@ public class VCSRepositoryFactory {
 			if (credsUrls != null) {
 				creds.loadFromYamlUrls(credsUrls);
 			}
-			isLoaded = true;
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
@@ -44,7 +51,7 @@ public class VCSRepositoryFactory {
 	public String getUrl(String componentName) {
 		String url = cc.getPlaceholderedStringByName(componentName, "url", null);
 		if (url == null) {
-			throw new EComponentConfig("no repo url for: " + componentName);
+			throw new EComponentConfigNoUrl(componentName);
 		}
 		return url;
 	}
@@ -85,9 +92,5 @@ public class VCSRepositoryFactory {
 			return VCSType.GIT;
 		}
 		return DEFAULT_VCS_TYPE;
-	}
-
-	public boolean isLoaded() {
-		return isLoaded;
 	}
 }

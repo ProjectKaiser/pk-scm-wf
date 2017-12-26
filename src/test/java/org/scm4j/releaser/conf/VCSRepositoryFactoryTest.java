@@ -1,15 +1,19 @@
 package org.scm4j.releaser.conf;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
-
-import java.io.File;
-
+import com.google.common.io.Resources;
 import org.junit.Before;
 import org.junit.Test;
+import org.scm4j.commons.RegexConfig;
+import org.scm4j.releaser.exceptions.EComponentConfigNoUrl;
 
-import com.google.common.io.Resources;
+import java.io.File;
+import java.io.IOException;
+
+import static org.hamcrest.CoreMatchers.is;
+import static org.mockito.Matchers.any;
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
 
 public class VCSRepositoryFactoryTest {
 
@@ -95,6 +99,52 @@ public class VCSRepositoryFactoryTest {
 		// expect no exceptions
 		repoFactory = new VCSRepositoryFactory();
 		repoFactory.load(configUrls);
+	}
+
+	@Test
+	public void testNoRepoUrlException() {
+		IConfigUrls configUrls = new IConfigUrls() {
+			@Override
+			public String getCCUrls() {
+				return "";
+			}
+
+			@Override
+			public String getCredsUrl() {
+				return "";
+			}
+		};
+		VCSRepositoryFactory repoFactory = new VCSRepositoryFactory();
+		repoFactory.load(configUrls);
+		try {
+			repoFactory.getUrl("wrong comp");
+			fail();
+		} catch (EComponentConfigNoUrl e) {
+		}
+	}
+
+	@Test
+	public void testIOExceptionOnLoad() throws IOException {
+		RegexConfig mockedCC = mock(RegexConfig.class);
+		IOException testException = new IOException("test exception");
+		doThrow(testException).when(mockedCC).loadFromYamlUrls(any(String[].class));
+		VCSRepositoryFactory repoFactory = new VCSRepositoryFactory(mockedCC, new RegexConfig());
+		IConfigUrls cu = new IConfigUrls() {
+			@Override
+			public String getCCUrls() {
+				return "";
+			}
+
+			@Override
+			public String getCredsUrl() {
+				return "";
+			}
+		};
+		try {
+			repoFactory.load(cu);
+		} catch (RuntimeException e) {
+			assertEquals(testException, e.getCause());
+		}
 	}
 }
 

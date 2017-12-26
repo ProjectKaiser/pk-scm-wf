@@ -5,7 +5,7 @@ import org.scm4j.releaser.TestEnvironment;
 import org.scm4j.releaser.Utils;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.VCSRepository;
-import org.scm4j.releaser.exceptions.EComponentConfig;
+import org.scm4j.releaser.exceptions.EComponentConfigNoUrl;
 import org.scm4j.vcs.api.IVCS;
 
 import java.util.ArrayList;
@@ -42,7 +42,7 @@ public class DevelopBranchTest {
 			try {
 				db.getVersion();
 				fail();
-			} catch (EComponentConfig e) {
+			} catch (EComponentConfigNoUrl e) {
 				
 			}
 		}
