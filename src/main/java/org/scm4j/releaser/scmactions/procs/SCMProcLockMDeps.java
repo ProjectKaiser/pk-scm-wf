@@ -16,16 +16,14 @@ import org.scm4j.vcs.api.IVCS;
 public class SCMProcLockMDeps implements ISCMProc {
 	
 	private final IVCS vcs;
-	private final Component comp;
 	private final ExtendedStatus status;
 	private final CachedStatuses cache;
 	private final VCSRepositoryFactory repoFactory;
 	private final VCSRepository repo;
 
-	public SCMProcLockMDeps(Component comp, CachedStatuses cache, VCSRepositoryFactory repoFactory, VCSRepository repo) {
+	public SCMProcLockMDeps(CachedStatuses cache, VCSRepositoryFactory repoFactory, VCSRepository repo) {
 		this.repo = repo;
 		status = cache.get(repo.getUrl());
-		this.comp = comp;
 		vcs = repo.getVCS();
 		this.cache = cache;
 		this.repoFactory = repoFactory;
@@ -33,13 +31,13 @@ public class SCMProcLockMDeps implements ISCMProc {
 
 	@Override
 	public void execute(IProgress progress) {
-		ReleaseBranchFactory.getCRB(comp, repo);
+		ReleaseBranchFactory.getCRB(repo);
 		if (status.getSubComponents().isEmpty()) {
 			progress.reportStatus("no mdeps to lock");
 			return;
 		}
-		MDepsFile currentMDepsFile = new MDepsFile(repo.getVCS().getFileContent(
-				Utils.getReleaseBranchName(repo, status.getNextVersion()), Utils.MDEPS_FILE_NAME, null));//MDepsFile.fromMDeps(status.getSubComponents().keySet());
+		String rbName = Utils.getReleaseBranchName(repo, status.getNextVersion());
+		MDepsFile currentMDepsFile = new MDepsFile(vcs.getFileContent(rbName, Utils.MDEPS_FILE_NAME, null));
 
 		StringBuilder sb = new StringBuilder();
 		Version newVersion;
@@ -54,7 +52,7 @@ public class SCMProcLockMDeps implements ISCMProc {
 		if (sb.length() > 0) {
 			sb.setLength(sb.length() - 2);
 			progress.reportStatus("mdeps to lock:\r\n" + sb.toString());
-			Utils.reportDuration(() -> vcs.setFileContent(Utils.getReleaseBranchName(repo, status.getNextVersion()), Utils.MDEPS_FILE_NAME, currentMDepsFile.toFileContent(), LogTag.SCM_MDEPS),
+			Utils.reportDuration(() -> vcs.setFileContent(rbName, Utils.MDEPS_FILE_NAME, currentMDepsFile.toFileContent(), LogTag.SCM_MDEPS),
 					"lock mdeps" , null, progress);
 		}
 	}

@@ -85,7 +85,7 @@ public class WorkflowForkTest extends WorkflowTestBase {
 		fork(compUBL);
 		
 		// simulate mdeps not locked
-		ReleaseBranchCurrent crb = ReleaseBranchFactory.getCRB(compUBL, repoUBL);
+		ReleaseBranchCurrent crb = ReleaseBranchFactory.getCRB(repoUBL);
 		MDepsFile mdf = new MDepsFile(env.getUblVCS().getFileContent(crb.getName(), Utils.MDEPS_FILE_NAME, null));
 		mdf.replaceMDep(mdf.getMDeps().get(0).clone(""));
 		env.getUblVCS().setFileContent(crb.getName(), Utils.MDEPS_FILE_NAME, mdf.toFileContent(), "mdeps not locked");

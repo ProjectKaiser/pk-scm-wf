@@ -1,25 +1,25 @@
 package org.scm4j.releaser.conf;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.scm4j.releaser.TestEnvironment;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Arrays;
 
-import static org.junit.Assert.*;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.scm4j.releaser.TestEnvironment;
 
 public class MDepsFileTest {
 
 	private static TestEnvironment env = new TestEnvironment();
-	private static VCSRepositoryFactory repoFactory;
 	
 	@BeforeClass
 	public static void setUp() throws Exception {
 		env.generateTestEnvironmentNoVCS();
-		repoFactory = env.getRepoFactory();
 	}
 
 	@AfterClass

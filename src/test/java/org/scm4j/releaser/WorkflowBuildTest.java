@@ -126,7 +126,7 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		build(compUnTillDb);
 		
 		// add feature to existing unTillDb release
-		ReleaseBranchCurrent crb = ReleaseBranchFactory.getCRB(compUnTillDb, repoUnTillDb);
+		ReleaseBranchCurrent crb = ReleaseBranchFactory.getCRB(repoUnTillDb);
 		env.generateFeatureCommit(env.getUnTillDbVCS(), crb.getName(), "patch feature added");
 
 		// build unTillDb patch
@@ -140,12 +140,12 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		assertActionDoesNothing(action, compUnTillDb);
 		
 		// check unTill actualized unTillDb version
-		crb = ReleaseBranchFactory.getCRB(compUnTill, repoUnTill);
+		crb = ReleaseBranchFactory.getCRB(repoUnTill);
 		MDepsFile mdf = new MDepsFile(env.getUnTillVCS().getFileContent(crb.getName(), Utils.MDEPS_FILE_NAME, null));
 		assertThat(mdf.getMDeps(), Matchers.hasItem(compUnTillDbPatch));
 		
 		// check UBL actualized unTillDb version
-		crb = ReleaseBranchFactory.getCRB(compUBL, repoUBL);
+		crb = ReleaseBranchFactory.getCRB(repoUBL);
 		mdf = new MDepsFile(env.getUblVCS().getFileContent(crb.getName(), Utils.MDEPS_FILE_NAME, null));
 		assertThat(mdf.getMDeps(), Matchers.hasItem(compUnTillDbPatch));
 	}

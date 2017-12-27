@@ -36,7 +36,7 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 
 		// add feature to unTillDb release/2.59
 		Component compUnTillDbVersioned = compUnTillDb.clone(env.getUnTillDbVer());
-		ReleaseBranchPatch rb = ReleaseBranchFactory.getReleaseBranchPatch(compUnTillDbVersioned, repoUnTillDb);
+		ReleaseBranchPatch rb = ReleaseBranchFactory.getReleaseBranchPatch(compUnTillDbVersioned.getVersion(), repoUnTillDb);
 		env.generateFeatureCommit(env.getUnTillDbVCS(), rb.getName(), "patch feature merged");
 		
 		// build all patches, delayed tag
@@ -117,7 +117,7 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 		IAction action = execAndGetActionTag(compUnTill, () -> {
 			// simulate tag exists already
 			// tagging should be skipped with no exceptions
-			ReleaseBranchCurrent rb = ReleaseBranchFactory.getCRB(compUnTill, repoUnTill);
+			ReleaseBranchCurrent rb = ReleaseBranchFactory.getCRB(repoUnTill);
 			Map<String, String> content = dtf.getContent();
 			for (Map.Entry<String, String> entry : content.entrySet()) {
 				if (repoUnTill.getUrl().equals(entry.getKey())) {
@@ -162,7 +162,7 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 		assertActionDoesBuild(action, compUnTillDb);
 
 		String revisionToTag = dtf.getRevisitonByUrl(repoUnTillDb.getUrl());
-		ReleaseBranchCurrent rb = ReleaseBranchFactory.getCRB(compUnTillDb, repoUnTillDb);
+		ReleaseBranchCurrent rb = ReleaseBranchFactory.getCRB(repoUnTillDb);
 		env.getUnTillDbVCS().createTag(rb.getName(), "other-tag", "other tag message", revisionToTag);
 		
 		// simulate tag exists
@@ -183,7 +183,7 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 	
 	private boolean isPreHeadCommitTaggedWithVersion(Component comp) {
 		VCSRepository repo = repoFactory.getVCSRepository(comp);
-		ReleaseBranchCurrent rb = ReleaseBranchFactory.getCRB(comp, repo);
+		ReleaseBranchCurrent rb = ReleaseBranchFactory.getCRB(repo);
 		List<VCSTag> tags = repo.getVCS().getTagsOnRevision(repo.getVCS().getCommitsRange(rb.getName(), null, WalkDirection.DESC, 2).get(1).getRevision());
 		for (VCSTag tag : tags) {
 			if (tag.getTagName().equals(rb.getVersion().toPreviousPatch().toReleaseString())) {

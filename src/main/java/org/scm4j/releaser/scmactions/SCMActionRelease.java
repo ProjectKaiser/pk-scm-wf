@@ -36,7 +36,7 @@ public class SCMActionRelease extends ActionAbstract {
 		case FORK:
 			procs.add(new SCMProcForkBranch(comp, cache, repo));
 		case LOCK:
-			getProcs().add(new SCMProcLockMDeps(comp, cache, repoFactory, repo));
+			getProcs().add(new SCMProcLockMDeps(cache, repoFactory, repo));
 			bsTo = BuildStatus.LOCK;
 			if (actionSet == ActionSet.FORK_ONLY) {
 				break;
@@ -44,7 +44,7 @@ public class SCMActionRelease extends ActionAbstract {
 		case BUILD_MDEPS:
 		case ACTUALIZE_PATCHES:
 			if (bsFrom.ordinal() > BuildStatus.LOCK.ordinal() && actionSet == ActionSet.FULL) {
-				getProcs().add(new SCMProcActualizePatches(comp, cache, repoFactory, repo));
+				getProcs().add(new SCMProcActualizePatches(cache, repoFactory, repo));
 			}
 		case BUILD:
 			if (actionSet == ActionSet.FULL) {

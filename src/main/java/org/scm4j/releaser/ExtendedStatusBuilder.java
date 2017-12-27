@@ -84,7 +84,7 @@ public class ExtendedStatusBuilder {
 	}
 	
 	private ExtendedStatus getMinorStatus(Component comp, CachedStatuses cache, IProgress progress, VCSRepository repo) {
-		ReleaseBranchCurrent rb = reportDuration(() -> ReleaseBranchFactory.getCRB(comp, repo), "CRB created", comp, progress);
+		ReleaseBranchCurrent rb = reportDuration(() -> ReleaseBranchFactory.getCRB(repo), "CRB created", comp, progress);
 		LinkedHashMap<Component, ExtendedStatus> subComponents = new LinkedHashMap<>();
 		
 		BuildStatus status;
@@ -112,7 +112,7 @@ public class ExtendedStatusBuilder {
 	}
 
 	private ExtendedStatus getPatchStatus(Component comp, CachedStatuses cache, IProgress progress, VCSRepository repo) {
-		ReleaseBranchPatch rb = reportDuration(() -> ReleaseBranchFactory.getReleaseBranchPatch(comp, repo),
+		ReleaseBranchPatch rb = reportDuration(() -> ReleaseBranchFactory.getReleaseBranchPatch(comp.getVersion(), repo),
 				"RB created", comp, progress);
 		LinkedHashMap<Component, ExtendedStatus> subComponents = new LinkedHashMap<>();
 		
@@ -234,13 +234,12 @@ public class ExtendedStatusBuilder {
 		}
 		
 		// develop branch has valuable commits => YES
-
 		if (reportDuration(() -> new DevelopBranch(comp, repo).isModified(), "is develop modified check", comp, progress)) {
 			return true;
 		}
 		
 		ExtendedStatus mdepStatus;
-		for (Component mdep : rb.getCRBMDeps(progress, repo)) {
+		for (Component mdep : rb.getCRBMDeps(progress, repo, comp)) {
 			mdepStatus = cache.get(repoFactory.getUrl(mdep));
 			// any mdeps needs FORK => YES
 			if (mdepStatus.getStatus() != BuildStatus.DONE) {

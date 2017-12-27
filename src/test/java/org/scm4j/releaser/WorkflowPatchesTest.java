@@ -33,7 +33,7 @@ public class WorkflowPatchesTest extends WorkflowTestBase {
 		forkAndBuild(compUnTill);
 
 		// add feature to existing unTillDb release
-		ReleaseBranchCurrent crb = ReleaseBranchFactory.getCRB(compUnTillDb, repoUnTillDb);
+		ReleaseBranchCurrent crb = ReleaseBranchFactory.getCRB(repoUnTillDb);
 		env.generateFeatureCommit(env.getUnTillDbVCS(), crb.getName(), "patch feature added");
 
 		// build unTillDb patch
@@ -41,7 +41,7 @@ public class WorkflowPatchesTest extends WorkflowTestBase {
 		IAction action = execAndGetActionBuild(compUnTillDbPatch);
 		assertActionDoesBuild(action, compUnTillDb);
 
-		ReleaseBranchPatch rb = ReleaseBranchFactory.getReleaseBranchPatch(compUnTillDbPatch, repoUnTillDb);
+		ReleaseBranchPatch rb = ReleaseBranchFactory.getReleaseBranchPatch(compUnTillDbPatch.getVersion(), repoUnTillDb);
 		assertEquals(env.getUnTillDbVer().toReleaseZeroPatch().toNextPatch().toNextPatch(),
 				rb.getVersion());
 		ExtendedStatusBuilder builder = new ExtendedStatusBuilder(repoFactory);
@@ -54,7 +54,7 @@ public class WorkflowPatchesTest extends WorkflowTestBase {
 		assertActionDoesNothing(action, compUnTillDb);
 
 		// check unTill uses new untillDb and UBL versions in existing unTill release branch.
-		rb = ReleaseBranchFactory.getReleaseBranchPatch(compUnTill.clone(env.getUnTillVer().toRelease()), repoUnTill);
+		rb = ReleaseBranchFactory.getReleaseBranchPatch(compUnTill.clone(env.getUnTillVer().toRelease()).getVersion(), repoUnTill);
 		
 		List<Component> mdeps = rb.getMDeps();
 		for (Component mdep : mdeps) {
@@ -77,18 +77,18 @@ public class WorkflowPatchesTest extends WorkflowTestBase {
 		env.generateFeatureCommit(env.getUnTillDbVCS(), repoUnTillDb.getDevelopBranch(), "feature added");
 		forkAndBuild(compUnTillDb, 2);
 
-		ReleaseBranchCurrent crb = ReleaseBranchFactory.getCRB(compUnTillDb, repoUnTillDb);
+		ReleaseBranchCurrent crb = ReleaseBranchFactory.getCRB(repoUnTillDb);
 		assertEquals(env.getUnTillDbVer().toNextMinor().toRelease(), crb.getVersion());
 
 		// add feature for 2.59.1
 		Component compToPatch = new Component(UNTILLDB + ":2.59.1");
-		ReleaseBranchPatch rb = ReleaseBranchFactory.getReleaseBranchPatch(compToPatch, repoUnTillDb);
+		ReleaseBranchPatch rb = ReleaseBranchFactory.getReleaseBranchPatch(compToPatch.getVersion(), repoUnTillDb);
 		env.generateFeatureCommit(env.getUnTillDbVCS(), rb.getName(), "2.59.1 feature merged");
 
 		// build new unTillDb patch 2.59.1
 		IAction action = execAndGetActionBuild(compToPatch);
 		assertActionDoesBuild(action, compUnTillDb);
-		rb = ReleaseBranchFactory.getReleaseBranchPatch(compToPatch, repoUnTillDb);
+		rb = ReleaseBranchFactory.getReleaseBranchPatch(compToPatch.getVersion(), repoUnTillDb);
 		assertEquals(dbUnTillDb.getVersion().toPreviousMinor().toPreviousMinor().toNextPatch().toRelease(), rb.getVersion());
 	}
 	
@@ -123,7 +123,7 @@ public class WorkflowPatchesTest extends WorkflowTestBase {
 		// simulate non-locked mdep
 		Component nonLockedMDep = new Component(UNTILL);
 		MDepsFile mdf = new MDepsFile(UNTILL);
-		ReleaseBranchCurrent rb = ReleaseBranchFactory.getCRB(compUnTillDb, repoUnTillDb);
+		ReleaseBranchCurrent rb = ReleaseBranchFactory.getCRB(repoUnTillDb);
 		env.getUnTillDbVCS().setFileContent(rb.getName(), Utils.MDEPS_FILE_NAME,
 				mdf.toFileContent(), "mdeps file added");
 
@@ -144,7 +144,7 @@ public class WorkflowPatchesTest extends WorkflowTestBase {
 		forkAndBuild(compUnTillDb);
 
 		// add an igonored feature and tag it
-		ReleaseBranchCurrent crb = ReleaseBranchFactory.getCRB(compUnTillDb, repoUnTillDb);
+		ReleaseBranchCurrent crb = ReleaseBranchFactory.getCRB(repoUnTillDb);
 		Component compUnTillDbVersioned = compUnTillDb.clone(crb.getVersion());
 		env.generateFeatureCommit(env.getUnTillDbVCS(), crb.getName(), LogTag.SCM_IGNORE + " feature megred");
 		env.getUnTillDbVCS().createTag(crb.getName(), "tag", "tag", null);
@@ -160,7 +160,7 @@ public class WorkflowPatchesTest extends WorkflowTestBase {
 
 		// simulate no commits left in release branch, i.e. all igonred and no tags.
 		// loop in noValueableCommitsAfterLastTag should be interrupted
-		ReleaseBranchCurrent crb = ReleaseBranchFactory.getCRB(compUnTillDb, repoUnTillDb);
+		ReleaseBranchCurrent crb = ReleaseBranchFactory.getCRB(repoUnTillDb);
 		Component compVersioned = compUnTillDb.clone(crb.getVersion());
 		IVCS mockedVCS = spy(env.getUnTillDbVCS());
 		VCSRepository mockedRepo = mock(VCSRepository.class);

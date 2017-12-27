@@ -32,7 +32,7 @@ public class CLI {
 	private final IConfigUrls configUrls;
 	private final VCSRepositoryFactory repoFactory;
 	private IAction action;
-	private RuntimeException lastException;
+	private RuntimeException lastException = null;
 	private Runnable preExec = null;
 	
 	public CLI() {

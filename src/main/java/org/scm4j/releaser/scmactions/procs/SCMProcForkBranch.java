@@ -14,7 +14,6 @@ import org.scm4j.vcs.api.IVCS;
 public class SCMProcForkBranch implements ISCMProc {
 	
 	private final DevelopBranch db;
-	private final Component comp;
 	private final IVCS vcs;
 	private final ExtendedStatus status;
 	private final String newBranchName;
@@ -26,7 +25,6 @@ public class SCMProcForkBranch implements ISCMProc {
 		vcs = repo.getVCS();
 		status = cache.get(repo.getUrl());
 		newBranchName = Utils.getReleaseBranchName(repo, status.getNextVersion());
-		this.comp = comp;
 	}
 	
 	@Override

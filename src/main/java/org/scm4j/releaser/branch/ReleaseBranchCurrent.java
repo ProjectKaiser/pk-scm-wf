@@ -15,15 +15,13 @@ public class ReleaseBranchCurrent {
 	private final boolean exists;
 	private final String name;
 	private final Version version;
-	private final Component comp;
 	private final Version devVersion;
 
-	public ReleaseBranchCurrent(List<Component> mdeps, boolean exists, String name, Version version, Component comp, Version devVersion) {
+	public ReleaseBranchCurrent(List<Component> mdeps, boolean exists, String name, Version version, Version devVersion) {
 		this.mdeps = mdeps;
 		this.exists = exists;
 		this.name = name;
 		this.version = version;
-		this.comp = comp;
 		this.devVersion = devVersion;
 	}
 
@@ -43,8 +41,8 @@ public class ReleaseBranchCurrent {
 		return version;
 	}
 
-	public List<Component> getCRBMDeps(IProgress progress, VCSRepository repo) {
-		return reportDuration(() -> ReleaseBranchFactory.getMDepsRelease(comp, name, repo), "get CRB mdeps", comp, progress);
+	public List<Component> getCRBMDeps(IProgress progress, VCSRepository repo, Component comp) {
+		return reportDuration(() -> ReleaseBranchFactory.getMDepsRelease(name, repo), "get CRB mdeps", comp, progress);
 	}
 
 	public Version getDevVersion() {

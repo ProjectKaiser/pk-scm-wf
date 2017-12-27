@@ -13,14 +13,12 @@ import org.scm4j.vcs.api.IVCS;
 
 public class SCMProcActualizePatches implements ISCMProc {
 	
-	private final Component comp;
 	private final CachedStatuses cache;
 	private final VCSRepositoryFactory repoFactory;
 	private final VCSRepository repo;
  
-	public SCMProcActualizePatches(Component comp, CachedStatuses cache, VCSRepositoryFactory repoFactory, VCSRepository repo) {
+	public SCMProcActualizePatches(CachedStatuses cache, VCSRepositoryFactory repoFactory, VCSRepository repo) {
 		this.cache = cache;
-		this.comp = comp;
 		this.repoFactory = repoFactory;
 		this.repo = repo;
 	}
