@@ -3,6 +3,7 @@ package org.scm4j.releaser;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.scm4j.releaser.conf.Credentials;
+import org.scm4j.releaser.conf.VCSFactory;
 import org.scm4j.releaser.conf.VCSType;
 import org.scm4j.vcs.GitVCS;
 import org.scm4j.vcs.api.IVCS;

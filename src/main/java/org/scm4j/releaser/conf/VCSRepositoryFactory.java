@@ -2,7 +2,6 @@ package org.scm4j.releaser.conf;
 
 import org.scm4j.commons.RegexConfig;
 import org.scm4j.releaser.Utils;
-import org.scm4j.releaser.VCSFactory;
 import org.scm4j.releaser.builders.BuilderFactory;
 import org.scm4j.releaser.exceptions.EComponentConfigNoUrl;
 import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;

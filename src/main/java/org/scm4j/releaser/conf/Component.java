@@ -22,7 +22,7 @@ public class Component {
 	}
 
 	public String getName() {
-		return coords.getName();
+		return coords.getName().trim();
 	}
 
 	@Override
