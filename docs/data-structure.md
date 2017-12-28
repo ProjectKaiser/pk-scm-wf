@@ -33,6 +33,8 @@ Contains a single line.
 
 ## `mdeps` file
 
+Keeps managable dependencies
+
 ### `develop` branch:
 
 ```
