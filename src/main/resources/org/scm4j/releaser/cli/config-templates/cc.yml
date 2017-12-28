@@ -1,7 +1,7 @@
 #
-# Components configuration file. Maps coordinates to repository properties
+# Components configuration file
 #
-# Note that components configuration is taken from `cc.yml` then from `cc`
+# Map component coordinates to another component properties, e.g. repository url
 #
 
 # Coordinates which matches `org.scm4j:(.*):`. Repository name is constructed from coorinates name using regular expression
