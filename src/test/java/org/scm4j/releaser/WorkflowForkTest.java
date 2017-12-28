@@ -41,9 +41,9 @@ public class WorkflowForkTest extends WorkflowTestBase {
 		assertActionDoesNothing(action, compUnTillDb, compUBL);
 		checkUnTillOnlyForked(2);
 
-		Version latestVersionUBL = getCrbNextVersion(compUBL);
-		Version latestVersionUnTill = getCrbNextVersion(compUnTill);
-		Version latestVersionUnTillDb = getCrbNextVersion(compUnTillDb);
+		Version latestVersionUBL = getCrbVersion(compUBL);
+		Version latestVersionUnTill = getCrbVersion(compUnTill);
+		Version latestVersionUnTillDb = getCrbVersion(compUnTillDb);
 		
 		assertEquals(env.getUblVer().toReleaseZeroPatch().toNextPatch(), latestVersionUBL);
 		assertEquals(env.getUnTillVer().toReleaseZeroPatch().toNextMinor(), latestVersionUnTill);
@@ -54,9 +54,9 @@ public class WorkflowForkTest extends WorkflowTestBase {
 		assertActionDoesBuild(action, compUnTill);
 		assertActionDoesNothing(action, compUnTillDb, compUBL);
 
-		latestVersionUBL = getCrbNextVersion(compUBL);
-		latestVersionUnTill = getCrbNextVersion(compUnTill);
-		latestVersionUnTillDb = getCrbNextVersion(compUnTillDb);
+		latestVersionUBL = getCrbVersion(compUBL);
+		latestVersionUnTill = getCrbVersion(compUnTill);
+		latestVersionUnTillDb = getCrbVersion(compUnTillDb);
 		assertEquals(env.getUblVer().toReleaseZeroPatch().toNextPatch(), latestVersionUBL);
 		assertEquals(env.getUnTillVer().toReleaseZeroPatch().toNextMinor().toNextPatch(), latestVersionUnTill);
 		assertEquals(env.getUnTillDbVer().toReleaseZeroPatch().toNextPatch(), latestVersionUnTillDb);

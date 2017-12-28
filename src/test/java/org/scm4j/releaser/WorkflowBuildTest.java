@@ -26,7 +26,7 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		// check nothing happens next time
 		IAction action = execAndGetActionBuild(compUnTill);
 		assertActionDoesNothing(action, compUnTill);
-		checkUnTillBuilt();
+		checkUnTillBuilt(1);
 
 		// test IGNORED dev branch state
 		env.generateFeatureCommit(env.getUnTillDbVCS(), repoUnTillDb.getDevelopBranch(),
