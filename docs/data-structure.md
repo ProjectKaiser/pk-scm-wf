@@ -41,11 +41,11 @@ com.mycompany:component-two:master-SNAPSHOT
 com.mycompany:component-three:
 ```
 
-Note: `master-SNAPSHOT` must be used for components which use jitpack
+Note: `master-SNAPSHOT` must be used for components which use `jitpack`
 
 ### `release` branch:
 
-Actual versions in `release` branch are "freezed" automatically during `fork` operation.
+Actual versions in `release` branch are locked automatically during `fork` operation
 
 ```
 com.mycompany:component-one:4.2.0
