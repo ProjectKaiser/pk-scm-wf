@@ -37,6 +37,8 @@ public class TestExists extends WorkflowTestBase {
 //		System.out.println(vcs.getBranches("").contains("test"));
 //		System.out.println(System.currentTimeMillis() - start + " ms");
 		
+		//test
+		
 		SVNURL trunkSVNUrl = SVNURL.parseURIEncoded("https://github.com/scm4j/scm4j-releaser");
 		SVNRepository repository = SVNRepositoryFactory.create(trunkSVNUrl);
 		SVNAuthentication userPassAuth = SVNPasswordAuthentication.newInstance("gmp", "".toCharArray(),  
