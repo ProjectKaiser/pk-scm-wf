@@ -28,6 +28,10 @@ For version definitions ref. [semantic Versioning 2.0.0](http://semver.org/).
 1. Execute `releaser`, it will create `cc`, `cc.yml`, `credentials.yml` files in $user.home/.scm4j folder. Edit these files (ref. comments there)
 1. Run `releaser (status|fork|build) com.mycompany:my-root-component`
 
+**Run from gradle**
+
+- gradlew run -Pa=status,com.mycompany:my-root-component
+
 # Under the Hood
 
 __Overview__

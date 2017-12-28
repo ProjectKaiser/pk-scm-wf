@@ -99,6 +99,15 @@ task javadocJar(type: Jar, dependsOn: javadoc) {
 	from javadoc.destinationDir
 }
 
+task run (type: JavaExec, dependsOn: classes){
+    if(project.hasProperty('a')){
+        args(a.split(','))
+    }
+    description = "Test CLI"
+    main = "org.scm4j.releaser.cli.CLI"
+    classpath = sourceSets.main.runtimeClasspath
+}
+
 artifacts {
 	archives sourcesJar
 	archives javadocJar
