@@ -17,8 +17,6 @@ Component configuration files should be  located in the root of repository
   - Keeps development and release version numbers
 - `mdeps`
   - Managed dependencies list
-- `mdeps-changed`
-  - Actual for `release` branch only. List of managed dependenciens which has been changed since last minor version
   
 ## `version` file
 
@@ -35,7 +33,7 @@ Contains a single line.
 
 ## `mdeps` file
 
-`develop` branch:
+### `develop` branch:
 
 ```
 com.mycompany:component-one:
@@ -45,7 +43,7 @@ com.mycompany:component-three:
 
 Note: `master-SNAPSHOT` must be used for components which use jitpack
 
-`release` branch:
+### `release` branch:
 
 Actual versions in `release` branch are "freezed" automatically during `fork` operation.
 
