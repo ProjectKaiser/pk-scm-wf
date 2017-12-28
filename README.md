@@ -28,18 +28,9 @@ For version definitions ref. [semantic Versioning 2.0.0](http://semver.org/).
 
 # Under the Hood
 
-__Overview__
-
 - `CLI` gets ExtendedStatusTree using `ExtendedStatusTreeBuilder` class (ref. [release statuses](docs/minor-release-status.md))
 - `ActionTreeBuilder` converts ExtendedStatusTree to ActionTree (IAction)
 - IAction is executed
-
-__ExtendedStatusTreeNode__
-
-  - Coords
-  - Status
-  - latestVersion. If Coords includes version latest version is taken from correspondent release branch, otherwise latest release branch is used
-  - Map<Coords, ExtendedStatusTreeNode> subComponents
 
 # Data Structure
 
