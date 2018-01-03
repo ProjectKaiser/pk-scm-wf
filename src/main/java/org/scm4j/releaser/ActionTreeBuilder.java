@@ -44,7 +44,7 @@ public class ActionTreeBuilder {
 		for (Map.Entry<Component, ExtendedStatus> nodeEntry : node.getSubComponents().entrySet()) {
 			childActions.add(getActionTree(nodeEntry.getValue(), cache, actionSet, false));
 		}
-		
+
 		if (node.getStatus() == BuildStatus.FORK && actionSet == ActionSet.FULL) {
 			throw new EBuildOnNotForkedRelease(node.getComp());
 		}

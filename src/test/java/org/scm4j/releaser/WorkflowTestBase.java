@@ -228,10 +228,6 @@ public class WorkflowTestBase {
 		checkCompForked(times, compUnTill);
 	}
 
-	public void checkUnTillForked() {
-		checkUnTillForked(1);
-	}
-
 	private IAction getActionByComp(IAction action, Component comp, int level) {
 		for (IAction nestedAction : action.getChildActions()) {
 			IAction res = getActionByComp(nestedAction, comp, level + 1);
@@ -263,23 +259,11 @@ public class WorkflowTestBase {
 		assertActionDoesFork(action, getAllComps());
 	}
 
-	protected void assertActionDoesForkAndBuildAll(IAction action) {
-		assertActionDoesForkAndBuild(action, getAllComps());
-	}
-
 	protected void assertActionDoesFork(IAction action, Component... comps) {
 		assertThatAction(action, allOf(
 				instanceOf(SCMActionRelease.class),
 				hasProperty("bsFrom", equalTo(BuildStatus.FORK)),
 				hasProperty("bsTo", equalTo(BuildStatus.LOCK))), comps);
-	}
-
-	protected void assertActionDoesForkAndBuild(IAction action, Component... comps) {
-		assertTrue(comps.length > 0);
-		assertThatAction(action, allOf(
-				instanceOf(SCMActionRelease.class),
-				hasProperty("bsFrom", equalTo(BuildStatus.FORK)),
-				hasProperty("bsTo", equalTo(BuildStatus.BUILD))), comps);
 	}
 
 	protected void assertActionDoesBuild(IAction action, Component comp, BuildStatus fromStatus) {
@@ -302,12 +286,6 @@ public class WorkflowTestBase {
 				hasProperty("bsFrom", equalTo(bsFrom)),
 				hasProperty("bsTo", equalTo(bsTo)),
 				hasProperty("procs", empty())), comps);
-	}
-	
-	protected void assertActionDoesSkipAll(IAction action) {
-		assertThatAction(action, allOf(
-				instanceOf(SCMActionRelease.class),
-				hasProperty("procs", empty())), getAllComps());
 	}
 	
 	private Component[] getAllComps() {
@@ -343,7 +321,7 @@ public class WorkflowTestBase {
 		cli.setPreExec(preExec);
 		if (cli.exec(args) != CLI.EXIT_CODE_OK) {
 			throw cli.getLastException();
-		};
+		}
 		return cli.getAction();
 	}
 

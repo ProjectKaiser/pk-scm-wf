@@ -51,7 +51,7 @@ public class TestEnvironment implements AutoCloseable {
 	private final Version ublVer = new Version("1.18.5-SNAPSHOT");
 	private final Version unTillDbVer = new Version("2.59.1-SNAPSHOT");
 	private File envDir;
-	private EnvironmentVariables ev = new EnvironmentVariables();
+	private final EnvironmentVariables ev = new EnvironmentVariables();
 
 	public TestEnvironment() {
 		RANDOM_VCS_NAME_SUFFIX = UUID.randomUUID().toString();

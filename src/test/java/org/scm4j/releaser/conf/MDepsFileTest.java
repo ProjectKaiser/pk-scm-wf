@@ -1,21 +1,19 @@
 package org.scm4j.releaser.conf;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.util.Arrays;
-
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.scm4j.releaser.testutils.TestEnvironment;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.util.Arrays;
+
+import static org.junit.Assert.*;
+
 public class MDepsFileTest {
 
-	private static TestEnvironment env = new TestEnvironment();
+	private static final TestEnvironment env = new TestEnvironment();
 	
 	@BeforeClass
 	public static void setUp() throws Exception {

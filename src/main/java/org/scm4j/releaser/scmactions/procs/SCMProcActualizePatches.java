@@ -29,7 +29,6 @@ public class SCMProcActualizePatches implements ISCMProc {
 		MDepsFile currentMDepsFile = new MDepsFile(vcs.getFileContent(
 				Utils.getReleaseBranchName(repo, cache.get(repo.getUrl()).getNextVersion()),
 				Utils.MDEPS_FILE_NAME, null));//cache.get(comp.getUrl()).getSubComponents().keySet());
-		//TODO: add workflow test mdeps file format saving
 		StringBuilder sb = new StringBuilder();
 		Version newVersion;
 		for (Component currentMDep : currentMDepsFile.getMDeps()) {
