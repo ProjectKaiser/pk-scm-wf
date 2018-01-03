@@ -1,25 +1,5 @@
 package org.scm4j.releaser.cli;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.atLeastOnce;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.verify;
-
-import java.io.File;
-import java.io.PrintStream;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.junit.Before;
@@ -29,15 +9,11 @@ import org.junit.contrib.java.lang.system.EnvironmentVariables;
 import org.junit.contrib.java.lang.system.ExpectedSystemExit;
 import org.mockito.Matchers;
 import org.scm4j.commons.progress.IProgress;
-import org.scm4j.releaser.ActionTreeBuilder;
-import org.scm4j.releaser.CachedStatuses;
-import org.scm4j.releaser.ExtendedStatus;
-import org.scm4j.releaser.ExtendedStatusBuilder;
-import org.scm4j.releaser.TestEnvironment;
-import org.scm4j.releaser.Utils;
+import org.scm4j.releaser.*;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.DefaultConfigUrls;
+import org.scm4j.releaser.conf.IConfigUrls;
 import org.scm4j.releaser.conf.VCSRepositoryFactory;
 import org.scm4j.releaser.exceptions.EReleaserException;
 import org.scm4j.releaser.exceptions.cmdline.ECmdLineNoCommand;
@@ -45,10 +21,24 @@ import org.scm4j.releaser.exceptions.cmdline.ECmdLineNoProduct;
 import org.scm4j.releaser.exceptions.cmdline.ECmdLineUnknownCommand;
 import org.scm4j.releaser.exceptions.cmdline.ECmdLineUnknownOption;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.*;
+
 public class CLITest {
 
 	private static final String TEST_CONFIG_CONTENT = "# test config content";
-	private static final String TEST_EXCEPTION = "test exception";
+	private static final String TEST_EXCEPTION_MESSAGE = "test exception";
 	private static final String UNTILL = "eu.untill:unTill";
 	private IAction mockedAction;
 	private PrintStream mockedPS;
@@ -56,10 +46,12 @@ public class CLITest {
 	private ActionTreeBuilder mockedActionTreeBuilder;
 	private ExtendedStatusBuilder mockedStatusTreeBuilder;
 	private ExtendedStatus mockedStatus;
+	private VCSRepositoryFactory mockedRepoFactory;
 
 	@Rule
 	public final ExpectedSystemExit exit = ExpectedSystemExit.none();
-	
+
+
 	@Before
 	public void setUp() throws Exception {
 		mockedAction = mock(IAction.class);
@@ -67,7 +59,7 @@ public class CLITest {
 		mockedActionTreeBuilder = mock(ActionTreeBuilder.class);
 		mockedStatusTreeBuilder = mock(ExtendedStatusBuilder.class);
 		mockedStatus = mock(ExtendedStatus.class);
-		VCSRepositoryFactory mockedRepoFactory = mock(VCSRepositoryFactory.class);
+		mockedRepoFactory = mock(VCSRepositoryFactory.class);
 		mockedCLI = spy(new CLI(mockedPS, mockedStatusTreeBuilder, mockedActionTreeBuilder, mockedRepoFactory));
 	}
 
@@ -220,7 +212,7 @@ public class CLITest {
 
 	@Test
 	public void testExceptionStackTrace() throws Exception {
-		RuntimeException mockedException = spy(new RuntimeException(TEST_EXCEPTION));
+		RuntimeException mockedException = spy(new RuntimeException(TEST_EXCEPTION_MESSAGE));
 		String[] args = new String[] { CLICommand.STATUS.getCmdLineStr(), UNTILL, Option.STACK_TRACE.getCmdLineStr() };
 		doThrow(mockedException).when(mockedCLI).getStatusTree(any(CommandLine.class), any(CachedStatuses.class));
 
@@ -232,7 +224,7 @@ public class CLITest {
 
 	@Test
 	public void testExceptionNoMessage() throws Exception {
-		RuntimeException mockedException = spy(new RuntimeException(TEST_EXCEPTION));
+		RuntimeException mockedException = spy(new RuntimeException(TEST_EXCEPTION_MESSAGE));
 		doThrow(mockedException).when(mockedCLI).getStatusTree(any(CommandLine.class), any(CachedStatuses.class));
 		String[] args = new String[] { CLICommand.STATUS.getCmdLineStr(), UNTILL };
 
@@ -243,6 +235,22 @@ public class CLITest {
 		verify(mockedPS).println(Matchers.contains(mockedException.getMessage()));
 		verify(mockedAction, never()).execute(any(IProgress.class));
 	}
+
+	@Test
+	public void testExceptionOnComponentsConfigLoad() throws IOException {
+		IOException testException = new IOException(TEST_EXCEPTION_MESSAGE);
+		doThrow(testException).when(mockedRepoFactory).load(any(IConfigUrls.class));
+		String[] args = new String[] { CLICommand.STATUS.getCmdLineStr(), UNTILL };
+
+		assertEquals(CLI.EXIT_CODE_ERROR, mockedCLI.exec(args));
+
+		verify(mockedPS, atLeastOnce()).println(anyString());
+		verify(mockedPS, atLeastOnce()).println();
+		verify(mockedPS).println(Matchers.contains(testException.getMessage()));
+		verify(mockedAction, never()).execute(any(IProgress.class));
+		verify(mockedCLI).printExceptionConfig(args, testException, mockedPS);
+	}
+
 
 	@Test
 	public void testSuccessfulExecution() throws Exception {
@@ -291,7 +299,8 @@ public class CLITest {
 		assertEquals(srcFileNames.size(), dstFileNames.size());
 		assertEquals(TEST_CONFIG_CONTENT, FileUtils.readFileToString(customConfigTemplateFile, StandardCharsets.UTF_8));
 	}
-	
+
+
 	private File getResourceFile(Class<?> forClass, String path) throws Exception {
 		URL url = forClass.getResource(path);
 		return new File(url.toURI());

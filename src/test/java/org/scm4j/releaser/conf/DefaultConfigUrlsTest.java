@@ -1,15 +1,5 @@
 package org.scm4j.releaser.conf;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.spy;
-
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.nio.charset.StandardCharsets;
-
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.Before;
@@ -17,6 +7,15 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.contrib.java.lang.system.EnvironmentVariables;
 import org.scm4j.releaser.Utils;
+
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
+
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.spy;
 
 public class DefaultConfigUrlsTest {
 	
@@ -124,9 +123,10 @@ public class DefaultConfigUrlsTest {
 		ev.set(DefaultConfigUrls.REPOS_LOCATION_ENV_VAR, null);
 		ev.set(DefaultConfigUrls.CC_URLS_ENV_VAR, null);
 		doThrow(e).when(dcu).getLinesFromCCFile();
-		
+		DefaultConfigUrls.CC_URLS_FILE.createNewFile();
 		try {
 			dcu.getCCUrls();
+			fail();
 		} catch (RuntimeException e1) {
 			assertEquals(e, e1.getCause());
 		}

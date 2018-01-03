@@ -24,37 +24,38 @@ public class DefaultConfigUrls implements IConfigUrls {
 	
 	@Override
 	public String getCCUrls() {
-		try {
-			String separatedUrls = getCCUrlsFromEnvVar();
-			if (separatedUrls != null) {
-				return separatedUrls;
+		String separatedUrls = getCCUrlsFromEnvVar();
+		if (separatedUrls != null) {
+			return separatedUrls;
+		}
+
+		StringBuilder urlsSB = new StringBuilder();
+
+		if (PRIORITY_CC_FILE.exists()) {
+			urlsSB.append(PRIORITY_CC_FILE.toString() + URL_SEPARATOR);
+		}
+
+		if (CC_URLS_FILE.exists()) {
+			List<String> lines;
+			try {
+				lines = getLinesFromCCFile();
+			} catch (IOException e) {
+				throw new RuntimeException(e);
 			}
-			
-			StringBuilder urlsSB = new StringBuilder();
-			
-			if (PRIORITY_CC_FILE.exists()) {
-				urlsSB.append(PRIORITY_CC_FILE.toString() + URL_SEPARATOR);
-			}
-			
-			if (CC_URLS_FILE.exists()) {
-				List<String> lines = getLinesFromCCFile();
-				for (String line : lines) {
-					CommentedString cs = new CommentedString(line);
-					if (cs.isValuable()) {
-						urlsSB.append(cs.getStrNoComment().trim() + URL_SEPARATOR);
-					}
+			for (String line : lines) {
+				CommentedString cs = new CommentedString(line);
+				if (cs.isValuable()) {
+					urlsSB.append(cs.getStrNoComment().trim() + URL_SEPARATOR);
 				}
 			}
-			
-			if (urlsSB.length() > 0) {
-				urlsSB.setLength(urlsSB.length() - URL_SEPARATOR.length());
-				return urlsSB.toString();
-			}
-
-			return null;
-		} catch (Exception e) {
-			throw new RuntimeException(e);
 		}
+
+		if (urlsSB.length() > 0) {
+			urlsSB.setLength(urlsSB.length() - URL_SEPARATOR.length());
+			return urlsSB.toString();
+		}
+
+		return null;
 	}
 
 	List<String> getLinesFromCCFile() throws IOException {

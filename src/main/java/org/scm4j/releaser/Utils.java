@@ -65,7 +65,7 @@ public final class Utils {
 			});
 			task.invoke();
 			if (task.getException() != null) {
-				throw new EReleaserException(task.getException());
+				throw new EReleaserException((Exception) task.getException());
 			}
 		}
 	}
