@@ -9,6 +9,7 @@ import org.scm4j.releaser.branch.ReleaseBranchPatch;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.MDepsFile;
 import org.scm4j.releaser.conf.VCSRepository;
+import org.scm4j.releaser.conf.VCSRepositoryFactory;
 import org.scm4j.releaser.exceptions.ENoReleaseBranchForPatch;
 import org.scm4j.releaser.exceptions.ENoReleases;
 import org.scm4j.releaser.exceptions.EReleaseMDepsNotLocked;
@@ -23,7 +24,6 @@ import java.util.List;
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 
 public class WorkflowPatchesTest extends WorkflowTestBase {
@@ -161,17 +161,19 @@ public class WorkflowPatchesTest extends WorkflowTestBase {
 	public void testPatchDONEIfAllReleaseBranchCommitsIgnored() throws Exception {
 		forkAndBuild(compUnTillDb);
 
-		// simulate no commits left in release branch, i.e. all igonred and no tags.
-		// loop in noValueableCommitsAfterLastTag should be interrupted
+		// simulate no commits left in release branch, i.e. all ignored and no tags.
+		// do-while loop in noValueableCommitsAfterLastTag should be interrupted
 		ReleaseBranchCurrent crb = ReleaseBranchFactory.getCRB(repoUnTillDb);
 		Component compVersioned = compUnTillDb.clone(crb.getVersion());
 		IVCS mockedVCS = spy(env.getUnTillDbVCS());
-		VCSRepository mockedRepo = mock(VCSRepository.class);
+		VCSRepository mockedRepo = spy(repoFactory.getVCSRepository(compVersioned));
 		doReturn(mockedVCS).when(mockedRepo).getVCS();
 		doReturn(new ArrayList<VCSCommit>()).when(mockedVCS)
 				.getCommitsRange(anyString(), (String) isNull(), any(WalkDirection.class), anyInt());
+		VCSRepositoryFactory mockedRepoFactory = spy(repoFactory);
+		doReturn(mockedRepo).when(mockedRepoFactory).getVCSRepository(compVersioned);
 
-		ExtendedStatusBuilder statusBuilder = new ExtendedStatusBuilder(repoFactory);
+		ExtendedStatusBuilder statusBuilder = new ExtendedStatusBuilder(mockedRepoFactory);
 		ExtendedStatus status = statusBuilder.getAndCachePatchStatus(compVersioned, new CachedStatuses());
 		assertEquals(BuildStatus.DONE, status.getStatus());
 	}

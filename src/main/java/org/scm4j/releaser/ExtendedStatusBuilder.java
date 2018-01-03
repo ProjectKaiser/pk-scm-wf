@@ -36,11 +36,6 @@ public class ExtendedStatusBuilder {
 		this.repoFactory = repoFactory;
 	}
 
-	public ExtendedStatus getAndCacheMinorStatus(Component comp) {
-		CachedStatuses cache = new CachedStatuses();
-		return getAndCacheMinorStatus(comp, cache);
-	}
-
 	public ExtendedStatus getAndCacheMinorStatus(Component comp, CachedStatuses cache) {
 		return getAndCacheStatus(comp, cache, new ProgressConsole(), false);
 	}
