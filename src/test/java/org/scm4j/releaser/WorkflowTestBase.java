@@ -80,28 +80,30 @@ public class WorkflowTestBase {
 		return new Version(repo.getVCS().getFileContent(Utils.getReleaseBranchName(repo, crbFirstVersion), Utils.VER_FILE_NAME, null));
 	}
 
-	private void checkCompBuilt(int times, Component comp, IVCS vcs, VCSRepository repo, Version ver) {
+	protected void checkCompBuilt(int times, Component comp) {
+		if (comp.getName().equals(compUnTill.getName())) {
+			checkCompBuilt(times, comp, env.getUnTillVCS(), repoUnTill, env.getUnTillVer());
+		} else if (comp.getName().equals(compUBL.getName())) {
+			checkCompBuilt(times, comp, env.getUblVCS(), repoUBL, env.getUblVer());
+		} else if (comp.getName().equals(compUnTillDb.getName())) {
+			checkCompBuilt(times, comp, env.getUnTillDbVCS(), repoUnTillDb, env.getUnTillDbVer());
+		}
+	}
+
+	private void checkCompBuilt(int times, Component comp, IVCS vcs, VCSRepository repo, Version initialVer) {
+		checkCompForked(times, comp, initialVer, repo);
 		Version latestVersion = getCrbVersion(comp);
 
 		assertNotNull(TestBuilder.getBuilders().get(comp.getName()));
 
 		assertTrue(Utils.getBuildDir(repo, latestVersion).exists());
 
-		// check versions
-		Version expectedReleaseVer = ver.toReleaseZeroPatch().toPreviousMinor().toNextPatch();
-		for (int i = 0; i < times; i++) {
-			expectedReleaseVer = expectedReleaseVer.toNextMinor();
-		}
-		assertEquals(expectedReleaseVer, latestVersion);
-		Version expectedDevVer = expectedReleaseVer.toNextMinor().setPatch(ver.getPatch()).toSnapshot();
-		assertEquals(expectedDevVer, Utils.getDevVersion(repo));
-
 		// check tags
 		List<VCSTag> tags = vcs.getTags();
 		assertEquals(times, tags.size());
 
 		// check has tags for each built version
-		Version expectedCompReleaseVer = ver.toReleaseZeroPatch().toPreviousMinor();
+		Version expectedCompReleaseVer = initialVer.toReleaseZeroPatch().toPreviousMinor();
 		for (int i = 0; i < times; i++) {
 			expectedCompReleaseVer = expectedCompReleaseVer.toNextMinor();
 			assertTrue(hasTagForVersion(tags, expectedCompReleaseVer));
@@ -116,39 +118,50 @@ public class WorkflowTestBase {
 	}
 	
 	public void checkUnTillDbBuilt(int times) {
-		checkCompBuilt(times, compUnTillDb, env.getUnTillDbVCS(), repoUnTillDb, env.getUnTillDbVer());
+		checkCompBuilt(times, compUnTillDb);
 	}
 
 	protected void checkUBLBuilt(int times) {
 		checkUnTillDbBuilt(times);
-		checkCompBuilt(times, compUBL, env.getUblVCS(), repoUBL, env.getUblVer());
-		Version latestVersion = getCrbVersion(compUBL);
-
-		// check UBL mDeps
-		List<Component> ublReleaseMDeps = ReleaseBranchFactory.getMDepsRelease(
-				Utils.getReleaseBranchName(repoUBL, latestVersion), repoUBL);
-		assertTrue(ublReleaseMDeps.size() == 1);
-		assertEquals(compUnTillDb.getName(), ublReleaseMDeps.get(0).getName());
-		Version expectedUnTillDbReleaseVer = env.getUnTillDbVer().toReleaseZeroPatch().toPreviousMinor();
-		for (int i = 0; i < times; i++) {
-			expectedUnTillDbReleaseVer = expectedUnTillDbReleaseVer.toNextMinor();
-		}
-		assertEquals(expectedUnTillDbReleaseVer, ublReleaseMDeps.get(0).getVersion());
+		checkCompBuilt(times, compUBL);
+		checkUBLMDepsVersions(times);
 	}
 
 	public void checkUnTillBuilt(int times) {
 		checkUBLBuilt(times);
-		checkCompBuilt(times, compUnTill, env.getUnTillVCS(), repoUnTill, env.getUnTillVer());
-		Version latestVersion = getCrbVersion(compUnTill);
+		checkCompBuilt(times, compUnTill);
+		checkUnTillMDepsVersions(times);
+	}
 
-		// check mDeps
+	protected void checkUBLMDepsVersions(int times) {
+		Version latestVersion = getCrbVersion(compUBL);
+		List<Component> ublReleaseMDeps = ReleaseBranchFactory.getMDepsRelease(
+				Utils.getReleaseBranchName(repoUBL, latestVersion), repoUBL);
+		assertTrue(ublReleaseMDeps.size() == 1);
+		assertEquals(compUnTillDb.getName(), ublReleaseMDeps.get(0).getName());
+		checkCompVersions(times, ublReleaseMDeps.get(0).getVersion(), env.getUnTillDbVer(), repoUnTillDb);
+	}
+
+	protected void checkUnTillMDepsVersions(int times) {
+		Version latestVersion = getCrbVersion(compUnTill);
 		List<Component> untillReleaseMDeps = ReleaseBranchFactory.getMDepsRelease(
 				Utils.getReleaseBranchName(repoUnTill, latestVersion), repoUnTill);
 		assertTrue(untillReleaseMDeps.size() == 2);
 		assertEquals(compUnTillDb.getName(), untillReleaseMDeps.get(1).getName());
-		assertEquals(env.getUnTillDbVer().toReleaseZeroPatch(), untillReleaseMDeps.get(1).getVersion().toReleaseZeroPatch());
+		checkCompVersions(times, untillReleaseMDeps.get(1).getVersion(), env.getUnTillDbVer(), repoUnTillDb);
+
 		assertEquals(compUBL.getName(), untillReleaseMDeps.get(0).getName());
-		assertEquals(env.getUblVer().toReleaseZeroPatch(), untillReleaseMDeps.get(0).getVersion().toReleaseZeroPatch());
+		checkCompVersions(times, untillReleaseMDeps.get(0).getVersion(), env.getUblVer(), repoUBL);
+	}
+
+	private void checkCompVersions(int times, Version actualVersion, Version initialVersion, VCSRepository repo) {
+		Version expectedVer = initialVersion.toReleaseZeroPatch().toPreviousMinor();
+		for (int i = 0; i < times; i++) {
+			expectedVer = expectedVer.toNextMinor();
+		}
+		assertEquals(expectedVer, actualVersion.toReleaseZeroPatch());
+		Version expectedDevVer = expectedVer.toNextMinor().setPatch(initialVersion.getPatch()).toSnapshot();
+		assertEquals(expectedDevVer, Utils.getDevVersion(repo));
 	}
 
 	private boolean hasTagForVersion(List<VCSTag> tags, Version expectedUBLReleaseVer) {
@@ -168,52 +181,31 @@ public class WorkflowTestBase {
 		checkUBLForked(1);
 	}
 
-	private void checkCompForked(int times, Component comp, Version ver, VCSRepository repo) {
-		Version latestVersion = getCrbVersion(comp);
-		// check branches
-		assertTrue(env.getUnTillDbVCS().getBranches(repo.getReleaseBranchPrefix()).contains(
-				Utils.getReleaseBranchName(repo, latestVersion)));
-
-		// check versions.
-		Version trunkVersion = Utils.getDevVersion(repo);
-		Version expectedTrunkVer = ver;
-		Version expectedReleaseVer = ver.toReleaseZeroPatch().toPreviousMinor();
-		for (int i = 0; i < times; i++) {
-			expectedTrunkVer = expectedTrunkVer.toNextMinor();
-			expectedReleaseVer = expectedReleaseVer.toNextMinor();
+	protected void checkCompForked(int times, Component comp) {
+		if (comp.getName().equals(compUnTill.getName())) {
+			checkCompForked(times, comp, env.getUnTillVer(), repoUnTill);
+		} else if (comp.getName().equals(compUBL.getName())) {
+			checkCompForked(times, comp, env.getUblVer(), repoUBL);
+		} else if (comp.getName().equals(compUnTillDb.getName())) {
+			checkCompForked(times, comp, env.getUnTillDbVer(), repoUnTillDb);
 		}
-		assertEquals(expectedTrunkVer, trunkVersion);
-		assertEquals(expectedReleaseVer, latestVersion);
+	}
+
+	private void checkCompForked(int times, Component comp, Version initialVer, VCSRepository repo) {
+		Version latestVersion = getCrbVersion(comp);
+		assertTrue(repo.getVCS().getBranches(repo.getReleaseBranchPrefix()).contains(
+				Utils.getReleaseBranchName(repo, latestVersion)));
+		checkCompVersions(times, latestVersion, initialVer, repo);
 	}
 
 	public void checkUBLForked(int times) {
-		Version latestVersion = getCrbVersion(compUBL);
-		// check branches
-		assertTrue(env.getUblVCS().getBranches(repoUBL.getReleaseBranchPrefix()).contains(
-				Utils.getReleaseBranchName(repoUBL, latestVersion)));
-
-		// check versions
-		Version trunkVersion = dbUBL.getVersion();
-		Version expectedTrunkVer = env.getUblVer();
-		Version expectedReleaseVer = env.getUblVer().toReleaseZeroPatch().toPreviousMinor();
-		for (int i = 0; i < times; i++) {
-			expectedTrunkVer = expectedTrunkVer.toNextMinor();
-			expectedReleaseVer = expectedReleaseVer.toNextMinor();
-		}
-		assertEquals(expectedTrunkVer, trunkVersion);
-		assertEquals(expectedReleaseVer, latestVersion);
-
-		// check mDeps
-		List<Component> ublReleaseMDeps = ReleaseBranchFactory.getMDepsRelease(
-				Utils.getReleaseBranchName(repoUBL, latestVersion), repoUBL);
-		assertTrue(ublReleaseMDeps.size() == 1);
-		assertEquals(compUnTillDb.getName(), ublReleaseMDeps.get(0).getName());
-		// do not consider patch because unTillDb could be build already before UBL fork so target patch is unknown
-		assertEquals(dbUnTillDb.getVersion().toPreviousMinor().toReleaseZeroPatch(), ublReleaseMDeps.get(0).getVersion().toReleaseZeroPatch()); 
+		checkUnTillDbForked(times);
+		checkCompForked(times, compUBL);
+		checkUBLMDepsVersions(times);
 	}
 	
 	public void checkUnTillDbForked(int times) {
-		checkCompForked(times, compUnTillDb, env.getUnTillDbVer(), repoUnTillDb);
+		checkCompForked(times, compUnTillDb);
 	}
 
 	public void checkUnTillDbForked() {
@@ -221,42 +213,15 @@ public class WorkflowTestBase {
 	}
 
 	public void checkUnTillOnlyForked(int times) {
+		checkCompForked(times, compUnTill);
 		Version latestVersion = getCrbVersion(compUnTill);
-
-		// check branches
-		assertTrue(env.getUnTillVCS().getBranches(repoUnTill.getReleaseBranchPrefix()).contains(
-				Utils.getReleaseBranchName(repoUnTill, latestVersion)));
-
-		// check versions
-		Version trunkVersion = dbUnTill.getVersion();
-		Version expectedTrunkVer = env.getUnTillVer();
-		Version expectedReleaseVer = env.getUnTillVer().toReleaseZeroPatch().toPreviousMinor();
-		for (int i = 0; i < times; i++) {
-			expectedTrunkVer = expectedTrunkVer.toNextMinor();
-			expectedReleaseVer = expectedReleaseVer.toNextMinor();
-		}
-		assertEquals(expectedTrunkVer, trunkVersion);
-		assertEquals(expectedReleaseVer, latestVersion);
-
-		// check mDeps
-		List<Component> unTillReleaseMDeps = ReleaseBranchFactory.getMDepsRelease(
-				Utils.getReleaseBranchName(repoUnTill, latestVersion), repoUnTill);
-		assertTrue(unTillReleaseMDeps.size() == 2);
-		for (Component unTillReleaseMDep : unTillReleaseMDeps) {
-			if (unTillReleaseMDep.getName().equals(UBL)) {
-				assertEquals(env.getUblVer().toReleaseZeroPatch(), unTillReleaseMDep.getVersion());
-			} else if (unTillReleaseMDep.getName().equals(UNTILLDB)) {
-				assertEquals(env.getUnTillDbVer().toReleaseZeroPatch(), unTillReleaseMDep.getVersion());
-			} else {
-				fail();
-			}
-		}
+		checkCompVersions(times, latestVersion, env.getUnTillVer(), repoUnTill);
+		checkUnTillMDepsVersions(times - 1);
 	}
 
 	public void checkUnTillForked() {
-		checkUnTillDbForked();
 		checkUBLForked();
-		checkUnTillOnlyForked(1);
+		checkCompForked(1, compUnTill);
 	}
 
 	private IAction getActionByComp(IAction action, Component comp, int level) {
