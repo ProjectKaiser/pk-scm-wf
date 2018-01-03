@@ -11,7 +11,7 @@ import java.util.Arrays;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.scm4j.releaser.TestEnvironment;
+import org.scm4j.releaser.testutils.TestEnvironment;
 
 public class MDepsFileTest {
 

@@ -1,7 +1,7 @@
 package org.scm4j.releaser.branch;
 
 import org.junit.Test;
-import org.scm4j.releaser.TestEnvironment;
+import org.scm4j.releaser.testutils.TestEnvironment;
 import org.scm4j.releaser.Utils;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.VCSRepository;

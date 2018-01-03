@@ -1,6 +1,7 @@
 package org.scm4j.releaser;
 
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.scm4j.commons.Version;
@@ -45,9 +46,9 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 		assertActionDoesBuildAll(action);
 
 		// check no new tags
-		assertEquals(2, env.getUblVCS().getTags().size());
-		assertEquals(2, env.getUnTillDbVCS().getTags().size());
-		assertEquals(1, env.getUnTillVCS().getTags().size());
+		Assert.assertEquals(2, env.getUblVCS().getTags().size());
+		Assert.assertEquals(2, env.getUnTillDbVCS().getTags().size());
+		Assert.assertEquals(1, env.getUnTillVCS().getTags().size());
 		
 		// check Delayed Tags file
 		assertNull(dtf.getRevisitonByUrl(repoUnTillDb.getUrl()));

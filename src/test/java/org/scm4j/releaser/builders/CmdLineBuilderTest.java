@@ -5,7 +5,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.scm4j.commons.progress.IProgress;
-import org.scm4j.releaser.TestEnvironment;
+import org.scm4j.releaser.testutils.TestEnvironment;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.exceptions.EBuilder;
 

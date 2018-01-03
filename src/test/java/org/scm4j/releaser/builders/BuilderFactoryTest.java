@@ -1,6 +1,7 @@
 package org.scm4j.releaser.builders;
 
 import org.junit.Test;
+import org.scm4j.releaser.testutils.TestBuilder;
 
 import static org.junit.Assert.*;
 

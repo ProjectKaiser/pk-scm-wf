@@ -8,7 +8,7 @@ import org.scm4j.commons.Version;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.branch.DevelopBranch;
 import org.scm4j.releaser.branch.ReleaseBranchFactory;
-import org.scm4j.releaser.builders.TestBuilder;
+import org.scm4j.releaser.testutils.TestBuilder;
 import org.scm4j.releaser.cli.CLI;
 import org.scm4j.releaser.cli.CLICommand;
 import org.scm4j.releaser.cli.Option;
@@ -18,6 +18,7 @@ import org.scm4j.releaser.conf.VCSRepository;
 import org.scm4j.releaser.conf.VCSRepositoryFactory;
 import org.scm4j.releaser.scmactions.SCMActionRelease;
 import org.scm4j.releaser.scmactions.SCMActionTag;
+import org.scm4j.releaser.testutils.TestEnvironment;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.vcs.api.VCSTag;
@@ -269,7 +270,7 @@ public class WorkflowTestBase {
 	protected void assertActionDoesFork(IAction action, Component... comps) {
 		assertThatAction(action, allOf(
 				instanceOf(SCMActionRelease.class),
-				hasProperty("bsFrom", equalTo(BuildStatus.FORK)), 
+				hasProperty("bsFrom", equalTo(BuildStatus.FORK)),
 				hasProperty("bsTo", equalTo(BuildStatus.LOCK))), comps);
 	}
 

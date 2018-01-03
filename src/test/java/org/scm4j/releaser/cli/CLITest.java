@@ -20,6 +20,7 @@ import org.scm4j.releaser.exceptions.cmdline.ECmdLineNoCommand;
 import org.scm4j.releaser.exceptions.cmdline.ECmdLineNoProduct;
 import org.scm4j.releaser.exceptions.cmdline.ECmdLineUnknownCommand;
 import org.scm4j.releaser.exceptions.cmdline.ECmdLineUnknownOption;
+import org.scm4j.releaser.testutils.TestEnvironment;
 
 import java.io.File;
 import java.io.IOException;
@@ -31,9 +32,9 @@ import java.util.List;
 
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
+import static org.scm4j.releaser.testutils.VerificationModeSometime.sometime;
 
 public class CLITest {
 
@@ -199,13 +200,11 @@ public class CLITest {
 		String[] args = new String[] { CLICommand.STATUS.getCmdLineStr(), "unknown:component" };
 		try (TestEnvironment te = new TestEnvironment()) {
 			te.generateTestEnvironmentNoVCS();
+
 			assertEquals(CLI.EXIT_CODE_ERROR, mockedCLI.exec(args));
 			
-			// FIXME: get rid of unneccessary verifications
-			verify(mockedPS, atLeastOnce()).println(anyString());
-			verify(mockedPS, atLeastOnce()).println();
 			Exception lastException = mockedCLI.getLastException();
-			verify(mockedPS).println(Matchers.contains(lastException.getMessage() == null ? lastException.toString() : lastException.getMessage()));
+			verify(mockedPS, sometime()).println(Matchers.contains(lastException.getMessage() == null ? lastException.toString() : lastException.getMessage()));
 			verify(mockedPS, never()).println(CommandLine.getUsage());
 		}
 	}
@@ -230,9 +229,7 @@ public class CLITest {
 
 		assertEquals(CLI.EXIT_CODE_ERROR, mockedCLI.exec(args));
 
-		verify(mockedPS, atLeastOnce()).println(anyString());
-		verify(mockedPS, atLeastOnce()).println();
-		verify(mockedPS).println(Matchers.contains(mockedException.getMessage()));
+		verify(mockedPS, sometime()).println(Matchers.contains(mockedException.getMessage()));
 		verify(mockedAction, never()).execute(any(IProgress.class));
 	}
 
@@ -244,13 +241,10 @@ public class CLITest {
 
 		assertEquals(CLI.EXIT_CODE_ERROR, mockedCLI.exec(args));
 
-		verify(mockedPS, atLeastOnce()).println(anyString());
-		verify(mockedPS, atLeastOnce()).println();
-		verify(mockedPS).println(Matchers.contains(testException.getMessage()));
+		verify(mockedPS, sometime()).println(Matchers.contains(testException.getMessage()));
 		verify(mockedAction, never()).execute(any(IProgress.class));
 		verify(mockedCLI).printExceptionConfig(args, testException, mockedPS);
 	}
-
 
 	@Test
 	public void testSuccessfulExecution() throws Exception {
@@ -315,9 +309,7 @@ public class CLITest {
 	}
 	
 	private void verifyException() {
-		verify(mockedPS, atLeastOnce()).println(anyString());
-		verify(mockedPS, atLeastOnce()).println();
-		verify(mockedPS).println(Matchers.contains(mockedCLI.getLastException().getMessage()));
+		verify(mockedPS, sometime()).println(Matchers.contains(mockedCLI.getLastException().getMessage()));
 	}
 	
 	private void verifyCmdLineException() {

@@ -1,7 +1,9 @@
 package org.scm4j.releaser;
 
 import org.hamcrest.Matchers;
+import org.junit.Assert;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.branch.ReleaseBranchCurrent;
 import org.scm4j.releaser.branch.ReleaseBranchFactory;
@@ -43,7 +45,7 @@ public class WorkflowPatchesTest extends WorkflowTestBase {
 
 		// check patch version
 		ReleaseBranchPatch rb = ReleaseBranchFactory.getReleaseBranchPatch(compUnTillDbPatch.getVersion(), repoUnTillDb);
-		assertEquals(env.getUnTillDbVer().toReleaseZeroPatch().toNextPatch().toNextPatch(),
+		Assert.assertEquals(env.getUnTillDbVer().toReleaseZeroPatch().toNextPatch().toNextPatch(),
 				rb.getVersion());
 
 		// check nothing happens on next build
@@ -62,9 +64,9 @@ public class WorkflowPatchesTest extends WorkflowTestBase {
 		List<Component> mdeps = rb.getMDeps();
 		for (Component mdep : mdeps) {
 			if (mdep.getName().equals(UBL)) {
-				assertEquals(env.getUblVer().toReleaseZeroPatch().toNextPatch(), mdep.getVersion());
+				Assert.assertEquals(env.getUblVer().toReleaseZeroPatch().toNextPatch(), mdep.getVersion());
 			} else if (mdep.getName().equals(UNTILLDB)) {
-				assertEquals(env.getUnTillDbVer().toReleaseZeroPatch().toNextPatch(), mdep.getVersion());
+				Assert.assertEquals(env.getUnTillDbVer().toReleaseZeroPatch().toNextPatch(), mdep.getVersion());
 			} else {
 				fail();
 			}
@@ -81,7 +83,7 @@ public class WorkflowPatchesTest extends WorkflowTestBase {
 		forkAndBuild(compUnTillDb, 2);
 
 		ReleaseBranchCurrent crb = ReleaseBranchFactory.getCRB(repoUnTillDb);
-		assertEquals(env.getUnTillDbVer().toNextMinor().toRelease(), crb.getVersion());
+		Assert.assertEquals(env.getUnTillDbVer().toNextMinor().toRelease(), crb.getVersion());
 
 		// add feature for 2.59.1
 		Component compToPatch = new Component(UNTILLDB + ":2.59.1");
@@ -165,7 +167,7 @@ public class WorkflowPatchesTest extends WorkflowTestBase {
 		// do-while loop in noValueableCommitsAfterLastTag should be interrupted
 		ReleaseBranchCurrent crb = ReleaseBranchFactory.getCRB(repoUnTillDb);
 		Component compVersioned = compUnTillDb.clone(crb.getVersion());
-		IVCS mockedVCS = spy(env.getUnTillDbVCS());
+		IVCS mockedVCS = Mockito.spy(env.getUnTillDbVCS());
 		VCSRepository mockedRepo = spy(repoFactory.getVCSRepository(compVersioned));
 		doReturn(mockedVCS).when(mockedRepo).getVCS();
 		doReturn(new ArrayList<VCSCommit>()).when(mockedVCS)
