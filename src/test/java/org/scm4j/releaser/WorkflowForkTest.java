@@ -18,64 +18,6 @@ import static org.junit.Assert.*;
 public class WorkflowForkTest extends WorkflowTestBase {
 	
 	@Test
-	public void testForkAll() throws Exception {
-		fork(compUnTill);
-
-		// check nothing happens on next fork
-		IAction action = execAndGetActionFork(compUnTill);
-		assertActionDoesSkipAll(action);
-		checkUnTillForked();
-	}
-
-	@Test
-	public void testNoForkOnIGNOREDDevBranchState() {
-		forkAndBuild(compUnTill);
-
-		env.generateFeatureCommit(env.getUnTillVCS(), null, LogTag.SCM_IGNORE +" feature commit");
-
-		// check nothing happens on IGNORED develop branch state
-		IAction action = execAndGetActionFork(compUnTill);
-		assertActionDoesSkipAll(action);
-		checkUnTillForked();
-	}
-	
-	@Test
-	public void testForkRootOnly() throws Exception {
-		forkAndBuild(compUnTill);
-
-		env.generateFeatureCommit(env.getUnTillVCS(), repoUnTill.getDevelopBranch(), "feature added");
-
-		// fork untill only
-		IAction action = execAndGetActionFork(compUnTill);
-		assertActionDoesFork(action, compUnTill);
-		assertActionDoesNothing(action, compUnTillDb, compUBL);
-		checkUBLForked(1);
-		checkUnTillOnlyForked(2);
-
-		// build untill only
-		action = execAndGetActionBuild(compUnTill);
-		assertActionDoesBuild(action, compUnTill);
-		assertActionDoesNothing(action, compUnTillDb, compUBL);
-		checkUBLBuilt(1);
-		checkCompBuilt(2, compUnTill);
-	}
-
-	@Test
-	public void testForkRootIfNestedIsForkedAlready() throws Exception {
-		forkAndBuild(compUBL);
-
-		// next fork unTillDb
-		env.generateFeatureCommit(env.getUnTillDbVCS(), repoUnTillDb.getDevelopBranch(), "feature added");
-		forkAndBuild(compUnTillDb, 2);
-
-		// UBL should be forked then
-		IAction action  = execAndGetActionFork(compUBL);
-		assertActionDoesFork(action, compUBL);
-		assertActionDoesNothing(action, compUnTillDb);
-		checkUBLForked(2);
-	}
-	
-	@Test
 	public void testLockMDepsIfNotLocked() {
 		fork(compUBL);
 		
@@ -90,23 +32,9 @@ public class WorkflowForkTest extends WorkflowTestBase {
 		assertThatAction(action, allOf(
 				hasProperty("bsFrom", equalTo(BuildStatus.LOCK)),
 				hasProperty("bsTo", equalTo(BuildStatus.LOCK))), compUBL);
-		
+
 		// check UBL mdeps locked
-		mdf = new MDepsFile(env.getUblVCS().getFileContent(crb.getName(), Utils.MDEPS_FILE_NAME, null));
-		for (Component mdep : mdf.getMDeps()) {
-			assertTrue(mdep.getVersion().isLocked());
-		}
-	}
-
-	@Test
-	public void testForkRootIfNestedNotDone() throws Exception {
-		forkAndBuild(compUBL);
-
-		env.generateFeatureCommit(env.getUnTillDbVCS(), repoUnTillDb.getDevelopBranch(), "unTillDb feature added");
-
-		IAction action = execAndGetActionFork(compUBL);
-		assertActionDoesFork(action, compUBL, compUnTillDb);
-		checkUBLForked(2);
+		checkUBLMDepsVersions(1);
 	}
 
 	@Test

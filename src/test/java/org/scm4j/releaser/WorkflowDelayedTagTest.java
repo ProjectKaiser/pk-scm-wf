@@ -43,7 +43,7 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 		Component compUnTillVersioned = compUnTill.clone(env.getUnTillVer().toReleaseZeroPatch());
 		IAction action = execAndGetActionBuildDelayedTag(compUnTillVersioned);
 		assertActionDoesBuildAll(action);
-		
+
 		// check no new tags
 		assertEquals(2, env.getUblVCS().getTags().size());
 		assertEquals(2, env.getUnTillDbVCS().getTags().size());
@@ -60,7 +60,7 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 	}
 	
 	@Test
-	public void testDelayedTag() throws Exception {
+	public void testDelayedTagOnMinor() throws Exception {
 		fork(compUnTill);
 		execAndGetActionBuildDelayedTag(compUnTill);
 
@@ -92,13 +92,13 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 	}
 
 	@Test
-	public void testTagFileDeleted() throws Exception {
+	public void testTagFileUnexpectedlyDeleted() throws Exception {
 		// build all, root tag delayed
 		fork(compUnTill);
 		execAndGetActionBuildDelayedTag(compUnTill);
 
-		// simulate delayed tags file is deleted right before action execution
-		IAction action = execAndGetActionTag(compUnTill, () -> dtf.delete());
+		// simulate delayed tags file is deleted right before action execution. Expecting no exceptions
+		IAction action = execAndGetActionTag(compUnTill, () -> assertTrue(dtf.delete()));
 		assertActionDoesTag(action, compUnTill);
 
 		// check no tags
@@ -128,7 +128,7 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 				}
 			}
 			try {
-				Thread.sleep(1000); // FIXME: test fails without sleep
+				Thread.sleep(1000); // TODO: test fails without sleep
 			} catch (InterruptedException e) {
 				throw new RuntimeException(e);
 			}
@@ -146,8 +146,8 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 	
 	@Test
 	public void testDoNothingIfNoDelayedTags() {
-		IAction action = execAndGetActionTag(compUnTillDb, null);
-		assertActionDoesTag(action, compUnTillDb);
+		IAction action = execAndGetActionTag(compUnTill, null);
+		assertActionDoesTag(action, compUnTill);
 
 		// check no tags
 		assertTrue(env.getUnTillVCS().getTags().isEmpty());
@@ -171,7 +171,7 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 		TagDesc tagDesc = Utils.getTagDesc(delayedTagVersion.toString());
 		env.getUnTillDbVCS().createTag(rb.getName(), tagDesc.getName(), tagDesc.getMessage(), revisionToTag);
 
-		Thread.sleep(1000); // FIXME: test fails without sleep
+		Thread.sleep(1000); // TODO: test fails without sleep
 
 		// check version tag is detected -> tagging skipped
 		action = execAndGetActionTag(compUnTillDb, null);

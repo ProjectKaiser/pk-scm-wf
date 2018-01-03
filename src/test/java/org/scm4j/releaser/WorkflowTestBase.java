@@ -139,6 +139,7 @@ public class WorkflowTestBase {
 				Utils.getReleaseBranchName(repoUBL, latestVersion), repoUBL);
 		assertTrue(ublReleaseMDeps.size() == 1);
 		assertEquals(compUnTillDb.getName(), ublReleaseMDeps.get(0).getName());
+		assertTrue(ublReleaseMDeps.get(0).getVersion().isLocked());
 		checkCompVersions(times, ublReleaseMDeps.get(0).getVersion(), env.getUnTillDbVer(), repoUnTillDb);
 	}
 
@@ -148,9 +149,11 @@ public class WorkflowTestBase {
 				Utils.getReleaseBranchName(repoUnTill, latestVersion), repoUnTill);
 		assertTrue(untillReleaseMDeps.size() == 2);
 		assertEquals(compUnTillDb.getName(), untillReleaseMDeps.get(1).getName());
+		assertTrue(untillReleaseMDeps.get(1).getVersion().isLocked());
 		checkCompVersions(times, untillReleaseMDeps.get(1).getVersion(), env.getUnTillDbVer(), repoUnTillDb);
 
 		assertEquals(compUBL.getName(), untillReleaseMDeps.get(0).getName());
+		assertTrue(untillReleaseMDeps.get(0).getVersion().isLocked());
 		checkCompVersions(times, untillReleaseMDeps.get(0).getVersion(), env.getUblVer(), repoUBL);
 	}
 
@@ -219,9 +222,13 @@ public class WorkflowTestBase {
 		checkUnTillMDepsVersions(times - 1);
 	}
 
+	public void checkUnTillForked(int times) {
+		checkUBLForked(times);
+		checkCompForked(times, compUnTill);
+	}
+
 	public void checkUnTillForked() {
-		checkUBLForked();
-		checkCompForked(1, compUnTill);
+		checkUnTillForked(1);
 	}
 
 	private IAction getActionByComp(IAction action, Component comp, int level) {
@@ -375,10 +382,7 @@ public class WorkflowTestBase {
 			fail("unexpected coords: " + comp.getCoords());
 		}
 		if (TestEnvironment.PRODUCT_UNTILL.contains(comp.getCoords().toString(""))) {
-			if (times > 1) {
-				fail("unsupported check unTill builds amount: " + times);
-			}
-			checkUnTillForked();
+			checkUnTillForked(times);
 		} else if (TestEnvironment.PRODUCT_UBL.contains(comp.getCoords().toString(""))) {
 			checkUBLForked(times);
 		} else if (TestEnvironment.PRODUCT_UNTILLDB.contains(comp.getCoords().toString(""))) {
@@ -401,9 +405,6 @@ public class WorkflowTestBase {
 			fail("unexpected coords: " + comp.getCoords());
 		}
 		if (TestEnvironment.PRODUCT_UNTILL.contains(comp.getCoords().toString(""))) {
-			if (times > 1) {
-				fail("unsupported check unTill builds amount: " + times);
-			}
 			checkUnTillBuilt(times);
 		} else if (TestEnvironment.PRODUCT_UBL.contains(comp.getCoords().toString(""))) {
 			checkUBLBuilt(times);

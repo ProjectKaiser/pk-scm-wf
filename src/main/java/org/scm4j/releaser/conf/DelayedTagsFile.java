@@ -64,8 +64,8 @@ public class DelayedTagsFile {
 		}
 	}
 	
-	public void delete() {
-		delayedTagsFile.delete();
+	public boolean delete() {
+		return delayedTagsFile.delete();
 	}
 	
 	@Override

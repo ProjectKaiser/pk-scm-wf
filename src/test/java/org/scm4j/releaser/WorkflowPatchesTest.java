@@ -39,13 +39,16 @@ public class WorkflowPatchesTest extends WorkflowTestBase {
 		// build unTillDb patch
 		Component compUnTillDbPatch = new Component(UNTILLDB + ":" + env.getUnTillDbVer().toRelease());
 		IAction action = execAndGetActionBuild(compUnTillDbPatch);
-		assertActionDoesBuild(action, compUnTillDb);
+		assertActionDoesBuild(action, compUnTillDbPatch);
 
+		// check patch version
 		ReleaseBranchPatch rb = ReleaseBranchFactory.getReleaseBranchPatch(compUnTillDbPatch.getVersion(), repoUnTillDb);
 		assertEquals(env.getUnTillDbVer().toReleaseZeroPatch().toNextPatch().toNextPatch(),
 				rb.getVersion());
-		ExtendedStatusBuilder builder = new ExtendedStatusBuilder(repoFactory);
-		assertEquals(BuildStatus.DONE, builder.getAndCacheMinorStatus(compUnTillDbPatch).getStatus());
+
+		// check nothing happens on next build
+		action = execAndGetActionBuild(compUnTillDbPatch);
+		assertActionDoesNothing(action, compUnTillDbPatch);
 
 		// Existing unTill and UBL release branches should actualize its mdeps
 		action = execAndGetActionBuild(compUnTill.clone(env.getUnTillVer().toRelease()));
@@ -146,7 +149,7 @@ public class WorkflowPatchesTest extends WorkflowTestBase {
 		// add an igonored feature and tag it
 		ReleaseBranchCurrent crb = ReleaseBranchFactory.getCRB(repoUnTillDb);
 		Component compUnTillDbVersioned = compUnTillDb.clone(crb.getVersion());
-		env.generateFeatureCommit(env.getUnTillDbVCS(), crb.getName(), LogTag.SCM_IGNORE + " feature megred");
+		env.generateFeatureCommit(env.getUnTillDbVCS(), crb.getName(), LogTag.SCM_IGNORE + " feature merged");
 		env.getUnTillDbVCS().createTag(crb.getName(), "tag", "tag", null);
 
 		ExtendedStatusBuilder statusBuilder = new ExtendedStatusBuilder(repoFactory);
