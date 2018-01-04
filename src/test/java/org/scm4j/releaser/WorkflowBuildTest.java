@@ -6,6 +6,7 @@ import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.branch.ReleaseBranchCurrent;
 import org.scm4j.releaser.branch.ReleaseBranchFactory;
 import org.scm4j.releaser.conf.Component;
+import org.scm4j.releaser.conf.MDepsFile;
 import org.scm4j.releaser.exceptions.EBuildOnNotForkedRelease;
 import org.scm4j.releaser.exceptions.ENoBuilder;
 import org.yaml.snakeyaml.Yaml;
@@ -95,6 +96,24 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		checkUnTillMDepsVersions(1);
 
 		// check UBL actualized unTillDb version
+		checkUBLMDepsVersions(1);
+	}
+
+	@Test
+	public void testLockMDeps() {
+		fork(compUBL);
+
+		// simulate mdeps not locked
+		ReleaseBranchCurrent crb = ReleaseBranchFactory.getCRB(repoUBL);
+		MDepsFile mdf = new MDepsFile(env.getUblVCS().getFileContent(crb.getName(), Utils.MDEPS_FILE_NAME, null));
+		mdf.replaceMDep(mdf.getMDeps().get(0).clone(""));
+		env.getUblVCS().setFileContent(crb.getName(), Utils.MDEPS_FILE_NAME, mdf.toFileContent(), "mdeps not locked");
+
+		// UBL should lock its mdeps
+		IAction action = execAndGetActionBuild(compUBL);
+		assertActionDoesBuild(action, compUBL, BuildStatus.LOCK);
+
+		// check UBL mdeps locked
 		checkUBLMDepsVersions(1);
 	}
 }
