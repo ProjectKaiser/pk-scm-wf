@@ -1,11 +1,11 @@
 package org.scm4j.releaser.branch;
 
 import org.junit.Test;
-import org.scm4j.releaser.testutils.TestEnvironment;
 import org.scm4j.releaser.Utils;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.VCSRepository;
-import org.scm4j.releaser.exceptions.EComponentConfigNoUrl;
+import org.scm4j.releaser.exceptions.ENoVersionFile;
+import org.scm4j.releaser.testutils.TestEnvironment;
 import org.scm4j.vcs.api.IVCS;
 
 import java.util.ArrayList;
@@ -13,7 +13,8 @@ import java.util.ArrayList;
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 
 public class DevelopBranchTest {
 	
@@ -32,7 +33,7 @@ public class DevelopBranchTest {
 	}
 	
 	@Test
-	public void testGetVersionIfNoVersionFile() throws Exception {
+	public void testNoVersionFileExcetpion() throws Exception {
 		try (TestEnvironment env = new TestEnvironment()) {
 			env.generateTestEnvironment();
 			Component comp = new Component(TestEnvironment.PRODUCT_UNTILL);
@@ -42,8 +43,7 @@ public class DevelopBranchTest {
 			try {
 				db.getVersion();
 				fail();
-			} catch (EComponentConfigNoUrl e) {
-				
+			} catch (ENoVersionFile e) {
 			}
 		}
 	}

@@ -5,7 +5,7 @@ import org.scm4j.releaser.LogTag;
 import org.scm4j.releaser.Utils;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.VCSRepository;
-import org.scm4j.releaser.exceptions.EComponentConfigNoUrl;
+import org.scm4j.releaser.exceptions.ENoVersionFile;
 import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.vcs.api.exceptions.EVCSFileNotFound;
 
@@ -35,7 +35,7 @@ public class DevelopBranch {
 			String verFileContent = repo.getVCS().getFileContent(repo.getDevelopBranch(), Utils.VER_FILE_NAME, null);
 			return new Version(verFileContent.trim());
 		} catch (EVCSFileNotFound e) {
-			throw new EComponentConfigNoUrl(Utils.VER_FILE_NAME + " file is missing in develop branch of " + comp);
+			throw new ENoVersionFile(comp);
 		}
 	}
 }
