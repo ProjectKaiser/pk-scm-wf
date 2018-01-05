@@ -13,6 +13,7 @@ import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.VCSRepository;
 import org.scm4j.releaser.conf.VCSRepositoryFactory;
 import org.scm4j.releaser.scmactions.procs.*;
+import org.scm4j.vcs.api.VCSChangeListNode;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,20 +24,20 @@ public class SCMActionRelease extends ActionAbstract {
 	private final BuildStatus bsFrom;
 	private final BuildStatus bsTo;
 	private final Version targetVersion;
-	
+
 	public SCMActionRelease(Component comp, List<IAction> childActions, CachedStatuses cache, VCSRepositoryFactory repoFactory,
 							ActionSet actionSet, boolean delayedTag, VCSRepository repo) {
 		super(comp, childActions, repo);
 		ExtendedStatus status = cache.get(repo.getUrl());
 		this.bsFrom = status.getStatus();
 		targetVersion = status.getNextVersion();
-		
+		List<VCSChangeListNode> vcsChangeList = new ArrayList<>();
 		BuildStatus bsTo = null;
 		switch(bsFrom) {
 		case FORK:
-			procs.add(new SCMProcForkBranch(comp, cache, repo));
+			procs.add(new SCMProcForkBranch(comp, cache, repo, vcsChangeList));
 		case LOCK:
-			getProcs().add(new SCMProcLockMDeps(cache, repoFactory, repo));
+			getProcs().add(new SCMProcLockMDeps(cache, repoFactory, repo, vcsChangeList));
 			bsTo = BuildStatus.LOCK;
 			if (actionSet == ActionSet.FORK_ONLY) {
 				break;

@@ -1,5 +1,6 @@
 package org.scm4j.releaser.scmactions.procs;
 
+import org.apache.commons.lang3.StringUtils;
 import org.scm4j.commons.Version;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.releaser.CachedStatuses;
@@ -12,6 +13,10 @@ import org.scm4j.releaser.conf.MDepsFile;
 import org.scm4j.releaser.conf.VCSRepository;
 import org.scm4j.releaser.conf.VCSRepositoryFactory;
 import org.scm4j.vcs.api.IVCS;
+import org.scm4j.vcs.api.VCSChangeListNode;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class SCMProcLockMDeps implements ISCMProc {
 	
@@ -20,9 +25,12 @@ public class SCMProcLockMDeps implements ISCMProc {
 	private final CachedStatuses cache;
 	private final VCSRepositoryFactory repoFactory;
 	private final VCSRepository repo;
+	private final List<VCSChangeListNode> vcsChangeList;
 
-	public SCMProcLockMDeps(CachedStatuses cache, VCSRepositoryFactory repoFactory, VCSRepository repo) {
+	public SCMProcLockMDeps(CachedStatuses cache, VCSRepositoryFactory repoFactory, VCSRepository repo,
+							List<VCSChangeListNode> vcsChangeList) {
 		this.repo = repo;
+		this.vcsChangeList = vcsChangeList;
 		status = cache.get(repo.getUrl());
 		vcs = repo.getVCS();
 		this.cache = cache;
@@ -34,6 +42,10 @@ public class SCMProcLockMDeps implements ISCMProc {
 		ReleaseBranchFactory.getCRB(repo);
 		if (status.getSubComponents().isEmpty()) {
 			progress.reportStatus("no mdeps to lock");
+			if (!vcsChangeList.isEmpty()) {
+				String rbName = Utils.getReleaseBranchName(repo, status.getNextVersion());
+				commitChangeList(rbName, "version truncate", progress);
+			}
 			return;
 		}
 		String rbName = Utils.getReleaseBranchName(repo, status.getNextVersion());
@@ -49,11 +61,23 @@ public class SCMProcLockMDeps implements ISCMProc {
 			sb.append("" + currentMDep.getName() + ": " + currentMDep.getVersion() + " -> " + newVersion + "\r\n");
 			currentMDepsFile.replaceMDep(currentMDep.clone(newVersion));
 		}
+		List<String> statusMessages = new ArrayList<>();
+		if (vcsChangeList.isEmpty()) {
+			statusMessages.add("version snapshot truncate");
+		}
 		if (sb.length() > 0) {
 			sb.setLength(sb.length() - 2);
 			progress.reportStatus("mdeps to lock:\r\n" + sb.toString());
-			Utils.reportDuration(() -> vcs.setFileContent(rbName, Utils.MDEPS_FILE_NAME, currentMDepsFile.toFileContent(), LogTag.SCM_MDEPS),
-					"lock mdeps" , null, progress);
+			statusMessages.add("lock mdeps");
+			vcsChangeList.add(new VCSChangeListNode(Utils.MDEPS_FILE_NAME, currentMDepsFile.toFileContent(),
+					LogTag.SCM_MDEPS));
 		}
+
+		commitChangeList(rbName, StringUtils.join(statusMessages, ", "), progress);
+	}
+
+	private void commitChangeList(String branchName, String statusMessage, IProgress progress) {
+		Utils.reportDuration(() -> vcs.setFileContent(branchName, vcsChangeList),
+				statusMessage, null, progress);
 	}
 }

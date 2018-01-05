@@ -10,6 +10,9 @@ import org.scm4j.releaser.branch.DevelopBranch;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.VCSRepository;
 import org.scm4j.vcs.api.IVCS;
+import org.scm4j.vcs.api.VCSChangeListNode;
+
+import java.util.List;
 
 public class SCMProcForkBranch implements ISCMProc {
 	
@@ -18,13 +21,16 @@ public class SCMProcForkBranch implements ISCMProc {
 	private final ExtendedStatus status;
 	private final String newBranchName;
 	private final VCSRepository repo;
+	private final List<VCSChangeListNode> vcsChangeList;
 
-	public SCMProcForkBranch(Component comp, CachedStatuses cache, VCSRepository repo) {
+	public SCMProcForkBranch(Component comp, CachedStatuses cache, VCSRepository repo, List<VCSChangeListNode> vcsChangeList) {
 		db = new DevelopBranch(comp, repo);
 		this.repo = repo;
 		vcs = repo.getVCS();
 		status = cache.get(repo.getUrl());
 		newBranchName = Utils.getReleaseBranchName(repo, status.getNextVersion());
+		this.vcsChangeList = vcsChangeList;
+
 	}
 	
 	@Override
@@ -43,8 +49,7 @@ public class SCMProcForkBranch implements ISCMProc {
 	
 	private void truncateSnapshotReleaseVersion(IProgress progress) {
 		String noSnapshotVersion = status.getNextVersion().toString();
-		Utils.reportDuration(() -> vcs.setFileContent(newBranchName, Utils.VER_FILE_NAME, noSnapshotVersion, LogTag.SCM_VER + " " + noSnapshotVersion),
-				"truncate snapshot: " + noSnapshotVersion + " in branch " + newBranchName, null, progress);
+		vcsChangeList.add(new VCSChangeListNode(Utils.VER_FILE_NAME, noSnapshotVersion, LogTag.SCM_VER + " " + noSnapshotVersion));
 	}
 	
 	private void bumpTrunkMinorVersion(IProgress progress) {
