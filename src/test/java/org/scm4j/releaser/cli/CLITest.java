@@ -56,6 +56,7 @@ public class CLITest {
 	@Before
 	public void setUp() throws Exception {
 		mockedAction = mock(IAction.class);
+		doReturn(true).when(mockedAction).isExecutable();
 		mockedPS = mock(PrintStream.class);
 		mockedActionTreeBuilder = mock(ActionTreeBuilder.class);
 		mockedStatusTreeBuilder = mock(ExtendedStatusBuilder.class);

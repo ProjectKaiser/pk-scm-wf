@@ -72,8 +72,10 @@ public class CLI {
 		if (preExec != null) {
 			preExec.run();
 		}
-		try (IProgress progress = new ProgressConsole(action.toStringAction(), ">>> ", "<<< ")) {
-			action.execute(progress);
+		if (action.isExecutable()) {
+			try (IProgress progress = new ProgressConsole(action.toStringAction(), ">>> ", "<<< ")) {
+				action.execute(progress);
+			}
 		}
 	}
 

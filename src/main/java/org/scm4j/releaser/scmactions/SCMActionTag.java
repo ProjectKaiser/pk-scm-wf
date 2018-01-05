@@ -52,4 +52,9 @@ public class SCMActionTag extends ActionAbstract {
 	public String toStringAction() {
 		return toString();
 	}
+
+	@Override
+	public boolean isExecutable() {
+		return true;
+	}
 }

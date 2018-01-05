@@ -20,4 +20,6 @@ public interface IAction {
 	Component getComp();
 
 	String toStringAction();
+
+	boolean isExecutable();
 }

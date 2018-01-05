@@ -65,8 +65,10 @@ public abstract class ActionAbstract implements IAction {
 	@SneakyThrows
 	protected void executeChilds(IProgress progress) {
 		for (IAction action : childActions) {
-			try (IProgress nestedProgress = progress.createNestedProgress(action.toStringAction())) {
-				action.execute(nestedProgress);
+			if (action.isExecutable()) {
+				try (IProgress nestedProgress = progress.createNestedProgress(action.toStringAction())) {
+					action.execute(nestedProgress);
+				}
 			}
 		}
 	}

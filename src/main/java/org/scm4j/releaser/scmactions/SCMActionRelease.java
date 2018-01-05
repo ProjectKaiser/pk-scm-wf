@@ -103,4 +103,9 @@ public class SCMActionRelease extends ActionAbstract {
 	public List<ISCMProc> getProcs() {
 		return procs;
 	}
+
+	@Override
+	public boolean isExecutable() {
+		return bsFrom != BuildStatus.DONE;
+	}
 }
