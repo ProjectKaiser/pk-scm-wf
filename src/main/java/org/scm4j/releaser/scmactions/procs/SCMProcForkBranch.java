@@ -37,7 +37,7 @@ public class SCMProcForkBranch implements ISCMProc {
 	public void execute(IProgress progress) {
 		createBranch(progress);
 		
-		truncateSnapshotReleaseVersion(progress);
+		truncateSnapshotReleaseVersion();
 		
 		bumpTrunkMinorVersion(progress);
 	}
@@ -47,7 +47,7 @@ public class SCMProcForkBranch implements ISCMProc {
 				"create branch " + newBranchName, null, progress);
 	}
 	
-	private void truncateSnapshotReleaseVersion(IProgress progress) {
+	private void truncateSnapshotReleaseVersion() {
 		String noSnapshotVersion = status.getNextVersion().toString();
 		vcsChangeList.add(new VCSChangeListNode(Utils.VER_FILE_NAME, noSnapshotVersion, LogTag.SCM_VER + " " + noSnapshotVersion));
 	}

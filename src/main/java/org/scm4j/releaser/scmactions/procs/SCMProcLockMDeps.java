@@ -44,7 +44,7 @@ public class SCMProcLockMDeps implements ISCMProc {
 			progress.reportStatus("no mdeps to lock");
 			if (!vcsChangeList.isEmpty()) {
 				String rbName = Utils.getReleaseBranchName(repo, status.getNextVersion());
-				commitChangeList(rbName, "version truncate", progress);
+				commitChangeList(rbName, "-SNAPSHOT truncate", progress);
 			}
 			return;
 		}
@@ -63,7 +63,7 @@ public class SCMProcLockMDeps implements ISCMProc {
 		}
 		List<String> statusMessages = new ArrayList<>();
 		if (vcsChangeList.isEmpty()) {
-			statusMessages.add("version snapshot truncate");
+			statusMessages.add("-SNAPSHOT truncate");
 		}
 		if (sb.length() > 0) {
 			sb.setLength(sb.length() - 2);
@@ -79,5 +79,5 @@ public class SCMProcLockMDeps implements ISCMProc {
 	private void commitChangeList(String branchName, String statusMessage, IProgress progress) {
 		Utils.reportDuration(() -> vcs.setFileContent(branchName, vcsChangeList),
 				statusMessage, null, progress);
-	}
+}
 }

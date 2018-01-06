@@ -1,6 +1,6 @@
 package org.scm4j.releaser.conf;
 
-import org.scm4j.commons.RegexConfig;
+import org.scm4j.commons.regexconfig.RegexConfig;
 import org.scm4j.releaser.Utils;
 import org.scm4j.releaser.builders.BuilderFactory;
 import org.scm4j.releaser.exceptions.EComponentConfigNoUrl;
