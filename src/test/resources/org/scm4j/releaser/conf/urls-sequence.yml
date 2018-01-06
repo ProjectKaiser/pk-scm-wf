@@ -1,0 +1,6 @@
+- git1:
+    url: http://localhost/git/myProj.git
+    type: null
+- git2:
+    url: http://localhost/git/myProj
+    type: null

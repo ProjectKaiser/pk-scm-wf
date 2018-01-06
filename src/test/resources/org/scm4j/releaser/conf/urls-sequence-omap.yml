@@ -1,0 +1,8 @@
+!!omap
+- svn1:
+    url: http://localhost/myProj
+    type: subversion
+- ~:
+    url: https://github.com/qwerty/$0
+    type: svn
+    developBranch: branches/

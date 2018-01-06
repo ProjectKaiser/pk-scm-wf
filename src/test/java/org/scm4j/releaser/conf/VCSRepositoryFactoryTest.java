@@ -3,6 +3,7 @@ package org.scm4j.releaser.conf;
 import com.google.common.io.Resources;
 import org.junit.Before;
 import org.junit.Test;
+import org.scm4j.commons.URLContentLoader;
 import org.scm4j.releaser.exceptions.EComponentConfigNoUrl;
 
 import java.io.File;
@@ -17,12 +18,15 @@ public class VCSRepositoryFactoryTest {
 	
 	@Before
 	public void setUp() throws Exception {
-		File ccFile = new File(Resources.getResource(this.getClass(), "urls-omap.yml").toURI());
+		File urlsMapping = new File(Resources.getResource(this.getClass(), "urls-mapping.yml").toURI());
+		File urlsSeq = new File(Resources.getResource(this.getClass(), "urls-sequence.yml").toURI());
+		File urlsSeqOmap = new File(Resources.getResource(this.getClass(), "urls-sequence-omap.yml").toURI());
 		File credsFile = new File(Resources.getResource(this.getClass(), "creds.yml").toURI());
 		IConfigUrls configUrls = new IConfigUrls() {
 			@Override
 			public String getCCUrls() {
-				return ccFile.toString();
+				return urlsMapping.toString() + URLContentLoader.URL_SEPARATOR +
+						urlsSeq.toString() + URLContentLoader.URL_SEPARATOR + urlsSeqOmap.toString();
 			}
 
 			@Override
