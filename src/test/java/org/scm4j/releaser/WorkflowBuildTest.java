@@ -2,7 +2,6 @@ package org.scm4j.releaser;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.Test;
-import org.scm4j.commons.Version;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.branch.ReleaseBranchCurrent;
 import org.scm4j.releaser.branch.ReleaseBranchFactory;
@@ -10,12 +9,9 @@ import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.MDepsFile;
 import org.scm4j.releaser.exceptions.EBuildOnNotForkedRelease;
 import org.scm4j.releaser.exceptions.ENoBuilder;
-import org.scm4j.vcs.api.VCSCommit;
-import org.scm4j.vcs.api.WalkDirection;
 import org.yaml.snakeyaml.Yaml;
 
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.*;
@@ -119,26 +115,5 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 
 		// check UBL mdeps locked
 		checkUBLMDepsVersions(1);
-	}
-
-	@Test
-	public void testMDepsAndVersionCombinedCommit() {
-		fork(compUnTill);
-		ReleaseBranchCurrent crb = ReleaseBranchFactory.getCRB(repoUnTill);
-		List<VCSCommit> commits = env.getUnTillVCS().getCommitsRange(crb.getName(), null, WalkDirection.DESC, 2);
-
-		// check pre-last commit contains unmodified version and mdeps files
-		VCSCommit preLastCommit = commits.get(1);
-		String versionPreLastContent = env.getUnTillVCS().getFileContent(crb.getName(), Utils.VER_FILE_NAME,
-				preLastCommit.getRevision());
-		String mdepsPreLastContent = env.getUnTillVCS().getFileContent(crb.getName(), Utils.MDEPS_FILE_NAME,
-				preLastCommit.getRevision());
-
-		assertTrue(new Version(versionPreLastContent).isSnapshot());
-		MDepsFile mdf = new MDepsFile(mdepsPreLastContent);
-		for (Component mdep : mdf.getMDeps()) {
-			assertTrue(!mdep.getVersion().isLocked());
-		}
-
 	}
 }
