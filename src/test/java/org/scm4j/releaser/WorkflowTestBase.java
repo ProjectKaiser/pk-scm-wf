@@ -322,7 +322,9 @@ public class WorkflowTestBase {
 		if (cli.exec(args) != CLI.EXIT_CODE_OK) {
 			throw cli.getLastException();
 		}
-		return cli.getAction();
+		IAction action = cli.getAction();
+		action.toString(); // cover
+		return action;
 	}
 
 	private IAction execAndGetAction(String... args) {

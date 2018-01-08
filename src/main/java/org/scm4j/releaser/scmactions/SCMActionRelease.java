@@ -34,28 +34,26 @@ public class SCMActionRelease extends ActionAbstract {
 		List<VCSChangeListNode> vcsChangeList = new ArrayList<>();
 		BuildStatus bsTo = null;
 		switch(bsFrom) {
-		case FORK:
-			procs.add(new SCMProcForkBranch(comp, cache, repo, vcsChangeList));
-		case LOCK:
-			getProcs().add(new SCMProcLockMDeps(cache, repoFactory, repo, vcsChangeList));
-			bsTo = BuildStatus.LOCK;
-			if (actionSet == ActionSet.FORK_ONLY) {
+			case FORK:
+				procs.add(new SCMProcForkBranch(comp, cache, repo, vcsChangeList));
+			case LOCK:
+				getProcs().add(new SCMProcLockMDeps(cache, repoFactory, repo, vcsChangeList));
+				bsTo = BuildStatus.LOCK;
+				if (actionSet == ActionSet.FORK_ONLY) {
+					break;
+				}
+			case BUILD_MDEPS:
+			case ACTUALIZE_PATCHES:
+				if (bsFrom.ordinal() > BuildStatus.LOCK.ordinal() && actionSet == ActionSet.FULL) {
+					getProcs().add(new SCMProcActualizePatches(cache, repoFactory, repo));
+				}
+			case BUILD:
+				if (actionSet == ActionSet.FULL) {
+					getProcs().add(new SCMProcBuild(comp, cache, delayedTag, repo));
+					bsTo = BuildStatus.BUILD;
+				}
+			case DONE:
 				break;
-			}
-		case BUILD_MDEPS:
-		case ACTUALIZE_PATCHES:
-			if (bsFrom.ordinal() > BuildStatus.LOCK.ordinal() && actionSet == ActionSet.FULL) {
-				getProcs().add(new SCMProcActualizePatches(cache, repoFactory, repo));
-			}
-		case BUILD:
-			if (actionSet == ActionSet.FULL) {
-				getProcs().add(new SCMProcBuild(comp, cache, delayedTag, repo));
-				bsTo = BuildStatus.BUILD;
-			}
-		case DONE:
-			break;
-		default:
-			throw new IllegalArgumentException("unsupported build status: " + bsFrom);
 		}
 		this.bsTo = bsTo;
 	}

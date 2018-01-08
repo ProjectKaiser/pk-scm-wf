@@ -1,8 +1,8 @@
 package org.scm4j.releaser;
 
-import static org.junit.Assert.assertEquals;
-
 import org.junit.Test;
+
+import static org.junit.Assert.*;
 
 public class BuildStatusTest {
 	
@@ -14,6 +14,5 @@ public class BuildStatusTest {
 		assertEquals(3, BuildStatus.ACTUALIZE_PATCHES.ordinal());
 		assertEquals(4, BuildStatus.BUILD.ordinal());
 		assertEquals(5, BuildStatus.DONE.ordinal());
-		assertEquals(6, BuildStatus.ERROR.ordinal());
 	}
 }
