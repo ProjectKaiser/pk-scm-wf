@@ -62,7 +62,7 @@ public class SCMProcLockMDeps implements ISCMProc {
 			currentMDepsFile.replaceMDep(currentMDep.clone(newVersion));
 		}
 		List<String> statusMessages = new ArrayList<>();
-		if (vcsChangeList.isEmpty()) {
+		if (!vcsChangeList.isEmpty()) {
 			statusMessages.add("-SNAPSHOT truncate");
 		}
 		if (sb.length() > 0) {
