@@ -281,7 +281,7 @@ public class CLITest {
 		new CLI().exec(args);
 		
 		List<String> srcFileNames = new ArrayList<>();
-		for (File srcFile : FileUtils.listFiles(getResourceFile(CLI.class, CLI.CONFIG_TEMPLATES_PATH), FileFilterUtils.trueFileFilter(), FileFilterUtils.trueFileFilter())) {
+		for (File srcFile : FileUtils.listFiles(getResourceFile(CLI.class, CLI.CONFIG_TEMPLATES_ROSURCE_PATH), FileFilterUtils.trueFileFilter(), FileFilterUtils.trueFileFilter())) {
 			srcFileNames.add(srcFile.getName());
 		}
 

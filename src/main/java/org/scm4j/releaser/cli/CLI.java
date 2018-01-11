@@ -21,7 +21,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public class CLI {
-	public static final String CONFIG_TEMPLATES_PATH = "config-templates/";
+	public static final String CONFIG_TEMPLATES_ROSURCE_PATH = "config-templates/";
 	public static final int EXIT_CODE_OK = 0;
 	public static final int EXIT_CODE_ERROR = 1;
 	public static final List<String> CONFIG_TEMPLATES = Arrays.asList("cc", "cc.yml", "credentials.yml");
@@ -157,12 +157,11 @@ public class CLI {
 		if (configUrls.getCCUrls() != null || configUrls.getCredsUrl() != null) {
 			return;
 		}
-		
 		Utils.BASE_WORKING_DIR.mkdirs();
 		for (String ct : CONFIG_TEMPLATES) {
 			File ctFile = new File(Utils.BASE_WORKING_DIR, ct);
 			if (!ctFile.exists()) {
-				InputStream is = this.getClass().getResourceAsStream(CONFIG_TEMPLATES_PATH + ct);
+				InputStream is = this.getClass().getResourceAsStream(CONFIG_TEMPLATES_ROSURCE_PATH + ct);
 				FileUtils.copyInputStreamToFile(is, ctFile);
 			}
 		}
