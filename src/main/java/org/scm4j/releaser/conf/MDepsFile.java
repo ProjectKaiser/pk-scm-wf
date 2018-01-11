@@ -57,16 +57,4 @@ public class MDepsFile {
 	public String toString() {
 		return "MDepsFile [mDeps=" + lines + "]";
 	}
-
-	public boolean hasMDeps() {
-		for (String line : lines) {
-			CommentedString cs = new CommentedString(line);
-			if (cs.isValuable()) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-
 }

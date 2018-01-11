@@ -30,14 +30,6 @@ public class MDepsFileTest {
 	}
 
 	@Test
-	public void testHasMDeps() {
-		assertFalse(getMDF("").hasMDeps());
-		assertFalse(getMDF("# non-component").hasMDeps());
-		assertFalse(getMDF(null).hasMDeps());
-		assertTrue(getMDF(TestEnvironment.PRODUCT_UNTILL).hasMDeps());
-	}
-
-	@Test
 	public void testGetMDeps() {
 		assertTrue(getMDF("").getMDeps().isEmpty());
 		assertTrue(getMDF(null).getMDeps().isEmpty());
