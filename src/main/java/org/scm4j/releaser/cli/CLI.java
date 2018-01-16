@@ -2,6 +2,7 @@ package org.scm4j.releaser.cli;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.ArrayUtils;
+import org.fusesource.jansi.AnsiConsole;
 import org.scm4j.commons.coords.Coords;
 import org.scm4j.commons.coords.CoordsGradle;
 import org.scm4j.commons.progress.IProgress;
@@ -20,11 +21,14 @@ import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.List;
 
+import static org.fusesource.jansi.Ansi.ansi;
+
 public class CLI {
 	public static final String CONFIG_TEMPLATES_ROSURCE_PATH = "config-templates/";
 	public static final int EXIT_CODE_OK = 0;
 	public static final int EXIT_CODE_ERROR = 1;
 	public static final List<String> CONFIG_TEMPLATES = Arrays.asList("cc", "cc.yml", "credentials.yml");
+	public static final String EXECUTION_FAILED_MESSAGE = "EXECUTION FAILED: ";
 
 	private final PrintStream out;
 	private final ActionTreeBuilder actionBuilder;
@@ -34,21 +38,23 @@ public class CLI {
 	private IAction action;
 	private RuntimeException lastException = null;
 	private Runnable preExec = null;
-	
+
 	public CLI() {
 		this(System.out, new DefaultConfigUrls());
 	}
-	
+
 	public CLI(PrintStream out, IConfigUrls configUrls) {
 		this.out = out;
 		repoFactory = new VCSRepositoryFactory();
 		this.statusBuilder = new ExtendedStatusBuilder(repoFactory);
 		this.actionBuilder = new ActionTreeBuilder(repoFactory);
 		this.configUrls = configUrls;
+
 	}
-	
+
 	public CLI(PrintStream out, ExtendedStatusBuilder statusBuilder, ActionTreeBuilder actionBuilder, VCSRepositoryFactory repoFactory) {
 		this.out = out;
+		AnsiConsole.wrapOutputStream(out);
 		this.statusBuilder = statusBuilder;
 		this.actionBuilder = actionBuilder;
 		this.repoFactory = repoFactory;
@@ -85,7 +91,7 @@ public class CLI {
 				statusBuilder.getAndCachePatchStatus(cmd.getProductCoords(), cache) :
 				statusBuilder.getAndCacheMinorStatus(cmd.getProductCoords(), cache);
 	}
-	
+
 	private IAction getActionTree(ExtendedStatus node, CachedStatuses cache, CommandLine cmd) {
 		if (cmd.getCommand() == CLICommand.BUILD) {
 			return cmd.isDelayedTag() ?
@@ -166,7 +172,7 @@ public class CLI {
 			}
 		}
 	}
-	
+
 	void validateCommandLine(CommandLine cmd) {
 		for (String optionArg : cmd.getOptionArgs()) {
 			if (Option.fromCmdLineStr(optionArg) == null) {
@@ -186,34 +192,35 @@ public class CLI {
 			throw new ECmdLineNoProduct();
 		}
 	}
-	
+
 	void printExceptionCmdLine(String[] args, Exception e, PrintStream ps) {
 		printException("", args, e, ps);
 	}
-	
+
 	void printExceptionExecution(String[] args, Exception e, PrintStream ps) {
-		printException("EXECUTION FAILED: ", args, e, ps);
+		printException(EXECUTION_FAILED_MESSAGE, args, e, ps);
 	}
-	
+
 	void printExceptionInitDir(String[] args, Exception e, PrintStream ps) {
 		printException("FAILED TO INIT WORKING FOLDER: ", args, e, ps);
 	}
-	
+
 	void printExceptionConfig(String[] args, Exception e, PrintStream ps) {
 		printException("FAILED TO LOAD CONFIG: ", args, e, ps);
 	}
-	
+
 	private void printException(String prefixMessage, String[] args, Exception e, PrintStream ps) {
-		ps.println();
 		if (ArrayUtils.contains(args, Option.STACK_TRACE.getCmdLineStr())) {
-			ps.println(prefixMessage);
+			ps.println(ansi().fgBrightRed().a(prefixMessage).reset().toString());
 			e.printStackTrace(ps);
 		} else {
-			ps.println(prefixMessage + (e.getMessage() == null ? e.toString() : e.getMessage()));
+			ps.println(ansi().fgBrightRed().a(prefixMessage + (e.getMessage() == null ? e.toString() : e.getMessage()))
+					.reset().toString());
 		}
 	}
 
 	public static void main(String[] args) throws Exception {
+		AnsiConsole.systemInstall();
 		System.exit(new CLI().exec(args));
 	}
 

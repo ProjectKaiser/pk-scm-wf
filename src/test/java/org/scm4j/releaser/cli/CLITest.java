@@ -2,6 +2,7 @@ package org.scm4j.releaser.cli;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.FileFilterUtils;
+import org.fusesource.jansi.AnsiConsole;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -30,6 +31,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.fusesource.jansi.Ansi.ansi;
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
@@ -57,12 +59,13 @@ public class CLITest {
 	public void setUp() throws Exception {
 		mockedAction = mock(IAction.class);
 		doReturn(true).when(mockedAction).isExecutable();
-		mockedPS = mock(PrintStream.class);
+		mockedPS = spy(System.out);
 		mockedActionTreeBuilder = mock(ActionTreeBuilder.class);
 		mockedStatusTreeBuilder = mock(ExtendedStatusBuilder.class);
 		mockedStatus = mock(ExtendedStatus.class);
 		mockedRepoFactory = mock(VCSRepositoryFactory.class);
 		mockedCLI = spy(new CLI(mockedPS, mockedStatusTreeBuilder, mockedActionTreeBuilder, mockedRepoFactory));
+		AnsiConsole.systemInstall();
 	}
 
 	@Test
@@ -79,7 +82,7 @@ public class CLITest {
 		doReturn(mockedStatus).when(mockedStatusTreeBuilder).getAndCacheMinorStatus(eq(UNTILL), any(CachedStatuses.class));
 
 		assertEquals(CLI.EXIT_CODE_OK, mockedCLI.exec(args));
-		
+
 		verify(mockedAction, never()).execute(any(IProgress.class));
 		verify(mockedActionTreeBuilder, never()).getActionTreeForkOnly(any(ExtendedStatus.class), any(CachedStatuses.class));
 		verify(mockedStatusTreeBuilder).getAndCacheMinorStatus(eq(UNTILL), any(CachedStatuses.class));
@@ -113,7 +116,7 @@ public class CLITest {
 		verify(mockedAction).execute(any(IProgress.class));
 		verify(mockedCLI, never()).printStatusTree(any(ExtendedStatus.class));
 	}
-	
+
 	@Test
 	public void testCommandBUILDPatch() throws Exception {
 		String coords = UNTILL + ":123.9";
@@ -152,7 +155,7 @@ public class CLITest {
 
 		verify(mockedAction, never()).execute(any(IProgress.class));
 		verify(mockedException, never()).printStackTrace(mockedPS);
-		verifyException();
+		verifyException(CLI.EXECUTION_FAILED_MESSAGE + mockedCLI.getLastException().getMessage());
 	}
 
 	@Test
@@ -160,7 +163,7 @@ public class CLITest {
 		String[] args = new String[] { "wrong command", UNTILL };
 
 		assertEquals(CLI.EXIT_CODE_ERROR, mockedCLI.exec(args));
-		
+
 		assertTrue(mockedCLI.getLastException() instanceof ECmdLineUnknownCommand);
 		verifyCmdLineException();
 	}
@@ -168,9 +171,9 @@ public class CLITest {
 	@Test
 	public void testCmdLineExceptionNoCommand() throws Exception {
 		String[] args = new String[0];
-		
+
 		assertEquals(CLI.EXIT_CODE_ERROR, mockedCLI.exec(args));
-		
+
 		assertTrue(mockedCLI.getLastException() instanceof ECmdLineNoCommand);
 		verifyCmdLineException();
 	}
@@ -178,9 +181,9 @@ public class CLITest {
 	@Test
 	public void testCmdLineExceptionNoProduct() throws Exception {
 		String[] args = new String[] { CLICommand.STATUS.getCmdLineStr() };
-		
+
 		assertEquals(CLI.EXIT_CODE_ERROR, mockedCLI.exec(args));
-		
+
 		assertTrue(mockedCLI.getLastException() instanceof ECmdLineNoProduct);
 		verifyCmdLineException();
 	}
@@ -191,7 +194,7 @@ public class CLITest {
 				"unknown-option" };
 
 		assertEquals(CLI.EXIT_CODE_ERROR, mockedCLI.exec(args));
-		
+
 		assertTrue(mockedCLI.getLastException() instanceof ECmdLineUnknownOption);
 		verifyCmdLineException();
 	}
@@ -203,7 +206,7 @@ public class CLITest {
 			te.generateTestEnvironmentNoVCS();
 
 			assertEquals(CLI.EXIT_CODE_ERROR, mockedCLI.exec(args));
-			
+
 			Exception lastException = mockedCLI.getLastException();
 			verify(mockedPS, sometime()).println(Matchers.contains(lastException.getMessage() == null ? lastException.toString() : lastException.getMessage()));
 			verify(mockedPS, never()).println(CommandLine.getUsage());
@@ -255,7 +258,7 @@ public class CLITest {
 			CLI.main(new String[] { CLICommand.STATUS.getCmdLineStr(), TestEnvironment.PRODUCT_UNTILL });
 		}
 	}
-	
+
 	@Test
 	public void testSuccessfulExecutionWithWorkingDirInitFailure() throws Exception {
 		String[] args = new String[] { CLICommand.STATUS.getCmdLineStr(), TestEnvironment.PRODUCT_UNTILL };
@@ -270,7 +273,7 @@ public class CLITest {
 			verify(mockedCLI).printExceptionInitDir(eq(args), eq(testException), any(PrintStream.class));
 		}
 	}
-	
+
 	@Test
 	public void testInitWorkingDir() throws Exception {
 		String[] args = new String[] {};
@@ -279,7 +282,7 @@ public class CLITest {
 		File customConfigTemplateFile = new File(Utils.BASE_WORKING_DIR, CLI.CONFIG_TEMPLATES.get(0));
 		FileUtils.writeStringToFile(customConfigTemplateFile, TEST_CONFIG_CONTENT, StandardCharsets.UTF_8);
 		new CLI().exec(args);
-		
+
 		List<String> srcFileNames = new ArrayList<>();
 		for (File srcFile : FileUtils.listFiles(getResourceFile(CLI.class, CLI.CONFIG_TEMPLATES_ROSURCE_PATH), FileFilterUtils.trueFileFilter(), FileFilterUtils.trueFileFilter())) {
 			srcFileNames.add(srcFile.getName());
@@ -289,18 +292,17 @@ public class CLITest {
 		for (File dstFile : FileUtils.listFiles(Utils.BASE_WORKING_DIR, FileFilterUtils.trueFileFilter(), FileFilterUtils.trueFileFilter())) {
 			dstFileNames.add(dstFile.getName());
 		}
-		
+
 		assertTrue(dstFileNames.containsAll(srcFileNames));
 		assertEquals(srcFileNames.size(), dstFileNames.size());
 		assertEquals(TEST_CONFIG_CONTENT, FileUtils.readFileToString(customConfigTemplateFile, StandardCharsets.UTF_8));
 	}
 
-
 	private File getResourceFile(Class<?> forClass, String path) throws Exception {
 		URL url = forClass.getResource(path);
 		return new File(url.toURI());
 	}
-	
+
 	@SuppressWarnings("deprecation")
 	void clearEnvVars() {
 		EnvironmentVariables ev = new EnvironmentVariables();
@@ -308,20 +310,25 @@ public class CLITest {
 		ev.set(DefaultConfigUrls.CC_URLS_ENV_VAR, null);
 		ev.set(DefaultConfigUrls.CREDENTIALS_URL_ENV_VAR, null);
 	}
-	
-	private void verifyException() {
-		verify(mockedPS, sometime()).println(Matchers.contains(mockedCLI.getLastException().getMessage()));
+
+	private void verifyException(String message) {
+		verify(mockedPS, sometime()).println(Matchers.contains(
+				ansi().fgBrightRed().a(message).reset().toString()));
 	}
-	
+
+	private void verifyException() {
+		verifyException(mockedCLI.getLastException().getMessage());
+	}
+
 	private void verifyCmdLineException() {
 		verifyException();
 		verify(mockedPS).println(CommandLine.getUsage());
 	}
-	
+
 	int mockedCLIExec(String[] args) {
 		int res = mockedCLI.exec(args);
 		if (mockedCLI.getLastException() != null) {
-			throw mockedCLI.getLastException(); 
+			throw mockedCLI.getLastException();
 		}
 		return res;
 	}
