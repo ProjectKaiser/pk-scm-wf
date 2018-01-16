@@ -18,6 +18,7 @@ import org.scm4j.vcs.api.VCSCommit;
 
 import java.io.File;
 import java.nio.file.Files;
+import java.util.Map;
 
 public class SCMProcBuild implements ISCMProc {
 	
@@ -73,7 +74,9 @@ public class SCMProcBuild implements ISCMProc {
 		String statusMessage = String.format(" out %s on revision %s into %s", comp.getName(), headCommit.getRevision(), buildDir.getPath());
 		progress.reportStatus("checking" + statusMessage + "...");
 		Utils.reportDuration(() -> vcs.checkout(releaseBranchName, buildDir.getPath(), headCommit.getRevision()), "checked" + statusMessage, null, progress);
-		repo.getBuilder().build(comp, buildDir, progress);
+		Map<String, String> btev = Utils.getBuildTimeEnvVars(repo.getType(), headCommit.getRevision(), releaseBranchName,
+				repo.getUrl());
+		repo.getBuilder().build(comp, buildDir, progress, btev);
 	}
 
 	@SneakyThrows

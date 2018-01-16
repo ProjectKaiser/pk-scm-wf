@@ -4,11 +4,12 @@ import org.hamcrest.Matcher;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
+import org.junit.contrib.java.lang.system.EnvironmentVariables;
 import org.scm4j.commons.Version;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.branch.DevelopBranch;
 import org.scm4j.releaser.branch.ReleaseBranchFactory;
-import org.scm4j.releaser.testutils.TestBuilder;
 import org.scm4j.releaser.cli.CLI;
 import org.scm4j.releaser.cli.CLICommand;
 import org.scm4j.releaser.cli.Option;
@@ -18,6 +19,7 @@ import org.scm4j.releaser.conf.VCSRepository;
 import org.scm4j.releaser.conf.VCSRepositoryFactory;
 import org.scm4j.releaser.scmactions.SCMActionRelease;
 import org.scm4j.releaser.scmactions.SCMActionTag;
+import org.scm4j.releaser.testutils.TestBuilder;
 import org.scm4j.releaser.testutils.TestEnvironment;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSCommit;
@@ -26,6 +28,7 @@ import org.scm4j.vcs.api.WalkDirection;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
@@ -45,6 +48,9 @@ public class WorkflowTestBase {
 	protected VCSRepository repoUnTillDb;
 	protected VCSRepository repoUBL;
 	protected VCSRepositoryFactory repoFactory;
+
+	@Rule
+	public final EnvironmentVariables environmentVariables = new EnvironmentVariables();
 	
 	@Before
 	public void setUp() throws Exception {
@@ -115,6 +121,16 @@ public class WorkflowTestBase {
 			List<VCSCommit> commits = vcs.getCommitsRange(Utils.getReleaseBranchName(
 					repo, new Version(tag.getTagName())), null, WalkDirection.DESC, 2);
 			assertEquals(commits.get(1), tag.getRelatedCommit());
+		}
+
+		// check Env Vars
+		VCSTag lastTag = tags.get(tags.size() - 1);
+		Map<String, String> btevActual = TestBuilder.getEnvVars().get(comp.getName());
+		Map<String, String> btevEthalon = Utils.getBuildTimeEnvVars(repo.getType(), lastTag.getRelatedCommit().getRevision(),
+				Utils.getReleaseBranchName(repo, new Version(lastTag.getTagName())), repo.getUrl());
+		for (Map.Entry<String, String> btevEntry : btevEthalon.entrySet()) {
+			assertNotNull(btevEntry.getValue());
+			assertEquals(btevEntry.getValue(), btevActual.get(btevEntry.getKey()));
 		}
 	}
 	

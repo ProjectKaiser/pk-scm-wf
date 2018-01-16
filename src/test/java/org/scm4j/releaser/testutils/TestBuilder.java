@@ -6,11 +6,18 @@ import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.exceptions.EBuilder;
 
 import java.io.File;
+import java.util.HashMap;
 import java.util.Map;
 
 public class TestBuilder implements IBuilder {
 
 	private static Map<String, TestBuilder> builders;
+
+	public static Map<String, Map<String, String>> getEnvVars() {
+		return envVars;
+	}
+
+	private static Map<String, Map<String, String>> envVars = new HashMap<>();
 
 	public static Map<String, TestBuilder> getBuilders() {
 		return builders;
@@ -21,8 +28,9 @@ public class TestBuilder implements IBuilder {
 	}
 
 	@Override
-	public void build(Component comp, File workingFolder, IProgress progress ) throws EBuilder {
+	public void build(Component comp, File workingFolder, IProgress progress, Map<String, String> buildTimeEnvVars) throws EBuilder {
 		builders.put(comp.getName(), this);
+		envVars.put(comp.getName(), buildTimeEnvVars);
 	}
 
 	@Override

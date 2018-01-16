@@ -6,6 +6,7 @@ import org.scm4j.commons.progress.IProgress;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.TagDesc;
 import org.scm4j.releaser.conf.VCSRepository;
+import org.scm4j.releaser.conf.VCSType;
 import org.scm4j.releaser.exceptions.EReleaserException;
 import org.scm4j.vcs.api.workingcopy.IVCSRepositoryWorkspace;
 import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
@@ -13,6 +14,8 @@ import org.scm4j.vcs.api.workingcopy.VCSWorkspace;
 
 import java.io.File;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinTask;
 import java.util.function.Consumer;
@@ -102,5 +105,28 @@ public final class Utils {
 		if (dir.exists()) {
 			throw new Exception("failed to delete " + dir);
 		}
+	}
+
+	public static Map<String, String> getBuildTimeEnvVars(VCSType vcsType, String buildRevision, String releaseBranchName, String url) {
+		String envVarRevision = null;
+		String envVarBranch = null;
+		String envVarUrl = null;
+		switch(vcsType) {
+			case GIT:
+				envVarRevision = "GIT_COMMIT";
+				envVarBranch = "GIT_BRANCH";
+				envVarUrl = "GIT_URL";
+				break;
+			case SVN:
+				envVarRevision = "SVN_REVISION";
+				envVarBranch = "SVN_BRANCH";
+				envVarUrl = "SVN_URL";
+				break;
+		}
+		Map<String, String> res = new HashMap<>();
+		res.put(envVarRevision, buildRevision);
+		res.put(envVarBranch, releaseBranchName);
+		res.put(envVarUrl, url);
+		return res;
 	}
 }
