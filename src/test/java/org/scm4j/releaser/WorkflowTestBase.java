@@ -105,15 +105,23 @@ public class WorkflowTestBase {
 
 		assertTrue(Utils.getBuildDir(repo, latestVersion).exists());
 
+		DelayedTagsFile dtf = new DelayedTagsFile();
+		boolean tagDelayed = dtf.getRevisitonByUrl(repo.getUrl()) != null;
+		String expectedPatch = tagDelayed ? "0" : "1";
+
+		assertEquals(expectedPatch, latestVersion.getPatch());
+
 		// check tags
 		List<VCSTag> tags = vcs.getTags();
-		assertEquals(times, tags.size());
+		assertEquals(tagDelayed ? times - 1 : times, tags.size());
 
 		// check has tags for each built version
 		Version expectedCompReleaseVer = initialVer.toReleaseZeroPatch().toPreviousMinor();
 		for (int i = 0; i < times; i++) {
 			expectedCompReleaseVer = expectedCompReleaseVer.toNextMinor();
-			assertTrue(hasTagForVersion(tags, expectedCompReleaseVer));
+			if (!tagDelayed) {
+				assertTrue(hasTagForVersion(tags, expectedCompReleaseVer));
+			}
 		}
 
 		// check if the pre-last commit of each release branch is tagged
@@ -124,10 +132,12 @@ public class WorkflowTestBase {
 		}
 
 		// check Env Vars
-		VCSTag lastTag = tags.get(tags.size() - 1);
+		String latestReleaseBranchName = Utils.getReleaseBranchName(repo, latestVersion);
+		List<VCSCommit> lastCommits = vcs.getCommitsRange(latestReleaseBranchName, null, WalkDirection.DESC, 2);
+		String buildRevision = lastCommits.get(tagDelayed ? 0 : 1).getRevision();
 		Map<String, String> btevActual = TestBuilder.getEnvVars().get(comp.getName());
-		Map<String, String> btevEthalon = Utils.getBuildTimeEnvVars(repo.getType(), lastTag.getRelatedCommit().getRevision(),
-				Utils.getReleaseBranchName(repo, new Version(lastTag.getTagName())), repo.getUrl());
+		Map<String, String> btevEthalon = Utils.getBuildTimeEnvVars(repo.getType(), buildRevision,
+				latestReleaseBranchName, repo.getUrl());
 		for (Map.Entry<String, String> btevEntry : btevEthalon.entrySet()) {
 			assertNotNull(btevEntry.getValue());
 			assertEquals(btevEntry.getValue(), btevActual.get(btevEntry.getKey()));
@@ -157,7 +167,7 @@ public class WorkflowTestBase {
 		assertTrue(ublReleaseMDeps.size() == 1);
 		assertEquals(compUnTillDb.getName(), ublReleaseMDeps.get(0).getName());
 		assertTrue(ublReleaseMDeps.get(0).getVersion().isLocked());
-		checkCompVersions(times, ublReleaseMDeps.get(0).getVersion(), env.getUnTillDbVer(), repoUnTillDb);
+		checkCompMinorVersions(times, ublReleaseMDeps.get(0).getVersion(), env.getUnTillDbVer(), repoUnTillDb);
 	}
 
 	protected void checkUnTillMDepsVersions(int times) {
@@ -167,14 +177,14 @@ public class WorkflowTestBase {
 		assertTrue(untillReleaseMDeps.size() == 2);
 		assertEquals(compUnTillDb.getName(), untillReleaseMDeps.get(1).getName());
 		assertTrue(untillReleaseMDeps.get(1).getVersion().isLocked());
-		checkCompVersions(times, untillReleaseMDeps.get(1).getVersion(), env.getUnTillDbVer(), repoUnTillDb);
+		checkCompMinorVersions(times, untillReleaseMDeps.get(1).getVersion(), env.getUnTillDbVer(), repoUnTillDb);
 
 		assertEquals(compUBL.getName(), untillReleaseMDeps.get(0).getName());
 		assertTrue(untillReleaseMDeps.get(0).getVersion().isLocked());
-		checkCompVersions(times, untillReleaseMDeps.get(0).getVersion(), env.getUblVer(), repoUBL);
+		checkCompMinorVersions(times, untillReleaseMDeps.get(0).getVersion(), env.getUblVer(), repoUBL);
 	}
 
-	private void checkCompVersions(int times, Version actualVersion, Version initialVersion, VCSRepository repo) {
+	private void checkCompMinorVersions(int times, Version actualVersion, Version initialVersion, VCSRepository repo) {
 		Version expectedVer = initialVersion.toReleaseZeroPatch().toPreviousMinor();
 		for (int i = 0; i < times; i++) {
 			expectedVer = expectedVer.toNextMinor();
@@ -215,7 +225,7 @@ public class WorkflowTestBase {
 		Version latestVersion = getCrbVersion(comp);
 		assertTrue(repo.getVCS().getBranches(repo.getReleaseBranchPrefix()).contains(
 				Utils.getReleaseBranchName(repo, latestVersion)));
-		checkCompVersions(times, latestVersion, initialVer, repo);
+		checkCompMinorVersions(times, latestVersion, initialVer, repo);
 	}
 
 	public void checkUBLForked(int times) {
@@ -235,7 +245,7 @@ public class WorkflowTestBase {
 	public void checkUnTillOnlyForked(int times) {
 		checkCompForked(times, compUnTill);
 		Version latestVersion = getCrbVersion(compUnTill);
-		checkCompVersions(times, latestVersion, env.getUnTillVer(), repoUnTill);
+		checkCompMinorVersions(times, latestVersion, env.getUnTillVer(), repoUnTill);
 		checkUnTillMDepsVersions(times - 1);
 	}
 
@@ -269,6 +279,9 @@ public class WorkflowTestBase {
 			IAction actionForComp = getActionByComp(action, comp);
 			Assert.assertThat("action for " + comp, actionForComp, matcher);
 		}
+		if (action instanceof SCMActionRelease) {
+			((SCMActionRelease) action).isDelayedTag(); // coverage
+		}
 	}
 
 	protected void assertActionDoesForkAll(IAction action) {
@@ -283,27 +296,35 @@ public class WorkflowTestBase {
 	}
 
 	protected void assertActionDoesBuild(IAction action, Component comp, BuildStatus fromStatus) {
-		assertThatAction(action, allOf(
-				instanceOf(SCMActionRelease.class),
-				hasProperty("bsFrom", equalTo(fromStatus)),
-				hasProperty("bsTo", equalTo(BuildStatus.BUILD))), comp);
+		assertThatAction(action, getBuildMatcher(fromStatus, BuildStatus.BUILD, false), comp);
 	}
 	
 	protected void assertActionDoesBuild(IAction action, Component... comps) {
-		assertThatAction(action, allOf(
-				instanceOf(SCMActionRelease.class),
-				hasProperty("bsFrom", equalTo(BuildStatus.BUILD)), 
-				hasProperty("bsTo", equalTo(BuildStatus.BUILD))), comps);
+		assertThatAction(action, getBuildMatcher(BuildStatus.BUILD, BuildStatus.BUILD, false), comps);
 	}
 
 	protected void assertActionDoesNothing(IAction action, BuildStatus bsFrom, BuildStatus bsTo, Component... comps) {
 		assertThatAction(action, allOf(
+				getBuildMatcher(bsFrom, bsTo, false),
+				hasProperty("procs", empty())), comps);
+	}
+
+	protected void assertActionDoesBuildDelayedTag(IAction action, Component comp, BuildStatus fromStatus) {
+		assertThatAction(action, getBuildMatcher(fromStatus, BuildStatus.BUILD, true), comp);
+	}
+
+	protected void assertActionDoesBuildDelayedTag(IAction action, Component comp) {
+		assertThatAction(action, getBuildMatcher(BuildStatus.BUILD, BuildStatus.BUILD, true), comp);
+	}
+
+	private Matcher<IAction> getBuildMatcher(BuildStatus bsFrom, BuildStatus bsTo, boolean delayedTag) {
+		return allOf(
 				instanceOf(SCMActionRelease.class),
 				hasProperty("bsFrom", equalTo(bsFrom)),
 				hasProperty("bsTo", equalTo(bsTo)),
-				hasProperty("procs", empty())), comps);
+				hasProperty("delayedTag", equalTo(delayedTag)));
 	}
-	
+
 	private Component[] getAllComps() {
 		return new Component[] {compUBL, compUnTillDb, compUnTill};
 	}
@@ -321,6 +342,12 @@ public class WorkflowTestBase {
 	protected void assertActionDoesBuildAll(IAction action) {
 		assertActionDoesBuild(action, compUnTillDb, BuildStatus.BUILD);
 		assertActionDoesBuild(action, compUnTill, BuildStatus.BUILD_MDEPS);
+		assertActionDoesBuild(action, compUBL, BuildStatus.BUILD_MDEPS);
+	}
+
+	protected void assertActionDoesBuildAllDelayedTag(IAction action) {
+		assertActionDoesBuild(action, compUnTillDb, BuildStatus.BUILD);
+		assertActionDoesBuildDelayedTag(action, compUnTill, BuildStatus.BUILD_MDEPS);
 		assertActionDoesBuild(action, compUBL, BuildStatus.BUILD_MDEPS);
 	}
 

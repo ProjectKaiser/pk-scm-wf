@@ -24,6 +24,7 @@ public class SCMActionRelease extends ActionAbstract {
 	private final BuildStatus bsFrom;
 	private final BuildStatus bsTo;
 	private final Version targetVersion;
+	private final boolean delayedTag;
 
 	public SCMActionRelease(Component comp, List<IAction> childActions, CachedStatuses cache, VCSRepositoryFactory repoFactory,
 							ActionSet actionSet, boolean delayedTag, VCSRepository repo) {
@@ -33,6 +34,7 @@ public class SCMActionRelease extends ActionAbstract {
 		targetVersion = status.getNextVersion();
 		List<VCSChangeListNode> vcsChangeList = new ArrayList<>();
 		BuildStatus bsTo = null;
+		this.delayedTag = delayedTag;
 		switch(bsFrom) {
 			case FORK:
 				procs.add(new SCMProcForkBranch(comp, cache, repo, vcsChangeList));
@@ -105,5 +107,9 @@ public class SCMActionRelease extends ActionAbstract {
 	@Override
 	public boolean isExecutable() {
 		return bsFrom != BuildStatus.DONE;
+	}
+
+	public boolean isDelayedTag() {
+		return delayedTag;
 	}
 }

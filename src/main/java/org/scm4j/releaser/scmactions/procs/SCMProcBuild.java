@@ -54,8 +54,10 @@ public class SCMProcBuild implements ISCMProc {
 		build(progress, headCommit);
 		
 		tagBuild(progress, headCommit);
-		
-		raisePatchVersion(progress);
+
+		if (!delayedTag) {
+			raisePatchVersion(progress);
+		}
 		
 		ExtendedStatus existing = cache.get(repo.getUrl());
 		cache.replace(repo.getUrl(), new ExtendedStatus(versionToBuild.toNextPatch(), existing.getStatus(),

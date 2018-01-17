@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 
+import static org.scm4j.releaser.Utils.ZERO_PATCH;
 import static org.scm4j.releaser.Utils.reportDuration;
 
 public class ExtendedStatusBuilder {
@@ -83,9 +84,10 @@ public class ExtendedStatusBuilder {
 		LinkedHashMap<Component, ExtendedStatus> subComponents = new LinkedHashMap<>();
 		
 		BuildStatus status;
+		DelayedTagsFile dtf = new DelayedTagsFile();
 		if (isNeedToFork(comp, rb, cache, progress, subComponents, repo)) {
 			status = BuildStatus.FORK;
-		} else if (Integer.parseInt(rb.getVersion().getPatch()) > 0) {
+		} else if (Integer.parseInt(rb.getVersion().getPatch()) > 0 || dtf.getRevisitonByUrl(repo.getUrl()) != null) {
 			status = BuildStatus.DONE;
 		} else if (!areMDepsLocked(rb.getMDeps())) {
 			status = BuildStatus.LOCK;
@@ -145,6 +147,10 @@ public class ExtendedStatusBuilder {
 		}
 		
 		Version nextVersion = rb.getVersion();
+		DelayedTagsFile dtf = new DelayedTagsFile();
+		if (dtf.getRevisitonByUrl(repo.getUrl()) != null) {
+			nextVersion = nextVersion.toNextPatch();
+		}
 		return new ExtendedStatus(nextVersion, buildStatus, subComponents, comp, repo);
 	}
 
@@ -187,8 +193,13 @@ public class ExtendedStatusBuilder {
 
 	private boolean areMDepsPatchesActual(List<Component> mDeps, CachedStatuses cache) {
 		for (Component mDep : mDeps) {
-			if (!cache.get(repoFactory.getUrl(mDep)).getNextVersion().equals(mDep.getVersion().toNextPatch())) {
-				return false;
+			String url = repoFactory.getUrl(mDep);
+			Version nextMDepVersion = cache.get(url).getNextVersion();
+			if (!nextMDepVersion.equals(mDep.getVersion().toNextPatch())) {
+				DelayedTagsFile mdf = new DelayedTagsFile();
+				if (!(nextMDepVersion.getPatch().equals(ZERO_PATCH) && mdf.getRevisitonByUrl(url) != null)) {
+					return false;
+				}
 			}
 		}
 		return true;
@@ -224,8 +235,12 @@ public class ExtendedStatusBuilder {
 			return true;
 		} 
 
+
 		if (rb.getVersion().getPatch().equals(Utils.ZERO_PATCH)) {
-			return false;
+			DelayedTagsFile dtf = new DelayedTagsFile();
+			if (dtf.getRevisitonByUrl(repo.getUrl()) == null) {
+				return false;
+			}
 		}
 		
 		// develop branch has valuable commits => YES

@@ -2,6 +2,7 @@ package org.scm4j.releaser.scmactions;
 
 import org.scm4j.commons.Version;
 import org.scm4j.commons.progress.IProgress;
+import org.scm4j.releaser.LogTag;
 import org.scm4j.releaser.Utils;
 import org.scm4j.releaser.actions.ActionAbstract;
 import org.scm4j.releaser.actions.IAction;
@@ -39,6 +40,12 @@ public class SCMActionTag extends ActionAbstract {
 		} catch (EVCSTagExists e) {
 			progress.reportStatus(String.format("revision %s is already tagged with %s tag", revisionToTag, tagDesc.getName()));
 		}
+
+		Version nextPatchVersion = delayedTagVersion.toNextPatch();
+
+		Utils.reportDuration(() -> vcs.setFileContent(releaseBranchName, Utils.VER_FILE_NAME, nextPatchVersion.toString(),
+				LogTag.SCM_VER + " " + nextPatchVersion),
+				"bump patch version in release branch: " + nextPatchVersion, null, progress);
 		
 		cf.removeRevisionByUrl(repo.getUrl());
 	}

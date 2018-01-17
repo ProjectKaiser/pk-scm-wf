@@ -43,7 +43,7 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 		// build all patches, delayed tag
 		Component compUnTillVersioned = compUnTill.clone(env.getUnTillVer().toReleaseZeroPatch());
 		IAction action = execAndGetActionBuildDelayedTag(compUnTillVersioned);
-		assertActionDoesBuildAll(action);
+		assertActionDoesBuildAllDelayedTag(action);
 
 		// check no new tags
 		Assert.assertEquals(2, env.getUblVCS().getTags().size());
@@ -63,7 +63,8 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 	@Test
 	public void testDelayedTagOnMinor() throws Exception {
 		fork(compUnTill);
-		execAndGetActionBuildDelayedTag(compUnTill);
+		IAction action = execAndGetActionBuildDelayedTag(compUnTill);
+		assertActionDoesBuildAllDelayedTag(action);
 
 		// check root component tag is delayed
 		assertTrue(env.getUnTillVCS().getTags().isEmpty());
@@ -71,7 +72,7 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 		assertTrue(env.getUblVCS().getTags().size() == 1);
 
 		// check component with delayed tag is considered as tagged (DONE) on build
-		IAction action = execAndGetActionBuild(compUnTill);
+		action = execAndGetActionBuild(compUnTill);
 		assertActionDoesNothing(action);
 
 		// check Delayed Tags file
@@ -160,7 +161,7 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 	public void testTagExistsOnGetActionTree() throws Exception {
 		fork(compUnTillDb);
 		IAction action = execAndGetActionBuildDelayedTag(compUnTillDb);
-		assertActionDoesBuild(action, compUnTillDb);
+		assertActionDoesBuildDelayedTag(action, compUnTillDb);
 
 		String revisionToTag = dtf.getRevisitonByUrl(repoUnTillDb.getUrl());
 		ReleaseBranchCurrent rb = ReleaseBranchFactory.getCRB(repoUnTillDb);
@@ -180,6 +181,34 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 
 		// check no new tags
 		assertTrue(env.getUnTillDbVCS().getTags().size() == 2);
+	}
+
+	@Test
+	public void testMDepTagDelayed() {
+		fork(compUnTillDb);
+		IAction action = execAndGetActionBuildDelayedTag(compUnTillDb);
+		assertActionDoesBuildDelayedTag(action, compUnTillDb);
+
+		// fork unTill. All should be forked except of unTillDb
+		action = execAndGetActionFork(compUnTill);
+		checkUnTillForked(1);
+		assertActionDoesFork(action, compUnTill, compUBL);
+		assertActionDoesNothing(action, compUnTillDb);
+
+		// build unTill. All should be built except of unTillDb
+		action = execAndGetActionBuild(compUnTill);
+		checkUnTillBuilt(1);
+		assertActionDoesBuild(action, compUnTill, BuildStatus.BUILD_MDEPS);
+		assertActionDoesBuild(action, compUBL, BuildStatus.BUILD);
+		assertActionDoesNothing(action, compUnTillDb);
+
+		// set tag on unTillDb
+		action = execAndGetActionTag(compUnTillDb, null);
+		assertActionDoesTag(action, compUnTillDb);
+
+		// check nothing happens on next fork
+		action = execAndGetActionFork(compUnTill);
+		assertActionDoesNothing(action, compUnTill, compUnTillDb, compUBL);
 	}
 	
 	private boolean isPreHeadCommitTaggedWithVersion(Component comp) {
