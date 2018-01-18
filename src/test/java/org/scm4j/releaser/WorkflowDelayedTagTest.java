@@ -201,10 +201,16 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 		assertActionDoesBuild(action, compUnTill, BuildStatus.BUILD_MDEPS);
 		assertActionDoesBuild(action, compUBL, BuildStatus.BUILD);
 		assertActionDoesNothing(action, compUnTillDb);
+		
+		// check nothing happens on next fork
+		action = execAndGetActionFork(compUnTill);
+		assertActionDoesNothing(action, compUnTill, compUnTillDb, compUBL);
 
 		// set tag on unTillDb
+		assertTrue(env.getUnTillDbVCS().getTags().isEmpty());
 		action = execAndGetActionTag(compUnTillDb, null);
 		assertActionDoesTag(action, compUnTillDb);
+		assertFalse(env.getUnTillDbVCS().getTags().isEmpty());
 
 		// check nothing happens on next fork
 		action = execAndGetActionFork(compUnTill);
