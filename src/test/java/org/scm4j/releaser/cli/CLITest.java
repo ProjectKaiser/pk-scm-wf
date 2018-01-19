@@ -2,6 +2,7 @@ package org.scm4j.releaser.cli;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.FileFilterUtils;
+import org.fusesource.jansi.Ansi;
 import org.fusesource.jansi.AnsiConsole;
 import org.junit.Before;
 import org.junit.Rule;
@@ -313,7 +314,7 @@ public class CLITest {
 
 	private void verifyException(String message) {
 		verify(mockedPS, sometime()).println(Matchers.contains(
-				ansi().fgBrightRed().a(message).reset().toString()));
+				ansi().a(Ansi.Attribute.INTENSITY_BOLD).fgRed().a(message).reset().toString()));
 	}
 
 	private void verifyException() {

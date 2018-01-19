@@ -213,10 +213,11 @@ public class CLI {
 
 	private void printException(String prefixMessage, String[] args, Exception e, PrintStream ps) {
 		if (ArrayUtils.contains(args, Option.STACK_TRACE.getCmdLineStr())) {
-			ps.println(ansi().fgBrightRed().a(prefixMessage).reset().toString());
+			ps.println(ansi().a(Ansi.Attribute.INTENSITY_BOLD).fgRed().a(prefixMessage).reset().toString());
 			e.printStackTrace(ps);
 		} else {
-			ps.println(ansi().fgBrightRed().a(prefixMessage + (e.getMessage() == null ? e.toString() : e.getMessage()))
+			ps.println(ansi().a(Ansi.Attribute.INTENSITY_BOLD).fgRed()
+					.a(prefixMessage + (e.getMessage() == null ? e.toString() : e.getMessage()))
 					.reset().toString());
 		}
 	}
