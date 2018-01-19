@@ -143,7 +143,8 @@ public class CLI {
 						execActionTree(action);
 					}
 				}
-				out.println("elapsed time: " + (System.currentTimeMillis() - startMS));
+				out.println(ansi().fgBrightGreen().a("Completed in " + (System.currentTimeMillis() - startMS) + " ms")
+						.reset());
 				return EXIT_CODE_OK;
 			} catch (RuntimeException e) {
 				lastException = e;
