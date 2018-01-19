@@ -2,6 +2,7 @@ package org.scm4j.releaser.cli;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.ArrayUtils;
+import org.fusesource.jansi.Ansi;
 import org.fusesource.jansi.AnsiConsole;
 import org.scm4j.commons.coords.Coords;
 import org.scm4j.commons.coords.CoordsGradle;
@@ -143,8 +144,8 @@ public class CLI {
 						execActionTree(action);
 					}
 				}
-				out.println(ansi().fgGreen().a("Completed in " + (System.currentTimeMillis() - startMS) + "ms")
-						.reset());
+				out.println(ansi().a(Ansi.Attribute.INTENSITY_BOLD).fgGreen()
+						.a("Completed in " + (System.currentTimeMillis() - startMS) + "ms").reset());
 				return EXIT_CODE_OK;
 			} catch (RuntimeException e) {
 				lastException = e;
