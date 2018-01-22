@@ -8,6 +8,7 @@ import org.scm4j.commons.coords.Coords;
 import org.scm4j.commons.coords.CoordsGradle;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.commons.progress.ProgressConsole;
+import org.scm4j.commons.regexconfig.EConfig;
 import org.scm4j.releaser.*;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.actions.PrintStatus;
@@ -114,48 +115,46 @@ public class CLI {
 
 	public int exec(String[] args) {
 		try {
+			out.println("scm4j-releaser " + CLI.class.getPackage().getSpecificationVersion());
 			try {
-				out.println("scm4j-releaser " + CLI.class.getPackage().getSpecificationVersion());
-				try {
-					initWorkingDir();
-				} catch (Exception e) {
-					printExceptionInitDir(args, e, out);
-				}
-				CommandLine cmd = new CommandLine(args);
-				validateCommandLine(cmd);
-
-				long startMS = System.currentTimeMillis();
-				try {
-					repoFactory.load(configUrls);
-				} catch (Exception e) {
-					printExceptionConfig(args, e, out);
-					return EXIT_CODE_ERROR;
-				}
-				if (cmd.getCommand() == CLICommand.TAG) {
-					action = getTagAction(cmd);
-					execActionTree(action);
-				} else {
-					if (cmd.getCommand() == CLICommand.STATUS) {
-						CachedStatuses cache = new CachedStatuses();
-						ExtendedStatus node = getStatusTree(cmd, cache);
-						printStatusTree(node);
-					} else {
-						action = getActionTree(cmd);
-						execActionTree(action);
-					}
-				}
-				out.println(ansi().a(Ansi.Attribute.INTENSITY_BOLD).fgGreen()
-						.a("Completed in " + (System.currentTimeMillis() - startMS) + "ms").reset());
-				return EXIT_CODE_OK;
-			} catch (RuntimeException e) {
-				lastException = e;
-				throw e;
+				initWorkingDir();
+			} catch (Exception e) {
+				printExceptionInitDir(args, e, out);
 			}
+			CommandLine cmd = new CommandLine(args);
+			validateCommandLine(cmd);
+
+			long startMS = System.currentTimeMillis();
+
+			repoFactory.load(configUrls);
+
+			if (cmd.getCommand() == CLICommand.TAG) {
+				action = getTagAction(cmd);
+				execActionTree(action);
+			} else {
+				if (cmd.getCommand() == CLICommand.STATUS) {
+					CachedStatuses cache = new CachedStatuses();
+					ExtendedStatus node = getStatusTree(cmd, cache);
+					printStatusTree(node);
+				} else {
+					action = getActionTree(cmd);
+					execActionTree(action);
+				}
+			}
+			out.println(ansi().a(Ansi.Attribute.INTENSITY_BOLD).fgGreen()
+					.a("Completed in " + (System.currentTimeMillis() - startMS) + "ms").reset());
+			return EXIT_CODE_OK;
+		} catch (EConfig e) {
+			lastException = e;
+			printExceptionConfig(args, e, out);
+			return EXIT_CODE_ERROR;
 		} catch (ECmdLine e) {
+			lastException = e;
 			printExceptionCmdLine(args, e, out);
 			out.println(CommandLine.getUsage());
 			return EXIT_CODE_ERROR;
 		} catch (Exception e) {
+			lastException = (RuntimeException) e;
 			printExceptionExecution(args, e, out);
 			return EXIT_CODE_ERROR;
 		}

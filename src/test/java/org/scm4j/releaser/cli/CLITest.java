@@ -11,6 +11,7 @@ import org.junit.contrib.java.lang.system.EnvironmentVariables;
 import org.junit.contrib.java.lang.system.ExpectedSystemExit;
 import org.mockito.Matchers;
 import org.scm4j.commons.progress.IProgress;
+import org.scm4j.commons.regexconfig.EConfig;
 import org.scm4j.releaser.*;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.conf.Component;
@@ -25,7 +26,6 @@ import org.scm4j.releaser.exceptions.cmdline.ECmdLineUnknownOption;
 import org.scm4j.releaser.testutils.TestEnvironment;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.PrintStream;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -239,8 +239,8 @@ public class CLITest {
 	}
 
 	@Test
-	public void testExceptionOnComponentsConfigLoad() throws IOException {
-		IOException testException = new IOException(TEST_EXCEPTION_MESSAGE);
+	public void testExceptionOnComponentsConfigLoad() throws Exception {
+		EConfig testException = new EConfig(TEST_EXCEPTION_MESSAGE);
 		doThrow(testException).when(mockedRepoFactory).load(any(IConfigUrls.class));
 		String[] args = new String[] { CLICommand.STATUS.getCmdLineStr(), UNTILL };
 
