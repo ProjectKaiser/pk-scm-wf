@@ -225,11 +225,7 @@ public class TestEnvironment implements AutoCloseable {
 	
 	public VCSRepositoryFactory getRepoFactory() {
 		VCSRepositoryFactory repoFactory = new VCSRepositoryFactory();
-		try {
-			repoFactory.load(new DefaultConfigUrls());
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
+		repoFactory.load(new DefaultConfigUrls());
 		return repoFactory;
 	}
 

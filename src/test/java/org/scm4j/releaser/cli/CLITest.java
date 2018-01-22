@@ -2,6 +2,7 @@ package org.scm4j.releaser.cli;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.FileFilterUtils;
+import org.fusesource.jansi.Ansi;
 import org.fusesource.jansi.AnsiConsole;
 import org.junit.Before;
 import org.junit.Rule;
@@ -10,6 +11,7 @@ import org.junit.contrib.java.lang.system.EnvironmentVariables;
 import org.junit.contrib.java.lang.system.ExpectedSystemExit;
 import org.mockito.Matchers;
 import org.scm4j.commons.progress.IProgress;
+import org.scm4j.commons.regexconfig.EConfig;
 import org.scm4j.releaser.*;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.conf.Component;
@@ -24,7 +26,6 @@ import org.scm4j.releaser.exceptions.cmdline.ECmdLineUnknownOption;
 import org.scm4j.releaser.testutils.TestEnvironment;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.PrintStream;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -238,8 +239,8 @@ public class CLITest {
 	}
 
 	@Test
-	public void testExceptionOnComponentsConfigLoad() throws IOException {
-		IOException testException = new IOException(TEST_EXCEPTION_MESSAGE);
+	public void testExceptionOnComponentsConfigLoad() throws Exception {
+		EConfig testException = new EConfig(TEST_EXCEPTION_MESSAGE);
 		doThrow(testException).when(mockedRepoFactory).load(any(IConfigUrls.class));
 		String[] args = new String[] { CLICommand.STATUS.getCmdLineStr(), UNTILL };
 
@@ -313,7 +314,7 @@ public class CLITest {
 
 	private void verifyException(String message) {
 		verify(mockedPS, sometime()).println(Matchers.contains(
-				ansi().fgBrightRed().a(message).reset().toString()));
+				ansi().a(Ansi.Attribute.INTENSITY_BOLD).fgRed().a(message).reset().toString()));
 	}
 
 	private void verifyException() {

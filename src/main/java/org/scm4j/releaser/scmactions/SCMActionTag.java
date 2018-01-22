@@ -6,6 +6,7 @@ import org.scm4j.releaser.LogTag;
 import org.scm4j.releaser.Utils;
 import org.scm4j.releaser.actions.ActionAbstract;
 import org.scm4j.releaser.actions.IAction;
+import org.scm4j.releaser.branch.ReleaseBranchFactory;
 import org.scm4j.releaser.conf.*;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.exceptions.EVCSTagExists;
@@ -42,11 +43,13 @@ public class SCMActionTag extends ActionAbstract {
 		}
 
 		Version nextPatchVersion = delayedTagVersion.toNextPatch();
+		Version crbVersion = ReleaseBranchFactory.getCRB(repo).getVersion();
+		if (!crbVersion.isGreaterThan(nextPatchVersion) && !crbVersion.equals(nextPatchVersion)) {
+			Utils.reportDuration(() -> vcs.setFileContent(releaseBranchName, Utils.VER_FILE_NAME, nextPatchVersion.toString(),
+					LogTag.SCM_VER + " " + nextPatchVersion),
+					"bump patch version in release branch: " + nextPatchVersion, null, progress);
+		}
 
-		Utils.reportDuration(() -> vcs.setFileContent(releaseBranchName, Utils.VER_FILE_NAME, nextPatchVersion.toString(),
-				LogTag.SCM_VER + " " + nextPatchVersion),
-				"bump patch version in release branch: " + nextPatchVersion, null, progress);
-		
 		cf.removeRevisionByUrl(repo.getUrl());
 	}
 	

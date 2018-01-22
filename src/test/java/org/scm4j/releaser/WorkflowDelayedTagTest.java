@@ -13,6 +13,7 @@ import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.DelayedTagsFile;
 import org.scm4j.releaser.conf.TagDesc;
 import org.scm4j.releaser.conf.VCSRepository;
+import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.vcs.api.VCSTag;
 import org.scm4j.vcs.api.WalkDirection;
 
@@ -216,7 +217,41 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 		action = execAndGetActionFork(compUnTill);
 		assertActionDoesNothing(action, compUnTill, compUnTillDb, compUBL);
 	}
-	
+
+	@Test
+	public void testVersionIsBumpedAlreadyOnTag() {
+		fork(compUnTillDb);
+		IAction action = execAndGetActionBuildDelayedTag(compUnTillDb);
+		assertActionDoesBuildDelayedTag(action, compUnTillDb);
+
+		ReleaseBranchCurrent crb = ReleaseBranchFactory.getCRB(repoUnTillDb);
+		VCSCommit headCommit = env.getUnTillDbVCS().setFileContent(crb.getName(), Utils.VER_FILE_NAME,
+				crb.getVersion().toNextPatch().toString(), "version bumped");
+
+		// set tag on unTillDb. Version file should not be changed
+		action = execAndGetActionTag(compUnTillDb, null);
+		assertActionDoesTag(action, compUnTillDb);
+
+		assertEquals(headCommit, env.getUnTillDbVCS().getHeadCommit(crb.getName()));
+	}
+
+	@Test
+	public void testVersionIsBumpedFewTimesAlreadyOnTag() {
+		fork(compUnTillDb);
+		IAction action = execAndGetActionBuildDelayedTag(compUnTillDb);
+		assertActionDoesBuildDelayedTag(action, compUnTillDb);
+
+		ReleaseBranchCurrent crb = ReleaseBranchFactory.getCRB(repoUnTillDb);
+		VCSCommit headCommit = env.getUnTillDbVCS().setFileContent(crb.getName(), Utils.VER_FILE_NAME,
+				crb.getVersion().toNextPatch().toNextPatch().toString(), "version bumped");
+
+		// set tag on unTillDb. Version file should not be changed
+		action = execAndGetActionTag(compUnTillDb, null);
+		assertActionDoesTag(action, compUnTillDb);
+
+		assertEquals(headCommit, env.getUnTillDbVCS().getHeadCommit(crb.getName()));
+	}
+
 	private boolean isPreHeadCommitTaggedWithVersion(Component comp) {
 		VCSRepository repo = repoFactory.getVCSRepository(comp);
 		ReleaseBranchCurrent rb = ReleaseBranchFactory.getCRB(repo);

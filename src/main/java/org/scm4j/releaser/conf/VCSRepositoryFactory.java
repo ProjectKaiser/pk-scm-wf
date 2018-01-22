@@ -8,7 +8,6 @@ import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
 import org.scm4j.vcs.api.workingcopy.VCSWorkspace;
 
 import java.io.File;
-import java.io.IOException;
 
 public class VCSRepositoryFactory {
 	
@@ -27,7 +26,7 @@ public class VCSRepositoryFactory {
 		this.creds = creds;
 	}
 
-	public void load(IConfigUrls configUrls) throws IOException {
+	public void load(IConfigUrls configUrls) {
 		String ccUrls = configUrls.getCCUrls();
 		if (ccUrls != null) {
 			cc.loadFromYamlUrls(ccUrls);

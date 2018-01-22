@@ -1,3 +1,4 @@
+!!omap
 - git1:
     url: http://localhost/git/myProj.git
     type: null
