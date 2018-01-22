@@ -222,7 +222,7 @@ public class ExtendedStatusBuilder {
 	private Boolean isNeedToFork(Component comp, ReleaseBranchCurrent rb, CachedStatuses cache, IProgress progress,
 								 LinkedHashMap<Component, ExtendedStatus> subComponents, VCSRepository repo) {
 		
-		LinkedHashMap<Component, ExtendedStatus> subComponentsLocal = new LinkedHashMap<>();
+		ConcurrentHashMap<Component, ExtendedStatus> subComponentsLocal = new ConcurrentHashMap<>();
 		Utils.async(rb.getMDeps(), (mdep) -> {
 			ExtendedStatus status = getAndCacheStatus(mdep, cache, progress, false);
 			subComponentsLocal.put(mdep, status);
