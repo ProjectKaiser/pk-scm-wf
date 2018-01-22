@@ -22,6 +22,7 @@ import org.scm4j.vcs.api.WalkDirection;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static org.scm4j.releaser.Utils.ZERO_PATCH;
 import static org.scm4j.releaser.Utils.reportDuration;
@@ -127,7 +128,7 @@ public class ExtendedStatusBuilder {
 			throw new EReleaseMDepsNotLocked(nonLockedMDeps);
 		}
 		
-		LinkedHashMap<Component, ExtendedStatus> subComponentsLocal = new LinkedHashMap<>();
+		ConcurrentHashMap<Component, ExtendedStatus> subComponentsLocal = new ConcurrentHashMap<>();
 		Utils.async(rb.getMDeps(), (mdep) -> {
 			ExtendedStatus status = getAndCacheStatus(mdep, cache, progress, true);
 			subComponentsLocal.put(mdep, status);

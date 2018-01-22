@@ -43,7 +43,10 @@ public class ExtendedStatus {
 	
 	@Override
 	public String toString() {
-		String targetBranch = Utils.getReleaseBranchName(repo, nextVersion);
+		if (this == DUMMY) {
+			return "<DUMMY>";
+		}
+ 		String targetBranch = Utils.getReleaseBranchName(repo, nextVersion);
 		return String.format("%s %s, target version: %s, target branch: %s", status, comp.getCoords(), nextVersion, targetBranch);
 	}
 }
