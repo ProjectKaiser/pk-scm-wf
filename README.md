@@ -42,7 +42,6 @@ For version definitions ref. [semantic Versioning 2.0.0](http://semver.org/).
 - [delayed tagging](/../../issues/2)
 - [exact versions in `develop`/`mdeps`](/../../issues/4)
 - [postTag hooks](/../../issues/8)
-- #9
 
 # Related repositories
   
