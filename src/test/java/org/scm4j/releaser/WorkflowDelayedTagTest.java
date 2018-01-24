@@ -13,6 +13,7 @@ import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.DelayedTagsFile;
 import org.scm4j.releaser.conf.TagDesc;
 import org.scm4j.releaser.conf.VCSRepository;
+import org.scm4j.releaser.exceptions.EDelayingDelayed;
 import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.vcs.api.VCSTag;
 import org.scm4j.vcs.api.WalkDirection;
@@ -251,6 +252,27 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 
 		assertEquals(headCommit, env.getUnTillDbVCS().getHeadCommit(crb.getName()));
 	}
+
+	@Test
+	public void testDelayingDelayed() {
+		fork(compUnTillDb);
+		IAction action = execAndGetActionBuildDelayedTag(compUnTillDb);
+		assertActionDoesBuildDelayedTag(action, compUnTillDb);
+
+		ReleaseBranchCurrent crb = ReleaseBranchFactory.getCRB(repoUnTillDb);
+		env.generateFeatureCommit(env.getUnTillDbVCS(), crb.getName(), "feature merged");
+
+		// try to build next untillDb patch with delayed tag
+		Component compUnTillDbPatch = new Component(UNTILLDB + ":" + env.getUnTillDbVer().toRelease());
+		try {
+			execAndGetActionBuildDelayedTag(compUnTillDbPatch);
+			fail();
+		} catch (EDelayingDelayed e) {
+			assertEquals(repoUnTillDb.getUrl(), e.getUrl());
+		}
+	}
+
+
 
 	private boolean isPreHeadCommitTaggedWithVersion(Component comp) {
 		VCSRepository repo = repoFactory.getVCSRepository(comp);

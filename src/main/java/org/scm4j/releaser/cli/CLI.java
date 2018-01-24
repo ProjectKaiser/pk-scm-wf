@@ -12,9 +12,8 @@ import org.scm4j.commons.regexconfig.EConfig;
 import org.scm4j.releaser.*;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.actions.PrintStatus;
-import org.scm4j.releaser.conf.DefaultConfigUrls;
-import org.scm4j.releaser.conf.IConfigUrls;
-import org.scm4j.releaser.conf.VCSRepositoryFactory;
+import org.scm4j.releaser.conf.*;
+import org.scm4j.releaser.exceptions.EDelayingDelayed;
 import org.scm4j.releaser.exceptions.cmdline.*;
 
 import java.io.File;
@@ -103,12 +102,6 @@ public class CLI {
 		return actionBuilder.getActionTreeForkOnly(node, cache);
 	}
 
-	protected IAction getActionTree(CommandLine cmd) {
-		CachedStatuses cache = new CachedStatuses();
-		ExtendedStatus node = getStatusTree(cmd, cache);
-		return getActionTree(node, cache, cmd);
-	}
-
 	protected IAction getTagAction(CommandLine cmd) {
 		return actionBuilder.getTagAction(cmd.getProductCoords());
 	}
@@ -128,19 +121,10 @@ public class CLI {
 
 			repoFactory.load(configUrls);
 
-			if (cmd.getCommand() == CLICommand.TAG) {
-				action = getTagAction(cmd);
-				execActionTree(action);
-			} else {
-				if (cmd.getCommand() == CLICommand.STATUS) {
-					CachedStatuses cache = new CachedStatuses();
-					ExtendedStatus node = getStatusTree(cmd, cache);
-					printStatusTree(node);
-				} else {
-					action = getActionTree(cmd);
-					execActionTree(action);
-				}
-			}
+			checkDelayedTags(cmd);
+
+			executeCmd(cmd);
+
 			out.println(ansi().a(Ansi.Attribute.INTENSITY_BOLD).fgGreen()
 					.a("Completed in " + (System.currentTimeMillis() - startMS) + "ms").reset());
 			return EXIT_CODE_OK;
@@ -158,6 +142,36 @@ public class CLI {
 			printExceptionExecution(args, e, out);
 			return EXIT_CODE_ERROR;
 		}
+	}
+
+	private void checkDelayedTags(CommandLine cmd) {
+		if (cmd.isDelayedTag()) {
+			String rootUrl = repoFactory.getUrl(new Component(cmd.getProductCoords()));
+			if (hasDelayedTags(rootUrl)) {
+				throw new EDelayingDelayed(rootUrl);
+			}
+		}
+	}
+
+	private void executeCmd(CommandLine cmd) throws Exception {
+		if (cmd.getCommand() == CLICommand.TAG) {
+			action = getTagAction(cmd);
+			execActionTree(action);
+		} else {
+			CachedStatuses cache = new CachedStatuses();
+			ExtendedStatus node = getStatusTree(cmd, cache);
+			if (cmd.getCommand() == CLICommand.STATUS) {
+				printStatusTree(node);
+			} else {
+				action = getActionTree(node, cache, cmd);
+				execActionTree(action);
+			}
+		}
+	}
+
+	private boolean hasDelayedTags(String rootUrl) {
+		DelayedTagsFile dtf = new DelayedTagsFile();
+		return dtf.getRevisitonByUrl(rootUrl) != null;
 	}
 
 	void initWorkingDir() throws Exception {
