@@ -1,6 +1,8 @@
 package org.scm4j.releaser.exceptions;
 
 public class EDelayingDelayed extends EReleaserException {
+
+	private static final long serialVersionUID = 1L;
 	private String url;
 
 	public EDelayingDelayed(String url) {
