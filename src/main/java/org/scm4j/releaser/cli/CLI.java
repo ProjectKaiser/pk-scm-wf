@@ -107,13 +107,15 @@ public class CLI {
 	}
 
 	public int exec(String[] args) {
+		boolean isStackTrace = ArrayUtils.contains(args, Option.STACK_TRACE.getCmdLineStr());
 		try {
 			out.println("scm4j-releaser " + CLI.class.getPackage().getSpecificationVersion());
 			try {
 				initWorkingDir();
 			} catch (Exception e) {
-				printExceptionInitDir(args, e, out);
+				printExceptionInitDir(isStackTrace, e, out);
 			}
+
 			CommandLine cmd = new CommandLine(args);
 			validateCommandLine(cmd);
 
@@ -130,16 +132,16 @@ public class CLI {
 			return EXIT_CODE_OK;
 		} catch (EConfig e) {
 			lastException = e;
-			printExceptionConfig(args, e, out);
+			printExceptionConfig(isStackTrace, e, out);
 			return EXIT_CODE_ERROR;
 		} catch (ECmdLine e) {
 			lastException = e;
-			printExceptionCmdLine(args, e, out);
+			printExceptionCmdLine(isStackTrace, e, out);
 			out.println(CommandLine.getUsage());
 			return EXIT_CODE_ERROR;
 		} catch (Exception e) {
 			lastException = (RuntimeException) e;
-			printExceptionExecution(args, e, out);
+			printExceptionExecution(isStackTrace, e, out);
 			return EXIT_CODE_ERROR;
 		}
 	}
@@ -208,24 +210,24 @@ public class CLI {
 		}
 	}
 
-	void printExceptionCmdLine(String[] args, Exception e, PrintStream ps) {
-		printException("", args, e, ps);
+	void printExceptionCmdLine(boolean isStackTrace, Exception e, PrintStream ps) {
+		printException("", isStackTrace, e, ps);
 	}
 
-	void printExceptionExecution(String[] args, Exception e, PrintStream ps) {
-		printException(EXECUTION_FAILED_MESSAGE, args, e, ps);
+	void printExceptionExecution(boolean isStackTrace, Exception e, PrintStream ps) {
+		printException(EXECUTION_FAILED_MESSAGE, isStackTrace, e, ps);
 	}
 
-	void printExceptionInitDir(String[] args, Exception e, PrintStream ps) {
-		printException("FAILED TO INIT WORKING FOLDER: ", args, e, ps);
+	void printExceptionInitDir(boolean isStackTrace, Exception e, PrintStream ps) {
+		printException("FAILED TO INIT WORKING FOLDER: ", isStackTrace, e, ps);
 	}
 
-	void printExceptionConfig(String[] args, Exception e, PrintStream ps) {
-		printException("FAILED TO LOAD CONFIG: ", args, e, ps);
+	void printExceptionConfig(boolean isStackTrace, Exception e, PrintStream ps) {
+		printException("FAILED TO LOAD CONFIG: ", isStackTrace, e, ps);
 	}
 
-	private void printException(String prefixMessage, String[] args, Exception e, PrintStream ps) {
-		if (ArrayUtils.contains(args, Option.STACK_TRACE.getCmdLineStr())) {
+	private void printException(String prefixMessage, boolean isStackTrace, Exception e, PrintStream ps) {
+		if (isStackTrace) {
 			ps.println(ansi().a(Ansi.Attribute.INTENSITY_BOLD).fgRed().a(prefixMessage).reset().toString());
 			e.printStackTrace(ps);
 		} else {

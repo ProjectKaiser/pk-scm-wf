@@ -248,7 +248,7 @@ public class CLITest {
 
 		verify(mockedPS, sometime()).println(Matchers.contains(testException.getMessage()));
 		verify(mockedAction, never()).execute(any(IProgress.class));
-		verify(mockedCLI).printExceptionConfig(args, testException, mockedPS);
+		verify(mockedCLI).printExceptionConfig(false, testException, mockedPS);
 	}
 
 	@Test
@@ -271,7 +271,7 @@ public class CLITest {
 			CLI mockedCLI = spy(new CLI());
 			doThrow(testException).when(mockedCLI).initWorkingDir();
 			assertEquals(CLI.EXIT_CODE_OK, mockedCLI.exec(args));
-			verify(mockedCLI).printExceptionInitDir(eq(args), eq(testException), any(PrintStream.class));
+			verify(mockedCLI).printExceptionInitDir(eq(false), eq(testException), any(PrintStream.class));
 		}
 	}
 
