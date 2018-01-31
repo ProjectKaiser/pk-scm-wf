@@ -43,7 +43,9 @@ public class CommandLine {
 	private static String printCommands() {
 		StringBuilder sb = new StringBuilder();
 		for (CLICommand cmd : CLICommand.values()) {
-			sb.append(cmd.getCmdLineStr() + "|");
+			if (cmd.getCmdLineStr() != null) {
+				sb.append(cmd.getCmdLineStr() + "|");
+			}
 		}
 		sb.deleteCharAt(sb.length() - 1);
 		return sb.toString();
