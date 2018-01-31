@@ -53,7 +53,7 @@ public class CommandLine {
 
 	public static String getUsage() {
 		int maxLen = CLICommand.getMaxLen();
-		return "usage: groovy run.groovy " + printCommands() + " productCoords " + printOptions() + "\r\n"
+		return "command line arguments: " + printCommands() + " productCoords " + printOptions() + "\r\n"
 				+ "\r\n"
 				+ String.format("%-" + maxLen + "s - show actions will be made with product specified by productCoords\r\n", CLICommand.STATUS.getCmdLineStr())
 				+ String.format("%-" + maxLen + "s - create all necessary release branches and lock mdeps versions for product specified by productCoords\r\n", CLICommand.FORK.getCmdLineStr())
