@@ -45,7 +45,8 @@ Status denotes next action which should be undertaken to finish patch build: {AC
 - `subComponents` are calculated using mdeps from particular RB
 - Any component is not in DONE status => BUILD_MDEPS
 - Any component has patch which is greater than one mentioned in `mdeps` => ACTUALIZE_PATCHES
-- No valuable commits after last tag => DONE
+- No valuable commits after last tag => DONE 
+  - Using #scm-ver is not safe, it is possible to lost commit which is done between build and increasing version
 - If none of above : BUILD
 
 # Example 1, Forked Sub
