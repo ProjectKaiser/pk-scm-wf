@@ -144,6 +144,28 @@ public class ExtendedStatusBuilder {
 		if (hasMDepsInERRORStatus(rb.getMDeps(), cache)) {
 			buildStatus = BuildStatus.ERROR;
 			errorDesc = "has components in ERROR status";
+		} else {
+			Version lastTagVersion = getLastTagVersion(repo, rb);
+			Version expectedHeadVer = lastTagVersion != null ? hasDelayedTag ? lastTagVersion : lastTagVersion.toNextPatch() : null;
+			Version actualVersion = rb.getVersion();
+			if (lastTagVersion != null && !actualVersion.equals(expectedHeadVer)) {
+				buildStatus = BuildStatus.ERROR; 
+				errorDesc = String.format("last tag %s does not correspond to %s head version. Expected version: %s, actual: %s", lastTagVersion + (hasDelayedTag ? " (delayed)" : ""), rb.getName(), 
+						expectedHeadVer + (hasDelayedTag ? " (considering delayed tag)" : ""), actualVersion, rb.getVersion());
+			} else if (hasMDepsNotInDONEStatus(rb.getMDeps(), cache)) {
+				buildStatus = BuildStatus.BUILD_MDEPS;
+			} else if (!areMDepsPatchesActual(rb.getMDeps(), cache)) {
+				buildStatus = BuildStatus.ACTUALIZE_PATCHES;
+			} else if (reportDuration(() -> noValueableCommitsAfterLastTag(repo, rb), "is release branch modified check", comp, progress)) { 
+				buildStatus = BuildStatus.DONE;
+			} else {
+				buildStatus = BuildStatus.BUILD;
+			}
+		}
+		
+		if (hasMDepsInERRORStatus(rb.getMDeps(), cache)) {
+			buildStatus = BuildStatus.ERROR;
+			errorDesc = "has components in ERROR status";
 		} else if (hasMDepsNotInDONEStatus(rb.getMDeps(), cache)) {
 			buildStatus = BuildStatus.BUILD_MDEPS;
 		} else if (!areMDepsPatchesActual(rb.getMDeps(), cache)) {
