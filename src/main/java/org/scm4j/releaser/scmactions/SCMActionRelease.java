@@ -55,7 +55,7 @@ public class SCMActionRelease extends ActionAbstract {
 					bsTo = BuildStatus.BUILD;
 				}
 			case DONE:
-				break;
+			case ERROR:
 		}
 		this.bsTo = bsTo;
 	}

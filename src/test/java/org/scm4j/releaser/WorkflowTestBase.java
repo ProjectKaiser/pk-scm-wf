@@ -359,27 +359,41 @@ public class WorkflowTestBase {
 		return execAndGetAction(CLICommand.BUILD.getCmdLineStr(), comp.getCoords().toString());
 	}
 	
-	private IAction getAndExecAction(Runnable preExec, String... args)  {
+	private CLI execAndGetCLI(Runnable preExec, String... args) {
 		CLI cli = new CLI();
 		cli.setPreExec(preExec);
 		if (cli.exec(args) != CLI.EXIT_CODE_OK) {
 			throw cli.getLastException();
 		}
+		return cli;
+	}
+	
+	private IAction execAndGetAction(Runnable preExec, String... args)  {
+		CLI cli = execAndGetCLI(preExec, args);
 		IAction action = cli.getAction();
 		action.toString(); // cover
 		return action;
 	}
+	
+	private ExtendedStatus execAndGetNode(Runnable preExec, String... args) {
+		CLI cli = execAndGetCLI(preExec, args);
+		return cli.getNode();
+	}
 
 	private IAction execAndGetAction(String... args) {
-		return getAndExecAction(null, args);
+		return execAndGetAction(null, args);
 	}
 	
 	protected IAction execAndGetActionTag(Component comp, Runnable preExec) {
-		return getAndExecAction(preExec, CLICommand.TAG.getCmdLineStr(), comp.getCoords().toString());
+		return execAndGetAction(preExec, CLICommand.TAG.getCmdLineStr(), comp.getCoords().toString());
 	}
 	
 	protected IAction execAndGetActionBuildDelayedTag(Component comp) {
 		return execAndGetAction(CLICommand.BUILD.getCmdLineStr(), comp.getCoords().toString(), Option.DELAYED_TAG.getCmdLineStr());
+	}
+	
+	protected ExtendedStatus execAndGetNodeStatus(Component comp) {
+		return execAndGetNode(null, CLICommand.STATUS.getCmdLineStr(), comp.getCoords().toString());
 	}
 	
 	protected void forkAndBuild(Component comp) {

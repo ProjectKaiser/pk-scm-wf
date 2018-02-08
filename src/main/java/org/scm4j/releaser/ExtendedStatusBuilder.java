@@ -1,5 +1,15 @@
 package org.scm4j.releaser;
 
+import static org.scm4j.releaser.Utils.ZERO_PATCH;
+import static org.scm4j.releaser.Utils.reportDuration;
+
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
+import java.util.function.Function;
+
 import org.scm4j.commons.Version;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.commons.progress.ProgressConsole;
@@ -19,13 +29,7 @@ import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.vcs.api.VCSTag;
 import org.scm4j.vcs.api.WalkDirection;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-
-import static org.scm4j.releaser.Utils.ZERO_PATCH;
-import static org.scm4j.releaser.Utils.reportDuration;
+import com.google.common.base.Supplier;
 
 public class ExtendedStatusBuilder {
 
@@ -71,24 +75,26 @@ public class ExtendedStatusBuilder {
 		if (null != existing) {
 			return new ExtendedStatus(existing.getNextVersion(), existing.getStatus(), existing.getSubComponents(), comp, repo);
 		}
+		
+		DelayedTagsFile dtf = new DelayedTagsFile();
+		Boolean hasDelayedTag = dtf.getRevisitonByUrl(repo.getUrl()) != null; 
 
 		ExtendedStatus res = patch ? 
-			getPatchStatus(comp, cache, progress, repo) :
-			getMinorStatus(comp, cache, progress, repo);
+			getPatchStatus(comp, cache, progress, repo, hasDelayedTag) :
+			getMinorStatus(comp, cache, progress, repo, hasDelayedTag);
 		
 		cache.replace(repo.getUrl(), res);
 		return res;
 	}
 	
-	private ExtendedStatus getMinorStatus(Component comp, CachedStatuses cache, IProgress progress, VCSRepository repo) {
+	private ExtendedStatus getMinorStatus(Component comp, CachedStatuses cache, IProgress progress, VCSRepository repo, Boolean hasDelayedTag) {
 		ReleaseBranchCurrent rb = reportDuration(() -> ReleaseBranchFactory.getCRB(repo), "CRB created", comp, progress);
 		LinkedHashMap<Component, ExtendedStatus> subComponents = new LinkedHashMap<>();
 		
 		BuildStatus status;
-		DelayedTagsFile dtf = new DelayedTagsFile();
-		if (isNeedToFork(comp, rb, cache, progress, subComponents, repo)) {
+		if (isNeedToFork(comp, rb, cache, progress, subComponents, repo, hasDelayedTag)) {
 			status = BuildStatus.FORK;
-		} else if (Integer.parseInt(rb.getVersion().getPatch()) > 0 || dtf.getRevisitonByUrl(repo.getUrl()) != null) {
+		} else if (Integer.parseInt(rb.getVersion().getPatch()) > 0 || hasDelayedTag) {
 			status = BuildStatus.DONE;
 		} else if (!areMDepsLocked(rb.getMDeps())) {
 			status = BuildStatus.LOCK;
@@ -109,7 +115,7 @@ public class ExtendedStatusBuilder {
 		return new ExtendedStatus(nextVersion, status, subComponents, comp, repo);
 	}
 
-	private ExtendedStatus getPatchStatus(Component comp, CachedStatuses cache, IProgress progress, VCSRepository repo) {
+	private ExtendedStatus getPatchStatus(Component comp, CachedStatuses cache, IProgress progress, VCSRepository repo, Boolean hasDelayedTag) {
 		ReleaseBranchPatch rb = reportDuration(() -> ReleaseBranchFactory.getReleaseBranchPatch(comp.getVersion(), repo),
 				"RB created", comp, progress);
 		LinkedHashMap<Component, ExtendedStatus> subComponents = new LinkedHashMap<>();
@@ -122,7 +128,7 @@ public class ExtendedStatusBuilder {
 		if (Integer.parseInt(rb.getVersion().getPatch()) < 1) {
 			throw new ENoReleases("Release Branch version patch is " + rb.getVersion().getPatch() + ". Component release should be created before patch");
 		}
-
+		
 		List<Component> nonLockedMDeps = new ArrayList<>();
 		if (!areMDepsLocked(rb.getMDeps(), nonLockedMDeps)) {
 			throw new EReleaseMDepsNotLocked(nonLockedMDeps);
@@ -137,22 +143,44 @@ public class ExtendedStatusBuilder {
 			subComponents.put(mdep, subComponentsLocal.get(mdep));
 		}
 		
-		if (hasMDepsNotInDONEStatus(rb.getMDeps(), cache)) {
+		String errorDesc = null;
+		if (hasMDepsInERRORStatus(rb.getMDeps(), cache)) {
+			buildStatus = BuildStatus.ERROR;
+			errorDesc = "has components in ERROR status";
+		} else if (hasMDepsNotInDONEStatus(rb.getMDeps(), cache)) {
 			buildStatus = BuildStatus.BUILD_MDEPS;
 		} else if (!areMDepsPatchesActual(rb.getMDeps(), cache)) {
 			buildStatus = BuildStatus.ACTUALIZE_PATCHES;
-		} else if (reportDuration(() -> noValueableCommitsAfterLastTag(repo, rb), "is release branch modified check", comp, progress)) {
-			buildStatus = BuildStatus.DONE;
 		} else {
-			buildStatus = BuildStatus.BUILD;
+			Version lastTagVersion = getLastTagVersion(repo, rb);
+			Version expectedHeadVer = lastTagVersion != null ? hasDelayedTag ? lastTagVersion : lastTagVersion.toNextPatch() : null;
+			Version actualVersion = rb.getVersion();
+			if (lastTagVersion != null && !actualVersion.equals(expectedHeadVer)) {
+				buildStatus = BuildStatus.ERROR; 
+				errorDesc = String.format("last tag %s does not correspond to %s head version. Expected version: %s, actual: %s", lastTagVersion + (hasDelayedTag ? " (delayed)" : ""), rb.getName(), 
+						expectedHeadVer + (hasDelayedTag ? " (considering delayed tag)" : ""), actualVersion, rb.getVersion());
+			} else if (reportDuration(() -> noValueableCommitsAfterLastTag(repo, rb), "is release branch modified check", comp, progress)) { 
+				buildStatus = BuildStatus.DONE;
+			} else {
+				buildStatus = BuildStatus.BUILD;
+			}
 		}
 		
 		Version nextVersion = rb.getVersion();
-		DelayedTagsFile dtf = new DelayedTagsFile();
-		if (dtf.getRevisitonByUrl(repo.getUrl()) != null) {
+		if (hasDelayedTag) {
 			nextVersion = nextVersion.toNextPatch();
 		}
-		return new ExtendedStatus(nextVersion, buildStatus, subComponents, comp, repo);
+		
+		return new ExtendedStatus(nextVersion, buildStatus, subComponents, comp, repo, errorDesc);
+	}
+	
+	private boolean hasMDepsInERRORStatus(List<Component> mDeps, CachedStatuses cache) {
+		for (Component mDep : mDeps) {
+			if (cache.get(repoFactory.getUrl(mDep)).getStatus() == BuildStatus.ERROR) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private boolean hasMDepsNotInDONEStatus(List<Component> mDeps, CachedStatuses cache) {
@@ -164,32 +192,65 @@ public class ExtendedStatusBuilder {
 		return false;
 	}
 
+	private Version getLastTagVersion(VCSRepository repo, ReleaseBranchPatch rb) {
+		IVCS vcs = repo.getVCS();
+		DelayedTagsFile dtf = new DelayedTagsFile();
+		String delayedTagRevision = dtf.getRevisitonByUrl(repo.getUrl());
+		Version res = walkOnCommitTags(repo, rb, (commit) -> {
+			if (commit.getRevision().equals(delayedTagRevision)) {
+				return new Version(vcs.getFileContent(rb.getName(), Utils.VER_FILE_NAME, delayedTagRevision));
+			}
+			List<VCSTag> tags = vcs.getTagsOnRevision(commit.getRevision());
+			for (VCSTag tag : tags) {
+				Version ver = new Version(tag.getTagName());
+				if (ver.isSemantic()) {
+					return ver;
+				}
+			}
+			return null;
+		});
+		return res;
+	}
+	
 	private boolean noValueableCommitsAfterLastTag(VCSRepository repo, ReleaseBranchPatch rb) {
+		IVCS vcs = repo.getVCS();
+		DelayedTagsFile dtf = new DelayedTagsFile();
+		String delayedTagRevision = dtf.getRevisitonByUrl(repo.getUrl());
+		Boolean res = walkOnCommitTags(repo, rb, (commit) -> {
+			if (commit.getRevision().equals(delayedTagRevision)) {
+				return true;
+			}
+			List<VCSTag> tags = vcs.getTagsOnRevision(commit.getRevision());
+			if (!commit.getLogMessage().contains(LogTag.SCM_VER) && !commit.getLogMessage().contains(LogTag.SCM_IGNORE)) {
+				return !tags.isEmpty();
+			}
+			if (!tags.isEmpty()) {
+				return true;
+			}
+			return null;
+		});
+		return res == null ? true : res;
+	}
+	
+	private <T> T walkOnCommitTags(VCSRepository repo, ReleaseBranchPatch rb, Function<VCSCommit, T> func) {
 		IVCS vcs = repo.getVCS();
 		String startingFromRevision = null;
 
-		DelayedTagsFile dtf = new DelayedTagsFile();
-		String delayedTagRevision = dtf.getRevisitonByUrl(repo.getUrl());
 		List<VCSCommit> commits;
 		String branchName;
 		branchName = rb.getName();
 		do {
 			commits = vcs.getCommitsRange(branchName, startingFromRevision, WalkDirection.DESC, COMMITS_RANGE_LIMIT);
 			for (VCSCommit commit : commits) {
-				if (commit.getRevision().equals(delayedTagRevision)) {
-					return true;
-				}
-				List<VCSTag> tags = vcs.getTagsOnRevision(commit.getRevision());
-				if (!commit.getLogMessage().contains(LogTag.SCM_VER) && !commit.getLogMessage().contains(LogTag.SCM_IGNORE)) {
-					return !tags.isEmpty();
-				}
-				if (!tags.isEmpty()) {
-					return true;
+				T res = func.apply(commit);
+				if (res != null) {
+					return res;
 				}
 				startingFromRevision = commit.getRevision();
 			}
 		} while (commits.size() >= COMMITS_RANGE_LIMIT);
-		return true;
+		return null;
+		
 	}
 
 	private boolean areMDepsPatchesActual(List<Component> mDeps, CachedStatuses cache) {
@@ -220,7 +281,7 @@ public class ExtendedStatusBuilder {
 	}
 
 	private Boolean isNeedToFork(Component comp, ReleaseBranchCurrent rb, CachedStatuses cache, IProgress progress,
-								 LinkedHashMap<Component, ExtendedStatus> subComponents, VCSRepository repo) {
+								 LinkedHashMap<Component, ExtendedStatus> subComponents, VCSRepository repo, Boolean hasDelayedTag) {
 		
 		ConcurrentHashMap<Component, ExtendedStatus> subComponentsLocal = new ConcurrentHashMap<>();
 		Utils.async(rb.getMDeps(), (mdep) -> {
@@ -238,8 +299,7 @@ public class ExtendedStatusBuilder {
 
 
 		if (rb.getVersion().getPatch().equals(Utils.ZERO_PATCH)) {
-			DelayedTagsFile dtf = new DelayedTagsFile();
-			if (dtf.getRevisitonByUrl(repo.getUrl()) == null) {
+			if (!hasDelayedTag) {
 				return false;
 			}
 		}

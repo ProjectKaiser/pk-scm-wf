@@ -37,6 +37,7 @@ public class CLI {
 	private final IConfigUrls configUrls;
 	private final VCSRepositoryFactory repoFactory;
 	private IAction action;
+	private ExtendedStatus node;
 	private RuntimeException lastException = null;
 	private Runnable preExec = null;
 
@@ -161,11 +162,11 @@ public class CLI {
 			execActionTree(action);
 		} else {
 			CachedStatuses cache = new CachedStatuses();
-			ExtendedStatus node = getStatusTree(cmd, cache);
+			node = getStatusTree(cmd, cache);
 			if (cmd.getCommand() == CLICommand.STATUS) {
-				printStatusTree(node);
+				printStatusTree(getNode());
 			} else {
-				action = getActionTree(node, cache, cmd);
+				action = getActionTree(getNode(), cache, cmd);
 				execActionTree(action);
 			}
 		}
@@ -227,6 +228,7 @@ public class CLI {
 	}
 
 	private void printException(String prefixMessage, boolean isStackTrace, Exception e, PrintStream ps) {
+		ps.println();
 		if (isStackTrace) {
 			ps.println(ansi().a(Ansi.Attribute.INTENSITY_BOLD).fgRed().a(prefixMessage).reset().toString());
 			e.printStackTrace(ps);
@@ -244,5 +246,9 @@ public class CLI {
 
 	public RuntimeException getLastException() {
 		return lastException;
+	}
+
+	public ExtendedStatus getNode() {
+		return node;
 	}
 }

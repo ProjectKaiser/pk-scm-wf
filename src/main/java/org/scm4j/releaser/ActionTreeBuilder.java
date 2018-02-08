@@ -8,6 +8,7 @@ import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.VCSRepository;
 import org.scm4j.releaser.conf.VCSRepositoryFactory;
 import org.scm4j.releaser.exceptions.EBuildOnNotForkedRelease;
+import org.scm4j.releaser.exceptions.EInconsistentCompState;
 import org.scm4j.releaser.scmactions.SCMActionRelease;
 import org.scm4j.releaser.scmactions.SCMActionTag;
 
@@ -43,6 +44,10 @@ public class ActionTreeBuilder {
 		List<IAction> childActions = new ArrayList<>();
 		for (Map.Entry<Component, ExtendedStatus> nodeEntry : node.getSubComponents().entrySet()) {
 			childActions.add(getActionTree(nodeEntry.getValue(), cache, actionSet, false));
+		}
+		
+		if (node.getStatus() == BuildStatus.ERROR) {
+			throw new EInconsistentCompState(node.getComp(), node.getErrorDesc());
 		}
 
 		if (node.getStatus() == BuildStatus.FORK && actionSet == ActionSet.FULL) {

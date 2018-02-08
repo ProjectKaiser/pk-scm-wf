@@ -14,6 +14,7 @@ import org.scm4j.releaser.conf.DelayedTagsFile;
 import org.scm4j.releaser.conf.TagDesc;
 import org.scm4j.releaser.conf.VCSRepository;
 import org.scm4j.releaser.exceptions.EDelayingDelayed;
+import org.scm4j.releaser.exceptions.EInconsistentCompState;
 import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.vcs.api.VCSTag;
 import org.scm4j.vcs.api.WalkDirection;
@@ -270,6 +271,28 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 		} catch (EDelayingDelayed e) {
 			assertEquals(repoUnTillDb.getUrl(), e.getUrl());
 		}
+	}
+	
+	@Test
+	public void testERRORStateIfVersionChangedAfterPatchDelayedTag() {
+		fork(compUnTillDb);
+		IAction action = execAndGetActionBuildDelayedTag(compUnTillDb);
+		assertActionDoesBuildDelayedTag(action, compUnTillDb);
+		
+		// simulate wrong release branch head version 
+		Component compUnTillDbPatch = new Component(UNTILLDB + ":" + env.getUnTillDbVer().toRelease());
+		ReleaseBranchPatch rbUnTillDbPatch = ReleaseBranchFactory.getReleaseBranchPatch(compUnTillDbPatch.getVersion(), repoUnTillDb);
+		repoUnTillDb.getVCS().setFileContent(rbUnTillDbPatch.getName(), Utils.VER_FILE_NAME, rbUnTillDbPatch.getVersion().toNextPatch().toNextPatch().toString(), "version wrongly changed");
+		
+		try {
+			execAndGetActionBuild(compUnTillDbPatch);
+			fail();
+		} catch (EInconsistentCompState e) {
+			assertEquals(compUnTillDbPatch, e.getComp());
+		}
+		
+		ExtendedStatus node = execAndGetNodeStatus(compUnTillDbPatch);
+		assertEquals(BuildStatus.ERROR, node.getStatus());
 	}
 
 
