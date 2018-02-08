@@ -73,6 +73,7 @@ public class SCMProcBuild implements ISCMProc {
 			Utils.waitForDeleteDir(buildDir);
 		}
 		Files.createDirectories(buildDir.toPath());
+
 		String statusMessage = String.format(" out %s on revision %s into %s", comp.getName(), headCommit.getRevision(), buildDir.getPath());
 		progress.reportStatus("checking" + statusMessage + "...");
 		Utils.reportDuration(() -> vcs.checkout(releaseBranchName, buildDir.getPath(), headCommit.getRevision()), "checked" + statusMessage, null, progress);

@@ -26,5 +26,4 @@ public class SCMProcBuildTest extends WorkflowTestBase {
 			
 		}
 	}
-	
 }

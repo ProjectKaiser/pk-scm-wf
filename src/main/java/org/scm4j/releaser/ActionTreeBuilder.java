@@ -59,9 +59,8 @@ public class ActionTreeBuilder {
 	}
 
 	public IAction getTagAction(Component comp) {
-		List<IAction> childActions = new ArrayList<>();
 		VCSRepository repo = repoFactory.getVCSRepository(comp);
 		Version lastReleaseVersion = new DevelopBranch(comp, repo).getVersion().toPreviousMinor();
-		return new SCMActionTag(comp, childActions, Utils.getReleaseBranchName(repo, lastReleaseVersion), repo);
+		return new SCMActionTag(comp, Utils.getReleaseBranchName(repo, lastReleaseVersion), repo);
 	}
 }

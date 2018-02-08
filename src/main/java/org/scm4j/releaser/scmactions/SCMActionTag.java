@@ -5,28 +5,30 @@ import org.scm4j.commons.progress.IProgress;
 import org.scm4j.releaser.LogTag;
 import org.scm4j.releaser.Utils;
 import org.scm4j.releaser.actions.ActionAbstract;
-import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.branch.ReleaseBranchFactory;
-import org.scm4j.releaser.conf.*;
+import org.scm4j.releaser.conf.Component;
+import org.scm4j.releaser.conf.DelayedTagsFile;
+import org.scm4j.releaser.conf.TagDesc;
+import org.scm4j.releaser.conf.VCSRepository;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.exceptions.EVCSTagExists;
 
-import java.util.List;
+import java.util.ArrayList;
 
 public class SCMActionTag extends ActionAbstract {
 	
 	private final String releaseBranchName;
 
-	public SCMActionTag(Component comp, List<IAction> childActions, String releaseBranchName, VCSRepository repo) {
-		super(comp, childActions, repo);
+	public SCMActionTag(Component comp, String releaseBranchName, VCSRepository repo) {
+		super(comp, new ArrayList<>(), repo);
 		this.releaseBranchName = releaseBranchName;
 	}
 	
 	@Override
 	protected void executeAction(IProgress progress) {
-		DelayedTagsFile cf = new DelayedTagsFile();
+		DelayedTagsFile dtf = new DelayedTagsFile();
 		IVCS vcs = getVCS();
-		String revisionToTag = cf.getRevisitonByUrl(repo.getUrl());
+		String revisionToTag = dtf.getRevisitonByUrl(repo.getUrl());
 		if (revisionToTag == null) {
 			progress.reportStatus("no revisions to delayed tag");
 			return;
@@ -50,7 +52,7 @@ public class SCMActionTag extends ActionAbstract {
 					"bump patch version in release branch: " + nextPatchVersion, null, progress);
 		}
 
-		cf.removeRevisionByUrl(repo.getUrl());
+		dtf.removeRevisionByUrl(repo.getUrl());
 	}
 	
 	@Override

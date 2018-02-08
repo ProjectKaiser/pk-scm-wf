@@ -1,14 +1,5 @@
 package org.scm4j.releaser;
 
-import static org.scm4j.releaser.Utils.ZERO_PATCH;
-import static org.scm4j.releaser.Utils.reportDuration;
-
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Function;
-
 import org.scm4j.commons.Version;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.commons.progress.ProgressConsole;
@@ -27,6 +18,15 @@ import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.vcs.api.VCSTag;
 import org.scm4j.vcs.api.WalkDirection;
+
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
+
+import static org.scm4j.releaser.Utils.ZERO_PATCH;
+import static org.scm4j.releaser.Utils.reportDuration;
 
 public class ExtendedStatusBuilder {
 
@@ -151,33 +151,11 @@ public class ExtendedStatusBuilder {
 			if (lastTagVersion != null && !actualVersion.equals(expectedHeadVer)) {
 				buildStatus = BuildStatus.ERROR; 
 				errorDesc = String.format("last tag %s does not correspond to %s head version. Expected version: %s, actual: %s", lastTagVersion + (hasDelayedTag ? " (delayed)" : ""), rb.getName(), 
-						expectedHeadVer + (hasDelayedTag ? " (considering delayed tag)" : ""), actualVersion, rb.getVersion());
+						expectedHeadVer + (hasDelayedTag ? " (considering delayed tag)" : ""), actualVersion);
 			} else if (hasMDepsNotInDONEStatus(rb.getMDeps(), cache)) {
 				buildStatus = BuildStatus.BUILD_MDEPS;
 			} else if (!areMDepsPatchesActual(rb.getMDeps(), cache)) {
 				buildStatus = BuildStatus.ACTUALIZE_PATCHES;
-			} else if (reportDuration(() -> noValueableCommitsAfterLastTag(repo, rb), "is release branch modified check", comp, progress)) { 
-				buildStatus = BuildStatus.DONE;
-			} else {
-				buildStatus = BuildStatus.BUILD;
-			}
-		}
-		
-		if (hasMDepsInERRORStatus(rb.getMDeps(), cache)) {
-			buildStatus = BuildStatus.ERROR;
-			errorDesc = "has components in ERROR status";
-		} else if (hasMDepsNotInDONEStatus(rb.getMDeps(), cache)) {
-			buildStatus = BuildStatus.BUILD_MDEPS;
-		} else if (!areMDepsPatchesActual(rb.getMDeps(), cache)) {
-			buildStatus = BuildStatus.ACTUALIZE_PATCHES;
-		} else {
-			Version lastTagVersion = getLastTagVersion(repo, rb);
-			Version expectedHeadVer = lastTagVersion != null ? hasDelayedTag ? lastTagVersion : lastTagVersion.toNextPatch() : null;
-			Version actualVersion = rb.getVersion();
-			if (lastTagVersion != null && !actualVersion.equals(expectedHeadVer)) {
-				buildStatus = BuildStatus.ERROR; 
-				errorDesc = String.format("last tag %s does not correspond to %s head version. Expected version: %s, actual: %s", lastTagVersion + (hasDelayedTag ? " (delayed)" : ""), rb.getName(), 
-						expectedHeadVer + (hasDelayedTag ? " (considering delayed tag)" : ""), actualVersion, rb.getVersion());
 			} else if (reportDuration(() -> noValueableCommitsAfterLastTag(repo, rb), "is release branch modified check", comp, progress)) { 
 				buildStatus = BuildStatus.DONE;
 			} else {
@@ -256,8 +234,7 @@ public class ExtendedStatusBuilder {
 		String startingFromRevision = null;
 
 		List<VCSCommit> commits;
-		String branchName;
-		branchName = rb.getName();
+		String branchName = rb.getName();
 		do {
 			commits = vcs.getCommitsRange(branchName, startingFromRevision, WalkDirection.DESC, COMMITS_RANGE_LIMIT);
 			for (VCSCommit commit : commits) {
