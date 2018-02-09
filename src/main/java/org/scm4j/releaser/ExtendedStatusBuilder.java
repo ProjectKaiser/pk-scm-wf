@@ -198,8 +198,11 @@ public class ExtendedStatusBuilder {
 				return new Version(vcs.getFileContent(rb.getName(), Utils.VER_FILE_NAME, delayedTagRevision));
 			}
 			List<VCSTag> tags = vcs.getTagsOnRevision(commit.getRevision());
-			if (!tags.isEmpty()) {
-				return new Version(tags.get(0).getTagName());
+			for (VCSTag tag : tags) {
+				Version ver = new Version(tag.getTagName());
+				if (ver.isSemantic()) {
+					return ver;
+				}
 			}
 			return null;
 		});
