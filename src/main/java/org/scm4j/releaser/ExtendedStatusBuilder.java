@@ -145,7 +145,7 @@ public class ExtendedStatusBuilder {
 			buildStatus = BuildStatus.ERROR;
 			errorDesc = "has components in ERROR status";
 		} else {
-			Version lastTagVersion = getLastTagVersion(repo, rb);
+			Version lastTagVersion = reportDuration(() -> getLastTagVersion(repo, rb), "last tag determination", comp, progress);
 			Version expectedHeadVer = lastTagVersion != null ? hasDelayedTag ? lastTagVersion : lastTagVersion.toNextPatch() : null;
 			Version actualVersion = rb.getVersion();
 			if (lastTagVersion != null && !actualVersion.equals(expectedHeadVer)) {
@@ -198,11 +198,8 @@ public class ExtendedStatusBuilder {
 				return new Version(vcs.getFileContent(rb.getName(), Utils.VER_FILE_NAME, delayedTagRevision));
 			}
 			List<VCSTag> tags = vcs.getTagsOnRevision(commit.getRevision());
-			for (VCSTag tag : tags) {
-				Version ver = new Version(tag.getTagName());
-				if (ver.isSemantic()) {
-					return ver;
-				}
+			if (!tags.isEmpty()) {
+				return new Version(tags.get(0).getTagName());
 			}
 			return null;
 		});
@@ -246,7 +243,6 @@ public class ExtendedStatusBuilder {
 			}
 		} while (commits.size() >= COMMITS_RANGE_LIMIT);
 		return null;
-		
 	}
 
 	private boolean areMDepsPatchesActual(List<Component> mDeps, CachedStatuses cache) {
