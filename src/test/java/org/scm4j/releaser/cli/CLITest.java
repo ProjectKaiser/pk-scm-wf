@@ -285,7 +285,7 @@ public class CLITest {
 		new CLI().exec(args);
 
 		List<String> srcFileNames = new ArrayList<>();
-		for (File srcFile : FileUtils.listFiles(getResourceFile(CLI.class, CLI.CONFIG_TEMPLATES_ROSURCE_PATH), FileFilterUtils.trueFileFilter(), FileFilterUtils.trueFileFilter())) {
+		for (File srcFile : FileUtils.listFiles(getResourceFile(CLI.class), FileFilterUtils.trueFileFilter(), FileFilterUtils.trueFileFilter())) {
 			srcFileNames.add(srcFile.getName());
 		}
 
@@ -299,8 +299,8 @@ public class CLITest {
 		assertEquals(TEST_CONFIG_CONTENT, FileUtils.readFileToString(customConfigTemplateFile, StandardCharsets.UTF_8));
 	}
 
-	private File getResourceFile(Class<?> forClass, String path) throws Exception {
-		URL url = forClass.getResource(path);
+	private File getResourceFile(Class<?> forClass) throws Exception {
+		URL url = forClass.getResource(CLI.CONFIG_TEMPLATES_ROSURCE_PATH);
 		return new File(url.toURI());
 	}
 

@@ -17,7 +17,7 @@ public class TestBuilder implements IBuilder {
 		return envVars;
 	}
 
-	private static Map<String, Map<String, String>> envVars = new HashMap<>();
+	private static final Map<String, Map<String, String>> envVars = new HashMap<>();
 
 	public static Map<String, TestBuilder> getBuilders() {
 		return builders;
