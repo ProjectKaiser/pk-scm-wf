@@ -33,17 +33,15 @@ public class SCMActionTag extends ActionAbstract {
 			progress.reportStatus("no revisions to delayed tag");
 			return;
 		}
-		
-		Version delayedTagVersion = new Version(vcs.getFileContent(releaseBranchName, Utils.VER_FILE_NAME, revisionToTag));
-		TagDesc tagDesc = Utils.getTagDesc(delayedTagVersion.toString());
 
-		try {
-			Utils.reportDuration(() -> vcs.createTag(releaseBranchName, tagDesc.getName(), tagDesc.getMessage(), revisionToTag),
-					String.format("tag revision %s of %s: %s", revisionToTag, releaseBranchName, delayedTagVersion.toReleaseString()), null, progress);
-		} catch (EVCSTagExists e) {
-			progress.reportStatus(String.format("revision %s is already tagged with %s tag", revisionToTag, tagDesc.getName()));
-		}
+		Version delayedTagVersion = tagRevision(progress, vcs, revisionToTag);
 
+		bumpPatch(progress, vcs, delayedTagVersion);
+
+		dtf.removeRevisionByUrl(repo.getUrl());
+	}
+
+	private void bumpPatch(IProgress progress, IVCS vcs, Version delayedTagVersion) {
 		Version nextPatchVersion = delayedTagVersion.toNextPatch();
 		Version crbVersion = ReleaseBranchFactory.getCRB(repo).getVersion();
 		if (!crbVersion.isGreaterThan(nextPatchVersion) && !crbVersion.equals(nextPatchVersion)) {
@@ -51,10 +49,20 @@ public class SCMActionTag extends ActionAbstract {
 					LogTag.SCM_VER + " " + nextPatchVersion),
 					"bump patch version in release branch: " + nextPatchVersion, null, progress);
 		}
-
-		dtf.removeRevisionByUrl(repo.getUrl());
 	}
-	
+
+	private Version tagRevision(IProgress progress, IVCS vcs, String revisionToTag) {
+		Version delayedTagVersion = new Version(vcs.getFileContent(releaseBranchName, Utils.VER_FILE_NAME, revisionToTag));
+		TagDesc tagDesc = Utils.getTagDesc(delayedTagVersion.toString());
+		try {
+			Utils.reportDuration(() -> vcs.createTag(releaseBranchName, tagDesc.getName(), tagDesc.getMessage(), revisionToTag),
+					String.format("tag revision %s of %s: %s", revisionToTag, releaseBranchName, delayedTagVersion.toReleaseString()), null, progress);
+		} catch (EVCSTagExists e) {
+			progress.reportStatus(String.format("revision %s is already tagged with %s tag", revisionToTag, tagDesc.getName()));
+		}
+		return delayedTagVersion;
+	}
+
 	@Override
 	public String toString() {
 		return "tag " +  comp.getCoords().toString();

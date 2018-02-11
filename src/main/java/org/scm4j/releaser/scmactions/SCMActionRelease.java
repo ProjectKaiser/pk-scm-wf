@@ -106,7 +106,7 @@ public class SCMActionRelease extends ActionAbstract {
 
 	@Override
 	public boolean isExecutable() {
-		return bsFrom != BuildStatus.DONE;
+		return bsFrom != BuildStatus.DONE && bsFrom != BuildStatus.ERROR;
 	}
 
 	public boolean isDelayedTag() {
