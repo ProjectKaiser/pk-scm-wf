@@ -89,7 +89,7 @@ public class ExtendedStatusBuilder {
 		LinkedHashMap<Component, ExtendedStatus> subComponents = new LinkedHashMap<>();
 		
 		BuildStatus status;
-		if (isNeedToFork(comp, rb, cache, progress, subComponents, repo, hasDelayedTag)) {
+		if (!comp.getVersion().isLocked() && isNeedToFork(comp, rb, cache, progress, subComponents, repo, hasDelayedTag)) {
 			status = BuildStatus.FORK;
 		} else if (Integer.parseInt(rb.getVersion().getPatch()) > 0 || hasDelayedTag) {
 			status = BuildStatus.DONE;
