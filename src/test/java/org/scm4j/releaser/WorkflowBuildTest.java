@@ -127,9 +127,8 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		env.generateFeatureCommit(env.getUnTillDbVCS(), crb.getName(), "patch feature added");
 		env.generateFeatureCommit(env.getUnTillDbVCS(), null, "patch feature added");
 		
-		// unTill should be built
+		// unTill should be built using locked unTillDb version
 		IAction action = execAndGetActionBuild(compUnTill);
-		
 		assertActionDoesBuild(action, compUnTill, BuildStatus.BUILD_MDEPS);
 		assertActionDoesBuild(action, compUBL, BuildStatus.BUILD);
 		assertActionDoesNothing(action, compUnTillDb);
