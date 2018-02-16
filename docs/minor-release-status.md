@@ -16,7 +16,8 @@ Extended status calculation is introduced as a way to avoid multiple visits of s
 
 Status denotes next action which should be undertaken to finish minor build: {FORK, LOCK, BUILD_MDEPS, ACTUALIZE_PATCHES, BUILD, DONE}
 
-- FORK needed? => FORK
+- If version is locked: calculate `nextVersion` and `subComponents`. If CRB exists and version.patch == 0 mdeps are taken from CRB otherwise from `develop`
+- If version is not locked: FORK needed? => FORK
 - CRB.version.patch > 0 or tag is delayed => DONE
 - mdeps are not locked => LOCK
 - Any component is not in DONE status => BUILD_MDEPS
@@ -34,7 +35,7 @@ Status denotes next action which should be undertaken to finish minor build: {FO
 - Any version in CRB.`mdeps` does not equal component nextVersion (patches are ignored) => YES (means that all is built but some sub-component has newer minor or patch) //- wrong: newer patch -> ACTUALIZE_PATCHES
 - NO
 
-This procedure also calculates `nextVersion` and `subComponents`.  If CRB exists and version.patch == 0 mdeps are taken from CRB otherwise from `develop`
+This procedure also calculates `nextVersion` and `subComponents`. If CRB exists and version.patch == 0 mdeps are taken from CRB otherwise from `develop`
 
 # PATCH BUILD STATUS
 
