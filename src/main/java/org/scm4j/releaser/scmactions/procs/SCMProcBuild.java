@@ -1,6 +1,9 @@
 package org.scm4j.releaser.scmactions.procs;
 
-import lombok.SneakyThrows;
+import java.io.File;
+import java.nio.file.Files;
+import java.util.Map;
+
 import org.scm4j.commons.Version;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.releaser.CachedStatuses;
@@ -12,13 +15,11 @@ import org.scm4j.releaser.conf.DelayedTagsFile;
 import org.scm4j.releaser.conf.TagDesc;
 import org.scm4j.releaser.conf.VCSRepository;
 import org.scm4j.releaser.exceptions.ENoBuilder;
-import org.scm4j.releaser.exceptions.EReleaserException;
+import org.scm4j.releaser.exceptions.ENoReleaseBranch;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSCommit;
 
-import java.io.File;
-import java.nio.file.Files;
-import java.util.Map;
+import lombok.SneakyThrows;
 
 public class SCMProcBuild implements ISCMProc {
 	
@@ -44,7 +45,7 @@ public class SCMProcBuild implements ISCMProc {
 	public void execute(IProgress progress) {
 		VCSCommit headCommit = vcs.getHeadCommit(releaseBranchName);
 		if (headCommit == null) {
-			throw new EReleaserException("branch does not exist: " + releaseBranchName);
+			throw new ENoReleaseBranch(releaseBranchName);
 		}
 		
 		if (repo.getBuilder() == null) {

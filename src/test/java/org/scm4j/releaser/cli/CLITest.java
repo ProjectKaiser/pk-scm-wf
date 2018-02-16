@@ -209,7 +209,7 @@ public class CLITest {
 			assertEquals(CLI.EXIT_CODE_ERROR, mockedCLI.exec(args));
 
 			Exception lastException = mockedCLI.getLastException();
-			verify(mockedPS, sometime()).println(Matchers.contains(lastException.getMessage() == null ? lastException.toString() : lastException.getMessage()));
+			verify(mockedPS, sometime()).println(Matchers.contains(lastException.toString()));
 			verify(mockedPS, never()).println(CommandLine.getUsage());
 		}
 	}
