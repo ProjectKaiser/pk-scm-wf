@@ -116,4 +116,26 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		// check UBL mdeps locked
 		checkUBLMDepsVersions(1);
 	}
+	
+	@Test
+	public void testBuiltRootIfNestedBuiltAndModified() {
+		fork(compUnTill);
+		build(compUnTillDb);
+		
+		// add feature to trunk and release branch
+		ReleaseBranchCurrent crb = ReleaseBranchFactory.getCRB(repoUnTillDb);
+		env.generateFeatureCommit(env.getUnTillDbVCS(), crb.getName(), "patch feature added");
+		env.generateFeatureCommit(env.getUnTillDbVCS(), null, "patch feature added");
+		
+		// unTill should be built
+		IAction action = execAndGetActionBuild(compUnTill);
+		
+		assertActionDoesBuild(action, compUnTill, BuildStatus.BUILD_MDEPS);
+		assertActionDoesBuild(action, compUBL, BuildStatus.BUILD);
+		assertActionDoesNothing(action, compUnTillDb);
+		checkCompBuilt(1, compUnTill);
+		checkCompBuilt(1, compUBL);
+		crb = ReleaseBranchFactory.getCRB(repoUnTillDb);
+		assertEquals(env.getUnTillDbVer().toReleaseZeroPatch().toNextPatch(), crb.getVersion());
+	}
 }
