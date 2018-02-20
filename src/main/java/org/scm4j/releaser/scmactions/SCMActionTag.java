@@ -52,7 +52,7 @@ public class SCMActionTag extends ActionAbstract {
 	}
 
 	private Version tagRevision(IProgress progress, IVCS vcs, String revisionToTag) {
-		Version delayedTagVersion = new Version(vcs.getFileContent(releaseBranchName, Utils.VER_FILE_NAME, revisionToTag));
+		Version delayedTagVersion = new Version(vcs.getFileContentFromRevision(revisionToTag, Utils.VER_FILE_NAME));
 		TagDesc tagDesc = Utils.getTagDesc(delayedTagVersion.toString());
 		try {
 			Utils.reportDuration(() -> vcs.createTag(releaseBranchName, tagDesc.getName(), tagDesc.getMessage(), revisionToTag),

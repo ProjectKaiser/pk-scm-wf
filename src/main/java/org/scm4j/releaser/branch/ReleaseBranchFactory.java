@@ -19,7 +19,7 @@ public final class ReleaseBranchFactory {
 		Version version;
 		List<Component> mdeps;
 		try {
-			version = new Version(repo.getVCS().getFileContent(name, Utils.VER_FILE_NAME, null)).toRelease();
+			version = new Version(repo.getVCS().getFileContentFromBranch(name, Utils.VER_FILE_NAME)).toRelease();
 			exists = true;
 			mdeps = getMDepsRelease(name, repo);
 		} catch (EVCSBranchNotFound e) {
@@ -37,7 +37,7 @@ public final class ReleaseBranchFactory {
 		boolean exists;
 		String name = Utils.getReleaseBranchName(repo, devVersion.toPreviousMinor());
 		try {
-			version = new Version(repo.getVCS().getFileContent(name, Utils.VER_FILE_NAME, null)).toRelease();
+			version = new Version(repo.getVCS().getFileContentFromBranch(name, Utils.VER_FILE_NAME)).toRelease();
 			exists = true;
 		} catch (EVCSBranchNotFound e) {
 			version = devVersion.toReleaseZeroPatch();
@@ -50,7 +50,7 @@ public final class ReleaseBranchFactory {
 	
 	public static List<Component> getMDepsRelease(String releaseBranchName, VCSRepository repo) {
 		try {
-			String mDepsFileContent = repo.getVCS().getFileContent(releaseBranchName, Utils.MDEPS_FILE_NAME, null);
+			String mDepsFileContent = repo.getVCS().getFileContentFromBranch(releaseBranchName, Utils.MDEPS_FILE_NAME);
 			return new MDepsFile(mDepsFileContent).getMDeps();
 		} catch (EVCSFileNotFound e) {
 			return new ArrayList<>();

@@ -105,7 +105,7 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 
 		// simulate mdeps not locked
 		ReleaseBranchCurrent crb = ReleaseBranchFactory.getCRB(repoUBL);
-		MDepsFile mdf = new MDepsFile(env.getUblVCS().getFileContent(crb.getName(), Utils.MDEPS_FILE_NAME, null));
+		MDepsFile mdf = new MDepsFile(env.getUblVCS().getFileContentFromBranch(crb.getName(), Utils.MDEPS_FILE_NAME));
 		mdf.replaceMDep(mdf.getMDeps().get(0).clone(""));
 		env.getUblVCS().setFileContent(crb.getName(), Utils.MDEPS_FILE_NAME, mdf.toFileContent(), "mdeps not locked");
 

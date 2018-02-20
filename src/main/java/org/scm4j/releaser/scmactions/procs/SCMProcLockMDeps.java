@@ -49,7 +49,7 @@ public class SCMProcLockMDeps implements ISCMProc {
 			return;
 		}
 		String rbName = Utils.getReleaseBranchName(repo, status.getNextVersion());
-		MDepsFile currentMDepsFile = new MDepsFile(vcs.getFileContent(rbName, Utils.MDEPS_FILE_NAME, null));
+		MDepsFile currentMDepsFile = new MDepsFile(vcs.getFileContentFromBranch(rbName, Utils.MDEPS_FILE_NAME));
 
 		StringBuilder sb = new StringBuilder();
 		Version newVersion;

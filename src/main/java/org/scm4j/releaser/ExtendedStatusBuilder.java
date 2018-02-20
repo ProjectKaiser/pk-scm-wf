@@ -206,7 +206,7 @@ public class ExtendedStatusBuilder {
 		String delayedTagRevision = dtf.getRevisitonByUrl(repo.getUrl());
 		Version res = walkOnCommitTags(repo, rb, (commit) -> {
 			if (commit.getRevision().equals(delayedTagRevision)) {
-				return new Version(vcs.getFileContent(rb.getName(), Utils.VER_FILE_NAME, delayedTagRevision));
+				return new Version(vcs.getFileContentFromRevision(delayedTagRevision, Utils.VER_FILE_NAME));
 			}
 			List<VCSTag> tags = vcs.getTagsOnRevision(commit.getRevision());
 			for (VCSTag tag : tags) {

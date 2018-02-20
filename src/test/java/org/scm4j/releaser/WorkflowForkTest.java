@@ -26,7 +26,7 @@ public class WorkflowForkTest extends WorkflowTestBase {
 		
 		// simulate mdeps not locked
 		ReleaseBranchCurrent crb = ReleaseBranchFactory.getCRB(repoUBL);
-		MDepsFile mdf = new MDepsFile(env.getUblVCS().getFileContent(crb.getName(), Utils.MDEPS_FILE_NAME, null));
+		MDepsFile mdf = new MDepsFile(env.getUblVCS().getFileContentFromBranch(crb.getName(), Utils.MDEPS_FILE_NAME));
 		mdf.replaceMDep(mdf.getMDeps().get(0).clone(""));
 		env.getUblVCS().setFileContent(crb.getName(), Utils.MDEPS_FILE_NAME, mdf.toFileContent(), "mdeps not locked");
 		
@@ -48,7 +48,7 @@ public class WorkflowForkTest extends WorkflowTestBase {
 		fork(compUnTill);
 
 		ReleaseBranchCurrent crb = ReleaseBranchFactory.getCRB(repoUnTill);
-		String actualMDepsFileContent = env.getUnTillVCS().getFileContent(crb.getName(), Utils.MDEPS_FILE_NAME, null);
+		String actualMDepsFileContent = env.getUnTillVCS().getFileContentFromBranch(crb.getName(), Utils.MDEPS_FILE_NAME);
 		String expectedMDepsFileContent = getMDepsFileTestContent(crb.getMDeps(), false);
 		assertEquals(expectedMDepsFileContent, actualMDepsFileContent);
 	}
@@ -83,10 +83,8 @@ public class WorkflowForkTest extends WorkflowTestBase {
 
 		// check pre-last commit contains unmodified version and mdeps files
 		VCSCommit preLastCommit = commits.get(1);
-		String versionPreLastContent = env.getUnTillVCS().getFileContent(crb.getName(), Utils.VER_FILE_NAME,
-				preLastCommit.getRevision());
-		String mdepsPreLastContent = env.getUnTillVCS().getFileContent(crb.getName(), Utils.MDEPS_FILE_NAME,
-				preLastCommit.getRevision());
+		String versionPreLastContent = env.getUnTillVCS().getFileContentFromRevision(preLastCommit.getRevision(), Utils.VER_FILE_NAME);
+		String mdepsPreLastContent = env.getUnTillVCS().getFileContentFromRevision(preLastCommit.getRevision(), Utils.MDEPS_FILE_NAME);
 
 		assertTrue(new Version(versionPreLastContent).isSnapshot());
 		MDepsFile mdf = new MDepsFile(mdepsPreLastContent);
