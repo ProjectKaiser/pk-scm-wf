@@ -32,7 +32,7 @@ public class DevelopBranch {
 	
 	public Version getVersion() {
 		try {
-			String verFileContent = repo.getVCS().getFileContentFromBranch(repo.getDevelopBranch(), Utils.VER_FILE_NAME);
+			String verFileContent = repo.getVCS().getFileContent(repo.getDevelopBranch(), Utils.VER_FILE_NAME, null);
 			return new Version(verFileContent.trim());
 		} catch (EVCSFileNotFound e) {
 			throw new ENoVersionFile(comp);

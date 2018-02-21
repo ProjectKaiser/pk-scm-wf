@@ -1,15 +1,5 @@
 package org.scm4j.releaser;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
-import java.util.List;
-import java.util.Map;
-
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -28,6 +18,11 @@ import org.scm4j.releaser.exceptions.EInconsistentCompState;
 import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.vcs.api.VCSTag;
 import org.scm4j.vcs.api.WalkDirection;
+
+import java.util.List;
+import java.util.Map;
+
+import static org.junit.Assert.*;
 
 public class WorkflowDelayedTagTest extends WorkflowTestBase {
 
@@ -100,7 +95,7 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 		// check Dealyed Tags file
 		assertTrue(dtf.getContent().isEmpty());
 	}
-	
+
 	@Test
 	public void testTagFileUnexpectedlyDeleted() throws Exception {
 		// build all, root tag delayed
@@ -131,7 +126,8 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 			Map<String, String> content = dtf.getContent();
 			for (Map.Entry<String, String> entry : content.entrySet()) {
 				if (repoUnTill.getUrl().equals(entry.getKey())) {
-					Version delayedTagVersion = new Version(env.getUnTillVCS().getFileContentFromRevision(entry.getValue(), Utils.VER_FILE_NAME));
+					Version delayedTagVersion = new Version(env.getUnTillVCS().getFileContent(rb.getName(), Utils.VER_FILE_NAME,
+							entry.getValue()));
 					TagDesc tagDesc = Utils.getTagDesc(delayedTagVersion.toString());
 					env.getUnTillVCS().createTag(rb.getName(), tagDesc.getName(), tagDesc.getMessage(), entry.getValue());
 				}
@@ -175,7 +171,8 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 		env.getUnTillDbVCS().createTag(rb.getName(), "other-tag", "other tag message", revisionToTag);
 		
 		// simulate tag exists
-		Version delayedTagVersion = new Version(env.getUnTillDbVCS().getFileContentFromRevision(revisionToTag, Utils.VER_FILE_NAME));
+		Version delayedTagVersion = new Version(env.getUnTillDbVCS().getFileContent(rb.getName(), Utils.VER_FILE_NAME,
+				revisionToTag));
 		TagDesc tagDesc = Utils.getTagDesc(delayedTagVersion.toString());
 		env.getUnTillDbVCS().createTag(rb.getName(), tagDesc.getName(), tagDesc.getMessage(), revisionToTag);
 
@@ -297,6 +294,8 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 		ExtendedStatus node = execAndGetNodeStatus(compUnTillDbPatch);
 		assertEquals(BuildStatus.ERROR, node.getStatus());
 	}
+
+
 
 	private boolean isPreHeadCommitTaggedWithVersion(Component comp) {
 		VCSRepository repo = repoFactory.getVCSRepository(comp);

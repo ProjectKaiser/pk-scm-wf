@@ -61,7 +61,6 @@ public class ActionTreeBuilder {
 	public IAction getTagAction(Component comp) {
 		VCSRepository repo = repoFactory.getVCSRepository(comp);
 		Version lastReleaseVersion = new DevelopBranch(comp, repo).getVersion().toPreviousMinor();
-		//new Version(repo.getVCS().getFileContentFromRevision(dtf.getRevisitonByUrl(repo.getUrl()), Utils.VER_FILE_NAME)
 		return new SCMActionTag(comp, Utils.getReleaseBranchName(repo, lastReleaseVersion), repo);
 	}
 }
