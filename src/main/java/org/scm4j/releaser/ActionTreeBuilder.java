@@ -1,20 +1,16 @@
 package org.scm4j.releaser;
 
+import org.scm4j.releaser.actions.ActionSet;
+import org.scm4j.releaser.actions.IAction;
+import org.scm4j.releaser.conf.*;
+import org.scm4j.releaser.exceptions.EBuildOnNotForkedRelease;
+import org.scm4j.releaser.exceptions.ENoDelayedTags;
+import org.scm4j.releaser.scmactions.SCMActionRelease;
+import org.scm4j.releaser.scmactions.SCMActionTag;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
-import org.scm4j.commons.Version;
-import org.scm4j.releaser.actions.ActionSet;
-import org.scm4j.releaser.actions.IAction;
-import org.scm4j.releaser.branch.DevelopBranch;
-import org.scm4j.releaser.conf.Component;
-import org.scm4j.releaser.conf.VCSRepository;
-import org.scm4j.releaser.conf.VCSRepositoryFactory;
-import org.scm4j.releaser.exceptions.EBuildOnNotForkedRelease;
-import org.scm4j.releaser.exceptions.EInconsistentCompState;
-import org.scm4j.releaser.scmactions.SCMActionRelease;
-import org.scm4j.releaser.scmactions.SCMActionTag;
 
 public class ActionTreeBuilder {
 	
@@ -46,10 +42,6 @@ public class ActionTreeBuilder {
 			childActions.add(getActionTree(nodeEntry.getValue(), cache, actionSet, false));
 		}
 		
-		if (node.getStatus() == BuildStatus.ERROR) {
-			throw new EInconsistentCompState(node.getComp(), node.getErrorDesc());
-		}
-
 		if (node.getStatus() == BuildStatus.FORK && actionSet == ActionSet.FULL) {
 			throw new EBuildOnNotForkedRelease(node.getComp());
 		}
@@ -60,14 +52,11 @@ public class ActionTreeBuilder {
 
 	public IAction getTagAction(Component comp) {
 		VCSRepository repo = repoFactory.getVCSRepository(comp);
-//		DelayedTagsFile dtf = new DelayedTagsFile();
-//		String revisionToTag = dtf.getRevisitonByUrl(repo.getUrl());
-//		if (revisionToTag == null) {
-//			throw new ENoRevisionsToTag();
-//		}
-		// FIXME: fix
-		Version lastReleaseVersion = new DevelopBranch(comp, repo).getVersion().toPreviousMinor();
-				//new Version(repo.getVCS().getFileContent(null, Utils.VER_FILE_NAME, dtf.getRevisitonByUrl(repo.getUrl())));
-		return new SCMActionTag(comp, Utils.getReleaseBranchName(repo, lastReleaseVersion), repo);
+		DelayedTagsFile dtf = new DelayedTagsFile();
+		DelayedTag delayedTag = dtf.getDelayedTagByUrl(repo.getUrl());
+		if (delayedTag == null) {
+			throw new ENoDelayedTags(repo.getUrl());
+		}
+		return new SCMActionTag(comp, repo);
 	}
 }

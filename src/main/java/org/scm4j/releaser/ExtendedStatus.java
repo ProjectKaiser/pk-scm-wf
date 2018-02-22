@@ -15,21 +15,14 @@ public class ExtendedStatus {
 	private final BuildStatus status;
 	private final LinkedHashMap<Component, ExtendedStatus> subComponents;
 	private final VCSRepository repo;
-	private final String errorDesc;
-	
-	public ExtendedStatus(Version nextVersion, BuildStatus status,
-			  LinkedHashMap<Component, ExtendedStatus> subComponents, Component comp, VCSRepository repo) {
-		this(nextVersion, status, subComponents, comp, repo, null);
-	}
 
 	public ExtendedStatus(Version nextVersion, BuildStatus status,
-						  LinkedHashMap<Component, ExtendedStatus> subComponents, Component comp, VCSRepository repo, String errorDesc) {
+						  LinkedHashMap<Component, ExtendedStatus> subComponents, Component comp, VCSRepository repo) {
 		this.nextVersion = nextVersion;
 		this.status = status;
 		this.subComponents = subComponents;
 		this.comp = comp;
 		this.repo = repo;
-		this.errorDesc = errorDesc;
 	}
 	
 	public Version getNextVersion() {
@@ -48,18 +41,11 @@ public class ExtendedStatus {
 		return comp;
 	}
 	
-	public String getErrorDesc() {
-		return errorDesc;
-	}
-	
 	@Override
 	public String toString() {
 		if (this == DUMMY) {
 			return "<DUMMY>";
 		}
-		if (status == BuildStatus.ERROR) {
- 			return String.format("%s %s: %s", status, comp.getCoords(), getErrorDesc());
- 		}
  		String targetBranch = Utils.getReleaseBranchName(repo, nextVersion);
  		return String.format("%s %s, target version: %s, target branch: %s", status, comp.getCoords(), nextVersion, targetBranch);
 	}

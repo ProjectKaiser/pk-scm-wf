@@ -55,7 +55,6 @@ public class SCMActionRelease extends ActionAbstract {
 					bsTo = BuildStatus.BUILD;
 				}
 			case DONE:
-			case ERROR:
 		}
 		this.bsTo = bsTo;
 	}
@@ -106,7 +105,7 @@ public class SCMActionRelease extends ActionAbstract {
 
 	@Override
 	public boolean isExecutable() {
-		return bsFrom != BuildStatus.DONE && bsFrom != BuildStatus.ERROR;
+		return bsFrom != BuildStatus.DONE;
 	}
 
 	public boolean isDelayedTag() {

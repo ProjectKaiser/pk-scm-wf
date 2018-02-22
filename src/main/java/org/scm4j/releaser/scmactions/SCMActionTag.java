@@ -6,10 +6,8 @@ import org.scm4j.releaser.LogTag;
 import org.scm4j.releaser.Utils;
 import org.scm4j.releaser.actions.ActionAbstract;
 import org.scm4j.releaser.branch.ReleaseBranchFactory;
-import org.scm4j.releaser.conf.Component;
-import org.scm4j.releaser.conf.DelayedTagsFile;
-import org.scm4j.releaser.conf.TagDesc;
-import org.scm4j.releaser.conf.VCSRepository;
+import org.scm4j.releaser.conf.*;
+import org.scm4j.releaser.exceptions.ENoDelayedTags;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.exceptions.EVCSTagExists;
 
@@ -17,50 +15,47 @@ import java.util.ArrayList;
 
 public class SCMActionTag extends ActionAbstract {
 	
-	private final String releaseBranchName;
-
-	public SCMActionTag(Component comp, String releaseBranchName, VCSRepository repo) {
+	public SCMActionTag(Component comp, VCSRepository repo) {
 		super(comp, new ArrayList<>(), repo);
-		this.releaseBranchName = releaseBranchName;
 	}
 	
 	@Override
 	protected void executeAction(IProgress progress) {
-		DelayedTagsFile dtf = new DelayedTagsFile();
 		IVCS vcs = getVCS();
-		String revisionToTag = dtf.getRevisitonByUrl(repo.getUrl());
-		if (revisionToTag == null) {
-			progress.reportStatus("no revisions to delayed tag");
-			return;
+		DelayedTagsFile dtf = new DelayedTagsFile();
+		DelayedTag delayedTag = dtf.getDelayedTagByUrl(repo.getUrl());
+		if (delayedTag == null) {
+			throw new ENoDelayedTags(repo.getUrl());
 		}
 
-		Version delayedTagVersion = tagRevision(progress, vcs, revisionToTag);
+		String branchName = Utils.getReleaseBranchName(repo, delayedTag.getVersion());
 
-		bumpPatch(progress, vcs, delayedTagVersion);
+		tagRevision(progress, vcs, delayedTag, branchName);
 
-		dtf.removeRevisionByUrl(repo.getUrl());
+		bumpPatch(progress, vcs, delayedTag, branchName);
+
+		new DelayedTagsFile().removeTagByUrl(repo.getUrl());
 	}
 
-	private void bumpPatch(IProgress progress, IVCS vcs, Version delayedTagVersion) {
-		Version nextPatchVersion = delayedTagVersion.toNextPatch();
+	private void bumpPatch(IProgress progress, IVCS vcs, DelayedTag delayedTag, String branchName) {
+		Version nextPatchVersion = delayedTag.getVersion().toNextPatch();
 		Version crbVersion = ReleaseBranchFactory.getCRB(repo).getVersion();
 		if (!crbVersion.isGreaterThan(nextPatchVersion) && !crbVersion.equals(nextPatchVersion)) {
-			Utils.reportDuration(() -> vcs.setFileContent(releaseBranchName, Utils.VER_FILE_NAME, nextPatchVersion.toString(),
+			Utils.reportDuration(() -> vcs.setFileContent(branchName, Utils.VER_FILE_NAME, nextPatchVersion.toString(),
 					LogTag.SCM_VER + " " + nextPatchVersion),
-					"bump patch version in release branch: " + nextPatchVersion, null, progress);
+					String.format("bump patch version in release branch %s: %s", branchName, nextPatchVersion), null, progress);
 		}
 	}
 
-	private Version tagRevision(IProgress progress, IVCS vcs, String revisionToTag) {
-		Version delayedTagVersion = new Version(vcs.getFileContent(releaseBranchName, Utils.VER_FILE_NAME, revisionToTag));
-		TagDesc tagDesc = Utils.getTagDesc(delayedTagVersion.toString());
+	private void tagRevision(IProgress progress, IVCS vcs, DelayedTag delayedTag, String branchName) {
+		TagDesc tagDesc = Utils.getTagDesc(delayedTag.getVersion().toString());
 		try {
-			Utils.reportDuration(() -> vcs.createTag(releaseBranchName, tagDesc.getName(), tagDesc.getMessage(), revisionToTag),
-					String.format("tag revision %s of %s: %s", revisionToTag, releaseBranchName, delayedTagVersion.toReleaseString()), null, progress);
+			Utils.reportDuration(() -> vcs.createTag(branchName, tagDesc.getName(), tagDesc.getMessage(), delayedTag.getRevision()),
+					String.format("tag revision %s of %s: %s", delayedTag.getRevision(), branchName,
+							delayedTag.getVersion()), null, progress);
 		} catch (EVCSTagExists e) {
-			progress.reportStatus(String.format("revision %s is already tagged with %s tag", revisionToTag, tagDesc.getName()));
+			progress.reportStatus(String.format("tag %s already exists", tagDesc.getName()));
 		}
-		return delayedTagVersion;
 	}
 
 	@Override

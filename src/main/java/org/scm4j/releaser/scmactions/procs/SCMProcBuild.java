@@ -1,9 +1,6 @@
 package org.scm4j.releaser.scmactions.procs;
 
-import java.io.File;
-import java.nio.file.Files;
-import java.util.Map;
-
+import lombok.SneakyThrows;
 import org.scm4j.commons.Version;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.releaser.CachedStatuses;
@@ -19,7 +16,9 @@ import org.scm4j.releaser.exceptions.ENoReleaseBranch;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSCommit;
 
-import lombok.SneakyThrows;
+import java.io.File;
+import java.nio.file.Files;
+import java.util.Map;
 
 public class SCMProcBuild implements ISCMProc {
 	
@@ -87,7 +86,7 @@ public class SCMProcBuild implements ISCMProc {
 	private void tagBuild(IProgress progress, VCSCommit headCommit) {
 		if (delayedTag) {
 			DelayedTagsFile delayedTagsFile = new DelayedTagsFile();
-			delayedTagsFile.writeUrlRevision(repo.getUrl(), headCommit.getRevision());
+			delayedTagsFile.writeUrlDelayedTag(repo.getUrl(), versionToBuild, headCommit.getRevision());
 			progress.reportStatus("build commit " + headCommit.getRevision() + " is saved for delayed tagging");
 		} else {
 			TagDesc tagDesc = Utils.getTagDesc(versionToBuild.toString());

@@ -28,7 +28,6 @@ public final class Utils {
 	public static final String ZERO_PATCH = "0";
 	public static final String VER_FILE_NAME = "version";
 	public static final String MDEPS_FILE_NAME = "mdeps";
-	public static final String DELAYED_TAGS_FILE_NAME = "delayed-tags.yml";
 	public static final File BASE_WORKING_DIR = new File(System.getProperty("user.home"), ".scm4j");
 
 	public static <T> T reportDuration(Supplier<T> sup, String message, Component comp, IProgress progress) {

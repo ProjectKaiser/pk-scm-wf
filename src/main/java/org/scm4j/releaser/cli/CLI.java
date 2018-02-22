@@ -174,7 +174,7 @@ public class CLI {
 
 	private boolean hasDelayedTags(String rootUrl) {
 		DelayedTagsFile dtf = new DelayedTagsFile();
-		return dtf.getRevisitonByUrl(rootUrl) != null;
+		return dtf.getDelayedTagByUrl(rootUrl) != null;
 	}
 
 	void initWorkingDir() throws Exception {

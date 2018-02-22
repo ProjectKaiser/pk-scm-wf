@@ -1,19 +1,5 @@
 package org.scm4j.releaser;
 
-import static org.hamcrest.Matchers.allOf;
-import static org.hamcrest.Matchers.empty;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.hasProperty;
-import static org.hamcrest.Matchers.instanceOf;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.commons.lang3.StringUtils;
 import org.hamcrest.Matcher;
 import org.junit.After;
@@ -40,6 +26,13 @@ import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.vcs.api.VCSTag;
 import org.scm4j.vcs.api.WalkDirection;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.*;
 
 public class WorkflowTestBase {
 	protected TestEnvironment env;
@@ -114,7 +107,7 @@ public class WorkflowTestBase {
 		assertTrue(Utils.getBuildDir(repo, latestVersion).exists());
 
 		DelayedTagsFile dtf = new DelayedTagsFile();
-		boolean tagDelayed = dtf.getRevisitonByUrl(repo.getUrl()) != null;
+		boolean tagDelayed = dtf.getDelayedTagByUrl(repo.getUrl()) != null;
 		String expectedPatch = tagDelayed ? "0" : "1";
 
 		assertEquals(expectedPatch, latestVersion.getPatch());

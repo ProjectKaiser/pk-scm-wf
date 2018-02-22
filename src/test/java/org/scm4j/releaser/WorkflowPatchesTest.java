@@ -12,7 +12,6 @@ import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.MDepsFile;
 import org.scm4j.releaser.conf.VCSRepository;
 import org.scm4j.releaser.conf.VCSRepositoryFactory;
-import org.scm4j.releaser.exceptions.EInconsistentCompState;
 import org.scm4j.releaser.exceptions.ENoReleaseBranchForPatch;
 import org.scm4j.releaser.exceptions.ENoReleases;
 import org.scm4j.releaser.exceptions.EReleaseMDepsNotLocked;
@@ -179,47 +178,5 @@ public class WorkflowPatchesTest extends WorkflowTestBase {
 		ExtendedStatusBuilder statusBuilder = new ExtendedStatusBuilder(mockedRepoFactory);
 		ExtendedStatus status = statusBuilder.getAndCachePatchStatus(compVersioned, new CachedStatuses());
 		assertEquals(BuildStatus.DONE, status.getStatus());
-	}
-	
-	@Test
-	public void testERRORStateIfVersionNotBumpedAfterTag() {
-		forkAndBuild(compUBL);
-		Component compUBLPatch = new Component(UBL + ":" + env.getUblVer().toRelease());
-		
-		// add feature to existing unTillDb release
-		ReleaseBranchCurrent crb = ReleaseBranchFactory.getCRB(repoUnTillDb);
-		env.generateFeatureCommit(env.getUnTillDbVCS(), crb.getName(), "patch feature added");
-
-		// build unTillDb patch
-		Component compUnTillDbPatch = new Component(UNTILLDB + ":" + env.getUnTillDbVer().toRelease());
-		IAction action = execAndGetActionBuild(compUnTillDbPatch);
-		assertActionDoesBuild(action, compUnTillDbPatch);
-		
-		// simulate version is not bumped
-		crb = ReleaseBranchFactory.getCRB(repoUnTillDb);
-		repoUnTillDb.getVCS().setFileContent(crb.getName(), Utils.VER_FILE_NAME, crb.getVersion().toPreviousPatch().toString(), "roll back version patch bump");
-		
-		try {
-			execAndGetActionBuild(compUnTillDbPatch);
-			fail();
-		} catch (EInconsistentCompState e) {
-			assertEquals(compUnTillDbPatch, e.getComp());
-		}
-		
-		ExtendedStatus node = execAndGetNodeStatus(compUnTillDbPatch);
-		assertEquals(BuildStatus.ERROR, node.getStatus());
-		
-		try {
-			execAndGetActionBuild(compUBLPatch);
-			fail();
-		} catch (EInconsistentCompState e) {
-			ReleaseBranchPatch patchUBL = ReleaseBranchFactory.getReleaseBranchPatch(env.getUblVer(), repoUBL);
-			List<Component> crbUBLMdeps = patchUBL.getMDeps();
-			assertTrue(crbUBLMdeps.size() == 1);
-			assertEquals(crbUBLMdeps.get(0), e.getComp());
-		}
-		
-		node = execAndGetNodeStatus(compUBLPatch);
-		assertEquals(BuildStatus.ERROR, node.getStatus());
 	}
 }
