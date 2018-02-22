@@ -1,5 +1,9 @@
 package org.scm4j.releaser;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 import org.scm4j.commons.Version;
 import org.scm4j.releaser.actions.ActionSet;
 import org.scm4j.releaser.actions.IAction;
@@ -11,10 +15,6 @@ import org.scm4j.releaser.exceptions.EBuildOnNotForkedRelease;
 import org.scm4j.releaser.exceptions.EInconsistentCompState;
 import org.scm4j.releaser.scmactions.SCMActionRelease;
 import org.scm4j.releaser.scmactions.SCMActionTag;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 
 public class ActionTreeBuilder {
 	
@@ -60,8 +60,14 @@ public class ActionTreeBuilder {
 
 	public IAction getTagAction(Component comp) {
 		VCSRepository repo = repoFactory.getVCSRepository(comp);
+//		DelayedTagsFile dtf = new DelayedTagsFile();
+//		String revisionToTag = dtf.getRevisitonByUrl(repo.getUrl());
+//		if (revisionToTag == null) {
+//			throw new ENoRevisionsToTag();
+//		}
+		// FIXME: fix
 		Version lastReleaseVersion = new DevelopBranch(comp, repo).getVersion().toPreviousMinor();
-		//new Version(repo.getVCS().getFileContentFromRevision(dtf.getRevisitonByUrl(repo.getUrl()), Utils.VER_FILE_NAME)
+				//new Version(repo.getVCS().getFileContent(null, Utils.VER_FILE_NAME, dtf.getRevisitonByUrl(repo.getUrl())));
 		return new SCMActionTag(comp, Utils.getReleaseBranchName(repo, lastReleaseVersion), repo);
 	}
 }

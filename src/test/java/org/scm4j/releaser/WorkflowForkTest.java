@@ -26,7 +26,7 @@ public class WorkflowForkTest extends WorkflowTestBase {
 		
 		// simulate mdeps not locked
 		ReleaseBranchCurrent crb = ReleaseBranchFactory.getCRB(repoUBL);
-		MDepsFile mdf = new MDepsFile(env.getUblVCS().getFileContentFromBranch(crb.getName(), Utils.MDEPS_FILE_NAME));
+		MDepsFile mdf = new MDepsFile(env.getUblVCS().getFileContent(crb.getName(), Utils.MDEPS_FILE_NAME, null));
 		mdf.replaceMDep(mdf.getMDeps().get(0).clone(""));
 		env.getUblVCS().setFileContent(crb.getName(), Utils.MDEPS_FILE_NAME, mdf.toFileContent(), "mdeps not locked");
 		
@@ -48,7 +48,7 @@ public class WorkflowForkTest extends WorkflowTestBase {
 		fork(compUnTill);
 
 		ReleaseBranchCurrent crb = ReleaseBranchFactory.getCRB(repoUnTill);
-		String actualMDepsFileContent = env.getUnTillVCS().getFileContentFromBranch(crb.getName(), Utils.MDEPS_FILE_NAME);
+		String actualMDepsFileContent = env.getUnTillVCS().getFileContent(crb.getName(), Utils.MDEPS_FILE_NAME, null);
 		String expectedMDepsFileContent = getMDepsFileTestContent(crb.getMDeps(), false);
 		assertEquals(expectedMDepsFileContent, actualMDepsFileContent);
 	}
@@ -83,15 +83,14 @@ public class WorkflowForkTest extends WorkflowTestBase {
 
 		// check pre-last commit contains unmodified version and mdeps files
 		VCSCommit preLastCommit = commits.get(1);
-		String versionPreLastContent = env.getUnTillVCS().getFileContentFromRevision(preLastCommit.getRevision(), Utils.VER_FILE_NAME);
-		String mdepsPreLastContent = env.getUnTillVCS().getFileContentFromRevision(preLastCommit.getRevision(), Utils.MDEPS_FILE_NAME);
+		String versionPreLastContent = env.getUnTillVCS().getFileContent(crb.getName(), Utils.VER_FILE_NAME, preLastCommit.getRevision());
+		String mdepsPreLastContent = env.getUnTillVCS().getFileContent(crb.getName(), Utils.MDEPS_FILE_NAME, preLastCommit.getRevision());
 
 		assertTrue(new Version(versionPreLastContent).isSnapshot());
 		MDepsFile mdf = new MDepsFile(mdepsPreLastContent);
 		for (Component mdep : mdf.getMDeps()) {
 			assertTrue(!mdep.getVersion().isLocked());
 		}
-
 	}
 }
 

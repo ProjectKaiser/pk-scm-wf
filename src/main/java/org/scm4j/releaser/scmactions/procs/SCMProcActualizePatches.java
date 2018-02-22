@@ -26,9 +26,9 @@ public class SCMProcActualizePatches implements ISCMProc {
 	@Override
 	public void execute(IProgress progress) {
 		IVCS vcs = repo.getVCS();
-		MDepsFile currentMDepsFile = new MDepsFile(vcs.getFileContentFromBranch(
+		MDepsFile currentMDepsFile = new MDepsFile(vcs.getFileContent(
 				Utils.getReleaseBranchName(repo, cache.get(repo.getUrl()).getNextVersion()),
-				Utils.MDEPS_FILE_NAME));
+				Utils.MDEPS_FILE_NAME, null));
 		StringBuilder sb = new StringBuilder();
 		Version newVersion;
 		for (Component currentMDep : currentMDepsFile.getMDeps()) {

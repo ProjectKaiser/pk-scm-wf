@@ -92,7 +92,7 @@ public class WorkflowTestBase {
 	protected Version getCrbVersion(Component comp) {
 		VCSRepository repo = repoFactory.getVCSRepository(comp);
 		Version crbFirstVersion = Utils.getDevVersion(repo).toPreviousMinor().toReleaseZeroPatch();
-		return new Version(repo.getVCS().getFileContentFromBranch(Utils.getReleaseBranchName(repo, crbFirstVersion), Utils.VER_FILE_NAME));
+		return new Version(repo.getVCS().getFileContent(Utils.getReleaseBranchName(repo, crbFirstVersion), Utils.VER_FILE_NAME, null));
 	}
 
 	protected void checkCompBuilt(int times, Component comp) {
