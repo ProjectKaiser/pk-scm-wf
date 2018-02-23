@@ -12,8 +12,9 @@ import org.scm4j.commons.regexconfig.EConfig;
 import org.scm4j.releaser.*;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.actions.PrintStatus;
-import org.scm4j.releaser.conf.*;
-import org.scm4j.releaser.exceptions.EDelayingDelayed;
+import org.scm4j.releaser.conf.DefaultConfigUrls;
+import org.scm4j.releaser.conf.IConfigUrls;
+import org.scm4j.releaser.conf.VCSRepositoryFactory;
 import org.scm4j.releaser.exceptions.cmdline.*;
 
 import java.io.File;
@@ -124,8 +125,6 @@ public class CLI {
 
 			repoFactory.load(configUrls);
 
-			checkDelayedTags(cmd);
-
 			executeCmd(cmd);
 
 			out.println(ansi().a(Ansi.Attribute.INTENSITY_BOLD).fgGreen()
@@ -147,15 +146,6 @@ public class CLI {
 		}
 	}
 
-	private void checkDelayedTags(CommandLine cmd) {
-		if (cmd.isDelayedTag()) {
-			String rootUrl = repoFactory.getUrl(new Component(cmd.getProductCoords()));
-			if (hasDelayedTags(rootUrl)) {
-				throw new EDelayingDelayed(rootUrl);
-			}
-		}
-	}
-
 	private void executeCmd(CommandLine cmd) throws Exception {
 		if (cmd.getCommand() == CLICommand.TAG) {
 			action = getTagAction(cmd);
@@ -170,11 +160,6 @@ public class CLI {
 				execActionTree(action);
 			}
 		}
-	}
-
-	private boolean hasDelayedTags(String rootUrl) {
-		DelayedTagsFile dtf = new DelayedTagsFile();
-		return dtf.getDelayedTagByUrl(rootUrl) != null;
 	}
 
 	void initWorkingDir() throws Exception {

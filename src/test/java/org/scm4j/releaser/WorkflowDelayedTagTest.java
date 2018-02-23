@@ -10,6 +10,8 @@ import org.scm4j.releaser.branch.DevelopBranch;
 import org.scm4j.releaser.branch.ReleaseBranchCurrent;
 import org.scm4j.releaser.branch.ReleaseBranchFactory;
 import org.scm4j.releaser.branch.ReleaseBranchPatch;
+import org.scm4j.releaser.cli.CLICommand;
+import org.scm4j.releaser.cli.Option;
 import org.scm4j.releaser.conf.*;
 import org.scm4j.releaser.exceptions.EDelayingDelayed;
 import org.scm4j.releaser.exceptions.ENoDelayedTags;
@@ -37,29 +39,43 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 	public void testDelayedTagOnPatch() throws Exception {
 		forkAndBuild(compUnTill);
 
-		// add feature to unTillDb release/2.59
-		Component compUnTillDbVersioned = compUnTillDb.clone(env.getUnTillDbVer());
-		ReleaseBranchPatch rb = ReleaseBranchFactory.getReleaseBranchPatch(compUnTillDbVersioned.getVersion(), repoUnTillDb);
-		env.generateFeatureCommit(env.getUnTillDbVCS(), rb.getName(), "patch feature merged");
+		// add feature to unTill
+		Component compUnTillVersioned = compUnTill.clone(env.getUnTillVer().toReleaseZeroPatch());
+		ReleaseBranchPatch rb = ReleaseBranchFactory.getReleaseBranchPatch(compUnTillVersioned.getVersion(), repoUnTillDb);
+		env.generateFeatureCommit(env.getUnTillVCS(), rb.getName(), "patch feature merged");
 		
 		// build all patches, delayed tag
-		Component compUnTillVersioned = compUnTill.clone(env.getUnTillVer().toReleaseZeroPatch());
 		IAction action = execAndGetActionBuildDelayedTag(compUnTillVersioned);
-		assertActionDoesBuildAllDelayedTag(action);
+		assertActionDoesBuildDelayedTag(action, compUnTillVersioned);
 
-		// check no new tags
-		Assert.assertEquals(2, env.getUblVCS().getTags().size());
-		Assert.assertEquals(2, env.getUnTillDbVCS().getTags().size());
+		// check root component patch tag is delayed
+		Assert.assertEquals(1, env.getUblVCS().getTags().size());
+		Assert.assertEquals(1, env.getUnTillDbVCS().getTags().size());
 		Assert.assertEquals(1, env.getUnTillVCS().getTags().size());
-		
-		// check Delayed Tags file
-		assertNull(dtf.getDelayedTagByUrl(repoUnTillDb.getUrl()));
-		assertNotNull(dtf.getDelayedTagByUrl(repoUnTill.getUrl()));
-		assertNull(dtf.getDelayedTagByUrl(repoUBL.getUrl()));
 
-		// check Delayed Tags are used
+		// check component with delayed tag is considered as tagged (DONE) on build
 		action = execAndGetActionBuild(compUnTillVersioned);
 		assertActionDoesNothing(action);
+
+		// check no exceptions on status command with --delayed-tag option
+		execAndGetNode(null, CLICommand.STATUS.getCmdLineStr(),
+				compUnTillVersioned.getCoords().toString(), Option.DELAYED_TAG.getCmdLineStr());
+
+		// check Delayed Tags file
+		DelayedTag delayedTag = dtf.getDelayedTagByUrl(repoUnTill.getUrl());
+		assertEquals(env.getUnTillVer().toReleaseZeroPatch().toNextPatch(), delayedTag.getVersion());
+		ReleaseBranchPatch patchRB = ReleaseBranchFactory.getReleaseBranchPatch(compUnTillVersioned.getVersion(), repoUnTill);
+		VCSCommit commitToTag = env.getUnTillVCS().getHeadCommit(patchRB.getName());
+		assertEquals(delayedTag.getRevision(), commitToTag.getRevision());
+
+		// create tag which was delayed
+		action = execAndGetActionTag(compUnTill, null);
+		assertActionDoesTag(action, compUnTill);
+
+		// check tags
+		assertTrue(isPreHeadCommitTaggedWithVersion(compUBL));
+		assertTrue(isPreHeadCommitTaggedWithVersion(compUnTillDb));
+		assertTrue(isPreHeadCommitTaggedWithVersion(compUnTill));
 	}
 	
 	@Test
@@ -77,10 +93,21 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 		action = execAndGetActionBuild(compUnTill);
 		assertActionDoesNothing(action);
 
+		// expect no exceptions on status command with --delayed-tag option
+		execAndGetNode(null, CLICommand.STATUS.getCmdLineStr(),
+				compUnTill.getCoords().toString(), Option.DELAYED_TAG.getCmdLineStr());
+
 		// check Delayed Tags file
 		assertNull(dtf.getDelayedTagByUrl(repoUnTillDb.getUrl()));
 		assertNotNull(dtf.getDelayedTagByUrl(repoUnTill.getUrl()));
 		assertNull(dtf.getDelayedTagByUrl(repoUBL.getUrl()));
+
+		// check delayed tag
+		DelayedTag delayedTag = dtf.getDelayedTagByUrl(repoUnTill.getUrl());
+		assertEquals(env.getUnTillVer().toReleaseZeroPatch(), delayedTag.getVersion());
+		ReleaseBranchCurrent crb = ReleaseBranchFactory.getCRB(repoUnTill);
+		VCSCommit commitToTag = env.getUnTillVCS().getHeadCommit(crb.getName());
+		assertEquals(delayedTag.getRevision(), commitToTag.getRevision());
 
 		// create tag which was delayed
 		action = execAndGetActionTag(compUnTill, null);
@@ -221,15 +248,19 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 
 	@Test
 	public void testDelayingDelayed() {
-		fork(compUnTillDb);
-		IAction action = execAndGetActionBuildDelayedTag(compUnTillDb);
-		assertActionDoesBuildDelayedTag(action, compUnTillDb);
+		forkAndBuild(compUnTillDb);
 
 		ReleaseBranchCurrent crb = ReleaseBranchFactory.getCRB(repoUnTillDb);
 		env.generateFeatureCommit(env.getUnTillDbVCS(), crb.getName(), "feature merged");
 
+		Component compUnTillDbPatch = compUnTillDb.clone(env.getUnTillDbVer().toReleaseZeroPatch());
+
+		IAction action = execAndGetActionBuildDelayedTag(compUnTillDbPatch);
+		assertActionDoesBuildDelayedTag(action, compUnTillDbPatch);
+
+		env.generateFeatureCommit(env.getUnTillDbVCS(), crb.getName(), "feature merged");
+
 		// try to build next untillDb patch with delayed tag
-		Component compUnTillDbPatch = new Component(UNTILLDB + ":" + env.getUnTillDbVer().toRelease());
 		try {
 			execAndGetActionBuildDelayedTag(compUnTillDbPatch);
 			fail();
@@ -297,5 +328,3 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 		return false;
 	}
 }
-
-

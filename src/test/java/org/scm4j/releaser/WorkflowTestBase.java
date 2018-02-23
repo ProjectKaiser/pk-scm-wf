@@ -377,7 +377,7 @@ public class WorkflowTestBase {
 		return action;
 	}
 	
-	private ExtendedStatus execAndGetNode(Runnable preExec, String... args) {
+	protected ExtendedStatus execAndGetNode(Runnable preExec, String... args) {
 		CLI cli = execAndGetCLI(preExec, args);
 		return cli.getNode();
 	}
