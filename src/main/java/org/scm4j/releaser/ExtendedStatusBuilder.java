@@ -188,6 +188,7 @@ public class ExtendedStatusBuilder {
 				return !tags.isEmpty();
 			}
 			if (!tags.isEmpty()) {
+				// tested by testDelayedTagOnPatch
 				return true;
 			}
 			return null;

@@ -74,7 +74,7 @@ public class WorkflowPatchesTest extends WorkflowTestBase {
 	}
 
 	@Test
-	public void testBuildPatchOnExistingRelease() throws Exception {
+	public void testBuildPatchOnPreviousRelease() throws Exception {
 		// 2.59
 		forkAndBuild(compUnTillDb);
 
@@ -141,22 +141,6 @@ public class WorkflowPatchesTest extends WorkflowTestBase {
 					Matchers.hasSize(1),
 					Matchers.contains(nonLockedMDep)));
 		}
-	}
-
-	@Test
-	public void testPatchDONEIfLastCommitTagged() throws Exception {
-		// fork unTillDb
-		forkAndBuild(compUnTillDb);
-
-		// add an igonored feature and tag it
-		ReleaseBranchCurrent crb = ReleaseBranchFactory.getCRB(repoUnTillDb);
-		Component compUnTillDbVersioned = compUnTillDb.clone(crb.getVersion());
-		env.generateFeatureCommit(env.getUnTillDbVCS(), crb.getName(), LogTag.SCM_IGNORE + " feature merged");
-		env.getUnTillDbVCS().createTag(crb.getName(), "tag", "tag", null);
-
-		ExtendedStatusBuilder statusBuilder = new ExtendedStatusBuilder(repoFactory);
-		ExtendedStatus status = statusBuilder.getAndCachePatchStatus(compUnTillDbVersioned, new CachedStatuses());
-		assertEquals(BuildStatus.DONE, status.getStatus());
 	}
 
 	@Test

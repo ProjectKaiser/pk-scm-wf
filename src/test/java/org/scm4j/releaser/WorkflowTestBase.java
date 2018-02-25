@@ -394,10 +394,6 @@ public class WorkflowTestBase {
 		return execAndGetAction(CLICommand.BUILD.getCmdLineStr(), comp.getCoords().toString(), Option.DELAYED_TAG.getCmdLineStr());
 	}
 	
-	protected ExtendedStatus execAndGetNodeStatus(Component comp) {
-		return execAndGetNode(null, CLICommand.STATUS.getCmdLineStr(), comp.getCoords().toString());
-	}
-	
 	protected void forkAndBuild(Component comp) {
 		forkAndBuild(comp, 1);
 	}
