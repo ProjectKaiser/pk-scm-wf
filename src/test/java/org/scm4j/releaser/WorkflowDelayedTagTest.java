@@ -288,7 +288,7 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 		assertActionDoesTag(action, compUnTillDb);
 		
 		ReleaseBranchPatch patchBranch = ReleaseBranchFactory.getReleaseBranchPatch(env.getUnTillDbVer(), repoUnTillDb);
-		assertEquals(env.getUnTillDbVer().toReleaseZeroPatch(), patchBranch.getVersion());
+		assertEquals(env.getUnTillDbVer().toReleaseZeroPatch().toNextPatch(), patchBranch.getVersion());
 	}
 
 	@Test
@@ -302,7 +302,7 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 		// simulate version is reaised already in release branch (e.g. built manually)
 		IVCS vcs = repoUnTillDb.getVCS();
 		ReleaseBranchPatch patchBranch = ReleaseBranchFactory.getReleaseBranchPatch(env.getUnTillDbVer(), repoUnTillDb);
-		VCSCommit headCommit = vcs.setFileContent(patchBranch.getName(), Utils.VER_FILE_NAME,
+		VCSCommit patchBranchHeadCommit = vcs.setFileContent(patchBranch.getName(), Utils.VER_FILE_NAME,
 				new Version(vcs.getFileContent(patchBranch.getName(), Utils.VER_FILE_NAME, null)).toNextPatch().toNextPatch().toString(),
 				"patch bumped");
 
@@ -313,7 +313,30 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 		assertEquals(env.getUnTillDbVer().toReleaseZeroPatch().toString(), vcs.getTags().get(0).getTagName());
 
 		// check version is not bumped because it is bumped already
-		assertEquals(headCommit, env.getUnTillDbVCS().getHeadCommit(patchBranch.getName()));
+		assertEquals(patchBranchHeadCommit, env.getUnTillDbVCS().getHeadCommit(patchBranch.getName()));
+	}
+	
+	@Test
+	public void testDealyedTagVersionUsageOnDifferentCRB() {
+		fork(compUnTillDb);
+		IAction action = execAndGetActionBuildDelayedTag(compUnTillDb);
+		assertActionDoesBuildDelayedTag(action, compUnTillDb);
+		
+		// make next build
+		env.generateFeatureCommit(env.getUnTillDbVCS(), repoUnTillDb.getDevelopBranch(), "feature added to dev branch");
+		fork(compUnTillDb, 2);
+		execAndGetActionBuild(compUnTillDb);
+		
+		// generate next feature to make CRB differ
+		env.generateFeatureCommit(env.getUnTillDbVCS(), repoUnTillDb.getDevelopBranch(), "feature added to dev branch");
+		
+		// make a tag for version which is not current CRB
+		action = execAndGetActionTag(compUnTillDb, null);
+		assertActionDoesTag(action, compUnTillDb);
+		
+		// ensure the version for delayed tag is used
+		ReleaseBranchPatch patch = ReleaseBranchFactory.getReleaseBranchPatch(env.getUnTillDbVer(), repoUnTillDb);
+		assertEquals(env.getUnTillDbVer().toReleaseZeroPatch().toNextPatch(), patch.getVersion());
 	}
 
 	private boolean isPreHeadCommitTaggedWithVersion(Component comp) {

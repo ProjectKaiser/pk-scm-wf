@@ -71,18 +71,19 @@ public class ExtendedStatusBuilder {
 		}
 		
 		DelayedTagsFile dtf = new DelayedTagsFile();
-		Boolean hasDelayedTag = dtf.getDelayedTagByUrl(repo.getUrl()) != null;
+		DelayedTag dt = dtf.getDelayedTagByUrl(repo.getUrl());
 
 		ExtendedStatus res = patch ? 
-			getPatchStatus(comp, cache, progress, repo, hasDelayedTag) :
-			getMinorStatus(comp, cache, progress, repo, hasDelayedTag);
+			getPatchStatus(comp, cache, progress, repo, dt) :
+			getMinorStatus(comp, cache, progress, repo, dt);
 		
 		cache.replace(repo.getUrl(), res);
 		return res;
 	}
 	
-	private ExtendedStatus getMinorStatus(Component comp, CachedStatuses cache, IProgress progress, VCSRepository repo, Boolean hasDelayedTag) {
+	private ExtendedStatus getMinorStatus(Component comp, CachedStatuses cache, IProgress progress, VCSRepository repo, DelayedTag dt) {
 		ReleaseBranchCurrent rb = reportDuration(() -> ReleaseBranchFactory.getCRB(repo), "CRB created", comp, progress);
+		Boolean hasDelayedTag = dt != null && rb.getName().equals(Utils.getReleaseBranchName(repo,  dt.getVersion()));
 		LinkedHashMap<Component, ExtendedStatus> subComponents = new LinkedHashMap<>();
 		
 		BuildStatus status;
@@ -120,9 +121,10 @@ public class ExtendedStatusBuilder {
 		return new ExtendedStatus(nextVersion, status, subComponents, comp, repo);
 	}
 
-	private ExtendedStatus getPatchStatus(Component comp, CachedStatuses cache, IProgress progress, VCSRepository repo, Boolean hasDelayedTag) {
+	private ExtendedStatus getPatchStatus(Component comp, CachedStatuses cache, IProgress progress, VCSRepository repo, DelayedTag dt) {
 		ReleaseBranchPatch rb = reportDuration(() -> ReleaseBranchFactory.getReleaseBranchPatch(comp.getVersion(), repo),
 				"RB created", comp, progress);
+		Boolean hasDelayedTag = dt != null && rb.getName().equals(Utils.getReleaseBranchName(repo, dt.getVersion()));
 		LinkedHashMap<Component, ExtendedStatus> subComponents = new LinkedHashMap<>();
 		
 		BuildStatus buildStatus;

@@ -1,17 +1,20 @@
 package org.scm4j.releaser.scmactions;
 
+import java.util.ArrayList;
+
 import org.scm4j.commons.Version;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.releaser.LogTag;
 import org.scm4j.releaser.Utils;
 import org.scm4j.releaser.actions.ActionAbstract;
-import org.scm4j.releaser.branch.ReleaseBranchFactory;
-import org.scm4j.releaser.conf.*;
+import org.scm4j.releaser.conf.Component;
+import org.scm4j.releaser.conf.DelayedTag;
+import org.scm4j.releaser.conf.DelayedTagsFile;
+import org.scm4j.releaser.conf.TagDesc;
+import org.scm4j.releaser.conf.VCSRepository;
 import org.scm4j.releaser.exceptions.ENoDelayedTags;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.exceptions.EVCSTagExists;
-
-import java.util.ArrayList;
 
 public class SCMActionTag extends ActionAbstract {
 	
@@ -39,8 +42,8 @@ public class SCMActionTag extends ActionAbstract {
 
 	private void bumpPatch(IProgress progress, IVCS vcs, DelayedTag delayedTag, String branchName) {
 		Version nextPatchVersion = delayedTag.getVersion().toNextPatch();
-		Version crbVersion = ReleaseBranchFactory.getCRB(repo).getVersion();
-		if (!crbVersion.isGreaterThan(nextPatchVersion) && !crbVersion.equals(nextPatchVersion)) {
+		Version branchHeadVersion = new Version(vcs.getFileContent(branchName, Utils.VER_FILE_NAME, null));
+		if (!branchHeadVersion.isGreaterThan(nextPatchVersion) && !branchHeadVersion.equals(nextPatchVersion)) {
 			Utils.reportDuration(() -> vcs.setFileContent(branchName, Utils.VER_FILE_NAME, nextPatchVersion.toString(),
 					LogTag.SCM_VER + " " + nextPatchVersion),
 					String.format("bump patch version in release branch %s: %s", branchName, nextPatchVersion), null, progress);

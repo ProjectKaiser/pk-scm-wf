@@ -10,11 +10,13 @@ import org.junit.contrib.java.lang.system.EnvironmentVariables;
 import org.scm4j.commons.Version;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.branch.DevelopBranch;
+import org.scm4j.releaser.branch.ReleaseBranchCurrent;
 import org.scm4j.releaser.branch.ReleaseBranchFactory;
 import org.scm4j.releaser.cli.CLI;
 import org.scm4j.releaser.cli.CLICommand;
 import org.scm4j.releaser.cli.Option;
 import org.scm4j.releaser.conf.Component;
+import org.scm4j.releaser.conf.DelayedTag;
 import org.scm4j.releaser.conf.DelayedTagsFile;
 import org.scm4j.releaser.conf.VCSRepository;
 import org.scm4j.releaser.conf.VCSRepositoryFactory;
@@ -100,14 +102,16 @@ public class WorkflowTestBase {
 
 	private void checkCompBuilt(int times, Component comp, IVCS vcs, VCSRepository repo, Version initialVer) {
 		checkCompForked(times, comp, initialVer, repo);
-		Version latestVersion = getCrbVersion(comp);
+		ReleaseBranchCurrent crb = ReleaseBranchFactory.getCRB(repo);
+		Version latestVersion = crb.getVersion();
 
 		assertNotNull(TestBuilder.getBuilders().get(comp.getName()));
 
 		assertTrue(Utils.getBuildDir(repo, latestVersion).exists());
 
 		DelayedTagsFile dtf = new DelayedTagsFile();
-		boolean tagDelayed = dtf.getDelayedTagByUrl(repo.getUrl()) != null;
+		DelayedTag dt = dtf.getDelayedTagByUrl(repo.getUrl());
+		Boolean tagDelayed = dt != null && crb.getName().equals(Utils.getReleaseBranchName(repo, dt.getVersion()));
 		String expectedPatch = tagDelayed ? "0" : "1";
 
 		assertEquals(expectedPatch, latestVersion.getPatch());
