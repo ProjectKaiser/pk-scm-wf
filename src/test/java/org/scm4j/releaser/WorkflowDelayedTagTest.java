@@ -73,9 +73,12 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 		assertActionDoesTag(action, compUnTill);
 
 		// check tags
-		assertTrue(isPreHeadCommitTaggedWithVersion(compUBL));
-		assertTrue(isPreHeadCommitTaggedWithVersion(compUnTillDb));
-		assertTrue(isPreHeadCommitTaggedWithVersion(compUnTill));
+		assertTrue(isPreHeadCommitTaggedWithVersion(repoUBL, env.getUblVer()));
+		assertTrue(isPreHeadCommitTaggedWithVersion(repoUnTillDb, env.getUnTillDbVer()));
+		assertTrue(isPreHeadCommitTaggedWithVersion(repoUnTill, env.getUnTillVer()));
+
+		// check Dealyed Tags file
+		assertTrue(dtf.getContent().isEmpty());
 	}
 	
 	@Test
@@ -114,9 +117,9 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 		assertActionDoesTag(action, compUnTill);
 
 		// check tags
-		assertTrue(isPreHeadCommitTaggedWithVersion(compUBL));
-		assertTrue(isPreHeadCommitTaggedWithVersion(compUnTillDb));
-		assertTrue(isPreHeadCommitTaggedWithVersion(compUnTill));
+		assertTrue(isPreHeadCommitTaggedWithVersion(repoUBL, env.getUblVer()));
+		assertTrue(isPreHeadCommitTaggedWithVersion(repoUnTillDb, env.getUnTillDbVer()));
+		assertTrue(isPreHeadCommitTaggedWithVersion(repoUnTill, env.getUnTillVer()));
 
 		// check Dealyed Tags file
 		assertTrue(dtf.getContent().isEmpty());
@@ -128,13 +131,18 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 		fork(compUnTill);
 		execAndGetActionBuildDelayedTag(compUnTill);
 
-		// simulate delayed tags file is deleted right before action execution. Expecting no exceptions
+		// simulate delayed tags file is deleted right before action execution.
 		try {
 			execAndGetActionTag(compUnTill, () -> assertTrue(dtf.delete()));
 			fail();
 		} catch (ENoDelayedTags e) {
 
 		}
+
+		// check no tags
+		assertTrue(env.getUnTillVCS().getTags().isEmpty());
+		assertTrue(env.getUnTillDbVCS().getTags().size() == 1);
+		assertTrue(env.getUblVCS().getTags().size() == 1);
 	}
 
 	@Test
@@ -165,9 +173,9 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 		assertActionDoesTag(action, compUnTill);
 
 		// check tags
-		assertTrue(isPreHeadCommitTaggedWithVersion(compUBL));
-		assertTrue(isPreHeadCommitTaggedWithVersion(compUnTillDb));
-		assertTrue(isPreHeadCommitTaggedWithVersion(compUnTill));
+		assertTrue(isPreHeadCommitTaggedWithVersion(repoUBL, env.getUblVer()));
+		assertTrue(isPreHeadCommitTaggedWithVersion(repoUnTillDb, env.getUnTillDbVer()));
+		assertTrue(isPreHeadCommitTaggedWithVersion(repoUnTill, env.getUnTillVer()));
 
 		// check Dealyed Tags file
 		assertTrue(dtf.getContent().isEmpty());
@@ -286,9 +294,16 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 		// tag delayed
 		action = execAndGetActionTag(compUnTillDb, null);
 		assertActionDoesTag(action, compUnTillDb);
-		
+
+		// check right version is used in right release branch
 		ReleaseBranchPatch patchBranch = ReleaseBranchFactory.getReleaseBranchPatch(env.getUnTillDbVer(), repoUnTillDb);
 		assertEquals(env.getUnTillDbVer().toReleaseZeroPatch().toNextPatch(), patchBranch.getVersion());
+
+		// check tags
+		assertTrue(isPreHeadCommitTaggedWithVersion(repoUnTillDb, env.getUnTillDbVer()));
+
+		// check Dealyed Tags file
+		assertTrue(dtf.getContent().isEmpty());
 	}
 
 	@Test
@@ -337,11 +352,16 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 		// ensure the version for delayed tag is used
 		ReleaseBranchPatch patch = ReleaseBranchFactory.getReleaseBranchPatch(env.getUnTillDbVer(), repoUnTillDb);
 		assertEquals(env.getUnTillDbVer().toReleaseZeroPatch().toNextPatch(), patch.getVersion());
+
+		// check tags
+		assertTrue(isPreHeadCommitTaggedWithVersion(repoUnTillDb, env.getUnTillDbVer()));
+
+		// check Delayed Tags file
+		assertTrue(dtf.getContent().isEmpty());
 	}
 
-	private boolean isPreHeadCommitTaggedWithVersion(Component comp) {
-		VCSRepository repo = repoFactory.getVCSRepository(comp);
-		ReleaseBranchCurrent rb = ReleaseBranchFactory.getCRB(repo);
+	private boolean isPreHeadCommitTaggedWithVersion(VCSRepository repo, Version forVersion) {
+		ReleaseBranchPatch rb = ReleaseBranchFactory.getReleaseBranchPatch(forVersion, repo);
 		List<VCSTag> tags = repo.getVCS().getTagsOnRevision(repo.getVCS().getCommitsRange(rb.getName(), null, WalkDirection.DESC, 2).get(1).getRevision());
 		for (VCSTag tag : tags) {
 			if (tag.getTagName().equals(rb.getVersion().toPreviousPatch().toReleaseString())) {

@@ -23,13 +23,13 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		IAction action = execAndGetActionFork(compUnTillDb);
 		assertActionDoesFork(action, compUnTillDb);
 		checkUnTillDbForked();
-		
+
 		// fork UBL
 		action = execAndGetActionFork(compUBL);
 		assertActionDoesFork(action, compUBL);
 		assertActionDoesNothing(action, BuildStatus.BUILD, null, compUnTillDb);
 		checkUBLForked();
-		
+
 		// build UBL and unTillDb
 		action = execAndGetActionBuild(compUBL);
 		assertActionDoesBuild(action, compUnTillDb);
@@ -40,7 +40,7 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 	@Test
 	public void testBuildSingleComponentTwice() throws Exception {
 		forkAndBuild(compUnTillDb);
-		
+
 		env.generateFeatureCommit(env.getUnTillDbVCS(), repoUnTillDb.getDevelopBranch(), "feature commit added");
 
 		forkAndBuild(compUnTillDb, 2);
