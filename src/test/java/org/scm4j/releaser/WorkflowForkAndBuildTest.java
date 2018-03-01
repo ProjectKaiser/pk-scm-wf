@@ -16,7 +16,7 @@ public class WorkflowForkAndBuildTest extends WorkflowTestBase {
 
 		// test IGNORED dev branch state
 		env.generateFeatureCommit(env.getUnTillDbVCS(), repoUnTillDb.getDevelopBranch(),
-				LogTag.SCM_IGNORE + " ignored feature commit added");
+				Constants.SCM_IGNORE + " ignored feature commit added");
 		action = execAndGetActionBuild(compUnTill);
 		assertActionDoesNothing(action);
 		checkUnTillBuilt(1);

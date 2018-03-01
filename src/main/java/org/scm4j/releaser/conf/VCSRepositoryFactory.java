@@ -1,7 +1,7 @@
 package org.scm4j.releaser.conf;
 
 import org.scm4j.commons.regexconfig.RegexConfig;
-import org.scm4j.releaser.Utils;
+import org.scm4j.releaser.Constants;
 import org.scm4j.releaser.builders.BuilderFactory;
 import org.scm4j.releaser.exceptions.EComponentConfigNoUrl;
 import org.scm4j.vcs.api.workingcopy.IVCSWorkspace;
@@ -12,7 +12,7 @@ import java.io.File;
 public class VCSRepositoryFactory {
 	
 	public static final VCSType DEFAULT_VCS_TYPE = VCSType.GIT;
-	public static final String DEFAULT_VCS_WORKSPACE_DIR = new File(Utils.BASE_WORKING_DIR,
+	public static final String DEFAULT_VCS_WORKSPACE_DIR = new File(Constants.BASE_WORKING_DIR,
 			"releaser-vcs-workspaces").getPath();
 	private final RegexConfig cc;
 	private final RegexConfig creds;

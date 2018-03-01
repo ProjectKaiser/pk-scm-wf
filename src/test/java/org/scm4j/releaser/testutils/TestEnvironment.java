@@ -4,7 +4,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.contrib.java.lang.system.EnvironmentVariables;
 import org.scm4j.commons.Version;
-import org.scm4j.releaser.LogTag;
+import org.scm4j.releaser.Constants;
 import org.scm4j.releaser.Utils;
 import org.scm4j.releaser.builders.BuilderFactory;
 import org.scm4j.releaser.conf.DefaultConfigUrls;
@@ -97,21 +97,21 @@ public class TestEnvironment implements AutoCloseable {
 	}
 
 	private void uploadVCSConfigFiles() {
-		unTillVCS.setFileContent(null, Utils.VER_FILE_NAME, unTillVer.toString(),
-				LogTag.SCM_IGNORE + " ver file added");
+		unTillVCS.setFileContent(null, Constants.VER_FILE_NAME, unTillVer.toString(),
+				Constants.SCM_IGNORE + " ver file added");
 		unTillVCS.setFileContent(null,
-				Utils.MDEPS_FILE_NAME, PRODUCT_UBL + ":" + ublVer.getSnapshot() + " # comment 1\r\n"
+				Constants.MDEPS_FILE_NAME, PRODUCT_UBL + ":" + ublVer.getSnapshot() + " # comment 1\r\n"
 						+ PRODUCT_UNTILLDB + ":" + unTillDbVer.getSnapshot() + "# comment 2\r\n",
-				LogTag.SCM_IGNORE + " mdeps file added");
+				Constants.SCM_IGNORE + " mdeps file added");
 
-		ublVCS.setFileContent(null, Utils.VER_FILE_NAME, ublVer.toString(),
-				LogTag.SCM_IGNORE + " ver file added");
-		ublVCS.setFileContent(null, Utils.MDEPS_FILE_NAME,
+		ublVCS.setFileContent(null, Constants.VER_FILE_NAME, ublVer.toString(),
+				Constants.SCM_IGNORE + " ver file added");
+		ublVCS.setFileContent(null, Constants.MDEPS_FILE_NAME,
 				PRODUCT_UNTILLDB + ":" + unTillDbVer.getSnapshot() + "#comment 3\r\n",
-				LogTag.SCM_IGNORE + " mdeps file added");
+				Constants.SCM_IGNORE + " mdeps file added");
 
-		unTillDbVCS.setFileContent(null, Utils.VER_FILE_NAME, unTillDbVer.toString(),
-				LogTag.SCM_IGNORE + " ver file added");
+		unTillDbVCS.setFileContent(null, Constants.VER_FILE_NAME, unTillDbVer.toString(),
+				Constants.SCM_IGNORE + " ver file added");
 	}
 
 	private void createTestVCSRepos() throws Exception {

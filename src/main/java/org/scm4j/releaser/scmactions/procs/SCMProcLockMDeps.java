@@ -3,10 +3,7 @@ package org.scm4j.releaser.scmactions.procs;
 import org.apache.commons.lang3.StringUtils;
 import org.scm4j.commons.Version;
 import org.scm4j.commons.progress.IProgress;
-import org.scm4j.releaser.CachedStatuses;
-import org.scm4j.releaser.ExtendedStatus;
-import org.scm4j.releaser.LogTag;
-import org.scm4j.releaser.Utils;
+import org.scm4j.releaser.*;
 import org.scm4j.releaser.branch.ReleaseBranchFactory;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.MDepsFile;
@@ -49,13 +46,13 @@ public class SCMProcLockMDeps implements ISCMProc {
 			return;
 		}
 		String rbName = Utils.getReleaseBranchName(repo, status.getNextVersion());
-		MDepsFile currentMDepsFile = new MDepsFile(vcs.getFileContent(rbName, Utils.MDEPS_FILE_NAME, null));
+		MDepsFile currentMDepsFile = new MDepsFile(vcs.getFileContent(rbName, Constants.MDEPS_FILE_NAME, null));
 
 		StringBuilder sb = new StringBuilder();
 		Version newVersion;
 		for (Component currentMDep : currentMDepsFile.getMDeps()) {
 			newVersion = cache.get(repoFactory.getUrl(currentMDep)).getNextVersion();
-			if (!newVersion.getPatch().equals(Utils.ZERO_PATCH)) {
+			if (!newVersion.getPatch().equals(Constants.ZERO_PATCH)) {
 				newVersion = newVersion.toPreviousPatch();
 			}
 			sb.append("" + currentMDep.getName() + ": " + currentMDep.getVersion() + " -> " + newVersion + "\r\n");
@@ -69,8 +66,8 @@ public class SCMProcLockMDeps implements ISCMProc {
 			sb.setLength(sb.length() - 2);
 			progress.reportStatus("mdeps to lock:\r\n" + sb.toString());
 			statusMessages.add("lock mdeps");
-			vcsChangeList.add(new VCSChangeListNode(Utils.MDEPS_FILE_NAME, currentMDepsFile.toFileContent(),
-					LogTag.SCM_MDEPS));
+			vcsChangeList.add(new VCSChangeListNode(Constants.MDEPS_FILE_NAME, currentMDepsFile.toFileContent(),
+					Constants.SCM_MDEPS));
 		}
 
 		commitChangeList(rbName, StringUtils.join(statusMessages, ", "), progress);

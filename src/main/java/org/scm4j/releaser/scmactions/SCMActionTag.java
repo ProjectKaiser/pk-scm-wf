@@ -4,7 +4,7 @@ import java.util.ArrayList;
 
 import org.scm4j.commons.Version;
 import org.scm4j.commons.progress.IProgress;
-import org.scm4j.releaser.LogTag;
+import org.scm4j.releaser.Constants;
 import org.scm4j.releaser.Utils;
 import org.scm4j.releaser.actions.ActionAbstract;
 import org.scm4j.releaser.conf.Component;
@@ -42,10 +42,10 @@ public class SCMActionTag extends ActionAbstract {
 
 	private void bumpPatch(IProgress progress, IVCS vcs, DelayedTag delayedTag, String branchName) {
 		Version nextPatchVersion = delayedTag.getVersion().toNextPatch();
-		Version branchHeadVersion = new Version(vcs.getFileContent(branchName, Utils.VER_FILE_NAME, null));
+		Version branchHeadVersion = new Version(vcs.getFileContent(branchName, Constants.VER_FILE_NAME, null));
 		if (!branchHeadVersion.isGreaterThan(nextPatchVersion) && !branchHeadVersion.equals(nextPatchVersion)) {
-			Utils.reportDuration(() -> vcs.setFileContent(branchName, Utils.VER_FILE_NAME, nextPatchVersion.toString(),
-					LogTag.SCM_VER + " " + nextPatchVersion),
+			Utils.reportDuration(() -> vcs.setFileContent(branchName, Constants.VER_FILE_NAME, nextPatchVersion.toString(),
+					Constants.SCM_VER + " " + nextPatchVersion),
 					String.format("bump patch version in release branch %s: %s", branchName, nextPatchVersion), null, progress);
 		}
 	}

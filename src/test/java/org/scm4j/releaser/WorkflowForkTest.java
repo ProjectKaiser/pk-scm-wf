@@ -26,9 +26,9 @@ public class WorkflowForkTest extends WorkflowTestBase {
 		
 		// simulate mdeps not locked
 		ReleaseBranchCurrent crb = ReleaseBranchFactory.getCRB(repoUBL);
-		MDepsFile mdf = new MDepsFile(env.getUblVCS().getFileContent(crb.getName(), Utils.MDEPS_FILE_NAME, null));
+		MDepsFile mdf = new MDepsFile(env.getUblVCS().getFileContent(crb.getName(), Constants.MDEPS_FILE_NAME, null));
 		mdf.replaceMDep(mdf.getMDeps().get(0).clone(""));
-		env.getUblVCS().setFileContent(crb.getName(), Utils.MDEPS_FILE_NAME, mdf.toFileContent(), "mdeps not locked");
+		env.getUblVCS().setFileContent(crb.getName(), Constants.MDEPS_FILE_NAME, mdf.toFileContent(), "mdeps not locked");
 		
 		// UBL should lock its mdeps
 		IAction action = execAndGetActionFork(compUBL);
@@ -43,12 +43,12 @@ public class WorkflowForkTest extends WorkflowTestBase {
 	@Test
 	public void testMDepsFileFormatSaving() {
 		String newMDepsFileContent = getMDepsFileTestContent(ReleaseBranchFactory.getMDepsDevelop(repoUnTill), true);
-		env.getUnTillVCS().setFileContent(null, Utils.MDEPS_FILE_NAME, newMDepsFileContent, "mdeps file changed");
+		env.getUnTillVCS().setFileContent(null, Constants.MDEPS_FILE_NAME, newMDepsFileContent, "mdeps file changed");
 
 		fork(compUnTill);
 
 		ReleaseBranchCurrent crb = ReleaseBranchFactory.getCRB(repoUnTill);
-		String actualMDepsFileContent = env.getUnTillVCS().getFileContent(crb.getName(), Utils.MDEPS_FILE_NAME, null);
+		String actualMDepsFileContent = env.getUnTillVCS().getFileContent(crb.getName(), Constants.MDEPS_FILE_NAME, null);
 		String expectedMDepsFileContent = getMDepsFileTestContent(crb.getMDeps(), false);
 		assertEquals(expectedMDepsFileContent, actualMDepsFileContent);
 	}
@@ -83,8 +83,8 @@ public class WorkflowForkTest extends WorkflowTestBase {
 
 		// check pre-last commit contains unmodified version and mdeps files
 		VCSCommit preLastCommit = commits.get(1);
-		String versionPreLastContent = env.getUnTillVCS().getFileContent(crb.getName(), Utils.VER_FILE_NAME, preLastCommit.getRevision());
-		String mdepsPreLastContent = env.getUnTillVCS().getFileContent(crb.getName(), Utils.MDEPS_FILE_NAME, preLastCommit.getRevision());
+		String versionPreLastContent = env.getUnTillVCS().getFileContent(crb.getName(), Constants.VER_FILE_NAME, preLastCommit.getRevision());
+		String mdepsPreLastContent = env.getUnTillVCS().getFileContent(crb.getName(), Constants.MDEPS_FILE_NAME, preLastCommit.getRevision());
 
 		assertTrue(new Version(versionPreLastContent).isSnapshot());
 		MDepsFile mdf = new MDepsFile(mdepsPreLastContent);

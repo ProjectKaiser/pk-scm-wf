@@ -1,8 +1,7 @@
 package org.scm4j.releaser.branch;
 
 import org.scm4j.commons.Version;
-import org.scm4j.releaser.LogTag;
-import org.scm4j.releaser.Utils;
+import org.scm4j.releaser.Constants;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.VCSRepository;
 import org.scm4j.releaser.exceptions.ENoVersionFile;
@@ -27,12 +26,12 @@ public class DevelopBranch {
 			return false;
 		}
 		VCSCommit lastCommit = log.get(0);
-		return !(lastCommit.getLogMessage().contains(LogTag.SCM_IGNORE) || lastCommit.getLogMessage().contains(LogTag.SCM_VER));
+		return !(lastCommit.getLogMessage().contains(Constants.SCM_IGNORE) || lastCommit.getLogMessage().contains(Constants.SCM_VER));
 	}
 	
 	public Version getVersion() {
 		try {
-			String verFileContent = repo.getVCS().getFileContent(repo.getDevelopBranch(), Utils.VER_FILE_NAME, null);
+			String verFileContent = repo.getVCS().getFileContent(repo.getDevelopBranch(), Constants.VER_FILE_NAME, null);
 			return new Version(verFileContent.trim());
 		} catch (EVCSFileNotFound e) {
 			throw new ENoVersionFile(comp);

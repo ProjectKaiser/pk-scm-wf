@@ -72,7 +72,7 @@ public class WorkflowTestBase {
 		dbUBL = new DevelopBranch(compUBL, repoUBL);
 		TestBuilder.setBuilders(new HashMap<>());
 		new DelayedTagsFile().delete();
-		Utils.waitForDeleteDir(Utils.RELEASES_DIR);
+		Utils.waitForDeleteDir(Constants.RELEASES_DIR);
 	}
 
 	@After
@@ -81,13 +81,13 @@ public class WorkflowTestBase {
 			env.close();
 		}
 		TestBuilder.setBuilders(null);
-		Utils.waitForDeleteDir(Utils.RELEASES_DIR);
+		Utils.waitForDeleteDir(Constants.RELEASES_DIR);
 	}
 
 	protected Version getCrbVersion(Component comp) {
 		VCSRepository repo = repoFactory.getVCSRepository(comp);
 		Version crbFirstVersion = Utils.getDevVersion(repo).toPreviousMinor().toReleaseZeroPatch();
-		return new Version(repo.getVCS().getFileContent(Utils.getReleaseBranchName(repo, crbFirstVersion), Utils.VER_FILE_NAME, null));
+		return new Version(repo.getVCS().getFileContent(Utils.getReleaseBranchName(repo, crbFirstVersion), Constants.VER_FILE_NAME, null));
 	}
 
 	protected void checkCompBuilt(int times, Component comp) {

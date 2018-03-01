@@ -81,7 +81,7 @@ public class DelayedTagsFile {
 		Map<String, DelayedTag> content = getContent();
 		DelayedTag tag = new DelayedTag(version, revision);
 		DelayedTag previousTag = content.put(url, tag);
-		if (previousTag == null || !previousTag.equals(tag)) {
+		if (!tag.equals(previousTag)) {
 			writeContent(content);
 		}
 	}

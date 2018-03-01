@@ -129,7 +129,7 @@ public class WorkflowPatchesTest extends WorkflowTestBase {
 		Component nonLockedMDep = new Component(UNTILL);
 		MDepsFile mdf = new MDepsFile(UNTILL);
 		ReleaseBranchCurrent rb = ReleaseBranchFactory.getCRB(repoUnTillDb);
-		env.getUnTillDbVCS().setFileContent(rb.getName(), Utils.MDEPS_FILE_NAME,
+		env.getUnTillDbVCS().setFileContent(rb.getName(), Constants.MDEPS_FILE_NAME,
 				mdf.toFileContent(), "mdeps file added");
 
 		// try to build patch

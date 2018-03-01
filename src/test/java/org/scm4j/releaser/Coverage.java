@@ -10,12 +10,12 @@ public class Coverage {
 	@Test
 	public void cover() {
 		new Utils();
-		new LogTag();
 		new ReleaseBranchFactory();
 		new VCSRepository("name", "url", null, null, null, null, null, null).toString();
 		for (VCSType type : VCSType.values()) {
 			Utils.getBuildTimeEnvVars(type,"", "", "");
 		}
 		ExtendedStatus.DUMMY.toString();
+		new Constants();
 	}
 }

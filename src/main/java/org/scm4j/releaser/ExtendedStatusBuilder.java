@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
-import static org.scm4j.releaser.Utils.ZERO_PATCH;
+import static org.scm4j.releaser.Constants.ZERO_PATCH;
 import static org.scm4j.releaser.Utils.reportDuration;
 
 public class ExtendedStatusBuilder {
@@ -186,7 +186,7 @@ public class ExtendedStatusBuilder {
 				return true;
 			}
 			List<VCSTag> tags = vcs.getTagsOnRevision(commit.getRevision());
-			if (!commit.getLogMessage().contains(LogTag.SCM_VER) && !commit.getLogMessage().contains(LogTag.SCM_IGNORE)) {
+			if (!commit.getLogMessage().contains(Constants.SCM_VER) && !commit.getLogMessage().contains(Constants.SCM_IGNORE)) {
 				return !tags.isEmpty();
 			}
 			if (!tags.isEmpty()) {
@@ -262,7 +262,7 @@ public class ExtendedStatusBuilder {
 		} 
 
 
-		if (rb.getVersion().getPatch().equals(Utils.ZERO_PATCH)) {
+		if (rb.getVersion().getPatch().equals(Constants.ZERO_PATCH)) {
 			if (!hasDelayedTag) {
 				return false;
 			}

@@ -6,6 +6,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.contrib.java.lang.system.EnvironmentVariables;
+import org.scm4j.releaser.Constants;
 import org.scm4j.releaser.Utils;
 
 import java.io.IOException;
@@ -30,8 +31,8 @@ public class DefaultConfigUrlsTest {
 	@SuppressWarnings("deprecation")
 	@Before
 	public void setUp() throws IOException {
-		Utils.BASE_WORKING_DIR.mkdirs();
-		FileUtils.cleanDirectory(Utils.BASE_WORKING_DIR);
+		Constants.BASE_WORKING_DIR.mkdirs();
+		FileUtils.cleanDirectory(Constants.BASE_WORKING_DIR);
 		ev.set(DefaultConfigUrls.REPOS_LOCATION_ENV_VAR, null);
 		ev.set(DefaultConfigUrls.CC_URLS_ENV_VAR, null);
 		ev.set(DefaultConfigUrls.CREDENTIALS_URL_ENV_VAR, null);
@@ -39,7 +40,7 @@ public class DefaultConfigUrlsTest {
 	
 	@After
 	public void tearDown() throws Exception {
-		Utils.waitForDeleteDir(Utils.BASE_WORKING_DIR);
+		Utils.waitForDeleteDir(Constants.BASE_WORKING_DIR);
 	}
 
 	@SuppressWarnings("deprecation")

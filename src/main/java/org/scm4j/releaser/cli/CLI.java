@@ -166,9 +166,9 @@ public class CLI {
 		if (configUrls.getCCUrls() != null || configUrls.getCredsUrl() != null) {
 			return;
 		}
-		Utils.BASE_WORKING_DIR.mkdirs();
+		Constants.BASE_WORKING_DIR.mkdirs();
 		for (String ct : CONFIG_TEMPLATES) {
-			File ctFile = new File(Utils.BASE_WORKING_DIR, ct);
+			File ctFile = new File(Constants.BASE_WORKING_DIR, ct);
 			if (!ctFile.exists()) {
 				InputStream is = this.getClass().getResourceAsStream(CONFIG_TEMPLATES_ROSURCE_PATH + ct);
 				FileUtils.copyInputStreamToFile(is, ctFile);

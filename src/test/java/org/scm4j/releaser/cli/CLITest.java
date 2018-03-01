@@ -263,7 +263,7 @@ public class CLITest {
 	@Test
 	public void testSuccessfulExecutionWithWorkingDirInitFailure() throws Exception {
 		String[] args = new String[] { CLICommand.STATUS.getCmdLineStr(), TestEnvironment.PRODUCT_UNTILL };
-		Utils.waitForDeleteDir(Utils.BASE_WORKING_DIR);
+		Utils.waitForDeleteDir(Constants.BASE_WORKING_DIR);
 		clearEnvVars();
 		Exception testException = new Exception("test exception");
 		try (TestEnvironment env = new TestEnvironment()) {
@@ -278,9 +278,9 @@ public class CLITest {
 	@Test
 	public void testInitWorkingDir() throws Exception {
 		String[] args = new String[] {};
-		Utils.waitForDeleteDir(Utils.BASE_WORKING_DIR);
+		Utils.waitForDeleteDir(Constants.BASE_WORKING_DIR);
 		clearEnvVars();
-		File customConfigTemplateFile = new File(Utils.BASE_WORKING_DIR, CLI.CONFIG_TEMPLATES.get(0));
+		File customConfigTemplateFile = new File(Constants.BASE_WORKING_DIR, CLI.CONFIG_TEMPLATES.get(0));
 		FileUtils.writeStringToFile(customConfigTemplateFile, TEST_CONFIG_CONTENT, StandardCharsets.UTF_8);
 		new CLI().exec(args);
 
@@ -290,7 +290,7 @@ public class CLITest {
 		}
 
 		List<String> dstFileNames = new ArrayList<>();
-		for (File dstFile : FileUtils.listFiles(Utils.BASE_WORKING_DIR, FileFilterUtils.trueFileFilter(), FileFilterUtils.trueFileFilter())) {
+		for (File dstFile : FileUtils.listFiles(Constants.BASE_WORKING_DIR, FileFilterUtils.trueFileFilter(), FileFilterUtils.trueFileFilter())) {
 			dstFileNames.add(dstFile.getName());
 		}
 

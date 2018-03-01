@@ -3,7 +3,7 @@ package org.scm4j.releaser.conf;
 import org.apache.commons.io.FileUtils;
 import org.scm4j.commons.CommentedString;
 import org.scm4j.commons.URLContentLoader;
-import org.scm4j.releaser.Utils;
+import org.scm4j.releaser.Constants;
 
 import java.io.File;
 import java.io.IOException;
@@ -12,9 +12,9 @@ import java.util.List;
 
 public class DefaultConfigUrls implements IConfigUrls {
 	
-	public static final File PRIORITY_CC_FILE = new File(Utils.BASE_WORKING_DIR, "cc.yml");
-	public static final File CC_URLS_FILE = new File(Utils.BASE_WORKING_DIR, "cc");
-	public static final File CREDENTIALS_FILE = new File(Utils.BASE_WORKING_DIR, "credentials.yml");
+	public static final File PRIORITY_CC_FILE = new File(Constants.BASE_WORKING_DIR, "cc.yml");
+	public static final File CC_URLS_FILE = new File(Constants.BASE_WORKING_DIR, "cc");
+	public static final File CREDENTIALS_FILE = new File(Constants.BASE_WORKING_DIR, "credentials.yml");
 	public static final String CC_URLS_ENV_VAR = "SCM4J_CC";
 	public static final String CREDENTIALS_URL_ENV_VAR = "SCM4J_CREDENTIALS";
 	public static final String URL_SEPARATOR = URLContentLoader.URL_SEPARATOR;

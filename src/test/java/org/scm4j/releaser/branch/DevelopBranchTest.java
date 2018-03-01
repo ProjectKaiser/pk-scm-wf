@@ -1,7 +1,7 @@
 package org.scm4j.releaser.branch;
 
 import org.junit.Test;
-import org.scm4j.releaser.Utils;
+import org.scm4j.releaser.Constants;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.VCSRepository;
 import org.scm4j.releaser.exceptions.ENoVersionFile;
@@ -38,7 +38,7 @@ public class DevelopBranchTest {
 			env.generateTestEnvironment();
 			Component comp = new Component(TestEnvironment.PRODUCT_UNTILL);
 			VCSRepository repo = env.getRepoFactory().getVCSRepository(comp);
-			env.getUnTillVCS().removeFile(repo.getDevelopBranch(), Utils.VER_FILE_NAME, "version file removed");
+			env.getUnTillVCS().removeFile(repo.getDevelopBranch(), Constants.VER_FILE_NAME, "version file removed");
 			DevelopBranch db = new DevelopBranch(comp, repo);
 			try {
 				db.getVersion();

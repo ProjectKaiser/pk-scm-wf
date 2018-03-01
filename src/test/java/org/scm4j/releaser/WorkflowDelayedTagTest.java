@@ -287,8 +287,8 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 		
 		// simulate version is reaised already in trunk (e.g. built manually)
 		IVCS vcs = repoUnTillDb.getVCS();
-		vcs.setFileContent(repoUnTillDb.getDevelopBranch(), Utils.VER_FILE_NAME,
-				new Version(vcs.getFileContent(repoUnTillDb.getDevelopBranch(), Utils.VER_FILE_NAME, null)).toNextMinor().toString(),
+		vcs.setFileContent(repoUnTillDb.getDevelopBranch(), Constants.VER_FILE_NAME,
+				new Version(vcs.getFileContent(repoUnTillDb.getDevelopBranch(), Constants.VER_FILE_NAME, null)).toNextMinor().toString(),
 				"minor bumped");
 		
 		// tag delayed
@@ -317,8 +317,8 @@ public class WorkflowDelayedTagTest extends WorkflowTestBase {
 		// simulate version is reaised already in release branch (e.g. built manually)
 		IVCS vcs = repoUnTillDb.getVCS();
 		ReleaseBranchPatch patchBranch = ReleaseBranchFactory.getReleaseBranchPatch(env.getUnTillDbVer(), repoUnTillDb);
-		VCSCommit patchBranchHeadCommit = vcs.setFileContent(patchBranch.getName(), Utils.VER_FILE_NAME,
-				new Version(vcs.getFileContent(patchBranch.getName(), Utils.VER_FILE_NAME, null)).toNextPatch().toNextPatch().toString(),
+		VCSCommit patchBranchHeadCommit = vcs.setFileContent(patchBranch.getName(), Constants.VER_FILE_NAME,
+				new Version(vcs.getFileContent(patchBranch.getName(), Constants.VER_FILE_NAME, null)).toNextPatch().toNextPatch().toString(),
 				"patch bumped");
 
 		// tag delayed

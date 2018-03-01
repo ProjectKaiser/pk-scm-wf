@@ -21,14 +21,7 @@ import java.util.concurrent.ForkJoinTask;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-
 public final class Utils {
-
-	public static final File RELEASES_DIR = new File(System.getProperty("user.dir"), "releases");
-	public static final String ZERO_PATCH = "0";
-	public static final String VER_FILE_NAME = "version";
-	public static final String MDEPS_FILE_NAME = "mdeps";
-	public static final File BASE_WORKING_DIR = new File(System.getProperty("user.home"), ".scm4j");
 
 	public static <T> T reportDuration(Supplier<T> sup, String message, Component comp, IProgress progress) {
 		if (progress == null) {
@@ -77,7 +70,7 @@ public final class Utils {
 	}
 
 	public static File getBuildDir(VCSRepository repo, Version forVersion) {
-		IVCSWorkspace ws = new VCSWorkspace(RELEASES_DIR.toString());
+		IVCSWorkspace ws = new VCSWorkspace(Constants.RELEASES_DIR.toString());
 		IVCSRepositoryWorkspace rws = ws.getVCSRepositoryWorkspace(repo.getUrl());
 		return new File(rws.getRepoFolder(), getReleaseBranchName(repo, forVersion).replaceAll("[^a-zA-Z0-9.-]", "_"));
 	}
@@ -89,7 +82,7 @@ public final class Utils {
 
 	public static Version getDevVersion(VCSRepository repo) {
 		return new Version(
-				repo.getVCS().getFileContent(repo.getDevelopBranch(), Utils.VER_FILE_NAME, null));
+				repo.getVCS().getFileContent(repo.getDevelopBranch(), Constants.VER_FILE_NAME, null));
 	}
 
 	public static void waitForDeleteDir(File dir) throws Exception {

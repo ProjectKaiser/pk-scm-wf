@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.scm4j.commons.Version;
+import org.scm4j.releaser.Constants;
 import org.scm4j.releaser.Utils;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.MDepsFile;
@@ -19,7 +20,7 @@ public final class ReleaseBranchFactory {
 		Version version;
 		List<Component> mdeps;
 		try {
-			version = new Version(repo.getVCS().getFileContent(name, Utils.VER_FILE_NAME, null)).toRelease();
+			version = new Version(repo.getVCS().getFileContent(name, Constants.VER_FILE_NAME, null)).toRelease();
 			exists = true;
 			mdeps = getMDepsRelease(name, repo);
 		} catch (EVCSBranchNotFound e) {
@@ -37,20 +38,20 @@ public final class ReleaseBranchFactory {
 		boolean exists;
 		String name = Utils.getReleaseBranchName(repo, devVersion.toPreviousMinor());
 		try {
-			version = new Version(repo.getVCS().getFileContent(name, Utils.VER_FILE_NAME, null)).toRelease();
+			version = new Version(repo.getVCS().getFileContent(name, Constants.VER_FILE_NAME, null)).toRelease();
 			exists = true;
 		} catch (EVCSBranchNotFound e) {
 			version = devVersion.toReleaseZeroPatch();
 			exists = false;
 		}
-		List<Component> mdeps = exists && version.getPatch().equals(Utils.ZERO_PATCH) ? getMDepsRelease(name, repo) : getMDepsDevelop(repo);
+		List<Component> mdeps = exists && version.getPatch().equals(Constants.ZERO_PATCH) ? getMDepsRelease(name, repo) : getMDepsDevelop(repo);
 	
 		return new ReleaseBranchCurrent(mdeps, exists, name, version, devVersion);
 	}
 	
 	public static List<Component> getMDepsRelease(String releaseBranchName, VCSRepository repo) {
 		try {
-			String mDepsFileContent = repo.getVCS().getFileContent(releaseBranchName, Utils.MDEPS_FILE_NAME, null);
+			String mDepsFileContent = repo.getVCS().getFileContent(releaseBranchName, Constants.MDEPS_FILE_NAME, null);
 			return new MDepsFile(mDepsFileContent).getMDeps();
 		} catch (EVCSFileNotFound e) {
 			return new ArrayList<>();
