@@ -45,7 +45,7 @@ For version definitions ref. [semantic Versioning 2.0.0](http://semver.org/).
 
 # Related repositories
   
-  - [scm4j-vcs-api](../../../scm4j-vcs-api/blob/master/README.md)
+  - [scm4j-vcs-api](../../../scm4j-vcs-api)
   - [scm4j-vcs-git](../../../scm4j-vcs-git/blob/master/README.md)
   - [scm4j-vcs-svn](../../../scm4j-vcs-svn/blob/master/README.md)
 
