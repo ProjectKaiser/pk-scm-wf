@@ -198,11 +198,13 @@ public class WorkflowPatchesTest extends WorkflowTestBase {
 			execAndGetActionBuild(compUnTill.clone(env.getUnTillVer().toRelease()));
 			fail();
 		} catch (EMinorUpgradeDowngrade e) {
-			if (!e.getRootComp().equals(compUBL.clone(crbUBL.getVersion().toPreviousPatch())) && 
-					e.getRootComp().equals(compUBL.clone(crbUnTill.getVersion().toPreviousPatch()))) {
+			if (e.getRootComp().equals(compUBL.clone(crbUBL.getVersion().toPreviousPatch()))) {
+				assertEquals(compUnTillDb.clone("2.59.0"), e.getProblematicMDep());
+			} else if (e.getRootComp().equals(compUBL.clone(crbUnTill.getVersion().toPreviousPatch()))) {
+				assertEquals(compUnTillDb.clone("2.60.0"), e.getProblematicMDep());
+			} else {
 				fail();
 			}
-			assertEquals(compUnTillDb.clone("2.59.0"), e.getProblematicMDep());
 		}
 	}
 
@@ -226,11 +228,13 @@ public class WorkflowPatchesTest extends WorkflowTestBase {
 			execAndGetActionBuild(compUnTill.clone(env.getUnTillVer().toRelease()));
 			fail();
 		} catch (EMinorUpgradeDowngrade e) {
-			if (!e.getRootComp().equals(compUBL.clone(crbUBL.getVersion().toPreviousPatch())) && 
-					e.getRootComp().equals(compUBL.clone(crbUnTill.getVersion().toPreviousPatch()))) {
+			if (e.getRootComp().equals(compUBL.clone(crbUBL.getVersion().toPreviousPatch()))) {
+				assertEquals(compUnTillDb.clone("2.59.1"), e.getProblematicMDep());
+			} else if (e.getRootComp().equals(compUBL.clone(crbUnTill.getVersion().toPreviousPatch()))) {
+				assertEquals(compUnTillDb.clone("2.59.0"), e.getProblematicMDep());
+			} else {
 				fail();
 			}
-			assertEquals(compUnTillDb.clone(crbUnTillDb.getVersion()), e.getProblematicMDep());
 		}
 	}
 }
