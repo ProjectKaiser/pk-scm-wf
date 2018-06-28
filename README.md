@@ -30,7 +30,7 @@ For version definitions ref. [semantic Versioning 2.0.0](http://semver.org/).
 
 - It is safe to add a new entry without version to any SNAPSHOT mdeps
 - If you add or modify some release mdeps you must also copy these changes to all your project mdeps
-  - Otherwise it is possible to get "Inconsistent dependencies"
+  - Otherwise it is possible to get "Inconsistent dependencies" error
 - It is safe to remove a record from mdeps and add it to `build.gralde` - this way you can change dependency version at your own risk, do not cry aftewards
 
 # Under the Hood
