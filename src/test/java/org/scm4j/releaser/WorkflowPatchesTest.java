@@ -203,7 +203,7 @@ public class WorkflowPatchesTest extends WorkflowTestBase {
 			} else if (e.getRootComp().equals(compUnTill.clone(crbUnTill.getVersion().toPreviousPatch()))) {
 				assertEquals(compUnTillDb.clone("2.60.0"), e.getProblematicMDep());
 			} else {
-				fail();
+				assertEquals(e.getRootComp(), compUBL.clone(crbUBL.getVersion().toPreviousPatch()));
 			}
 		}
 	}
