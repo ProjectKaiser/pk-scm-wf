@@ -98,6 +98,21 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		// check UBL actualized unTillDb version
 		checkUBLMDepsVersions(1);
 	}
+	
+	@Test
+	public void testNoActualizePatchesIfHasNewReleases() {
+		forkAndBuild(compUnTill);
+		
+		// release next 2.60 unTillDb minor
+		env.generateFeatureCommit(env.getUnTillDbVCS(), repoUnTillDb.getDevelopBranch(), "feature added");
+		forkAndBuild(compUnTillDb, 2);
+		
+		ReleaseBranchCurrent crb = ReleaseBranchFactory.getCRB(repoUnTill);
+		IAction action = execAndGetActionBuild(compUnTill.clone(crb.getVersion()));
+		assertActionDoesNothing(action, compUnTill);
+		assertActionDoesNothing(action, compUBL);
+		assertActionDoesNothing(action, compUnTillDb);
+	}
 
 	@Test
 	public void testLockMDeps() {

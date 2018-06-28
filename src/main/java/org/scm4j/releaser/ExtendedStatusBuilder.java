@@ -8,6 +8,7 @@ import org.scm4j.releaser.branch.ReleaseBranchCurrent;
 import org.scm4j.releaser.branch.ReleaseBranchFactory;
 import org.scm4j.releaser.branch.ReleaseBranchPatch;
 import org.scm4j.releaser.conf.*;
+import org.scm4j.releaser.exceptions.EMinorUpgradeDowngrade;
 import org.scm4j.releaser.exceptions.ENoReleaseBranchForPatch;
 import org.scm4j.releaser.exceptions.ENoReleases;
 import org.scm4j.releaser.exceptions.EReleaseMDepsNotLocked;
@@ -106,7 +107,7 @@ public class ExtendedStatusBuilder {
 			status = BuildStatus.LOCK;
 		} else if (hasMDepsNotInDONEStatus(rb.getMDeps(), cache)) {
 			status = BuildStatus.BUILD_MDEPS;
-		} else if (!areMDepsPatchesActual(rb.getMDeps(), cache)) {
+		} else if (!areMDepsPatchesActual(comp, repo, rb.getMDeps(), cache)) {
 			status = BuildStatus.ACTUALIZE_PATCHES;
 		} else {
 			status = BuildStatus.BUILD;
@@ -152,7 +153,7 @@ public class ExtendedStatusBuilder {
 		
 		if (hasMDepsNotInDONEStatus(rb.getMDeps(), cache)) {
 			buildStatus = BuildStatus.BUILD_MDEPS;
-		} else if (!areMDepsPatchesActual(rb.getMDeps(), cache)) {
+		} else if (!areMDepsPatchesActual(comp, repo, rb.getMDeps(), cache)) {
 			buildStatus = BuildStatus.ACTUALIZE_PATCHES;
 		} else if (reportDuration(() -> noValueableCommitsAfterLastTag(repo, rb), "is release branch modified check", comp, progress)) {
 			buildStatus = BuildStatus.DONE;
@@ -217,15 +218,34 @@ public class ExtendedStatusBuilder {
 		return null;
 	}
 
-	private boolean areMDepsPatchesActual(List<Component> mDeps, CachedStatuses cache) {
+	private boolean areMDepsPatchesActual(Component rootComp, VCSRepository repo, List<Component> mDeps, CachedStatuses cache) {
 		for (Component mDep : mDeps) {
 			String url = repoFactory.getUrl(mDep);
 			Version nextMDepVersion = cache.get(url).getNextVersion();
-			if (!nextMDepVersion.equals(mDep.getVersion().toNextPatch())) {
-				DelayedTagsFile mdf = new DelayedTagsFile();
-				if (!(nextMDepVersion.getPatch().equals(ZERO_PATCH) && mdf.getDelayedTagByUrl(url) != null)) {
-					return false;
-				}
+			if (!nextMDepVersion.toReleaseNoPatch().equals(mDep.getVersion().toReleaseNoPatch())) {
+				cache.remove(repo.getUrl());
+				throw new EMinorUpgradeDowngrade(rootComp, mDep, nextMDepVersion.toPreviousPatch());
+			}
+			DelayedTagsFile mdf = new DelayedTagsFile();
+			Integer cachedMDepPatch;
+			if (!(nextMDepVersion.getPatch().equals(ZERO_PATCH) && mdf.getDelayedTagByUrl(url) != null)) {
+				cachedMDepPatch = Integer.parseInt(nextMDepVersion.toPreviousPatch().getPatch());
+			} else {
+				cachedMDepPatch = Integer.parseInt(nextMDepVersion.getPatch());
+			}
+			 
+			Integer mDepPatch = Integer.parseInt(mDep.getVersion().getPatch());
+			if (cachedMDepPatch == mDepPatch) {
+				continue;
+			}
+			
+			if (cachedMDepPatch < mDepPatch) {
+				cache.remove(repo.getUrl());
+				throw new EMinorUpgradeDowngrade(rootComp, mDep, nextMDepVersion.toPreviousPatch());
+			}
+				
+			if (!(nextMDepVersion.getPatch().equals(ZERO_PATCH) && mdf.getDelayedTagByUrl(url) != null)) {
+				return false;
 			}
 		}
 		return true;
