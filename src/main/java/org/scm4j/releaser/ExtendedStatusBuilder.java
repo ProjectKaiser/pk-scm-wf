@@ -1,5 +1,13 @@
 package org.scm4j.releaser;
 
+import static org.scm4j.releaser.Utils.reportDuration;
+
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
+
 import org.scm4j.commons.Version;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.commons.progress.ProgressConsole;
@@ -7,7 +15,11 @@ import org.scm4j.releaser.branch.DevelopBranch;
 import org.scm4j.releaser.branch.ReleaseBranchCurrent;
 import org.scm4j.releaser.branch.ReleaseBranchFactory;
 import org.scm4j.releaser.branch.ReleaseBranchPatch;
-import org.scm4j.releaser.conf.*;
+import org.scm4j.releaser.conf.Component;
+import org.scm4j.releaser.conf.DelayedTag;
+import org.scm4j.releaser.conf.DelayedTagsFile;
+import org.scm4j.releaser.conf.VCSRepository;
+import org.scm4j.releaser.conf.VCSRepositoryFactory;
 import org.scm4j.releaser.exceptions.EMinorUpgradeDowngrade;
 import org.scm4j.releaser.exceptions.ENoReleaseBranchForPatch;
 import org.scm4j.releaser.exceptions.ENoReleases;
@@ -16,15 +28,6 @@ import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.vcs.api.VCSTag;
 import org.scm4j.vcs.api.WalkDirection;
-
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Function;
-
-import static org.scm4j.releaser.Constants.ZERO_PATCH;
-import static org.scm4j.releaser.Utils.reportDuration;
 
 public class ExtendedStatusBuilder {
 
@@ -217,34 +220,37 @@ public class ExtendedStatusBuilder {
 		} while (commits.size() >= COMMITS_RANGE_LIMIT);
 		return null;
 	}
-
+	
 	private boolean areMDepsPatchesActual(Component rootComp, VCSRepository repo, List<Component> mDeps, CachedStatuses cache) {
 		for (Component mDep : mDeps) {
 			String url = repoFactory.getUrl(mDep);
-			Version nextMDepVersion = cache.get(url).getNextVersion();
-			if (!nextMDepVersion.toReleaseNoPatch().equals(mDep.getVersion().toReleaseNoPatch())) {
+			Version nextVersion = cache.get(url).getNextVersion();
+			
+			// Any component `nextVersion`.truncatePatch is not equal to one mentioned in `mdeps` -> error (disallow minor upgrade/downgrade)
+			if (!nextVersion.toReleaseNoPatch().equals(mDep.getVersion().toReleaseNoPatch())) {
 				cache.remove(repo.getUrl());
-				throw new EMinorUpgradeDowngrade(rootComp, mDep, nextMDepVersion.toPreviousPatch());
-			}
-			DelayedTagsFile mdf = new DelayedTagsFile();
-			Integer cachedMDepPatch;
-			if (!(nextMDepVersion.getPatch().equals(ZERO_PATCH) && mdf.getDelayedTagByUrl(url) != null)) {
-				cachedMDepPatch = Integer.parseInt(nextMDepVersion.toPreviousPatch().getPatch());
-			} else {
-				cachedMDepPatch = Integer.parseInt(nextMDepVersion.getPatch());
-			}
-			 
-			Integer mDepPatch = Integer.parseInt(mDep.getVersion().getPatch());
-			if (cachedMDepPatch == mDepPatch) {
-				continue;
+				throw new EMinorUpgradeDowngrade(rootComp, mDep, nextVersion.toPreviousPatch());
 			}
 			
-			if (cachedMDepPatch < mDepPatch) {
-				cache.remove(repo.getUrl());
-				throw new EMinorUpgradeDowngrade(rootComp, mDep, nextMDepVersion.toPreviousPatch());
+			
+			DelayedTagsFile mdf = new DelayedTagsFile();
+			Version verToActualizeOn ;
+			if (mdf.getDelayedTagByUrl(url) != null) { // if delayed tag
+				verToActualizeOn = nextVersion;
+			} else {
+				verToActualizeOn = nextVersion.toPreviousPatch();
 			}
-				
-			if (!(nextMDepVersion.getPatch().equals(ZERO_PATCH) && mdf.getDelayedTagByUrl(url) != null)) {
+			
+			Integer mDepPatch = Integer.parseInt(mDep.getVersion().getPatch());
+			Integer nextVersionPatch = Integer.parseInt(verToActualizeOn.getPatch());
+			
+			// Any component `nextVersion`.patch is less than one mentioned in `mdeps` -> error (patch upgrade only is allowed)
+			if (nextVersionPatch < mDepPatch) {
+				cache.remove(repo.getUrl());
+				throw new EMinorUpgradeDowngrade(rootComp, mDep, verToActualizeOn);
+			}
+			
+			if (nextVersionPatch > mDepPatch) {
 				return false;
 			}
 		}

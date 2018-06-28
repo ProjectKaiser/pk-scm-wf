@@ -45,6 +45,8 @@ Status denotes next action which should be undertaken to finish patch build: {AC
 - mdeps are not locked => ERROR
 - `subComponents` are calculated using mdeps from particular RB
 - Any component is not in DONE status => BUILD_MDEPS
+- Any component `nextVersion`.truncatePatch is not equal to one mentioned in `mdeps` -> error (disallow minor upgrade/downgrade)
+- Any component `nextVersion`.patch is less than one mentioned in `mdeps` -> error (patch upgrade only is allowed)
 - Any component has patch which is greater than one mentioned in `mdeps` => ACTUALIZE_PATCHES
 - No valuable commits after last tag => DONE
   - Using #scm-ver is not safe, it is possible to lost commit which is done between build and increasing version
