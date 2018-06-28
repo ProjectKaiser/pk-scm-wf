@@ -198,7 +198,10 @@ public class WorkflowPatchesTest extends WorkflowTestBase {
 			execAndGetActionBuild(compUnTill.clone(env.getUnTillVer().toRelease()));
 			fail();
 		} catch (EMinorUpgradeDowngrade e) {
-			assertEquals(compUBL.clone(crbUBL.getVersion().toPreviousPatch()), e.getRootComp());
+			if (!e.getRootComp().equals(compUBL.clone(crbUBL.getVersion().toPreviousPatch())) && 
+					e.getRootComp().equals(compUBL.clone(crbUnTill.getVersion().toPreviousPatch()))) {
+				fail();
+			}
 			assertEquals(compUnTillDb.clone("2.59.0"), e.getProblematicMDep());
 		}
 	}
@@ -209,6 +212,7 @@ public class WorkflowPatchesTest extends WorkflowTestBase {
 
 		// unTill uses 2.59.0 version of UnTillDb
 		// make UBL use 2.59.1 version of unTillDb
+		ReleaseBranchCurrent crbUnTill = ReleaseBranchFactory.getCRB(repoUnTill);
 		ReleaseBranchCurrent crbUBL = ReleaseBranchFactory.getCRB(repoUBL);
 		ReleaseBranchCurrent crbUnTillDb = ReleaseBranchFactory.getCRB(repoUnTillDb);
 		MDepsFile mdf = new MDepsFile(env.getUblVCS().getFileContent(crbUBL.getName(), Constants.MDEPS_FILE_NAME, null));
@@ -222,7 +226,10 @@ public class WorkflowPatchesTest extends WorkflowTestBase {
 			execAndGetActionBuild(compUnTill.clone(env.getUnTillVer().toRelease()));
 			fail();
 		} catch (EMinorUpgradeDowngrade e) {
-			assertEquals(compUBL.clone(crbUBL.getVersion().toPreviousPatch()), e.getRootComp());
+			if (!e.getRootComp().equals(compUBL.clone(crbUBL.getVersion().toPreviousPatch())) && 
+					e.getRootComp().equals(compUBL.clone(crbUnTill.getVersion().toPreviousPatch()))) {
+				fail();
+			}
 			assertEquals(compUnTillDb.clone(crbUnTillDb.getVersion()), e.getProblematicMDep());
 		}
 	}
