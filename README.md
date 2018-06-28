@@ -26,7 +26,7 @@ For version definitions ref. [semantic Versioning 2.0.0](http://semver.org/).
 
 - gradlew run -Pa=status,com.mycompany:my-root-component
 
-# mdeps Management
+# Advanced `mdeps` Management
 
 - It is safe to add a new entry without version to any SNAPSHOT mdeps
 - If you add or modify some release mdeps you must also copy these changes to all your project mdeps
