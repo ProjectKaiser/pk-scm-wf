@@ -110,7 +110,7 @@ public class ExtendedStatusBuilder {
 			status = BuildStatus.LOCK;
 		} else if (hasMDepsNotInDONEStatus(rb.getMDeps(), cache)) {
 			status = BuildStatus.BUILD_MDEPS;
-		} else if (!areMDepsPatchesActual(comp, repo, rb.getMDeps(), cache)) {
+		} else if (!areMDepsPatchesActualForMinor(rb.getMDeps(), cache)) {
 			status = BuildStatus.ACTUALIZE_PATCHES;
 		} else {
 			status = BuildStatus.BUILD;
@@ -156,7 +156,7 @@ public class ExtendedStatusBuilder {
 		
 		if (hasMDepsNotInDONEStatus(rb.getMDeps(), cache)) {
 			buildStatus = BuildStatus.BUILD_MDEPS;
-		} else if (!areMDepsPatchesActual(comp, repo, rb.getMDeps(), cache)) {
+		} else if (!areMDepsPatchesActualForPatch(comp, repo, rb.getMDeps(), cache)) {
 			buildStatus = BuildStatus.ACTUALIZE_PATCHES;
 		} else if (reportDuration(() -> noValueableCommitsAfterLastTag(repo, rb), "is release branch modified check", comp, progress)) {
 			buildStatus = BuildStatus.DONE;
@@ -221,7 +221,21 @@ public class ExtendedStatusBuilder {
 		return null;
 	}
 	
-	private boolean areMDepsPatchesActual(Component rootComp, VCSRepository repo, List<Component> mDeps, CachedStatuses cache) {
+	private boolean areMDepsPatchesActualForMinor(List<Component> mDeps, CachedStatuses cache) {
+		for (Component mDep : mDeps) {
+			String url = repoFactory.getUrl(mDep);
+			Version nextMDepVersion = cache.get(url).getNextVersion();
+			if (!nextMDepVersion.equals(mDep.getVersion().toNextPatch())) {
+				DelayedTagsFile mdf = new DelayedTagsFile();
+				if (!(nextMDepVersion.getPatch().equals(Constants.ZERO_PATCH) && mdf.getDelayedTagByUrl(url) != null)) {
+					return false;
+				}
+			}
+		}
+		return true;
+	}
+	
+	private boolean areMDepsPatchesActualForPatch(Component rootComp, VCSRepository repo, List<Component> mDeps, CachedStatuses cache) {
 		for (Component mDep : mDeps) {
 			String url = repoFactory.getUrl(mDep);
 			Version nextVersion = cache.get(url).getNextVersion();
@@ -286,7 +300,6 @@ public class ExtendedStatusBuilder {
 		if (!rb.exists()) {
 			return true;
 		} 
-
 
 		if (rb.getVersion().getPatch().equals(Constants.ZERO_PATCH)) {
 			if (!hasDelayedTag) {

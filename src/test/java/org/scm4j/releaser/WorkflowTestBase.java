@@ -377,7 +377,9 @@ public class WorkflowTestBase {
 	private IAction execAndGetAction(Runnable preExec, String... args)  {
 		CLI cli = execAndGetCLI(preExec, args);
 		IAction action = cli.getAction();
-		action.toString(); // cover
+		if (action != null) {
+			action.toString(); // cover
+		}
 		return action;
 	}
 	
@@ -386,7 +388,7 @@ public class WorkflowTestBase {
 		return cli.getNode();
 	}
 
-	private IAction execAndGetAction(String... args) {
+	protected IAction execAndGetAction(String... args) {
 		return execAndGetAction(null, args);
 	}
 	

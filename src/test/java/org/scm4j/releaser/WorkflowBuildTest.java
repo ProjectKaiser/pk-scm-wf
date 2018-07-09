@@ -5,6 +5,7 @@ import org.junit.Test;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.branch.ReleaseBranchCurrent;
 import org.scm4j.releaser.branch.ReleaseBranchFactory;
+import org.scm4j.releaser.cli.CLICommand;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.MDepsFile;
 import org.scm4j.releaser.exceptions.EBuildOnNotForkedRelease;
@@ -151,5 +152,20 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		checkCompBuilt(1, compUBL);
 		crb = ReleaseBranchFactory.getCRB(repoUnTillDb);
 		assertEquals(env.getUnTillDbVer().toReleaseZeroPatch().toNextPatch(), crb.getVersion());
+	}
+	
+	@Test
+	public void TestMinorUpgradeIsOK() {
+		fork(compUnTill);
+		build(compUnTillDb);
+		// add feature to trunk and release branch
+		env.generateFeatureCommit(env.getUnTillDbVCS(), null, "feature added");
+		
+		// release next unTillDb version
+		forkAndBuild(compUnTillDb, 2);
+		//execAndGetActionBuildDelayedTag(compUnTillDb);
+		
+		// expect no EMinorUpgradeDowngrade exception because areMDepsPatchesActualForMinor should be used for minor
+		execAndGetAction(CLICommand.STATUS.getCmdLineStr(), compUBL.getCoords().toString());
 	}
 }
