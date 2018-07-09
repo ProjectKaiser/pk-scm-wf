@@ -94,8 +94,12 @@ public class ExtendedStatusBuilder {
 		if (comp.getVersion().isLocked()) {
 			ConcurrentHashMap<Component, ExtendedStatus> subComponentsLocal = new ConcurrentHashMap<>();
 			Utils.async(rb.getMDeps(), (mdep) -> {
-				ExtendedStatus exStatus = getAndCacheStatus(mdep, cache, progress, false);
-				subComponentsLocal.put(mdep, exStatus);
+				try {
+					recursiveGetAndCacheStatus(cache, progress, subComponentsLocal, mdep, false);
+				} catch (Exception e) {
+					cache.remove(repo.getUrl());
+					throw e;
+				}
 			});
 			
 			for (Component mdep : rb.getMDeps()) {
@@ -125,6 +129,12 @@ public class ExtendedStatusBuilder {
 		return new ExtendedStatus(nextVersion, status, subComponents, comp, repo);
 	}
 
+	void recursiveGetAndCacheStatus(CachedStatuses cache, IProgress progress,
+			ConcurrentHashMap<Component, ExtendedStatus> subComponentsLocal, Component mdep, Boolean isPatch) throws RuntimeException {
+		ExtendedStatus exStatus = getAndCacheStatus(mdep, cache, progress, isPatch);
+		subComponentsLocal.put(mdep, exStatus);
+	}
+
 	private ExtendedStatus getPatchStatus(Component comp, CachedStatuses cache, IProgress progress, VCSRepository repo, DelayedTag dt) {
 		ReleaseBranchPatch rb = reportDuration(() -> ReleaseBranchFactory.getReleaseBranchPatch(comp.getVersion(), repo),
 				"RB created", comp, progress);
@@ -147,8 +157,12 @@ public class ExtendedStatusBuilder {
 		
 		ConcurrentHashMap<Component, ExtendedStatus> subComponentsLocal = new ConcurrentHashMap<>();
 		Utils.async(rb.getMDeps(), (mdep) -> {
-			ExtendedStatus status = getAndCacheStatus(mdep, cache, progress, true);
-			subComponentsLocal.put(mdep, status);
+			try {
+				recursiveGetAndCacheStatus(cache, progress, subComponentsLocal, mdep, true);
+			} catch (Exception e) {
+				cache.remove(repo.getUrl());
+				throw e;
+			}
 		});
 		for (Component mdep : rb.getMDeps()) {
 			subComponents.put(mdep, subComponentsLocal.get(mdep));
@@ -246,7 +260,6 @@ public class ExtendedStatusBuilder {
 				throw new EMinorUpgradeDowngrade(rootComp, mDep, nextVersion.toPreviousPatch());
 			}
 			
-			
 			DelayedTagsFile mdf = new DelayedTagsFile();
 			Version verToActualizeOn ;
 			if (mdf.getDelayedTagByUrl(url) != null) { // if delayed tag
@@ -289,8 +302,12 @@ public class ExtendedStatusBuilder {
 		
 		ConcurrentHashMap<Component, ExtendedStatus> subComponentsLocal = new ConcurrentHashMap<>();
 		Utils.async(rb.getMDeps(), (mdep) -> {
-			ExtendedStatus status = getAndCacheStatus(mdep, cache, progress, false);
-			subComponentsLocal.put(mdep, status);
+			try {
+				recursiveGetAndCacheStatus(cache, progress, subComponentsLocal, mdep, false);
+			} catch (Exception e) {
+				cache.remove(repo.getUrl());
+				throw e;
+			}
 		});
 		
 		for (Component mdep : rb.getMDeps()) {
