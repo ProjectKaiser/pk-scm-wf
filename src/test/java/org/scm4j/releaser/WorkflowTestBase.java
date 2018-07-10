@@ -388,7 +388,7 @@ public class WorkflowTestBase {
 		return cli.getNode();
 	}
 
-	protected IAction execAndGetAction(String... args) {
+	private IAction execAndGetAction(String... args) {
 		return execAndGetAction(null, args);
 	}
 	
@@ -398,6 +398,10 @@ public class WorkflowTestBase {
 	
 	protected IAction execAndGetActionBuildDelayedTag(Component comp) {
 		return execAndGetAction(CLICommand.BUILD.getCmdLineStr(), comp.getCoords().toString(), Option.DELAYED_TAG.getCmdLineStr());
+	}
+	
+	protected void status(Component comp) {
+		execAndGetAction(CLICommand.STATUS.getCmdLineStr(), comp.getCoords().toString());
 	}
 	
 	protected void forkAndBuild(Component comp) {

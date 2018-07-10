@@ -18,7 +18,6 @@ import org.scm4j.commons.progress.ProgressConsole;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.branch.ReleaseBranchCurrent;
 import org.scm4j.releaser.branch.ReleaseBranchFactory;
-import org.scm4j.releaser.cli.CLICommand;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.MDepsFile;
 import org.scm4j.releaser.exceptions.EBuildOnNotForkedRelease;
@@ -163,7 +162,7 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 	}
 	
 	@Test
-	public void TestMinorUpgradeIsOK() {
+	public void testMinorUpgradeIsOKOnMinor() {
 		fork(compUnTill);
 		build(compUnTillDb);
 		// add feature to trunk and release branch
@@ -174,11 +173,11 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		//execAndGetActionBuildDelayedTag(compUnTillDb);
 		
 		// expect no EMinorUpgradeDowngrade exception because areMDepsPatchesActualForMinor should be used for minor
-		execAndGetAction(CLICommand.STATUS.getCmdLineStr(), compUBL.getCoords().toString());
+		status(compUBL);
 	}
 	
 	@Test
-	public void TestShouldRemoveFromCacheOnErrorsOnMinor() {
+	public void testShouldRemoveFromCacheOnErrorsOnMinor() {
 		ExtendedStatusBuilder esb = spy(new ExtendedStatusBuilder(repoFactory));
 		CachedStatuses cache = spy(new CachedStatuses());
 		RuntimeException testException = new RuntimeException("");
@@ -196,7 +195,7 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 	}
 	
 	@Test
-	public void TestShouldRemoveFromCacheOnErrorsOnPatch() {
+	public void testShouldRemoveFromCacheOnErrorsOnPatch() {
 		forkAndBuild(compUBL);
 		ExtendedStatusBuilder esb = spy(new ExtendedStatusBuilder(repoFactory));
 		CachedStatuses cache = spy(new CachedStatuses());
@@ -206,8 +205,8 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		ReleaseBranchCurrent crbUBL = ReleaseBranchFactory.getCRB(repoUBL);
 		Component versionedUBL = compUBL.clone(crbUBL.getVersion());
 		Component versionedUnTillDb = new Component("eu.untill:unTillDb:2.59.0#comment 3");
-		
 		doThrow(testException).when(esb).recursiveGetAndCacheStatus(cache, pc, subComponentsLocal, versionedUnTillDb, true);
+		
 		try {
 			esb.getAndCacheStatus(versionedUBL, cache, pc, true);
 			fail();
