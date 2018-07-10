@@ -18,6 +18,7 @@ import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.scm4j.commons.Version;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.branch.ReleaseBranchCurrent;
 import org.scm4j.releaser.branch.ReleaseBranchFactory;
@@ -200,8 +201,10 @@ public class WorkflowPatchesTest extends WorkflowTestBase {
 		} catch (EMinorUpgradeDowngrade e) {
 			if (e.getRootComp().equals(compUBL.clone(crbUBL.getVersion().toPreviousPatch()))) {
 				assertEquals(compUnTillDb.clone("2.59.0"), e.getProblematicMDep());
+				assertEquals(new Version("2.60.0"), e.getChangeToVersion());
 			} else if (e.getRootComp().equals(compUnTill.clone(env.getUnTillVer().toRelease()))) {
 				assertEquals(compUnTillDb.clone("2.60.0"), e.getProblematicMDep());
+				assertEquals(new Version("2.61.0"), e.getChangeToVersion());
 			} else {
 				fail();
 			}
