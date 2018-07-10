@@ -115,8 +115,7 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		env.generateFeatureCommit(env.getUnTillDbVCS(), repoUnTillDb.getDevelopBranch(), "feature added");
 		forkAndBuild(compUnTillDb, 2);
 		
-		ReleaseBranchCurrent crb = ReleaseBranchFactory.getCRB(repoUnTill);
-		IAction action = execAndGetActionBuild(compUnTill.clone(crb.getVersion()));
+		IAction action = execAndGetActionBuild(compUnTill.clone(getCrbVersion(compUnTill)));
 		assertActionDoesNothing(action, compUnTill);
 		assertActionDoesNothing(action, compUBL);
 		assertActionDoesNothing(action, compUnTillDb);
@@ -202,8 +201,7 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		RuntimeException testException = new RuntimeException("");
 		ProgressConsole pc = new ProgressConsole();
 		ConcurrentHashMap<Component, ExtendedStatus> subComponentsLocal = new ConcurrentHashMap<Component, ExtendedStatus>();
-		ReleaseBranchCurrent crbUBL = ReleaseBranchFactory.getCRB(repoUBL);
-		Component versionedUBL = compUBL.clone(crbUBL.getVersion());
+		Component versionedUBL = compUBL.clone(getCrbVersion(compUBL));
 		Component versionedUnTillDb = new Component("eu.untill:unTillDb:2.59.0#comment 3");
 		doThrow(testException).when(esb).recursiveGetAndCacheStatus(cache, pc, subComponentsLocal, versionedUnTillDb, true);
 		
