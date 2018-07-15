@@ -366,7 +366,9 @@ public class WorkflowTestBase {
 	private IAction execAndGetAction(Runnable preExec, String... args)  {
 		CLI cli = execAndGetCLI(preExec, args);
 		IAction action = cli.getAction();
-		action.toString(); // cover
+		if (action != null) {
+			action.toString(); // cover
+		}
 		return action;
 	}
 	
@@ -385,6 +387,10 @@ public class WorkflowTestBase {
 	
 	protected IAction execAndGetActionBuildDelayedTag(Component comp) {
 		return execAndGetAction(CLICommand.BUILD.getCmdLineStr(), comp.getCoords().toString(), Option.DELAYED_TAG.getCmdLineStr());
+	}
+	
+	protected void status(Component comp) {
+		execAndGetAction(CLICommand.STATUS.getCmdLineStr(), comp.getCoords().toString());
 	}
 	
 	protected void forkAndBuild(Component comp) {

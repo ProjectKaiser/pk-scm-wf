@@ -1,7 +1,20 @@
 package org.scm4j.releaser;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.atLeast;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
+
+import java.nio.charset.StandardCharsets;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 import org.apache.commons.io.FileUtils;
 import org.junit.Test;
+import org.scm4j.commons.progress.ProgressConsole;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.branch.ReleaseBranchCurrent;
 import org.scm4j.releaser.branch.ReleaseBranchFactory;
@@ -10,11 +23,6 @@ import org.scm4j.releaser.conf.MDepsFile;
 import org.scm4j.releaser.exceptions.EBuildOnNotForkedRelease;
 import org.scm4j.releaser.exceptions.ENoBuilder;
 import org.yaml.snakeyaml.Yaml;
-
-import java.nio.charset.StandardCharsets;
-import java.util.Map;
-
-import static org.junit.Assert.*;
 public class WorkflowBuildTest extends WorkflowTestBase {
 	
 	@Test
@@ -98,6 +106,20 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		// check UBL actualized unTillDb version
 		checkUBLMDepsVersions(1);
 	}
+	
+	@Test
+	public void testNoActualizePatchesIfHasNewReleases() {
+		forkAndBuild(compUnTill);
+		
+		// release next 2.60 unTillDb minor
+		env.generateFeatureCommit(env.getUnTillDbVCS(), repoUnTillDb.getDevelopBranch(), "feature added");
+		forkAndBuild(compUnTillDb, 2);
+		
+		IAction action = execAndGetActionBuild(compUnTill.clone(getCrbVersion(compUnTill)));
+		assertActionDoesNothing(action, compUnTill);
+		assertActionDoesNothing(action, compUBL);
+		assertActionDoesNothing(action, compUnTillDb);
+	}
 
 	@Test
 	public void testLockMDeps() {
@@ -136,5 +158,75 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		checkCompBuilt(1, compUBL);
 		crb = ReleaseBranchFactory.getCRB(repoUnTillDb);
 		assertEquals(env.getUnTillDbVer().toReleaseZeroPatch().toNextPatch(), crb.getVersion());
+	}
+	
+	@Test
+	public void testMinorUpgradeIsOKOnMinor() {
+		fork(compUnTill);
+		build(compUnTillDb);
+		// add feature to trunk and release branch
+		env.generateFeatureCommit(env.getUnTillDbVCS(), null, "feature added");
+		
+		// release next unTillDb version
+		forkAndBuild(compUnTillDb, 2);
+		//execAndGetActionBuildDelayedTag(compUnTillDb);
+		
+		// expect no EMinorUpgradeDowngrade exception because areMDepsPatchesActualForMinor should be used for minor
+		status(compUBL);
+	}
+	
+	@Test
+	public void testShouldRemoveFromCacheOnErrorsOnMinor() {
+		ExtendedStatusBuilder esb = spy(new ExtendedStatusBuilder(repoFactory));
+		CachedStatuses cache = spy(new CachedStatuses());
+		RuntimeException testException = new RuntimeException("");
+		ProgressConsole pc = new ProgressConsole();
+		ConcurrentHashMap<Component, ExtendedStatus> subComponentsLocal = new ConcurrentHashMap<Component, ExtendedStatus>();
+		Component versionedUBL = compUBL.clone("1.0");
+		doThrow(testException).when(esb).recursiveGetAndCacheStatus(cache, pc, subComponentsLocal, compUnTillDb, false);
+		
+		try {
+			esb.getAndCacheStatus(versionedUBL, cache, pc, false);
+			fail();
+		} catch (RuntimeException e) {
+			verify(cache, atLeast(1)).remove(eq(repoUBL.getUrl()));
+		}
+	}
+	
+	@Test
+	public void testShouldRemoveFromCacheOnErrorsOnPatch() {
+		forkAndBuild(compUBL);
+		ExtendedStatusBuilder esb = spy(new ExtendedStatusBuilder(repoFactory));
+		CachedStatuses cache = spy(new CachedStatuses());
+		RuntimeException testException = new RuntimeException("");
+		ProgressConsole pc = new ProgressConsole();
+		ConcurrentHashMap<Component, ExtendedStatus> subComponentsLocal = new ConcurrentHashMap<Component, ExtendedStatus>();
+		Component versionedUBL = compUBL.clone(getCrbVersion(compUBL));
+		Component versionedUnTillDb = new Component("eu.untill:unTillDb:2.59.0#comment 3");
+		doThrow(testException).when(esb).recursiveGetAndCacheStatus(cache, pc, subComponentsLocal, versionedUnTillDb, true);
+		
+		try {
+			esb.getAndCacheStatus(versionedUBL, cache, pc, true);
+			fail();
+		} catch (RuntimeException e) {
+			verify(cache, atLeast(1)).remove(eq(repoUBL.getUrl()));
+		}
+	}
+	
+	@Test
+	public void testSouldRemoveFromCacheOnErrorsIsNeedToFork() {
+		ExtendedStatusBuilder esb = spy(new ExtendedStatusBuilder(repoFactory));
+		CachedStatuses cache = spy(new CachedStatuses());
+		RuntimeException testException = new RuntimeException("");
+		ProgressConsole pc = new ProgressConsole();
+		ConcurrentHashMap<Component, ExtendedStatus> subComponentsLocal = new ConcurrentHashMap<Component, ExtendedStatus>();
+		doThrow(testException).when(esb).recursiveGetAndCacheStatus(cache, pc, subComponentsLocal, compUnTillDb, false);
+		
+		try {
+			esb.getAndCacheStatus(compUBL, cache, pc, false);
+			fail();
+		} catch (RuntimeException e) {
+			verify(cache, atLeast(1)).remove(eq(repoUBL.getUrl()));
+		}
 	}
 }

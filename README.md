@@ -26,6 +26,13 @@ For version definitions ref. [semantic Versioning 2.0.0](http://semver.org/).
 
 - gradlew run -Pa=status,com.mycompany:my-root-component
 
+# Advanced `mdeps` Management
+
+- It is safe to add a new entry without version to any SNAPSHOT mdeps
+- If you add or modify some release mdeps you must also copy these changes to all your project mdeps
+  - Otherwise it is possible to get "Inconsistent dependencies" error
+- It is safe to remove a record from mdeps and add it to `build.gralde` - this way you can change dependency version at your own risk, do not cry aftewards
+
 # Under the Hood
 
 - `CLI` gets ExtendedStatusTree using `ExtendedStatusTreeBuilder` class (ref. [release statuses](docs/minor-release-status.md))
@@ -45,10 +52,9 @@ For version definitions ref. [semantic Versioning 2.0.0](http://semver.org/).
 
 # Related repositories
   
-  - [scm4j-releaser-choco](../../../scm4j-releaser-choco/blob/master/README.md)
-  - [scm4j-vcs-api](../../../scm4j-vcs-api/blob/master/README.md)
-  - [scm4j-vcs-git](../../../scm4j-vcs-git/blob/master/README.md)
-  - [scm4j-vcs-svn](../../../scm4j-vcs-svn/blob/master/README.md)
+  - [scm4j-vcs-api](../../../scm4j-vcs-api)
+  - [scm4j-vcs-git](../../../scm4j-vcs-git)
+  - [scm4j-vcs-svn](../../../scm4j-vcs-svn)
 
 # See also
 
