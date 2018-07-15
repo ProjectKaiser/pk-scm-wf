@@ -1,17 +1,5 @@
 package org.scm4j.releaser;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.atLeast;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.verify;
-
-import java.nio.charset.StandardCharsets;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
 import org.apache.commons.io.FileUtils;
 import org.junit.Test;
 import org.scm4j.commons.progress.ProgressConsole;
@@ -23,6 +11,14 @@ import org.scm4j.releaser.conf.MDepsFile;
 import org.scm4j.releaser.exceptions.EBuildOnNotForkedRelease;
 import org.scm4j.releaser.exceptions.ENoBuilder;
 import org.yaml.snakeyaml.Yaml;
+
+import java.nio.charset.StandardCharsets;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.*;
 public class WorkflowBuildTest extends WorkflowTestBase {
 	
 	@Test
@@ -181,7 +177,7 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		CachedStatuses cache = spy(new CachedStatuses());
 		RuntimeException testException = new RuntimeException("");
 		ProgressConsole pc = new ProgressConsole();
-		ConcurrentHashMap<Component, ExtendedStatus> subComponentsLocal = new ConcurrentHashMap<Component, ExtendedStatus>();
+		ConcurrentHashMap<Component, ExtendedStatus> subComponentsLocal = new ConcurrentHashMap<>();
 		Component versionedUBL = compUBL.clone("1.0");
 		doThrow(testException).when(esb).recursiveGetAndCacheStatus(cache, pc, subComponentsLocal, compUnTillDb, false);
 		
@@ -200,7 +196,7 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 		CachedStatuses cache = spy(new CachedStatuses());
 		RuntimeException testException = new RuntimeException("");
 		ProgressConsole pc = new ProgressConsole();
-		ConcurrentHashMap<Component, ExtendedStatus> subComponentsLocal = new ConcurrentHashMap<Component, ExtendedStatus>();
+		ConcurrentHashMap<Component, ExtendedStatus> subComponentsLocal = new ConcurrentHashMap<>();
 		Component versionedUBL = compUBL.clone(getCrbVersion(compUBL));
 		Component versionedUnTillDb = new Component("eu.untill:unTillDb:2.59.0#comment 3");
 		doThrow(testException).when(esb).recursiveGetAndCacheStatus(cache, pc, subComponentsLocal, versionedUnTillDb, true);
@@ -214,12 +210,12 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 	}
 	
 	@Test
-	public void testSouldRemoveFromCacheOnErrorsIsNeedToFork() {
+	public void testShouldRemoveFromCacheOnErrorsIsNeedToFork() {
 		ExtendedStatusBuilder esb = spy(new ExtendedStatusBuilder(repoFactory));
 		CachedStatuses cache = spy(new CachedStatuses());
 		RuntimeException testException = new RuntimeException("");
 		ProgressConsole pc = new ProgressConsole();
-		ConcurrentHashMap<Component, ExtendedStatus> subComponentsLocal = new ConcurrentHashMap<Component, ExtendedStatus>();
+		ConcurrentHashMap<Component, ExtendedStatus> subComponentsLocal = new ConcurrentHashMap<>();
 		doThrow(testException).when(esb).recursiveGetAndCacheStatus(cache, pc, subComponentsLocal, compUnTillDb, false);
 		
 		try {

@@ -9,7 +9,7 @@ import org.scm4j.releaser.conf.VCSRepository;
 import org.scm4j.releaser.exceptions.EReleaserException;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.Assert.*;
@@ -65,7 +65,7 @@ public class ActionAbstractTest extends WorkflowTestBase {
 		doReturn(false).when(doneAction).isExecutable();
 		doReturn(false).when(doneAction).isUrlProcessed(anyString());
 
-		ActionAbstract aa = spy(new TestAction(compUnTill, Arrays.asList(doneAction), repoUnTill));
+		ActionAbstract aa = spy(new TestAction(compUnTill, Collections.singletonList(doneAction), repoUnTill));
 		IProgress progress = mock(IProgress.class);
 		aa.execute(progress);
 		verify(progress, never()).createNestedProgress(anyString());

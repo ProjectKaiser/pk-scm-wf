@@ -1,13 +1,5 @@
 package org.scm4j.releaser;
 
-import static org.scm4j.releaser.Utils.reportDuration;
-
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Function;
-
 import org.scm4j.commons.Version;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.commons.progress.ProgressConsole;
@@ -15,11 +7,7 @@ import org.scm4j.releaser.branch.DevelopBranch;
 import org.scm4j.releaser.branch.ReleaseBranchCurrent;
 import org.scm4j.releaser.branch.ReleaseBranchFactory;
 import org.scm4j.releaser.branch.ReleaseBranchPatch;
-import org.scm4j.releaser.conf.Component;
-import org.scm4j.releaser.conf.DelayedTag;
-import org.scm4j.releaser.conf.DelayedTagsFile;
-import org.scm4j.releaser.conf.VCSRepository;
-import org.scm4j.releaser.conf.VCSRepositoryFactory;
+import org.scm4j.releaser.conf.*;
 import org.scm4j.releaser.exceptions.EMinorUpgradeDowngrade;
 import org.scm4j.releaser.exceptions.ENoReleaseBranchForPatch;
 import org.scm4j.releaser.exceptions.ENoReleases;
@@ -28,6 +16,14 @@ import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.vcs.api.VCSTag;
 import org.scm4j.vcs.api.WalkDirection;
+
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
+
+import static org.scm4j.releaser.Utils.reportDuration;
 
 public class ExtendedStatusBuilder {
 
@@ -93,15 +89,8 @@ public class ExtendedStatusBuilder {
 		BuildStatus status;
 		if (comp.getVersion().isLocked()) {
 			ConcurrentHashMap<Component, ExtendedStatus> subComponentsLocal = new ConcurrentHashMap<>();
-			Utils.async(rb.getMDeps(), (mdep) -> {
-				try {
-					recursiveGetAndCacheStatus(cache, progress, subComponentsLocal, mdep, false);
-				} catch (Exception e) {
-					cache.remove(repo.getUrl());
-					throw e;
-				}
-			});
-			
+			recursiveGetAndCacheStatusAsync(rb, cache, progress, repo, subComponentsLocal);
+
 			for (Component mdep : rb.getMDeps()) {
 				subComponents.put(mdep, subComponentsLocal.get(mdep));
 			}
@@ -301,15 +290,8 @@ public class ExtendedStatusBuilder {
 								 LinkedHashMap<Component, ExtendedStatus> subComponents, VCSRepository repo, Boolean hasDelayedTag) {
 		
 		ConcurrentHashMap<Component, ExtendedStatus> subComponentsLocal = new ConcurrentHashMap<>();
-		Utils.async(rb.getMDeps(), (mdep) -> {
-			try {
-				recursiveGetAndCacheStatus(cache, progress, subComponentsLocal, mdep, false);
-			} catch (Exception e) {
-				cache.remove(repo.getUrl());
-				throw e;
-			}
-		});
-		
+		recursiveGetAndCacheStatusAsync(rb, cache, progress, repo, subComponentsLocal);
+
 		for (Component mdep : rb.getMDeps()) {
 			subComponents.put(mdep, subComponentsLocal.get(mdep));
 		}
@@ -344,5 +326,16 @@ public class ExtendedStatusBuilder {
 		}
 
 		return false;
+	}
+
+	private void recursiveGetAndCacheStatusAsync(ReleaseBranchCurrent rb, CachedStatuses cache, IProgress progress, VCSRepository repo, ConcurrentHashMap<Component, ExtendedStatus> subComponentsLocal) {
+		Utils.async(rb.getMDeps(), (mdep) -> {
+			try {
+				recursiveGetAndCacheStatus(cache, progress, subComponentsLocal, mdep, false);
+			} catch (Exception e) {
+				cache.remove(repo.getUrl());
+				throw e;
+			}
+		});
 	}
 }

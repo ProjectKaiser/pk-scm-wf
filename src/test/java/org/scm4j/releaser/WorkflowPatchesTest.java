@@ -1,19 +1,5 @@
 package org.scm4j.releaser;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyInt;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.isNull;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.spy;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
 import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Test;
@@ -34,6 +20,15 @@ import org.scm4j.releaser.exceptions.EReleaseMDepsNotLocked;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.vcs.api.WalkDirection;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.spy;
 
 public class WorkflowPatchesTest extends WorkflowTestBase {
 
@@ -194,22 +189,7 @@ public class WorkflowPatchesTest extends WorkflowTestBase {
 		
 		// unTill still have old untillDb version. untillDb for unTill is processed first and cached 2.60.0.
 		// The UBL have unTillDb 2.59.0 but 2.60.0 is cached -> UBL status would be ACTUALIZE_PATCHES but EMinorUpgradeDowngrade should be thrown
-		try {
-			execAndGetActionBuild(compUnTill.clone(env.getUnTillVer().toRelease()));
-			fail();
-		} catch (EMinorUpgradeDowngrade e) {
-			if (e.getRootComp().equals(compUBL.clone(crbUBL.getVersion().toPreviousPatch()))) {
-				// on >1-core systems
-				assertEquals(compUnTillDb.clone("2.59.0"), e.getProblematicMDep());
-				assertEquals(new Version("2.60.0"), e.getChangeToVersion());
-			} else if (e.getRootComp().equals(compUnTill.clone(env.getUnTillVer().toRelease()))) {
-				// on 1-core systems
-				assertEquals(compUnTillDb.clone("2.60.0"), e.getProblematicMDep());
-				assertEquals(new Version("2.59.0"), e.getChangeToVersion());
-			} else {
-				fail();
-			}
-		}
+		checkEMinorUpgradeDowngrade(crbUBL);
 	}
 
 	@Test
@@ -227,6 +207,10 @@ public class WorkflowPatchesTest extends WorkflowTestBase {
 
 		// unTill still have 2.59.0 untillDb version. untillDb for unTill is processed first and cached 2.59.0.
 		// The UBL have unTillDb 2.59.1 but 2.59.0 cached -> UBL status would be ACTUALIZE_PATCHES but EMinorUpgradeDowngrade should be thrown
+		checkEMinorUpgradeDowngrade(crbUBL);
+	}
+
+	private void checkEMinorUpgradeDowngrade(ReleaseBranchCurrent crbUBL) {
 		try {
 			execAndGetActionBuild(compUnTill.clone(env.getUnTillVer().toRelease()));
 			fail();
