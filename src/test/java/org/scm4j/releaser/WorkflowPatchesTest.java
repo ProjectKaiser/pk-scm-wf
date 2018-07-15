@@ -90,11 +90,11 @@ public class WorkflowPatchesTest extends WorkflowTestBase {
 		ReleaseBranchPatch rb = ReleaseBranchFactory.getReleaseBranchPatch(compToPatch.getVersion(), repoUnTillDb);
 		env.generateFeatureCommit(env.getUnTillDbVCS(), rb.getName(), "2.59.1 feature merged");
 
-		// build new unTillDb patch 2.59.1
+		// build new unTillDb patch 2.59.2
 		IAction action = execAndGetActionBuild(compToPatch);
 		assertActionDoesBuild(action, compUnTillDb);
 		rb = ReleaseBranchFactory.getReleaseBranchPatch(compToPatch.getVersion(), repoUnTillDb);
-		assertEquals(dbUnTillDb.getVersion().toPreviousMinor().toPreviousMinor().toNextPatch().toRelease(), rb.getVersion());
+		assertEquals(env.getUnTillDbVer().toReleaseZeroPatch().toNextPatch().toNextPatch(), rb.getVersion());
 	}
 	
 	@Test
