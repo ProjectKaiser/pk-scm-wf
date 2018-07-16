@@ -1,19 +1,5 @@
 package org.scm4j.releaser;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyInt;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.isNull;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.spy;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
 import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Test;
@@ -34,6 +20,15 @@ import org.scm4j.releaser.exceptions.EReleaseMDepsNotLocked;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.vcs.api.WalkDirection;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.spy;
 
 public class WorkflowPatchesTest extends WorkflowTestBase {
 
@@ -99,12 +94,11 @@ public class WorkflowPatchesTest extends WorkflowTestBase {
 		ReleaseBranchPatch rb = ReleaseBranchFactory.getReleaseBranchPatch(compToPatch.getVersion(), repoUnTillDb);
 		env.generateFeatureCommit(env.getUnTillDbVCS(), rb.getName(), "2.59.1 feature merged");
 
-		// build new unTillDb patch 2.59.1
+		// build new unTillDb patch 2.59.2
 		IAction action = execAndGetActionBuild(compToPatch);
 		assertActionDoesBuild(action, compUnTillDb);
 		rb = ReleaseBranchFactory.getReleaseBranchPatch(compToPatch.getVersion(), repoUnTillDb);
-		assertEquals(dbUnTillDb.getVersion().toPreviousMinor().toPreviousMinor().toNextPatch().toRelease(),
-				rb.getVersion());
+		assertEquals(env.getUnTillDbVer().toReleaseZeroPatch().toNextPatch().toNextPatch(), rb.getVersion());
 	}
 
 	@Test
@@ -172,7 +166,7 @@ public class WorkflowPatchesTest extends WorkflowTestBase {
 		ExtendedStatus status = statusBuilder.getAndCachePatchStatus(compVersioned, new CachedStatuses());
 		assertEquals(BuildStatus.DONE, status.getStatus());
 	}
-	
+
 	@Test
 	public void testMinorUpgradeDowngradeException() {
 		forkAndBuild(compUnTill);
@@ -180,7 +174,7 @@ public class WorkflowPatchesTest extends WorkflowTestBase {
 		// release next 2.60 unTillDb minor
 		env.generateFeatureCommit(env.getUnTillDbVCS(), repoUnTillDb.getDevelopBranch(), "feature added");
 		forkAndBuild(compUnTillDb, 2);
-		
+
 		// make unTill use new 2.60.0 version of unTillDb
 		ReleaseBranchCurrent crbUnTill = ReleaseBranchFactory.getCRB(repoUnTill);
 		ReleaseBranchCurrent crbUBL = ReleaseBranchFactory.getCRB(repoUBL);
@@ -192,7 +186,7 @@ public class WorkflowPatchesTest extends WorkflowTestBase {
 			}
 		}
 		env.getUnTillVCS().setFileContent(crbUnTill.getName(), Constants.MDEPS_FILE_NAME, mdf.toFileContent(), "unTillDb version is changed manually");
-		
+
 		// unTill still have old untillDb version. untillDb for unTill is processed first and cached 2.60.0.
 		// The UBL have unTillDb 2.59.0 but 2.60.0 is cached -> UBL status would be ACTUALIZE_PATCHES but EMinorUpgradeDowngrade should be thrown
 		try {

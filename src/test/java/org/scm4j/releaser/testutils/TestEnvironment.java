@@ -182,10 +182,6 @@ public class TestEnvironment implements AutoCloseable {
 		return unTillDbVCS;
 	}
 
-	public File getCredsFile() {
-		return credsFile;
-	}
-
 	public File getCcFile() {
 		return ccFile;
 	}
@@ -197,11 +193,6 @@ public class TestEnvironment implements AutoCloseable {
 
 	public VCSCommit generateContent(IVCS vcs, String branchName, String fileName, String content, String logMessage) {
 		return vcs.setFileContent(branchName, fileName, content, logMessage);
-	}
-
-	public VCSCommit generateDummyContent(IVCS vcs, String branchName, String logMessage) {
-		return vcs.setFileContent(branchName, TEST_DUMMY_FILE_NAME, "dummy content " + UUID.randomUUID().toString(),
-				logMessage);
 	}
 
 	public Version getUnTillVer() {
