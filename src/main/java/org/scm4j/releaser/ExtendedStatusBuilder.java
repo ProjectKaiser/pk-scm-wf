@@ -329,9 +329,8 @@ public class ExtendedStatusBuilder {
 			return true;
 		}
 		
-		ExtendedStatus mdepStatus;
 		for (Component mdep : rb.getCRBMDeps(progress, repo, comp)) {
-			mdepStatus = cache.get(repoFactory.getUrl(mdep));
+			ExtendedStatus mdepStatus = cache.get(repoFactory.getUrl(mdep));
 			// any mdeps needs FORK => YES
 			if (mdepStatus.getStatus() != BuildStatus.DONE) {
 				return true;

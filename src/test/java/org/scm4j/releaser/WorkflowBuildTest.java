@@ -214,7 +214,7 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 	}
 	
 	@Test
-	public void testSouldRemoveFromCacheOnErrorsIsNeedToFork() {
+	public void testShouldRemoveFromCacheOnErrorsIsNeedToFork() {
 		ExtendedStatusBuilder esb = spy(new ExtendedStatusBuilder(repoFactory));
 		CachedStatuses cache = spy(new CachedStatuses());
 		RuntimeException testException = new RuntimeException("");
