@@ -17,8 +17,8 @@ public class AsyncTest {
 	private ForkJoinPool poolForInsufficientThreads = new ForkJoinPool(2);
 	private int counter = 0;
 	private List<Integer> list1 = Arrays.asList(1, 2, 3, 4, 5);
-	private List<Integer> list2 = Arrays.asList(6, 7, 8, 9, 10);
-	private List<Integer> list3 = Arrays.asList(11, 12, 13, 14, 15);
+	//private List<Integer> list2 = Arrays.asList(6, 7, 8, 9, 10);
+	//private List<Integer> list3 = Arrays.asList(11, 12, 13, 14, 15);
 	private long startMs;
 	
 	@Before

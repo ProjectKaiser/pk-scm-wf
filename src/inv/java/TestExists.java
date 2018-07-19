@@ -59,7 +59,8 @@ public class TestExists extends WorkflowTestBase {
 
 		
 		start = System.currentTimeMillis();
-		List<String> entries = listEntries(repository, "branches/");
+		//List<String> entries = 
+		listEntries(repository, "branches/");
 		System.out.println("getDir() " + (System.currentTimeMillis() - start));
 		
 		
