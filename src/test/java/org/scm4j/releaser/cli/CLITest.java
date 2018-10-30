@@ -1,5 +1,25 @@
 package org.scm4j.releaser.cli;
 
+import static org.fusesource.jansi.Ansi.ansi;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
+import static org.scm4j.releaser.testutils.VerificationModeSometime.sometime;
+
+import java.io.File;
+import java.io.PrintStream;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.fusesource.jansi.Ansi;
@@ -12,12 +32,18 @@ import org.junit.contrib.java.lang.system.ExpectedSystemExit;
 import org.mockito.Matchers;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.commons.regexconfig.EConfig;
-import org.scm4j.releaser.*;
+import org.scm4j.releaser.ActionTreeBuilder;
+import org.scm4j.releaser.CachedStatuses;
+import org.scm4j.releaser.Constants;
+import org.scm4j.releaser.ExtendedStatus;
+import org.scm4j.releaser.ExtendedStatusBuilder;
+import org.scm4j.releaser.Utils;
 import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.DefaultConfigUrls;
 import org.scm4j.releaser.conf.IConfigUrls;
 import org.scm4j.releaser.conf.VCSRepositoryFactory;
+import org.scm4j.releaser.exceptions.EBuildStatus;
 import org.scm4j.releaser.exceptions.EReleaserException;
 import org.scm4j.releaser.exceptions.cmdline.ECmdLineNoCommand;
 import org.scm4j.releaser.exceptions.cmdline.ECmdLineNoProduct;
@@ -25,25 +51,12 @@ import org.scm4j.releaser.exceptions.cmdline.ECmdLineUnknownCommand;
 import org.scm4j.releaser.exceptions.cmdline.ECmdLineUnknownOption;
 import org.scm4j.releaser.testutils.TestEnvironment;
 
-import java.io.File;
-import java.io.PrintStream;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
-
-import static org.fusesource.jansi.Ansi.ansi;
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.*;
-import static org.scm4j.releaser.testutils.VerificationModeSometime.sometime;
-
 public class CLITest {
 
 	private static final String TEST_CONFIG_CONTENT = "# test config content";
 	private static final String TEST_EXCEPTION_MESSAGE = "test exception";
 	private static final String UNTILL = "eu.untill:unTill";
+	private static final String UNTILLDB = "eu.untill:unTillDb";
 	private IAction mockedAction;
 	private PrintStream mockedPS;
 	private CLI mockedCLI;
@@ -297,6 +310,23 @@ public class CLITest {
 		assertTrue(dstFileNames.containsAll(srcFileNames));
 		assertEquals(srcFileNames.size(), dstFileNames.size());
 		assertEquals(TEST_CONFIG_CONTENT, FileUtils.readFileToString(customConfigTemplateFile, StandardCharsets.UTF_8));
+	}
+	
+	@Test
+	public void testBriefCompInfoOnBuildStatusFailure() throws Exception {
+		String[] args = new String[] { CLICommand.STATUS.getCmdLineStr(), UNTILLDB };
+		RuntimeException testException = new RuntimeException("test exception");
+		try (TestEnvironment env = new TestEnvironment()) {
+			env.generateTestEnvironment();
+			Component compUnTillDb = new Component(UNTILLDB);
+			doThrow(testException).when(mockedRepoFactory).getVCSRepository(compUnTillDb);
+			mockedCLI = spy(new CLI(mockedPS, new ExtendedStatusBuilder(mockedRepoFactory), mockedActionTreeBuilder, mockedRepoFactory));
+			
+			assertEquals(CLI.EXIT_CODE_ERROR, mockedCLI.exec(args));
+			assertTrue(mockedCLI.getLastException() instanceof EBuildStatus);
+			assertEquals(compUnTillDb, ((EBuildStatus) mockedCLI.getLastException()).getComp());
+			verify(mockedPS, sometime()).println(Matchers.contains(((EBuildStatus) mockedCLI.getLastException()).getMessage()));
+		}
 	}
 
 	private File getResourceFile(Class<?> forClass) throws Exception {

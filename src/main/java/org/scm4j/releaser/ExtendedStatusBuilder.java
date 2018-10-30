@@ -8,10 +8,12 @@ import org.scm4j.releaser.branch.ReleaseBranchCurrent;
 import org.scm4j.releaser.branch.ReleaseBranchFactory;
 import org.scm4j.releaser.branch.ReleaseBranchPatch;
 import org.scm4j.releaser.conf.*;
+import org.scm4j.releaser.exceptions.EBuildStatus;
 import org.scm4j.releaser.exceptions.EMinorUpgradeDowngrade;
 import org.scm4j.releaser.exceptions.ENoReleaseBranchForPatch;
 import org.scm4j.releaser.exceptions.ENoReleases;
 import org.scm4j.releaser.exceptions.EReleaseMDepsNotLocked;
+import org.scm4j.releaser.exceptions.EReleaserException;
 import org.scm4j.vcs.api.IVCS;
 import org.scm4j.vcs.api.VCSCommit;
 import org.scm4j.vcs.api.VCSTag;
@@ -54,31 +56,38 @@ public class ExtendedStatusBuilder {
 	}
 
 	public ExtendedStatus getAndCacheStatus(Component comp, CachedStatuses cache, IProgress progress, boolean patch) {
-		VCSRepository repo = repoFactory.getVCSRepository(comp);
-		ExtendedStatus existing = cache.putIfAbsent(repo.getUrl(), ExtendedStatus.DUMMY);
-		
-		while (ExtendedStatus.DUMMY == existing) {
-			try {
-				Thread.sleep(PARALLEL_CALCULATION_AWAIT_TIME);
-				existing = cache.get(repo.getUrl());
-			} catch (InterruptedException e) {
-				throw new RuntimeException(e);
+		try {
+			VCSRepository repo = repoFactory.getVCSRepository(comp);
+			ExtendedStatus existing = cache.putIfAbsent(repo.getUrl(), ExtendedStatus.DUMMY);
+			
+			while (ExtendedStatus.DUMMY == existing) {
+				try {
+					Thread.sleep(PARALLEL_CALCULATION_AWAIT_TIME);
+					existing = cache.get(repo.getUrl());
+				} catch (InterruptedException e) {
+					throw new RuntimeException(e);
+				}
 			}
+			
+			if (null != existing) {
+				return new ExtendedStatus(existing.getNextVersion(), existing.getStatus(), existing.getSubComponents(), comp, repo);
+			}
+			
+			DelayedTagsFile dtf = new DelayedTagsFile();
+			DelayedTag dt = dtf.getDelayedTagByUrl(repo.getUrl());
+	
+			ExtendedStatus res = patch ? 
+				getPatchStatus(comp, cache, progress, repo, dt) :
+				getMinorStatus(comp, cache, progress, repo, dt);
+			
+			cache.replace(repo.getUrl(), res);
+			return res;
+		} catch (Exception e) {
+			if (e instanceof EReleaserException) {
+				throw e;
+			}
+			throw new EBuildStatus(e, comp);
 		}
-		
-		if (null != existing) {
-			return new ExtendedStatus(existing.getNextVersion(), existing.getStatus(), existing.getSubComponents(), comp, repo);
-		}
-		
-		DelayedTagsFile dtf = new DelayedTagsFile();
-		DelayedTag dt = dtf.getDelayedTagByUrl(repo.getUrl());
-
-		ExtendedStatus res = patch ? 
-			getPatchStatus(comp, cache, progress, repo, dt) :
-			getMinorStatus(comp, cache, progress, repo, dt);
-		
-		cache.replace(repo.getUrl(), res);
-		return res;
 	}
 	
 	private ExtendedStatus getMinorStatus(Component comp, CachedStatuses cache, IProgress progress, VCSRepository repo, DelayedTag dt) {
