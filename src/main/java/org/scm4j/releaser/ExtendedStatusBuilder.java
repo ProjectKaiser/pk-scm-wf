@@ -56,8 +56,9 @@ public class ExtendedStatusBuilder {
 	}
 
 	public ExtendedStatus getAndCacheStatus(Component comp, CachedStatuses cache, IProgress progress, boolean patch) {
+		VCSRepository repo = null;
 		try {
-			VCSRepository repo = repoFactory.getVCSRepository(comp);
+			repo = repoFactory.getVCSRepository(comp);
 			ExtendedStatus existing = cache.putIfAbsent(repo.getUrl(), ExtendedStatus.DUMMY);
 			
 			while (ExtendedStatus.DUMMY == existing) {
@@ -83,6 +84,9 @@ public class ExtendedStatusBuilder {
 			cache.replace(repo.getUrl(), res);
 			return res;
 		} catch (Exception e) {
+			if (repo != null) {
+				cache.remove(repo.getUrl());
+			}
 			if (e instanceof EReleaserException) {
 				throw e;
 			}
@@ -90,7 +94,7 @@ public class ExtendedStatusBuilder {
 		}
 	}
 	
-	private ExtendedStatus getMinorStatus(Component comp, CachedStatuses cache, IProgress progress, VCSRepository repo, DelayedTag dt) {
+	ExtendedStatus getMinorStatus(Component comp, CachedStatuses cache, IProgress progress, VCSRepository repo, DelayedTag dt) {
 		ReleaseBranchCurrent rb = reportDuration(() -> ReleaseBranchFactory.getCRB(repo), "CRB created", comp, progress);
 		Boolean hasDelayedTag = dt != null && rb.getName().equals(Utils.getReleaseBranchName(repo,  dt.getVersion()));
 		LinkedHashMap<Component, ExtendedStatus> subComponents = new LinkedHashMap<>();
@@ -154,14 +158,7 @@ public class ExtendedStatusBuilder {
 		}
 		
 		ConcurrentHashMap<Component, ExtendedStatus> subComponentsLocal = new ConcurrentHashMap<>();
-		Utils.async(rb.getMDeps(), (mdep) -> {
-			try {
-				recursiveGetAndCacheStatus(cache, progress, subComponentsLocal, mdep, true);
-			} catch (Exception e) {
-				cache.remove(repo.getUrl());
-				throw e;
-			}
-		});
+		Utils.async(rb.getMDeps(), (mdep) -> recursiveGetAndCacheStatus(cache, progress, subComponentsLocal, mdep, true));
 		for (Component mdep : rb.getMDeps()) {
 			subComponents.put(mdep, subComponentsLocal.get(mdep));
 		}
@@ -254,7 +251,6 @@ public class ExtendedStatusBuilder {
 			
 			// Any component `nextVersion`.truncatePatch is not equal to one mentioned in `mdeps` -> error (disallow minor upgrade/downgrade)
 			if (!nextVersion.toReleaseNoPatch().equals(mDep.getVersion().toReleaseNoPatch())) {
-				cache.remove(repo.getUrl());
 				throw new EMinorUpgradeDowngrade(rootComp, mDep, nextVersion.toPreviousPatch());
 			}
 			
@@ -271,7 +267,6 @@ public class ExtendedStatusBuilder {
 			
 			// Any component `nextVersion`.patch is less than one mentioned in `mdeps` -> error (patch upgrade only is allowed)
 			if (nextVersionPatch < mDepPatch) {
-				cache.remove(repo.getUrl());
 				throw new EMinorUpgradeDowngrade(rootComp, mDep, verToActualizeOn);
 			}
 			
@@ -337,13 +332,6 @@ public class ExtendedStatusBuilder {
 	}
 
 	private void recursiveGetAndCacheStatusAsync(ReleaseBranchCurrent rb, CachedStatuses cache, IProgress progress, VCSRepository repo, ConcurrentHashMap<Component, ExtendedStatus> subComponentsLocal) {
-		Utils.async(rb.getMDeps(), (mdep) -> {
-			try {
-				recursiveGetAndCacheStatus(cache, progress, subComponentsLocal, mdep, false);
-			} catch (Exception e) {
-				cache.remove(repo.getUrl());
-				throw e;
-			}
-		});
+		Utils.async(rb.getMDeps(), (mdep) -> recursiveGetAndCacheStatus(cache, progress, subComponentsLocal, mdep, false));
 	}
 }

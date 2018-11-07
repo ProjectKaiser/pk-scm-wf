@@ -225,4 +225,20 @@ public class WorkflowBuildTest extends WorkflowTestBase {
 			verify(cache, atLeast(1)).remove(eq(repoUBL.getUrl()));
 		}
 	}
+	
+	@Test
+	public void testShouldRemoveFromCacheOnBuildStatusFailure() {
+		ExtendedStatusBuilder esb = spy(new ExtendedStatusBuilder(repoFactory));
+		CachedStatuses cache = spy(new CachedStatuses());
+		RuntimeException testException = new RuntimeException("");
+		ProgressConsole pc = new ProgressConsole();
+		doThrow(testException).when(esb).getMinorStatus(compUnTillDb, cache, pc, repoUnTillDb, null);
+		
+		try {
+			esb.getAndCacheStatus(compUBL, cache, pc, false);
+			fail();
+		} catch (RuntimeException e) {
+			verify(cache, atLeast(1)).remove(eq(repoUnTillDb.getUrl()));
+		}
+	}
 }
