@@ -273,9 +273,6 @@ public class WorkflowTestBase {
 			IAction actionForComp = getActionByComp(action, comp);
 			Assert.assertThat("action for " + comp, actionForComp, matcher);
 		}
-		if (action instanceof SCMActionRelease) {
-			((SCMActionRelease) action).isDelayedTag(); // coverage
-		}
 	}
 
 	protected void assertActionDoesForkAll(IAction action) {

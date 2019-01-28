@@ -1,5 +1,8 @@
 package org.scm4j.releaser.scmactions;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.scm4j.commons.Version;
 import org.scm4j.commons.progress.IProgress;
 import org.scm4j.releaser.BuildStatus;
@@ -12,11 +15,12 @@ import org.scm4j.releaser.actions.IAction;
 import org.scm4j.releaser.conf.Component;
 import org.scm4j.releaser.conf.VCSRepository;
 import org.scm4j.releaser.conf.VCSRepositoryFactory;
-import org.scm4j.releaser.scmactions.procs.*;
+import org.scm4j.releaser.scmactions.procs.ISCMProc;
+import org.scm4j.releaser.scmactions.procs.SCMProcActualizePatches;
+import org.scm4j.releaser.scmactions.procs.SCMProcBuild;
+import org.scm4j.releaser.scmactions.procs.SCMProcForkBranch;
+import org.scm4j.releaser.scmactions.procs.SCMProcLockMDeps;
 import org.scm4j.vcs.api.VCSChangeListNode;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class SCMActionRelease extends ActionAbstract {
 
@@ -30,7 +34,7 @@ public class SCMActionRelease extends ActionAbstract {
 							ActionSet actionSet, boolean delayedTag, VCSRepository repo) {
 		super(comp, childActions, repo);
 		ExtendedStatus status = cache.get(repo.getUrl());
-		this.bsFrom = status.getStatus();
+		bsFrom = status.getStatus();
 		targetVersion = status.getNextVersion();
 		List<VCSChangeListNode> vcsChangeList = new ArrayList<>();
 		BuildStatus bsTo = null;
@@ -39,7 +43,7 @@ public class SCMActionRelease extends ActionAbstract {
 			case FORK:
 				procs.add(new SCMProcForkBranch(comp, cache, repo, vcsChangeList));
 			case LOCK:
-				getProcs().add(new SCMProcLockMDeps(cache, repoFactory, repo, vcsChangeList));
+				procs.add(new SCMProcLockMDeps(cache, repoFactory, repo, vcsChangeList));
 				bsTo = BuildStatus.LOCK;
 				if (actionSet == ActionSet.FORK_ONLY) {
 					break;
@@ -47,11 +51,11 @@ public class SCMActionRelease extends ActionAbstract {
 			case BUILD_MDEPS:
 			case ACTUALIZE_PATCHES:
 				if (bsFrom.ordinal() > BuildStatus.LOCK.ordinal() && actionSet == ActionSet.FULL) {
-					getProcs().add(new SCMProcActualizePatches(cache, repoFactory, repo));
+					procs.add(new SCMProcActualizePatches(cache, repoFactory, repo));
 				}
 			case BUILD:
 				if (actionSet == ActionSet.FULL) {
-					getProcs().add(new SCMProcBuild(comp, cache, delayedTag, repo));
+					procs.add(new SCMProcBuild(comp, cache, delayedTag, repo));
 					bsTo = BuildStatus.BUILD;
 				}
 			case DONE:
@@ -61,7 +65,7 @@ public class SCMActionRelease extends ActionAbstract {
 
 	@Override
 	protected void executeAction(IProgress progress) {
-		for (ISCMProc proc : getProcs()) {
+		for (ISCMProc proc : procs) {
 			proc.execute(progress);
 		}
 	}
@@ -77,8 +81,8 @@ public class SCMActionRelease extends ActionAbstract {
 	}
 
 	private String getDetailedStatus() {
-		String skipStr = getProcs().isEmpty() && getBsFrom() != BuildStatus.DONE ? "skip " : "";
-		String bsToStr = getBsTo() != null && getBsTo() != getBsFrom() ? " -> " + getBsTo() : "";
+		String skipStr = procs.isEmpty() && bsFrom != BuildStatus.DONE ? "skip " : "";
+		String bsToStr = bsTo != null && bsTo != bsFrom ? " -> " + bsTo : "";
 		return skipStr + getSimpleStatus() + bsToStr;
 	}
 
@@ -88,7 +92,7 @@ public class SCMActionRelease extends ActionAbstract {
 	}
 
 	private String getSimpleStatus() {
-		return getBsFrom().toString();
+		return bsFrom.toString();
 	}
 
 	public BuildStatus getBsFrom() {
@@ -107,7 +111,7 @@ public class SCMActionRelease extends ActionAbstract {
 	public boolean isExecutable() {
 		return bsFrom != BuildStatus.DONE;
 	}
-
+	
 	public boolean isDelayedTag() {
 		return delayedTag;
 	}

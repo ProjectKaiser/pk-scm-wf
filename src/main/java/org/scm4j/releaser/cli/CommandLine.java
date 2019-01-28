@@ -67,6 +67,7 @@ public class CommandLine {
 	}
 
 	public String[] getOptionArgs() {
+		
 		if (args.length > 2) {
 			return Arrays.copyOfRange(args, 2, args.length);
 		}
