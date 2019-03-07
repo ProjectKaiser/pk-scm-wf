@@ -76,7 +76,7 @@ public class ExtendedStatusBuilder {
 			
 			DelayedTagsFile dtf = new DelayedTagsFile();
 			DelayedTag dt = dtf.getDelayedTagByUrl(repo.getUrl());
-	
+
 			ExtendedStatus res = patch ? 
 				getPatchStatus(comp, cache, progress, repo, dt) :
 				getMinorStatus(comp, cache, progress, repo, dt);
@@ -149,7 +149,7 @@ public class ExtendedStatusBuilder {
 		}
 
 		if (Integer.parseInt(rb.getVersion().getPatch()) < 1) {
-			throw new ENoReleases("Release Branch version patch is " + rb.getVersion().getPatch() + ". Component release should be created before patch");
+			//throw new ENoReleases("Release Branch version patch is " + rb.getVersion().getPatch() + ". Component release should be created before patch");
 		}
 		
 		List<Component> nonLockedMDeps = new ArrayList<>();
